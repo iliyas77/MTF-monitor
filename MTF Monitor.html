@@ -682,11 +682,11 @@
                 Zerodha: {
                     label: 'Zerodha',
                     interestRatePerDay: 0.0004,
-                    brokeragePct: 0.003,
-                    brokerageCap: 20,
+                    brokeragePct: 0,
+                    brokerageCap: 0,
                     pledgeCharge: 15,
                     unpledgeCharge: 15,
-                    dpCharge: 0,
+                    dpCharge: 15.93,
                     sttPct: 0.001,
                     exchangePct: 0.0000322,
                     sebiPct: 0.000001,
@@ -928,7 +928,7 @@
                 return !!buyKey && buyKey === sellKey;
             }
 
-            /** Equity intraday statutory charges (NSE) — applied when buy & sell are same calendar day. */
+            /** Equity intraday statutory charges (NSE) — same calendar-day buy & sell for all brokers. */
             const INTRADAY_STATUTORY = {
                 sttBuyPct: 0,
                 sttSellPct: 0.00025,
@@ -938,12 +938,18 @@
                 dpCharge: 0,
             };
 
-            /** Per-broker intraday brokerage (₹20 or % per executed order, whichever is lower). */
-            const INTRADAY_BROKERAGE = {
+            /**
+             * Same-day square-off = intraday product (Zerodha MIS, Dhan intraday, Groww intraday).
+             * Brokerage: ₹20 or % per executed order (whichever is lower) on buy + sell.
+             * Sources: zerodha.com/charges, dhan.co/pricing, groww.in/help
+             */
+            const BROKER_INTRADAY_PROFILE = {
                 Zerodha: { brokeragePct: 0.0003, brokerageCap: 20 },
                 Dhan: { brokeragePct: 0.0003, brokerageCap: 20 },
                 Groww: { brokeragePct: 0.001, brokerageCap: 20 },
             };
+
+            const CHARGE_LOGIC_VERSION = 2;
 
             function getChargeConfig(broker, buyDate, sellDate) {
                 const base = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
@@ -955,7 +961,7 @@
                         tradeType: 'mtf',
                     };
                 }
-                const intraBrk = INTRADAY_BROKERAGE[broker] || {
+                const intraBrk = BROKER_INTRADAY_PROFILE[broker] || {
                     brokeragePct: base.brokeragePct,
                     brokerageCap: base.brokerageCap,
                 };
@@ -993,12 +999,26 @@
                         totalInvestment: calc.totalInvestment,
                         breakdown: calc.breakdown,
                     };
-                    if (newTx.charges !== tx.charges || newTx.netProfit !== tx.netProfit || newTx.interest !== tx.interest) {
+                    if (
+                        newTx.charges !== tx.charges ||
+                        newTx.netProfit !== tx.netProfit ||
+                        newTx.interest !== tx.interest ||
+                        (tx.breakdown && tx.breakdown.tradeType) !== calc.tradeType
+                    ) {
                         changed = true;
                     }
                     return newTx;
                 });
                 if (changed) setTransactions(updated);
+            }
+
+            function migrateChargeLogic() {
+                const key = 'mtf_charge_logic_version';
+                const stored = parseInt(localStorage.getItem(key) || '0', 10);
+                if (stored < CHARGE_LOGIC_VERSION) {
+                    recalculateStoredTrades();
+                    localStorage.setItem(key, String(CHARGE_LOGIC_VERSION));
+                }
             }
 
             function calculateTrade(tx) {
@@ -1647,8 +1667,10 @@
                 return inp.buyDate && inp.sellDate && inp.quantity > 0 && inp.buyPrice > 0 && inp.sellPrice > 0;
             }
 
-            function renderBrokerRatesPanel(broker, mtfAmount) {
+            function renderBrokerRatesPanel(broker, mtfAmount, buyDate, sellDate) {
                 const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
+                const chargeCfg = getChargeConfig(broker, buyDate, sellDate);
+                const isIntraday = chargeCfg.tradeType === 'intraday';
                 let interestLine;
                 if (broker === 'Dhan') {
                     if (mtfAmount > 0) {
@@ -1660,21 +1682,30 @@
                 } else {
                     interestLine = `${(cfg.interestRatePerDay * 100).toFixed(4)}% / day (${(cfg.interestRatePerDay * 365 * 100).toFixed(2)}% p.a.)`;
                 }
-                const capLabel = cfg.brokerageCap === Infinity ? 'No cap' : fmtDec(cfg.brokerageCap);
+                const brkPct = chargeCfg.brokeragePct;
+                const brkCap = chargeCfg.brokerageCap;
+                const capLabel = brkCap === Infinity ? 'No cap' : (brkCap > 0 ? fmtDec(brkCap) : '₹0');
+                const brkLabel = isIntraday
+                    ? `Intraday: ${(brkPct * 100).toFixed(4)}% or ${capLabel}/order`
+                    : (brkPct > 0 ? `${(brkPct * 100).toFixed(4)}%` : '₹0 (delivery)');
+                const sttLabel = isIntraday ? '0.025% sell only' : `${(chargeCfg.sttSellPct * 100).toFixed(4)}% buy &amp; sell`;
+                const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
+                const typeBadge = isIntraday
+                    ? '<span class="badge rounded-pill text-bg-warning ms-1">Intraday</span>'
+                    : '<span class="badge rounded-pill bg-light text-dark border ms-1">MTF</span>';
                 return `
-                    <h6 class="fw-bold mb-2"><i class="fas fa-info-circle me-2"></i>${cfg.label} Broker Rates</h6>
+                    <h6 class="fw-bold mb-2"><i class="fas fa-info-circle me-2"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
                     <table class="table table-sm align-middle mb-0">
                         <tbody>
-                            <tr><td class="text-muted">Interest</td><td class="text-end small">${interestLine}</td></tr>
-                            <tr><td class="text-muted">Brokerage</td><td class="text-end">${(cfg.brokeragePct * 100).toFixed(4)}%</td></tr>
-                            <tr><td class="text-muted">Brokerage cap</td><td class="text-end">${capLabel}</td></tr>
-                            <tr><td class="text-muted">Pledge</td><td class="text-end">${fmtDec(cfg.pledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-muted">Unpledge</td><td class="text-end">${fmtDec(cfg.unpledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-muted">DP charges</td><td class="text-end">${fmtDec(cfg.dpCharge || 0)}</td></tr>
-                            <tr><td class="text-muted">STT</td><td class="text-end">${(cfg.sttPct * 100).toFixed(4)}%</td></tr>
+                            <tr><td class="text-muted">Interest</td><td class="text-end small">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
+                            <tr><td class="text-muted">Brokerage</td><td class="text-end small">${brkLabel}</td></tr>
+                            <tr><td class="text-muted">Pledge</td><td class="text-end">${fmtDec(chargeCfg.pledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">Unpledge</td><td class="text-end">${fmtDec(chargeCfg.unpledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">DP charges</td><td class="text-end">${fmtDec(chargeCfg.dpCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">STT</td><td class="text-end small">${sttLabel}</td></tr>
                             <tr><td class="text-muted">Exchange</td><td class="text-end">${(cfg.exchangePct * 100).toFixed(6)}%</td></tr>
                             <tr><td class="text-muted">SEBI</td><td class="text-end">${(cfg.sebiPct * 100).toFixed(6)}%</td></tr>
-                            <tr><td class="text-muted">Stamp duty</td><td class="text-end">${(cfg.stampPct * 100).toFixed(4)}%</td></tr>
+                            <tr><td class="text-muted">Stamp duty</td><td class="text-end small">${stampLabel}</td></tr>
                             <tr><td class="text-muted">GST</td><td class="text-end">${(cfg.gstPct * 100).toFixed(0)}%</td></tr>
                         </tbody>
                     </table>
@@ -1722,7 +1753,7 @@
                     : '';
 
                 return `
-                    ${renderBrokerRatesPanel(broker, result.mtfAmount)}
+                    ${renderBrokerRatesPanel(broker, result.mtfAmount, inp.buyDate, inp.sellDate)}
                     <hr class="my-3" />
                     <div class="section-title"><i class="fas fa-hand-holding-usd me-2"></i>Funding</div>
                     <div class="detail-row"><span class="detail-label">Total Investment</span><span class="detail-value">${fmtDec(result.totalInvestment)}</span></div>
@@ -2516,7 +2547,7 @@
             // ---------- INIT ----------
             document.addEventListener('DOMContentLoaded', function() {
                 initModals();
-                recalculateStoredTrades();
+                migrateChargeLogic();
 
                 const range = getDateRange(30);
                 pastFrom = range.from;
