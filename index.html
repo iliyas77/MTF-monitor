@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Money Monitor · MTF Calculator</title>
+
+  <!-- Bootstrap 5 + Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+
+  <style>
+    /* ── global ── */
+    body {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+
+    /* ── header ── */
+    .app-header {
+      background: linear-gradient(135deg, #0d6efd 0%, #6610f2 100%);
+      color: #fff;
+      border-radius: 0 0 1.5rem 1.5rem;
+      box-shadow: 0 4px 20px rgba(13, 110, 253, 0.25);
+    }
+
+    /* ── view panels ── */
+    .view-panel {
+      display: none;
+      animation: fadeSlide 0.25s ease;
+    }
+    .view-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeSlide {
+      0% {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── dashboard cards ── */
+    .feature-card {
+      border: none;
+      border-radius: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      height: 100%;
+      background: #fff;
+    }
+    .feature-card:not(.coming-soon):hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.10) !important;
+    }
+    .feature-card.coming-soon {
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .feature-icon {
+      width: 3.5rem;
+      height: 3.5rem;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    /* ── result rows ── */
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid #eee;
+    }
+    .result-row:last-child {
+      border-bottom: none;
+    }
+    .result-highlight {
+      background: linear-gradient(135deg, #e7f1ff 0%, #f3e8ff 100%);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem;
+    }
+
+    .profit-positive {
+      color: #198754;
+      font-weight: 600;
+    }
+    .profit-negative {
+      color: #dc3545;
+      font-weight: 600;
+    }
+
+    /* ── charge blocks ── */
+    .charges-section-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #6c757d;
+    }
+    .charge-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 0.9rem;
+    }
+    .charge-row:last-child {
+      border-bottom: none;
+    }
+    .charge-row.total-row {
+      border-top: 2px solid #dee2e6;
+      margin-top: 0.2rem;
+      padding-top: 0.7rem;
+      font-weight: 700;
+    }
+
+    /* ── collapsible breakdown header ── */
+    .breakdown-toggle {
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s;
+    }
+    .breakdown-toggle:hover {
+      background: #f8f9fa;
+    }
+    .breakdown-toggle .chevron {
+      transition: transform 0.25s ease;
+    }
+    .breakdown-toggle.collapsed .chevron {
+      transform: rotate(-90deg);
+    }
+
+    /* ── misc ── */
+    .card-header.bg-white {
+      background-color: #fff !important;
+    }
+
+    @media (max-width: 576px) {
+      .app-header {
+        border-radius: 0 0 1rem 1rem;
+      }
+      .result-highlight {
+        padding: 0.5rem 0.75rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="app-header py-3 py-md-4 mb-3 mb-md-4">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <h1 class="h4 h-md-3 mb-0 fw-bold">
+            <i class="bi bi-wallet2 me-2"></i>Money Monitor
+          </h1>
+          <p class="mb-0 opacity-75 small" id="headerSubtitle">Your personal finance toolkit</p>
+        </div>
+        <button class="btn btn-light btn-sm d-none" id="backToDashboardBtn">
+          <i class="bi bi-arrow-left me-1"></i>Dashboard
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="container pb-5">
+
+    <!-- ─── DASHBOARD ─── -->
+    <section id="dashboardView" class="view-panel active">
+      <div class="mb-4">
+        <h2 class="h4 fw-bold mb-1">Dashboard</h2>
+        <p class="text-muted mb-0">Select a tool to get started. More features will be added over time.</p>
+      </div>
+      <div class="row g-4" id="featureGrid"></div>
+    </section>
+
+    <!-- ─── MTF CALCULATOR ─── -->
+    <section id="mtfCalculatorView" class="view-panel">
+      <div class="mb-4">
+        <h2 class="h4 fw-bold mb-1">
+          <i class="bi bi-calculator me-2 text-primary"></i>MTF Calculator
+        </h2>
+        <p class="text-muted mb-0">Estimate margin, broker funding, interest, and break‑even for Margin Trading Facility trades.</p>
+      </div>
+
+      <div class="row g-4">
+
+        <!-- ── left: form ── -->
+        <div class="col-lg-5">
+          <div class="card shadow-sm border-0">
+            <div class="card-header bg-white border-0 pt-3">
+              <h5 class="card-title mb-0">Trade Details</h5>
+            </div>
+            <div class="card-body">
+              <form id="mtfForm" novalidate>
+                <div class="mb-3">
+                  <label for="broker" class="form-label">Select Broker</label>
+                  <select class="form-select" id="broker" required>
+                    <option value="">Choose a broker…</option>
+                    <option value="dhan">Dhan</option>
+                    <option value="zerodha">Zerodha</option>
+                  </select>
+                </div>
+
+                <div class="alert alert-info py-2 px-3 small d-none" id="brokerInfo"></div>
+
+                <!-- Stock Price, Quantity & Leverage in one row -->
+                <div class="row g-2 mb-3">
+                  <div class="col-md-4">
+                    <label for="stockPrice" class="form-label">Stock Price (₹)</label>
+                    <input type="number" class="form-control" id="stockPrice" placeholder="e.g. 2500" step="0.01" min="0.01" value="2500" required />
+                  </div>
+                  <div class="col-md-4">
+                    <label for="quantity" class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="quantity" placeholder="e.g. 10" step="1" min="1" value="10" required />
+                  </div>
+                  <div class="col-md-4">
+                    <label for="leverage" class="form-label">Leverage (x)</label>
+                    <input type="number" class="form-control" id="leverage" placeholder="e.g. 4.0" step="0.1" min="1" value="4.0" required />
+                  </div>
+                </div>
+
+                <div class="mb-3">
+                  <label for="holdingDays" class="form-label">Holding Period (days)</label>
+                  <input type="number" class="form-control" id="holdingDays" placeholder="e.g. 30" step="1" min="1" value="30" required />
+                </div>
+
+                <hr />
+                <p class="small text-muted mb-2">Expected Sell Price (for P&amp;L &amp; break‑even)</p>
+                <div class="mb-3">
+                  <input type="number" class="form-control" id="sellPrice" placeholder="Leave blank to skip" step="0.01" min="0" />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="bi bi-calculator me-1"></i>Calculate
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── right: results ── -->
+        <div class="col-lg-7">
+
+          <!-- ═══ P&L CARD (TABLE FORMAT) ═══ -->
+          <div class="card shadow-sm border-0 d-none mb-4" id="pnlCard">
+            <div class="card-header bg-white border-0 pt-3">
+              <h5 class="card-title mb-0">Profit &amp; Loss</h5>
+            </div>
+            <div class="card-body">
+              <div class="result-row">
+                <span>Gross P&amp;L</span>
+                <span id="resultGrossPnl">—</span>
+              </div>
+              <div class="result-row">
+                <span>Total Tax &amp; Charges</span>
+                <span id="resultTotalChargesPnl" class="text-primary fw-bold">—</span>
+              </div>
+              <div class="result-row border-bottom-0">
+                <span>Net P&amp;L (after costs)</span>
+                <span id="resultNetPnl" class="fw-bold">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ═══ COLLAPSIBLE DETAILED BREAKDOWN ═══ -->
+          <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white border-0 p-0">
+              <div class="d-flex align-items-center justify-content-between p-3 breakdown-toggle collapsed"
+                   data-bs-toggle="collapse" data-bs-target="#breakdownCollapse"
+                   role="button" aria-expanded="false" aria-controls="breakdownCollapse">
+                <span class="fw-semibold">
+                  <i class="bi bi-layout-three-columns me-2"></i>Detailed Breakdown
+                </span>
+                <i class="bi bi-chevron-down chevron"></i>
+              </div>
+            </div>
+            <div id="breakdownCollapse" class="collapse">
+              <div class="card-body">
+
+                <!-- Trade Summary -->
+                <h6 class="charges-section-title mt-1">Trade Summary</h6>
+                <div class="result-highlight mb-3">
+                  <div class="result-row border-0 pb-2">
+                    <span class="text-muted">Broker</span>
+                    <span class="fw-bold" id="resultBroker">—</span>
+                  </div>
+                  <div class="result-row border-0 pb-2 pt-0">
+                    <span class="text-muted">Total Buy Value</span>
+                    <span class="fw-bold" id="resultTotalBuy">—</span>
+                  </div>
+                  <div class="result-row border-0 pb-2 pt-0">
+                    <span class="text-muted">Total Sell Value</span>
+                    <span class="fw-bold" id="resultTotalSell">—</span>
+                  </div>
+                  <div class="result-row border-0 pt-0">
+                    <span class="text-muted">Leverage</span>
+                    <span class="fw-bold" id="resultLeverage">—</span>
+                  </div>
+                </div>
+
+                <div class="result-row">
+                  <span>Your Margin (Paid)</span>
+                  <span class="fw-semibold" id="resultYourMargin">—</span>
+                </div>
+                <div class="result-row">
+                  <span>Broker Funded Amount</span>
+                  <span class="fw-semibold text-primary" id="resultFunded">—</span>
+                </div>
+                <div class="result-row">
+                  <span>Interest Rate Applied</span>
+                  <span id="resultInterestRate">—</span>
+                </div>
+                <div class="result-row">
+                  <span>Break‑even Price / Share</span>
+                  <span class="fw-semibold" id="resultBreakeven">—</span>
+                </div>
+
+                <hr />
+
+                <!-- Buy / Sell charges side‑by‑side -->
+                <div class="row g-4 mb-3">
+                  <div class="col-md-6">
+                    <p class="charges-section-title mb-1">Buy Side</p>
+                    <div id="buyCharges"></div>
+                  </div>
+                  <div class="col-md-6">
+                    <p class="charges-section-title mb-1">Sell Side</p>
+                    <div id="sellCharges"></div>
+                  </div>
+                </div>
+
+                <!-- Overall charges -->
+                <p class="charges-section-title mb-1">Overall</p>
+                <div id="overallCharges"></div>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- footnote -->
+          <div class="alert alert-light border mt-3 mb-0 small" id="formulaNote">
+            <i class="bi bi-info-circle me-1"></i>
+            Charges are estimated for one MTF buy and one sell (NSE). GST is 18% on brokerage, exchange txn, SEBI &amp; IPFT. STT and stamp duty are statutory. Sell value defaults to buy price if left blank.
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ SCRIPTS ═══ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+  </script>
+
+  <script>
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  FEATURES (dashboard)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const features = [{
+      id: 'mtf-calculator',
+      name: 'MTF Calculator',
+      description: 'Calculate margin, broker funding, interest, and break‑even for MTF trades.',
+      icon: 'bi-calculator',
+      color: 'primary',
+      enabled: true
+    }];
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  DOM refs
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const views = {
+      dashboard: document.getElementById('dashboardView'),
+      'mtf-calculator': document.getElementById('mtfCalculatorView')
+    };
+    const headerSubtitle = document.getElementById('headerSubtitle');
+    const backBtn = document.getElementById('backToDashboardBtn');
+    let currentView = 'dashboard';
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Helpers
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function formatINR(amount) {
+      return new Intl.NumberFormat('en-IN', {
+        style: 'currency',
+        currency: 'INR',
+        maximumFractionDigits: 2
+      }).format(amount);
+    }
+
+    function formatPercent(value) {
+      return value.toFixed(2) + '%';
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Navigation
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function navigateTo(viewId) {
+      currentView = viewId;
+      Object.entries(views).forEach(([id, el]) => {
+        el.classList.toggle('active', id === viewId);
+      });
+
+      const isDashboard = viewId === 'dashboard';
+      backBtn.classList.toggle('d-none', isDashboard);
+      headerSubtitle.textContent = isDashboard ?
+        'Your personal finance toolkit' :
+        (features.find(f => f.id === viewId)?.name || '');
+
+      if (viewId === 'mtf-calculator') {
+        calculateMTF();
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Constants – using NSE only (exchange removed)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const GST_RATE = 0.18;
+    const EXCHANGE = {
+      name: 'NSE',
+      exchangeTxnPercent: 0.0030699,
+      sttPercent: 0.1,
+      stampDutyPercent: 0.015,
+      sebiPerCrore: 10,
+      ipftPerCrore: 10
+    };
+
+    const brokers = {
+      dhan: {
+        name: 'Dhan',
+        brokerage: { percent: 0.03, flat: 20 },
+        pledgeBase: 15,
+        dpChargeBase: 12.50,
+        dpIncludesGst: false,
+        info: 'Brokerage: ₹20 or 0.03% per order (whichever lower). Pledge/unpledge: ₹15 + GST each. DP: ₹12.50 + GST on sell. Interest slab-based on funded amount (see rates below).',
+        getInterestRate(fundedAmount) {
+          if (fundedAmount <= 500000) return 12.49;
+          if (fundedAmount <= 1000000) return 13.49;
+          if (fundedAmount <= 2500000) return 14.49;
+          return 15.49;
+        },
+        calcInterest(fundedAmount, days) {
+          const rate = this.getInterestRate(fundedAmount);
+          return (fundedAmount * (rate / 100) * days) / 365;
+        },
+        interestRateLabel(fundedAmount) {
+          const rate = this.getInterestRate(fundedAmount);
+          return `${rate.toFixed(2)}% p.a. (slab) ~ daily ${(rate/365).toFixed(4)}%`;
+        }
+      },
+      zerodha: {
+        name: 'Zerodha',
+        dailyInterestPercent: 0.04,
+        brokerage: { percent: 0.3, flat: 20 },
+        pledgeBase: 15,
+        dpChargeTotal: 15.34,
+        dpIncludesGst: true,
+        info: 'Brokerage: ₹20 or 0.3% per order. Pledge/unpledge: ₹15 + GST per ISIN. DP: ₹15.34 per scrip on sell. Interest: 0.04% per day on funded amount.',
+        calcInterest(fundedAmount, days) {
+          return fundedAmount * (this.dailyInterestPercent / 100) * days;
+        },
+        interestRateLabel() {
+          return '0.04% per day (~14.6% p.a.)';
+        }
+      }
+    };
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Calculation functions (using EXCHANGE constant)
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function calcOrderBrokerage(tradeValue, brokerConfig) {
+      const { percent, flat } = brokerConfig.brokerage;
+      return Math.min(flat, tradeValue * (percent / 100));
+    }
+
+    function calcPledgeCharge(broker) {
+      return broker.pledgeBase * (1 + GST_RATE);
+    }
+
+    function calcDpCharge(broker) {
+      if (broker.dpIncludesGst) {
+        return broker.dpChargeTotal;
+      }
+      return broker.dpChargeBase * (1 + GST_RATE);
+    }
+
+    function calcSideCharges(turnover, side, broker) {
+      const exchange = EXCHANGE;
+      const brokerage = calcOrderBrokerage(turnover, broker);
+
+      const exchangeTxn = turnover * (exchange.exchangeTxnPercent / 100);
+      const stt = turnover * (exchange.sttPercent / 100);
+      const stampDuty = (side === 'buy') ?
+        turnover * (exchange.stampDutyPercent / 100) :
+        0;
+      const sebi = turnover * (exchange.sebiPerCrore / 10000000);
+      const ipft = turnover * (exchange.ipftPerCrore / 10000000);
+
+      const gstBase = brokerage + exchangeTxn + sebi + ipft;
+      const gst = gstBase * GST_RATE;
+
+      const pledgeUnpledge = calcPledgeCharge(broker);
+      const dpCharges = (side === 'sell') ? calcDpCharge(broker) : 0;
+
+      const sideTotal = exchangeTxn + stt + stampDuty + sebi + ipft + gst +
+        brokerage + pledgeUnpledge + dpCharges;
+
+      return {
+        exchangeTurnover: turnover,
+        exchangeTxn,
+        stt,
+        stampDuty,
+        sebi,
+        ipft,
+        gst,
+        brokerage,
+        pledgeUnpledge,
+        dpCharges,
+        sideTotal
+      };
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Rendering helpers
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    const chargeLineItems = [
+      { key: 'exchangeTurnover', label: 'Exchange Turnover' },
+      { key: 'exchangeTxn', label: 'Exchange Transaction Charges' },
+      { key: 'stt', label: 'Securities Transaction Tax (STT)' },
+      { key: 'gst', label: 'GST' },
+      { key: 'sebi', label: 'SEBI Turnover Charges' },
+      { key: 'ipft', label: 'Investor Protection Fund Trust (IPFT)' },
+      { key: 'stampDuty', label: 'Stamp Duty' },
+      { key: 'dpCharges', label: 'DP Charges' },
+      { key: 'brokerage', label: 'Brokerage' },
+      { key: 'pledgeUnpledge', label: 'Pledge / Unpledge Charges' }
+    ];
+
+    function renderChargeBlock(containerId, charges, sideLabel) {
+      const container = document.getElementById(containerId);
+      if (!charges) {
+        container.innerHTML =
+          '<p class="text-muted small mb-0">Select a broker to calculate charges.</p>';
+        return;
+      }
+
+      const rows = chargeLineItems.map(item =>
+        `<div class="charge-row">
+            <span>${item.label}</span>
+            <span>${formatINR(charges[item.key])}</span>
+          </div>`
+      ).join('');
+
+      container.innerHTML = `
+          ${rows}
+          <div class="charge-row total-row">
+            <span>${sideLabel} Total</span>
+            <span>${formatINR(charges.sideTotal)}</span>
+          </div>
+        `;
+    }
+
+    function renderOverallCharges(buyTotal, sellTotal, interest) {
+      const total = buyTotal + sellTotal + interest;
+      const container = document.getElementById('overallCharges');
+
+      container.innerHTML = `
+          <div class="charge-row">
+            <span>Buy Side Total</span>
+            <span>${formatINR(buyTotal)}</span>
+          </div>
+          <div class="charge-row">
+            <span>Sell Side Total</span>
+            <span>${formatINR(sellTotal)}</span>
+          </div>
+          <div class="charge-row">
+            <span>Interest Amount</span>
+            <span class="text-danger">${formatINR(interest)}</span>
+          </div>
+          <div class="charge-row total-row">
+            <span>Total Tax &amp; Charges</span>
+            <span class="text-primary">${formatINR(total)}</span>
+          </div>
+        `;
+
+      return total;
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Update broker info
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function updateBrokerInfo() {
+      const brokerId = document.getElementById('broker').value;
+      const infoEl = document.getElementById('brokerInfo');
+      const formulaEl = document.getElementById('formulaNote');
+
+      if (!brokerId || !brokers[brokerId]) {
+        infoEl.classList.add('d-none');
+        formulaEl.innerHTML =
+          '<i class="bi bi-info-circle me-1"></i>Select a broker to calculate buy/sell charges, interest, and total tax &amp; charges.';
+        return;
+      }
+
+      const broker = brokers[brokerId];
+      infoEl.textContent = broker.info;
+      infoEl.classList.remove('d-none');
+
+      if (brokerId === 'zerodha') {
+        formulaEl.innerHTML =
+          '<i class="bi bi-info-circle me-1"></i><strong>Zerodha:</strong> Interest = Funded × 0.04% × Days. DP charge ₹15.34 per scrip on sell. Pledge/unpledge ₹15 + GST per ISIN.';
+      } else {
+        formulaEl.innerHTML =
+          '<i class="bi bi-info-circle me-1"></i><strong>Dhan:</strong> Slab interest (12.49%–15.49% p.a.) on funded amount. Pledge/unpledge ₹15+GST each. DP ₹12.50+GST on sell. Brokerage ₹20 or 0.03% per order.';
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Main calculation – uses user‑defined leverage
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function calculateMTF() {
+      const brokerId = document.getElementById('broker').value;
+      const stockPrice = parseFloat(document.getElementById('stockPrice').value);
+      const quantity = parseInt(document.getElementById('quantity').value, 10);
+      const leverage = parseFloat(document.getElementById('leverage').value);
+      const holdingDays = parseInt(document.getElementById('holdingDays').value, 10);
+      const sellPriceRaw = document.getElementById('sellPrice').value;
+      const sellPrice = (sellPriceRaw !== '' && !isNaN(parseFloat(sellPriceRaw)) && parseFloat(sellPriceRaw) > 0) ?
+        parseFloat(sellPriceRaw) :
+        null;
+
+      // if no broker selected → show placeholder
+      if (!brokerId || !brokers[brokerId]) {
+        renderChargeBlock('buyCharges', null);
+        renderChargeBlock('sellCharges', null);
+        document.getElementById('overallCharges').innerHTML =
+          '<p class="text-muted small mb-0">Select a broker to calculate charges.</p>';
+        return;
+      }
+
+      // validate required inputs
+      if ([stockPrice, quantity, leverage, holdingDays].some(v => isNaN(v) || v <= 0)) {
+        return;
+      }
+
+      const broker = brokers[brokerId];
+      const totalBuyValue = stockPrice * quantity;
+      const effectiveSellPrice = (sellPrice !== null) ? sellPrice : stockPrice;
+      const totalSellValue = effectiveSellPrice * quantity;
+
+      // Margin = totalBuyValue / leverage
+      const yourMargin = totalBuyValue / leverage;
+      const fundedAmount = totalBuyValue - yourMargin;
+
+      const totalInterest = broker.calcInterest(fundedAmount, holdingDays);
+
+      const buyCharges = calcSideCharges(totalBuyValue, 'buy', broker);
+      const sellCharges = calcSideCharges(totalSellValue, 'sell', broker);
+
+      const totalCost = renderOverallCharges(
+        buyCharges.sideTotal,
+        sellCharges.sideTotal,
+        totalInterest
+      );
+
+      const breakevenPerShare = stockPrice + (totalCost / quantity);
+
+      // ── update summary ──
+      document.getElementById('resultBroker').textContent = broker.name;
+      document.getElementById('resultTotalBuy').textContent = formatINR(totalBuyValue);
+      document.getElementById('resultTotalSell').textContent = formatINR(totalSellValue);
+      document.getElementById('resultLeverage').textContent = leverage.toFixed(1) + 'x';
+      document.getElementById('resultInterestRate').textContent =
+        brokerId === 'dhan' ?
+        broker.interestRateLabel(fundedAmount) :
+        broker.interestRateLabel();
+      document.getElementById('resultYourMargin').textContent = formatINR(yourMargin);
+      document.getElementById('resultFunded').textContent = formatINR(fundedAmount);
+      document.getElementById('resultBreakeven').textContent = formatINR(breakevenPerShare);
+
+      // ── charge blocks ──
+      renderChargeBlock('buyCharges', buyCharges, 'Buy Side');
+      renderChargeBlock('sellCharges', sellCharges, 'Sell Side');
+
+      // ── P&L (only if sell price provided) ──
+      const pnlCard = document.getElementById('pnlCard');
+      if (sellPrice !== null && sellPrice > 0) {
+        const grossPnl = (sellPrice - stockPrice) * quantity;
+        const netPnl = grossPnl - totalCost;
+
+        const pnlClass = (val) => (val >= 0) ? 'profit-positive' : 'profit-negative';
+
+        document.getElementById('resultGrossPnl').innerHTML =
+          `<span class="${pnlClass(grossPnl)}">${formatINR(grossPnl)}</span>`;
+        document.getElementById('resultNetPnl').innerHTML =
+          `<span class="${pnlClass(netPnl)}">${formatINR(netPnl)}</span>`;
+        document.getElementById('resultTotalChargesPnl').textContent = formatINR(totalCost);
+        pnlCard.classList.remove('d-none');
+      } else {
+        pnlCard.classList.add('d-none');
+      }
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Dashboard: render feature grid
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    function renderFeatureGrid() {
+      const grid = document.getElementById('featureGrid');
+
+      grid.innerHTML = features.map(feature => {
+        const iconBg = feature.enabled ?
+          `bg-${feature.color} bg-opacity-10 text-${feature.color}` :
+          'bg-secondary bg-opacity-10 text-secondary';
+        const badge = feature.enabled ?
+          '<span class="badge bg-success">Available</span>' :
+          '<span class="badge bg-secondary">Coming Soon</span>';
+
+        return `
+            <div class="col-md-6 col-lg-4">
+              <div class="card feature-card shadow-sm ${feature.enabled ? '' : 'coming-soon'}"
+                   data-feature-id="${feature.id}"
+                   ${feature.enabled ? '' : 'aria-disabled="true"'}
+                   tabindex="${feature.enabled ? '0' : '-1'}">
+                <div class="card-body p-4">
+                  <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div class="feature-icon ${iconBg}">
+                      <i class="bi ${feature.icon}"></i>
+                    </div>
+                    ${badge}
+                  </div>
+                  <h5 class="card-title fw-bold">${feature.name}</h5>
+                  <p class="card-text text-muted small mb-0">${feature.description}</p>
+                </div>
+              </div>
+            </div>
+          `;
+      }).join('');
+
+      grid.querySelectorAll('.feature-card:not(.coming-soon)').forEach(card => {
+        const handler = () => navigateTo(card.dataset.featureId);
+        card.addEventListener('click', handler);
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handler();
+          }
+        });
+      });
+    }
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Event bindings
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    document.getElementById('mtfForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      calculateMTF();
+    });
+
+    let calcTimer = null;
+    document.getElementById('mtfForm').addEventListener('input', () => {
+      updateBrokerInfo();
+      if (calcTimer) cancelAnimationFrame(calcTimer);
+      calcTimer = requestAnimationFrame(() => calculateMTF());
+    });
+
+    document.getElementById('broker').addEventListener('change', () => {
+      updateBrokerInfo();
+      calculateMTF();
+    });
+
+    backBtn.addEventListener('click', () => navigateTo('dashboard'));
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    //  Init
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    renderFeatureGrid();
+    updateBrokerInfo();
+  </script>
+
+</body>
+</html>

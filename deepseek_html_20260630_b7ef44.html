@@ -1,0 +1,1806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MTF Profit Tracker</title>
+
+    <!-- Bootstrap 5 + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <style>
+        :root {
+            --app-bg: #f3f5f8;
+            --app-text: #172033;
+            --app-muted: #7b8794;
+            --app-primary: #1a73e8;
+            --app-success: #198754;
+            --app-danger: #dc3545;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding-bottom: 0;
+            background: var(--app-bg);
+            color: var(--app-text);
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            overflow-x: hidden;
+        }
+
+        .app-shell {
+            max-width: 480px;
+            min-height: 100vh;
+            margin: 0 auto;
+            background: var(--app-bg);
+        }
+
+        .app-header,
+        .bottom-nav {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .scroll-content { max-width: 480px; margin: 0 auto; padding: 12px 14px 120px; }
+        .page-section { display: none; animation: fadeIn 0.18s ease; }
+        .page-section.active-page { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .status-tab.active,
+        .range-filter .btn.active,
+        .past-range-filter .btn.active {
+            background: var(--app-primary);
+            border-color: var(--app-primary);
+            color: #fff;
+        }
+
+        .search-bar .form-control { padding-left: 2.65rem; padding-right: 2.65rem; }
+        .search-icon {
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--app-muted);
+            pointer-events: none;
+        }
+        .search-clear {
+            right: .45rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: none;
+            width: 2rem;
+            height: 2rem;
+        }
+        .search-clear.visible { display: inline-flex; }
+
+        .tx-card { border-left: 5px solid var(--app-primary); }
+        .tx-card.closed-card { border-left-color: var(--app-success); }
+        .tx-card .big-value { font-size: clamp(1.9rem, 9vw, 2.35rem); }
+        .empty-state { text-align: center; color: var(--app-muted); }
+        .empty-state i { font-size: 2.75rem; opacity: .25; }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: .45rem 0;
+            border-bottom: 1px solid #eef1f5;
+        }
+        .detail-row:last-child { border-bottom: 0; }
+        .detail-label { color: var(--app-muted); font-size: .82rem; }
+        .detail-value { font-size: .85rem; font-weight: 600; text-align: right; }
+        .section-title {
+            margin: 1rem 0 .45rem;
+            padding-bottom: .35rem;
+            border-bottom: 1px solid #e8edf3;
+            font-size: .95rem;
+            font-weight: 700;
+        }
+
+        .fab {
+            position: fixed;
+            right: max(16px, calc((100vw - 480px) / 2 + 16px));
+            bottom: 74px;
+            z-index: 1030;
+            width: 56px;
+            height: 56px;
+            border: 0;
+            border-radius: 50%;
+            background: var(--app-primary);
+            color: #fff;
+            box-shadow: 0 .75rem 1.8rem rgba(26, 115, 232, .35);
+        }
+
+        .bottom-nav {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1020;
+            padding: .3rem .5rem;
+        }
+        .bottom-nav .nav-item {
+            flex: 1 1 0;
+            min-width: 0;
+            border: 0;
+            border-radius: 1rem;
+            background: transparent;
+            color: var(--app-muted);
+        }
+        .bottom-nav .nav-item.active {
+            background: rgba(26, 115, 232, .1);
+            color: var(--app-primary);
+        }
+        .bottom-nav .nav-item i { font-size: 1.2rem; }
+        .bottom-nav .nav-item span { font-size: .68rem; font-weight: 600; }
+
+        .toast-container {
+            position: fixed;
+            top: .75rem;
+            left: 50%;
+            z-index: 2000;
+            width: min(92vw, 420px);
+            transform: translateX(-50%);
+        }
+
+        .bottom-sheet-modal.fade .modal-dialog,
+        .bottom-sheet-modal .modal-dialog {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            max-width: 480px;
+            height: 90vh;
+            margin: 0 auto;
+            transform: translateY(100%);
+            transition: transform .25s ease-out;
+        }
+        .bottom-sheet-modal.show .modal-dialog { transform: translateY(0); }
+        .bottom-sheet-modal .modal-content {
+            height: 90vh;
+            overflow: hidden;
+            border: 0;
+            border-radius: 1.5rem 1.5rem 0 0;
+            box-shadow: 0 -1rem 3rem rgba(15, 23, 42, .22);
+        }
+        .bottom-sheet-modal .modal-header,
+        .bottom-sheet-modal .modal-footer { flex-shrink: 0; }
+        .bottom-sheet-modal .modal-header { position: relative; flex-direction: column; align-items: stretch; gap: .65rem; }
+        .bottom-sheet-modal .modal-header .btn-close { position: absolute; top: 1rem; right: 1rem; }
+        .bottom-sheet-modal .modal-body { overflow-y: auto; }
+        .sheet-handle {
+            width: 42px;
+            height: 4px;
+            border-radius: 999px;
+            background: #d7dde5;
+        }
+
+        @media (min-width: 576px) {
+            .scroll-content { border-inline: 1px solid #e1e7ef; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============ TOAST ============ -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ============ HEADER ============ -->
+    <header class="app-header sticky-top bg-white border-bottom shadow-sm px-3 py-3">
+        <h5 class="fw-bold mb-0 fs-5"><i class="fas fa-chart-line text-success me-2"></i>MTF Profit Tracker</h5>
+    </header>
+
+    <!-- ============ PAGES ============ -->
+
+    <!-- PAGE: TRADES -->
+    <section id="page-trades" class="page-section active-page">
+        <div class="scroll-content">
+            <!-- Company search -->
+            <div class="search-bar position-relative mb-3">
+                <i class="fas fa-search search-icon position-absolute"></i>
+                <input type="text" class="form-control rounded-4 shadow-sm" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
+                <button class="search-clear btn btn-light position-absolute align-items-center justify-content-center rounded-circle p-0" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Summary Card (Net Profit, Trades, Total Charges) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3" id="summaryCard">
+                <div class="card-body row g-0 text-center py-3">
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
+                        <div class="fw-bold fs-4 text-success" id="summaryNet">₹0</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
+                        <div class="fw-bold fs-4" id="summaryTrades">0</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-receipt me-1"></i>Total Charges</div>
+                        <div class="fw-bold fs-4 text-secondary" id="summaryCharges">₹0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Open trades list -->
+            <div id="transactionList"></div>
+        </div>
+    </section>
+
+    <!-- PAGE: PAST TRADES -->
+    <section id="page-past" class="page-section">
+        <div class="scroll-content">
+            <!-- Sub-tabs: List / Detail -->
+            <div class="status-tabs d-flex gap-2 bg-white border rounded-4 p-1 mb-3 shadow-sm" id="pastTabs">
+                <button class="status-tab btn btn-sm fw-semibold rounded-3 active flex-fill" data-tab="list" onclick="setPastTab('list')">List</button>
+                <button class="status-tab btn btn-sm fw-semibold rounded-3 flex-fill" data-tab="detail" onclick="setPastTab('detail')">Detail</button>
+            </div>
+
+            <!-- Company search -->
+            <div class="search-bar position-relative mb-3">
+                <i class="fas fa-search search-icon position-absolute"></i>
+                <input type="text" class="form-control rounded-4 shadow-sm" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
+                <button class="search-clear btn btn-light position-absolute align-items-center justify-content-center rounded-circle p-0" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="past-range-filter d-flex flex-column gap-2 bg-white border rounded-4 p-3 mb-3 shadow-sm">
+                <div class="row-1 d-flex flex-wrap gap-2 justify-content-center">
+                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(7)">1W</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(10)">10D</button>
+                    <button class="btn btn-outline-secondary btn-sm active" onclick="setPastRange(30)">1M</button>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(90)">3M</button>
+                </div>
+                <div class="row-2 d-flex flex-wrap gap-2 align-items-center justify-content-center">
+                    <input type="date" class="form-control form-control-sm rounded-3 flex-fill" id="pastFrom" />
+                    <span class="small text-muted">to</span>
+                    <input type="date" class="form-control form-control-sm rounded-3 flex-fill" id="pastTo" />
+                    <button class="btn btn-primary btn-sm" onclick="applyPastRangeFilter()"><i class="fas fa-check"></i> Apply</button>
+                </div>
+            </div>
+            <!-- Summary Card (Detail tab only) -->
+            <div class="card border-0 shadow-sm rounded-4 mb-3" id="pastSummaryCard" style="display:none;">
+                <div class="card-body row g-0 text-center py-3">
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
+                        <div class="fw-bold fs-4 text-success" id="pastSummaryNet">₹0</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
+                        <div class="fw-bold fs-4" id="pastSummaryTrades">0</div>
+                    </div>
+                    <div class="col-4">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-receipt me-1"></i>Total Charges</div>
+                        <div class="fw-bold fs-4 text-secondary" id="pastSummaryCharges">₹0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pastTradesList"></div>
+            <div id="pastDetailList" style="display:none;"></div>
+        </div>
+    </section>
+
+    <!-- PAGE: SETTINGS -->
+    <section id="page-settings" class="page-section">
+        <div class="scroll-content">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2 small text-muted">Status:</span>
+                        <span id="cloudSyncStatus" class="badge bg-secondary">Off</span>
+                    </div>
+                    <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep data in sync. Choose a long, secret code (like a password).</p>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="fas fa-key"></i></span>
+                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-primary flex-fill" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug me-1"></i> Connect</button>
+                        <button class="btn btn-sm btn-outline-secondary flex-fill" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink me-1"></i> Disconnect</button>
+                    </div>
+                    <div id="cloudSyncHint" class="small text-muted mt-2"></div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-file-export me-2"></i>Export Data</div>
+                            <div class="small text-muted">Download all transactions as JSON backup</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="exportData()"><i class="fas fa-download"></i> Export</button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-file-import me-2"></i>Import Data</div>
+                            <div class="small text-muted">Restore from a JSON backup file</div>
+                        </div>
+                        <div>
+                            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)" />
+                            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('importFileInput').click()"><i class="fas fa-upload"></i> Import</button>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
+                            <div class="small text-muted">Copy your data as text, or paste it back to restore (best for mobile)</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
+                            <div class="small text-muted">Permanently delete all transactions</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 py-3">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-database me-2"></i>Total Transactions</div>
+                            <div class="small text-muted" id="totalTxCount">0 records</div>
+                        </div>
+                        <span class="badge bg-secondary" id="totalTxBadge">0</span>
+                    </div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mt-3">
+                <div class="card-body">
+                    <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>About</h6>
+                    <p class="small text-muted mb-1">MTF Profit Tracker v1.0</p>
+                    <p class="small text-muted mb-0">All data stored locally in your browser. No internet required.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAB -->
+    <button class="fab d-flex align-items-center justify-content-center" id="fabBtn" onclick="openAddModal()">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- BOTTOM NAV -->
+    <nav class="bottom-nav bg-white border-top shadow-lg d-flex align-items-stretch" id="bottomNav">
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2 active" data-page="trades" onclick="navigateTo('trades')">
+            <i class="fas fa-list-ul"></i>
+            <span>Trades</span>
+        </button>
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2" data-page="past" onclick="navigateTo('past')">
+            <i class="fas fa-history"></i>
+            <span>Past Trades</span>
+        </button>
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2" data-page="settings" onclick="navigateTo('settings')">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
+        </button>
+    </nav>
+
+    <!-- MODAL: ADD/EDIT -->
+    <div class="modal fade bottom-sheet-modal" id="txModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title" id="txModalTitle"><i class="fas fa-plus-circle me-2"></i>Add Trade</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="txForm" novalidate>
+                        <input type="hidden" id="txEditId" value="" />
+                        <div class="mb-3">
+                            <label class="form-label">Company Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="txCompany" placeholder="e.g. MARICO, RELIANCE" required />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Broker <span class="text-danger">*</span></label>
+                            <select class="form-select" id="txBroker" required>
+                                <option value="">Select Broker</option>
+                                <option value="Zerodha">Zerodha</option>
+                                <option value="Dhan">Dhan</option>
+                                <option value="Groww">Groww</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Trade Status</label>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="statusOpen" value="open">
+                                    <label class="form-check-label" for="statusOpen">Open</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status" id="statusClosed" value="closed" checked>
+                                    <label class="form-check-label" for="statusClosed">Closed</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">Buy Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="txBuyDate" required />
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Sell Date <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="txSellDate" required />
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <label class="form-label">Qty <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="txQty" placeholder="0" required min="1" step="1" />
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Buy Price <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="txBuyPrice" placeholder="0.00" required min="0.01" step="0.01" />
+                            </div>
+                            <div class="col-4">
+                                <label class="form-label">Sell Price <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="txSellPrice" placeholder="0.00" required min="0.01" step="0.01" />
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Leverage (X) <span class="small text-muted">(e.g., 3, 4, 5)</span></label>
+                            <input type="number" class="form-control" id="txLeverage" placeholder="1" min="1" step="0.1" value="1" />
+                            <div class="form-text">Your own margin = Total Investment / Leverage. Broker funds the rest.</div>
+                            <div id="leverageBreakdown" class="mt-2 small text-muted">
+                                Total Investment: <span id="previewTotalInv">₹0</span> &nbsp;|&nbsp; 
+                                Your Margin: <span id="previewOwnMargin">₹0</span> &nbsp;|&nbsp; 
+                                Broker Funded: <span id="previewMtfAmt">₹0</span>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Notes (optional)</label>
+                            <textarea class="form-control" id="txNotes" rows="2" placeholder="Any notes..."></textarea>
+                        </div>
+                        <div class="bg-light border rounded-3 p-3" id="calcPreview">
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Holding Days</span><span class="fw-semibold" id="previewDays">0</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Gross Profit</span><span class="fw-semibold text-success" id="previewGross">₹0</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">MTF Interest</span><span class="fw-semibold" id="previewInterest">₹0</span></div>
+                            <div class="d-flex justify-content-between mb-1"><span class="text-muted">Total Charges</span><span class="fw-semibold" id="previewCharges">₹0</span></div>
+                            <hr class="my-2" />
+                            <div class="d-flex justify-content-between fw-bold"><span>Net Profit</span><span id="previewNet">₹0</span></div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="txSaveBtn" onclick="saveTransaction()">
+                        <i class="fas fa-save me-1"></i> Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: VIEW -->
+    <div class="modal fade bottom-sheet-modal" id="viewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title" id="viewModalTitle">Trade Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="viewModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SCRIPTS ============ -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+    </script>
+
+    <!-- Firebase (compat SDK) for cloud sync -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ======================================================================
+        //  MTF PROFIT TRACKER – FINAL REFINED VERSION
+        // ======================================================================
+
+        (function() {
+            'use strict';
+
+            // ======================================================================
+            //  FIREBASE CLOUD SYNC CONFIG
+            //  1) Create a free project at https://console.firebase.google.com
+            //  2) Add a Web App, copy its config, and paste the values below.
+            //  3) In Firestore, create the database and set the security rules
+            //     (see the instructions provided with this change).
+            //  Until you paste a real config, the app keeps working offline
+            //  (localStorage only) and the Cloud Sync card shows "Not configured".
+            // ======================================================================
+            const FIREBASE_CONFIG = {
+                apiKey: "AIzaSyCD3GpPPNnGPb3y6VeVcEgKSsorVxVtgWI",
+                authDomain: "mtf-monitor.firebaseapp.com",
+                projectId: "mtf-monitor",
+                storageBucket: "mtf-monitor.firebasestorage.app",
+                messagingSenderId: "500531310641",
+                appId: "1:500531310641:web:d627217a012bff9570e510",
+                measurementId: "G-S90EJWTKVS"
+            };
+
+            // ---------- BROKER CONFIG ----------
+            const BROKER_CONFIG = {
+                Zerodha: {
+                    label: 'Zerodha',
+                    interestRatePerDay: 0.0004,
+                    brokeragePct: 0.003,
+                    brokerageCap: 20,
+                    pledgeCharge: 15,
+                    unpledgeCharge: 15,
+                    dpCharge: 0,
+                    sttPct: 0.001,
+                    exchangePct: 0.0000322,
+                    sebiPct: 0.000001,
+                    stampPct: 0.00015,
+                    gstPct: 0.18,
+                },
+                Groww: {
+                    label: 'Groww',
+                    interestRatePerDay: 0.00041,
+                    brokeragePct: 0.001,
+                    brokerageCap: Infinity,
+                    pledgeCharge: 20,
+                    unpledgeCharge: 20,
+                    dpCharge: 0,
+                    sttPct: 0.001,
+                    exchangePct: 0.0000322,
+                    sebiPct: 0.000001,
+                    stampPct: 0.00015,
+                    gstPct: 0.18,
+                },
+                Dhan: {
+                    label: 'Dhan',
+                    interestRatePerDay: null,
+                    brokeragePct: 0.0003,
+                    brokerageCap: 20,
+                    pledgeCharge: 15,
+                    unpledgeCharge: 15,
+                    dpCharge: 12.5,
+                    sttPct: 0.001,
+                    exchangePct: 0.0000322,
+                    sebiPct: 0.000001,
+                    stampPct: 0.00015,
+                    gstPct: 0.18,
+                }
+            };
+
+            function getDhanInterestRate(mtfAmount) {
+                if (mtfAmount <= 500000) return 0.1249 / 365;
+                if (mtfAmount <= 1000000) return 0.1349 / 365;
+                if (mtfAmount <= 2500000) return 0.1449 / 365;
+                if (mtfAmount <= 5000000) return 0.1549 / 365;
+                return 0.1649 / 365;
+            }
+
+            // ---------- STORAGE ----------
+            function getStorage() {
+                try {
+                    const raw = localStorage.getItem('mtf_tracker_data');
+                    if (raw) {
+                        const data = JSON.parse(raw);
+                        if (Array.isArray(data.transactions)) return data;
+                    }
+                } catch (_) { /* ignore */ }
+                return { transactions: [] };
+            }
+            // Write only to the local cache (used by the cloud listener to avoid echo loops).
+            function saveStorageLocal(data) { localStorage.setItem('mtf_tracker_data', JSON.stringify(data)); }
+            // Write locally AND push to the cloud (used by all user-initiated changes).
+            function saveStorage(data) { saveStorageLocal(data); cloudPush(data); }
+            function getTransactions() { return getStorage().transactions || []; }
+            function setTransactions(txs) { const data = getStorage(); data.transactions = txs; saveStorage(data); }
+            function addTransaction(tx) { const txs = getTransactions(); tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6); txs.push(tx); setTransactions(txs); return tx; }
+            function updateTransaction(id, updated) { const txs = getTransactions(); const idx = txs.findIndex(t => t.id === id); if (idx === -1) return null; txs[idx] = { ...txs[idx], ...updated }; setTransactions(txs); return txs[idx]; }
+            function deleteTransaction(id) { let txs = getTransactions(); txs = txs.filter(t => t.id !== id); setTransactions(txs); }
+            function getTransaction(id) { return getTransactions().find(t => t.id === id) || null; }
+
+            // ---------- CLOUD SYNC (Firebase Firestore, sync-code based) ----------
+            // Default sync code pre-filled in the field so you don't have to remember it.
+            const DEFAULT_SYNC_CODE = 'iliyas-mtf-9f3k2x7q';
+            let fbDb = null;              // Firestore instance (null if not configured/available)
+            let syncCode = null;          // current sync code (also the Firestore doc id)
+            let syncUnsub = null;         // realtime listener unsubscribe fn
+            let syncStatus = 'off';       // 'off' | 'connecting' | 'connected' | 'error'
+
+            function isFirebaseConfigured() {
+                return FIREBASE_CONFIG &&
+                    FIREBASE_CONFIG.apiKey &&
+                    FIREBASE_CONFIG.apiKey.indexOf('YOUR_') === -1 &&
+                    FIREBASE_CONFIG.projectId &&
+                    FIREBASE_CONFIG.projectId.indexOf('YOUR_') === -1;
+            }
+
+            function initFirebase() {
+                if (fbDb) return true;
+                if (!isFirebaseConfigured()) return false;
+                if (typeof firebase === 'undefined' || !firebase.initializeApp) return false;
+                try {
+                    if (!firebase.apps || !firebase.apps.length) {
+                        firebase.initializeApp(FIREBASE_CONFIG);
+                    }
+                    fbDb = firebase.firestore();
+                    return true;
+                } catch (e) {
+                    console.warn('Firebase init failed', e);
+                    return false;
+                }
+            }
+
+            function normalizeCode(code) {
+                return (code || '').trim().toLowerCase().replace(/\s+/g, '-');
+            }
+
+            // Push the whole dataset to the cloud (no-op unless connected).
+            function cloudPush(data) {
+                if (!fbDb || !syncCode) return;
+                try {
+                    fbDb.collection('syncs').doc(syncCode).set({
+                        data: data || getStorage(),
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    }, { merge: true }).catch(err => {
+                        console.warn('Cloud push failed', err);
+                    });
+                } catch (e) { console.warn('Cloud push error', e); }
+            }
+
+            function refreshAllViews() {
+                try { renderCurrentView(); } catch (_) {}
+                try { renderPastTrades(); } catch (_) {}
+                try { renderSettings(); } catch (_) {}
+            }
+
+            // Merge two transaction lists by id (remote wins on conflicts).
+            function mergeTransactions(localTxs, remoteTxs) {
+                const byId = {};
+                (localTxs || []).forEach(t => { if (t && t.id) byId[t.id] = t; });
+                (remoteTxs || []).forEach(t => { if (t && t.id) byId[t.id] = t; });
+                return Object.keys(byId).map(k => byId[k]);
+            }
+
+            // Connect to a sync code: one-time merge of local + remote, then live listener.
+            function connectSync(rawCode, opts) {
+                opts = opts || {};
+                if (!initFirebase()) {
+                    if (!opts.silent) showToast('Cloud sync is not configured yet.', 'warning');
+                    return;
+                }
+                const code = normalizeCode(rawCode);
+                if (!code || code.length < 4) {
+                    if (!opts.silent) showToast('Please enter a sync code (at least 4 characters).', 'warning');
+                    return;
+                }
+
+                if (syncUnsub) { try { syncUnsub(); } catch (_) {} syncUnsub = null; }
+                syncCode = code;
+                syncStatus = 'connecting';
+                localStorage.setItem('mtf_sync_code', code);
+                renderSettings();
+
+                const docRef = fbDb.collection('syncs').doc(code);
+                docRef.get().then(snap => {
+                    const local = getStorage();
+                    if (snap.exists && snap.data() && snap.data().data && Array.isArray(snap.data().data.transactions)) {
+                        const remote = snap.data().data;
+                        const merged = { transactions: mergeTransactions(local.transactions, remote.transactions) };
+                        saveStorageLocal(merged);
+                        // push merged back so both sides converge
+                        docRef.set({ data: merged, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    } else {
+                        // First device on this code: seed the cloud with local data
+                        docRef.set({ data: local, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                    }
+                    startSyncListener();
+                    if (!opts.silent) showToast('Cloud sync connected!', 'success');
+                    refreshAllViews();
+                }).catch(err => {
+                    console.warn('connectSync failed', err);
+                    syncStatus = 'error';
+                    if (!opts.silent) showToast('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), 'danger');
+                    renderSettings();
+                });
+            }
+
+            function startSyncListener() {
+                if (!fbDb || !syncCode) return;
+                if (syncUnsub) { try { syncUnsub(); } catch (_) {} }
+                syncUnsub = fbDb.collection('syncs').doc(syncCode).onSnapshot(snap => {
+                    syncStatus = 'connected';
+                    if (snap.exists && snap.data() && snap.data().data && Array.isArray(snap.data().data.transactions)) {
+                        saveStorageLocal(snap.data().data);   // local cache only -> no echo push
+                        refreshAllViews();
+                    }
+                    renderSettings();
+                }, err => {
+                    console.warn('sync listener error', err);
+                    syncStatus = 'error';
+                    renderSettings();
+                });
+            }
+
+            function disconnectSync() {
+                if (syncUnsub) { try { syncUnsub(); } catch (_) {} syncUnsub = null; }
+                syncCode = null;
+                syncStatus = 'off';
+                localStorage.removeItem('mtf_sync_code');
+                showToast('Cloud sync disconnected. Data stays on this device.', 'info');
+                renderSettings();
+            }
+
+            function initSyncOnLoad() {
+                if (!initFirebase()) return;
+                const saved = localStorage.getItem('mtf_sync_code') || DEFAULT_SYNC_CODE;
+                if (saved) connectSync(saved, { silent: true });
+            }
+
+            // ---------- CALCULATION ENGINE ----------
+            function calculateTrade(tx) {
+                const { company, broker, quantity, buyPrice, sellPrice, buyDate, sellDate, leverage = 1 } = tx;
+                const qty = Number(quantity) || 0;
+                const bp = Number(buyPrice) || 0;
+                const sp = Number(sellPrice) || 0;
+                const lev = Number(leverage) || 1;
+
+                const totalInvestment = bp * qty;
+                let mtfAmount = 0;
+                let ownMargin = totalInvestment;
+                if (lev > 1) {
+                    mtfAmount = totalInvestment * (1 - 1 / lev);
+                    ownMargin = totalInvestment / lev;
+                }
+
+                const grossProfit = (sp - bp) * qty;
+                const bd = new Date(buyDate);
+                const sd = new Date(sellDate);
+                const days = Math.max(0, Math.ceil((sd - bd) / (1000 * 60 * 60 * 24)));
+
+                const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
+
+                let dailyRate = cfg.interestRatePerDay;
+                if (broker === 'Dhan' && mtfAmount > 0) {
+                    dailyRate = getDhanInterestRate(mtfAmount);
+                } else if (broker !== 'Dhan' && cfg.interestRatePerDay !== null) {
+                    dailyRate = cfg.interestRatePerDay;
+                } else {
+                    dailyRate = 0;
+                }
+
+                let interest = 0;
+                if (mtfAmount > 0 && days > 0 && dailyRate > 0) {
+                    interest = mtfAmount * dailyRate * days;
+                }
+
+                const buyOrderValue = bp * qty;
+                const sellOrderValue = sp * qty;
+                const turnover = buyOrderValue + sellOrderValue;
+
+                function calcBrokerage(amount) {
+                    let brk = amount * cfg.brokeragePct;
+                    if (cfg.brokerageCap !== Infinity && brk > cfg.brokerageCap) {
+                        brk = cfg.brokerageCap;
+                    }
+                    return brk;
+                }
+                const brokerage = calcBrokerage(buyOrderValue) + calcBrokerage(sellOrderValue);
+
+                const stt = buyOrderValue * cfg.sttPct + sellOrderValue * cfg.sttPct;
+                const exchange = turnover * cfg.exchangePct;
+                const sebi = turnover * cfg.sebiPct;
+                const stamp = buyOrderValue * cfg.stampPct;
+                const pledge = cfg.pledgeCharge || 0;
+                const unpledge = cfg.unpledgeCharge || 0;
+                const dp = cfg.dpCharge || 0;
+
+                const gstBase = brokerage + exchange + sebi + pledge + unpledge + dp;
+                const gst = gstBase * cfg.gstPct;
+
+                const totalCharges = brokerage + stt + exchange + sebi + stamp + pledge + unpledge + dp + gst;
+                const netProfit = grossProfit - interest - totalCharges;
+
+                const breakdown = {
+                    brokerage: Math.round(brokerage * 100) / 100,
+                    stt: Math.round(stt * 100) / 100,
+                    exchange: Math.round(exchange * 100) / 100,
+                    sebi: Math.round(sebi * 100) / 100,
+                    stamp: Math.round(stamp * 100) / 100,
+                    pledge: Math.round(pledge * 100) / 100,
+                    unpledge: Math.round(unpledge * 100) / 100,
+                    dp: Math.round(dp * 100) / 100,
+                    gst: Math.round(gst * 100) / 100,
+                    interest: Math.round(interest * 100) / 100,
+                };
+
+                return {
+                    grossProfit: Math.round(grossProfit * 100) / 100,
+                    holdingDays: days,
+                    interest: Math.round(interest * 100) / 100,
+                    totalCharges: Math.round(totalCharges * 100) / 100,
+                    netProfit: Math.round(netProfit * 100) / 100,
+                    mtfAmount: Math.round(mtfAmount * 100) / 100,
+                    ownMargin: Math.round(ownMargin * 100) / 100,
+                    totalInvestment: Math.round(totalInvestment * 100) / 100,
+                    leverage: lev,
+                    breakdown: breakdown,
+                };
+            }
+
+            // ---------- FORMAT HELPERS ----------
+            function fmt(n) {
+                if (n === undefined || n === null || isNaN(n)) return '₹0';
+                const sign = n < 0 ? '-' : '';
+                const abs = Math.abs(n);
+                if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(1) + 'Cr';
+                if (abs >= 100000) return sign + '₹' + (abs / 100000).toFixed(1) + 'L';
+                return sign + '₹' + abs.toFixed(0);
+            }
+            function fmtDec(n) {
+                if (n === undefined || n === null || isNaN(n)) return '₹0.00';
+                return '₹' + n.toFixed(2);
+            }
+            function fmtDate(d) {
+                if (!d) return '-';
+                const dt = new Date(d);
+                return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+            }
+            function fmtDateFull(d) {
+                if (!d) return '-';
+                const dt = new Date(d);
+                return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+
+            // ---------- TOAST ----------
+            function showToast(msg, type = 'success') {
+                const container = document.getElementById('toastContainer');
+                const colors = { success: 'bg-success text-white', danger: 'bg-danger text-white', warning: 'bg-warning text-dark', info: 'bg-info text-dark' };
+                const div = document.createElement('div');
+                div.className = `alert ${colors[type] || colors.info} alert-dismissible fade show mb-2 text-center rounded-4 shadow`;
+                div.role = 'alert';
+                div.innerHTML = `${msg} <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>`;
+                container.appendChild(div);
+                setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
+            }
+
+            // ---------- NAVIGATION ----------
+            const pageMap = { trades: 'page-trades', past: 'page-past', settings: 'page-settings' };
+
+            function navigateTo(page) {
+                document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
+                const target = document.getElementById(pageMap[page]);
+                if (target) target.classList.add('active-page');
+                document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
+                    el.classList.toggle('active', el.dataset.page === page);
+                });
+                if (page === 'trades') { renderCurrentView(); }
+                if (page === 'past') { renderPastTrades(); }
+                if (page === 'settings') renderSettings();
+                document.getElementById('fabBtn').style.display = (page === 'trades') ? 'flex' : 'none';
+            }
+
+            // ---------- STATE ----------
+            let pastRangeDays = 30;
+            let pastSubTab = 'list';
+            let pastFrom = null;
+            let pastTo = null;
+            let tradeSearchQuery = '';
+            let pastSearchQuery = '';
+
+            // ---------- RANGE HELPERS ----------
+            function getDateRange(days) {
+                const to = new Date();
+                const from = new Date();
+                from.setDate(from.getDate() - days);
+                return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
+            }
+
+            function setPastRange(days) {
+                pastRangeDays = days;
+                const range = getDateRange(days);
+                pastFrom = range.from;
+                pastTo = range.to;
+                document.getElementById('pastFrom').value = pastFrom;
+                document.getElementById('pastTo').value = pastTo;
+                document.querySelectorAll('.past-range-filter .row-1 .btn').forEach(b => b.classList.remove('active'));
+                const btns = document.querySelectorAll('.past-range-filter .row-1 .btn');
+                if (days === 7) btns[0].classList.add('active');
+                else if (days === 10) btns[1].classList.add('active');
+                else if (days === 30) btns[2].classList.add('active');
+                else if (days === 90) btns[3].classList.add('active');
+                renderPastTrades();
+            }
+
+            function applyPastRangeFilter() {
+                const from = document.getElementById('pastFrom').value;
+                const to = document.getElementById('pastTo').value;
+                if (!from || !to) { showToast('Please select both dates.', 'warning'); return; }
+                if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
+                pastFrom = from;
+                pastTo = to;
+                renderPastTrades();
+                showToast('Range applied.', 'success');
+            }
+
+            // ---------- SHARED TRADE CARD ----------
+            function renderTradeCard(t) {
+                const isOpen = (t.status || 'closed') === 'open';
+                const lev = t.leverage || 1;
+                const levDisplay = lev > 1 ? `${lev}x` : '1x';
+                const sign = t.netProfit >= 0 ? '+' : '';
+                const profitClass = t.netProfit >= 0 ? 'text-success' : 'text-danger';
+
+                let daysHeld = t.holdingDays || 0;
+                if (isOpen && t.buyDate) {
+                    const buyDt = new Date(t.buyDate);
+                    daysHeld = Math.max(0, Math.ceil((new Date() - buyDt) / (1000 * 60 * 60 * 24)));
+                }
+
+                const bigLabel = isOpen ? 'Target Sell Price' : 'Net Profit';
+                const bigValue = isOpen ? fmtDec(t.sellPrice) : `${sign}${fmt(t.netProfit)}`;
+                const bigClass = isOpen ? 'text-success' : profitClass;
+                const detailItems = isOpen ? [
+                    ['Buy Date', fmtDate(t.buyDate), '', 'col-6'],
+                    ['Sell Date', fmtDate(t.sellDate), '', 'col-6'],
+                    ['Buy Price', fmtDec(t.buyPrice), '', 'col-6'],
+                    ['Net Profit', `${sign}${fmt(t.netProfit)}`, profitClass, 'col-6'],
+                    ['Quantity', t.quantity, '', 'col-12']
+                ] : [
+                    ['Buy Price', fmtDec(t.buyPrice), '', 'col-4'],
+                    ['Sell Price', fmtDec(t.sellPrice), 'text-success', 'col-4'],
+                    ['Quantity', t.quantity, '', 'col-4']
+                ];
+
+                const detailHtml = detailItems.map(([label, value, cls, col]) => `
+                    <div class="${col}">
+                        <div class="bg-light rounded-3 p-2 h-100">
+                            <div class="small text-muted text-uppercase fw-semibold">${label}</div>
+                            <div class="fw-semibold ${cls}">${value}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="tx-card ${isOpen ? 'open-card' : 'closed-card'} card border-0 shadow-sm rounded-4 mb-3">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
+                                <div>
+                                    <h5 class="fw-bold mb-1">${t.company}</h5>
+                                    <span class="badge rounded-pill bg-light text-dark border">${t.broker}</span>
+                                    <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                                </div>
+                                <span class="badge ${isOpen ? 'text-bg-warning' : 'text-bg-success'}">${isOpen ? 'Open' : 'Closed'}</span>
+                            </div>
+
+                            <div class="text-center border-bottom pb-3 mb-3">
+                                <div class="small text-muted text-uppercase fw-semibold">${bigLabel}</div>
+                                <div class="big-value fw-bold ${bigClass}">${bigValue}</div>
+                            </div>
+
+                            <div class="row g-2 mb-3">${detailHtml}</div>
+
+                            <div class="row g-2 text-center bg-light rounded-4 p-2 mb-3">
+                                <div class="col-3"><div class="small text-muted"><i class="fas fa-sack-dollar"></i> Gross</div><div class="fw-semibold ${t.grossProfit >= 0 ? 'text-success' : 'text-danger'}">${fmt(t.grossProfit)}</div></div>
+                                <div class="col-3"><div class="small text-muted"><i class="far fa-clock"></i> Held</div><div class="fw-semibold text-primary">${daysHeld}d</div></div>
+                                <div class="col-3"><div class="small text-muted"><i class="fas fa-percent"></i> Interest</div><div class="fw-semibold text-warning">${fmtDec(t.interest || 0)}</div></div>
+                                <div class="col-3"><div class="small text-muted"><i class="fas fa-receipt"></i> Charges</div><div class="fw-semibold text-secondary">${fmtDec(t.charges || 0)}</div></div>
+                            </div>
+
+                            <div class="d-flex gap-2 border-top pt-3">
+                                <button class="btn btn-sm btn-outline-info flex-fill" onclick="openViewModal('${t.id}')"><i class="fas fa-eye"></i> View</button>
+                                <button class="btn btn-sm btn-outline-success flex-fill" onclick="copyTransaction('${t.id}')"><i class="fas fa-copy"></i> Copy</button>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i> More</button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><button class="dropdown-item" onclick="openEditModal('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
+                                        <li><button class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash-alt me-2"></i>Delete</button></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
+            function renderCurrentView() {
+                const txs = getTransactions();
+                let filtered = txs.filter(t => (t.status || 'closed') === 'open');
+
+                const tradeQuery = tradeSearchQuery.trim().toLowerCase();
+                if (tradeQuery) {
+                    filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(tradeQuery));
+                }
+
+                filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
+
+                let net = 0, charges = 0;
+                filtered.forEach(t => {
+                    net += t.netProfit || 0;
+                    charges += t.charges || 0;
+                });
+
+                document.getElementById('summaryNet').textContent = fmt(net);
+                document.getElementById('summaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('summaryTrades').textContent = filtered.length;
+                document.getElementById('summaryCharges').textContent = fmt(charges);
+
+                const container = document.getElementById('transactionList');
+
+                if (filtered.length === 0) {
+                    if (tradeQuery) {
+                        container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`;
+                        return;
+                    }
+                    container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="small text-muted mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = filtered.map(renderTradeCard).join('');
+            }
+
+            // ---------- PAST TRADES (LIST + DETAIL) ----------
+            function getPastFiltered() {
+                const txs = getTransactions();
+                if (!pastFrom || !pastTo) {
+                    const range = getDateRange(30);
+                    pastFrom = range.from;
+                    pastTo = range.to;
+                    document.getElementById('pastFrom').value = pastFrom;
+                    document.getElementById('pastTo').value = pastTo;
+                }
+                const fromDate = new Date(pastFrom);
+                const toDate = new Date(pastTo);
+                toDate.setHours(23, 59, 59, 999);
+
+                let filtered = txs
+                    .filter(t => (t.status || 'closed') === 'closed')
+                    .filter(t => { const d = new Date(t.buyDate); return d >= fromDate && d <= toDate; });
+
+                const pastQuery = pastSearchQuery.trim().toLowerCase();
+                if (pastQuery) {
+                    filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(pastQuery));
+                }
+                filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
+                return filtered;
+            }
+
+            function renderPastTrades() {
+                const filtered = getPastFiltered();
+                const pastQuery = pastSearchQuery.trim().toLowerCase();
+                const listContainer = document.getElementById('pastTradesList');
+                const detailContainer = document.getElementById('pastDetailList');
+                const summaryCard = document.getElementById('pastSummaryCard');
+                const isDetail = pastSubTab === 'detail';
+
+                listContainer.style.display = isDetail ? 'none' : '';
+                detailContainer.style.display = isDetail ? '' : 'none';
+                summaryCard.style.display = isDetail ? '' : 'none';
+
+                if (isDetail) {
+                    let net = 0, charges = 0;
+                    filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; });
+                    document.getElementById('pastSummaryNet').textContent = fmt(net);
+                    document.getElementById('pastSummaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                    document.getElementById('pastSummaryTrades').textContent = filtered.length;
+                    document.getElementById('pastSummaryCharges').textContent = fmt(charges);
+
+                    if (filtered.length === 0) {
+                        detailContainer.innerHTML = pastQuery
+                            ? `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`
+                            : `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
+                        return;
+                    }
+                    detailContainer.innerHTML = filtered.map(renderTradeCard).join('');
+                    return;
+                }
+
+                if (filtered.length === 0) {
+                    listContainer.innerHTML = pastQuery
+                        ? `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`
+                        : `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
+                    return;
+                }
+
+                let totalNet = 0;
+                filtered.forEach(t => { totalNet += t.netProfit || 0; });
+                const totalClass = totalNet >= 0 ? 'text-success' : 'text-danger';
+                const summaryHtml = `
+                    <div class="card border-0 shadow-sm rounded-4 mb-3">
+                        <div class="card-body d-flex justify-content-between align-items-center gap-3">
+                            <div>
+                                <div class="fw-bold">Total Profit/Loss</div>
+                                <div class="small text-muted">${filtered.length} trades \u00b7 ${fmtDate(pastFrom)} to ${fmtDate(pastTo)}</div>
+                            </div>
+                            <div class="fs-3 fw-bold ${totalClass}">${fmt(totalNet)}</div>
+                        </div>
+                    </div>
+                `;
+                const html = filtered.map(t => {
+                    const sign = t.netProfit >= 0 ? '+' : '';
+                    const profitClass = t.netProfit >= 0 ? 'text-success' : 'text-danger';
+                    return `
+                        <div class="card border-0 shadow-sm rounded-4 mb-2">
+                            <div class="card-body d-flex justify-content-between align-items-center gap-3 py-3">
+                                <div>
+                                    <div class="fw-semibold">${t.company}</div>
+                                    <div class="small text-muted">${fmtDate(t.buyDate)} to ${fmtDate(t.sellDate)}</div>
+                                </div>
+                                <div class="fw-bold fs-5 ${profitClass}">${sign}${fmt(t.netProfit)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                listContainer.innerHTML = summaryHtml + html;
+            }
+
+            function setPastTab(tab) {
+                pastSubTab = tab;
+                document.querySelectorAll('#pastTabs .status-tab').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.tab === tab);
+                });
+                renderPastTrades();
+            }
+
+            // ---------- COPY TRANSACTION ----------
+            function copyTransaction(id) {
+                const original = getTransaction(id);
+                if (!original) { showToast('Transaction not found.', 'danger'); return; }
+                const copyData = { ...original };
+                delete copyData.id;
+                const newTx = addTransaction(copyData);
+                showToast(`Copied trade: ${newTx.company}`, 'success');
+                renderCurrentView();
+                renderPastTrades();
+            }
+
+            // ---------- SEARCH ----------
+            function toggleClearBtn(btnId, hasValue) {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.classList.toggle('visible', !!hasValue);
+            }
+            function setTradeSearch(value) {
+                tradeSearchQuery = value || '';
+                toggleClearBtn('tradeSearchClear', tradeSearchQuery.trim());
+                renderCurrentView();
+            }
+            function clearTradeSearch() {
+                tradeSearchQuery = '';
+                const input = document.getElementById('tradeSearch');
+                if (input) { input.value = ''; input.focus(); }
+                toggleClearBtn('tradeSearchClear', false);
+                renderCurrentView();
+            }
+            function setPastSearch(value) {
+                pastSearchQuery = value || '';
+                toggleClearBtn('pastSearchClear', pastSearchQuery.trim());
+                renderPastTrades();
+            }
+            function clearPastSearch() {
+                pastSearchQuery = '';
+                const input = document.getElementById('pastSearch');
+                if (input) { input.value = ''; input.focus(); }
+                toggleClearBtn('pastSearchClear', false);
+                renderPastTrades();
+            }
+
+            // ---------- VIEW MODAL ----------
+            let viewModalInstance = null;
+
+            function openViewModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+
+                const bd = tx.breakdown || {};
+                const isOpen = (tx.status || 'closed') === 'open';
+                const statusLabel = isOpen ?
+                    '<span class="badge text-bg-warning">Open</span>' :
+                    '<span class="badge text-bg-secondary">Closed</span>';
+                const lev = tx.leverage || 1;
+                const levDisplay = lev > 1 ? `${lev}x` : '1x';
+                const mtfAmt = tx.mtfAmount || 0;
+                const ownMargin = tx.ownMargin || tx.totalInvestment || 0;
+                const totalInv = tx.totalInvestment || (tx.quantity * tx.buyPrice) || 0;
+                const totalCost = (tx.charges || 0) + (tx.interest || 0);
+
+                let html = `
+                    <div class="d-flex justify-content-between align-items-start gap-3 mb-3">
+                        <div>
+                            <h5 class="fw-bold mb-2">${tx.company}</h5>
+                            <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
+                            ${statusLabel}
+                            <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                        </div>
+                        <div class="text-end">
+                            <div class="small text-muted">Net Profit</div>
+                            <div class="fw-bold fs-4 ${tx.netProfit >= 0 ? 'text-success' : 'text-danger'}">${fmt(tx.netProfit)}</div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-4"><div class="bg-light rounded-3 p-2 text-center"><div class="small text-muted">Gross</div><div class="fw-bold">${fmt(tx.grossProfit)}</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2 text-center"><div class="small text-muted">Holding</div><div class="fw-bold">${tx.holdingDays || 0}d</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2 text-center"><div class="small text-muted">Qty</div><div class="fw-bold">${tx.quantity}</div></div></div>
+                    </div>
+                    <div class="section-title"><i class="fas fa-hand-holding-usd me-2"></i>Funding</div>
+                    <div class="detail-row"><span class="detail-label">Total Investment</span><span class="detail-value">${fmtDec(totalInv)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Your Margin</span><span class="detail-value">${fmtDec(ownMargin)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Broker Funded</span><span class="detail-value">${fmtDec(mtfAmt)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Leverage</span><span class="detail-value">${levDisplay}</span></div>
+                    <div class="section-title"><i class="fas fa-calendar-alt me-2"></i>Dates & Prices</div>
+                    <div class="detail-row"><span class="detail-label">Buy Date</span><span class="detail-value">${fmtDateFull(tx.buyDate)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Sell Date</span><span class="detail-value">${fmtDateFull(tx.sellDate)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Buy Price</span><span class="detail-value">${fmtDec(tx.buyPrice)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Sell Price</span><span class="detail-value">${fmtDec(tx.sellPrice)}</span></div>
+                    <div class="section-title"><i class="fas fa-receipt me-2"></i>Charges</div>
+                    <div class="detail-row"><span class="detail-label">Brokerage</span><span class="detail-value">${fmtDec(bd.brokerage || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">STT</span><span class="detail-value">${fmtDec(bd.stt || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Exchange</span><span class="detail-value">${fmtDec(bd.exchange || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">SEBI</span><span class="detail-value">${fmtDec(bd.sebi || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Stamp Duty</span><span class="detail-value">${fmtDec(bd.stamp || 0)}</span></div>
+                    ${bd.pledge ? `<div class="detail-row"><span class="detail-label">Pledge</span><span class="detail-value">${fmtDec(bd.pledge)}</span></div>` : ''}
+                    ${bd.unpledge ? `<div class="detail-row"><span class="detail-label">Unpledge</span><span class="detail-value">${fmtDec(bd.unpledge)}</span></div>` : ''}
+                    ${bd.dp ? `<div class="detail-row"><span class="detail-label">DP Charges</span><span class="detail-value">${fmtDec(bd.dp)}</span></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">GST</span><span class="detail-value">${fmtDec(bd.gst || 0)}</span></div>
+                    <div class="detail-row fw-bold border-top pt-2 mt-1"><span class="detail-label">Total Charges</span><span class="detail-value">${fmtDec(tx.charges || 0)}</span></div>
+                    <div class="section-title"><i class="fas fa-calculator me-2"></i>P&amp;L Summary</div>
+                    <div class="detail-row"><span class="detail-label">Gross Profit</span><span class="detail-value">${fmtDec(tx.grossProfit || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">MTF Interest</span><span class="detail-value">- ${fmtDec(tx.interest || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Total Charges</span><span class="detail-value">- ${fmtDec(tx.charges || 0)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Total Cost</span><span class="detail-value">${fmtDec(totalCost)}</span></div>
+                    <div class="detail-row fw-bold border-top pt-2 mt-1"><span class="detail-label">Net Profit</span><span class="detail-value ${tx.netProfit >= 0 ? 'text-success' : 'text-danger'}">${fmtDec(tx.netProfit || 0)}</span></div>
+                    ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt me-2"></i>Notes</div><p class="small text-muted mb-0">${tx.notes}</p>` : ''}
+                    <div class="small text-muted mt-3 text-center">ID: ${tx.id}</div>
+                `;
+
+                document.getElementById('viewModalTitle').textContent = `${tx.company} Details`;
+                document.getElementById('viewModalBody').innerHTML = html;
+
+                if (!viewModalInstance) {
+                    const el = document.getElementById('viewModal');
+                    viewModalInstance = new bootstrap.Modal(el, { backdrop: true, keyboard: true });
+                }
+                viewModalInstance.show();
+            }
+
+            // ---------- DELETE CONFIRM ----------
+            let deleteModalInstance = null;
+            let deleteTargetId = null;
+
+            function confirmDelete(id) {
+                deleteTargetId = id;
+                if (!deleteModalInstance) {
+                    const delEl = document.getElementById('deleteModal');
+                    deleteModalInstance = new bootstrap.Modal(delEl, { backdrop: 'static' });
+                    document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
+                        if (deleteTargetId) {
+                            deleteTransaction(deleteTargetId);
+                            deleteTargetId = null;
+                            deleteModalInstance.hide();
+                            renderCurrentView();
+                            renderPastTrades();
+                            showToast('Trade deleted.', 'danger');
+                        }
+                    });
+                }
+                deleteModalInstance.show();
+            }
+
+            // ---------- MODAL HELPERS ----------
+            let txModalInstance = null;
+
+            function initModals() {
+                const txEl = document.getElementById('txModal');
+                txModalInstance = new bootstrap.Modal(txEl, { backdrop: 'static' });
+                txEl.addEventListener('hidden.bs.modal', () => {
+                    document.getElementById('txEditId').value = '';
+                    document.getElementById('txForm').reset();
+                    document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Add Trade';
+                    document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                    document.getElementById('statusClosed').checked = true;
+                    document.getElementById('txLeverage').value = 1;
+                    clearPreview();
+                });
+
+                // Delete modal already set up in confirmDelete
+            }
+
+            function openAddModal() {
+                document.getElementById('txEditId').value = '';
+                document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>Add Trade';
+                document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save';
+                document.getElementById('txForm').reset();
+                document.getElementById('statusClosed').checked = true;
+                document.getElementById('txLeverage').value = 1;
+                const today = new Date().toISOString().split('T')[0];
+                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                document.getElementById('txBuyDate').value = yesterday;
+                document.getElementById('txSellDate').value = today;
+                clearPreview();
+                txModalInstance.show();
+                attachCalcListeners();
+                updateLeverageBreakdown();
+            }
+
+            function openEditModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                document.getElementById('txEditId').value = id;
+                document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-edit me-2"></i>Edit Trade';
+                document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Update';
+
+                document.getElementById('txCompany').value = tx.company || '';
+                document.getElementById('txBroker').value = tx.broker || '';
+                document.getElementById('txBuyDate').value = tx.buyDate || '';
+                document.getElementById('txSellDate').value = tx.sellDate || '';
+                document.getElementById('txQty').value = tx.quantity || '';
+                document.getElementById('txBuyPrice').value = tx.buyPrice || '';
+                document.getElementById('txSellPrice').value = tx.sellPrice || '';
+                document.getElementById('txLeverage').value = tx.leverage || 1;
+                document.getElementById('txNotes').value = tx.notes || '';
+
+                const status = tx.status || 'closed';
+                document.querySelector(`input[name="status"][value="${status}"]`).checked = true;
+
+                updatePreview();
+                updateLeverageBreakdown();
+                attachCalcListeners();
+                txModalInstance.show();
+            }
+
+            function attachCalcListeners() {
+                const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage', 'txBroker'];
+                fields.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.removeEventListener('input', updatePreview);
+                        el.removeEventListener('change', updatePreview);
+                        el.addEventListener('input', updatePreview);
+                        el.addEventListener('change', updatePreview);
+                    }
+                });
+                document.getElementById('txLeverage').addEventListener('input', updateLeverageBreakdown);
+                document.getElementById('txBuyPrice').addEventListener('input', updateLeverageBreakdown);
+                document.getElementById('txQty').addEventListener('input', updateLeverageBreakdown);
+            }
+
+            function updateLeverageBreakdown() {
+                const qty = parseFloat(document.getElementById('txQty').value) || 0;
+                const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
+                const lev = parseFloat(document.getElementById('txLeverage').value) || 1;
+                const totalInv = qty * bp;
+                let ownMargin = totalInv;
+                let mtfAmt = 0;
+                if (lev > 1 && totalInv > 0) {
+                    ownMargin = totalInv / lev;
+                    mtfAmt = totalInv - ownMargin;
+                }
+                document.getElementById('previewTotalInv').textContent = fmtDec(totalInv);
+                document.getElementById('previewOwnMargin').textContent = fmtDec(ownMargin);
+                document.getElementById('previewMtfAmt').textContent = fmtDec(mtfAmt);
+            }
+
+            function clearPreview() {
+                document.getElementById('previewDays').textContent = '0';
+                document.getElementById('previewGross').textContent = '₹0';
+                document.getElementById('previewInterest').textContent = '₹0';
+                document.getElementById('previewCharges').textContent = '₹0';
+                document.getElementById('previewNet').textContent = '₹0';
+                document.getElementById('previewTotalInv').textContent = '₹0';
+                document.getElementById('previewOwnMargin').textContent = '₹0';
+                document.getElementById('previewMtfAmt').textContent = '₹0';
+            }
+
+            function updatePreview() {
+                const company = document.getElementById('txCompany').value || 'Preview';
+                const broker = document.getElementById('txBroker').value || 'Zerodha';
+                const qty = parseFloat(document.getElementById('txQty').value) || 0;
+                const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
+                const sp = parseFloat(document.getElementById('txSellPrice').value) || 0;
+                const buyDate = document.getElementById('txBuyDate').value;
+                const sellDate = document.getElementById('txSellDate').value;
+                const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
+
+                if (!buyDate || !sellDate || qty <= 0 || bp <= 0 || sp <= 0) {
+                    clearPreview();
+                    return;
+                }
+
+                const result = calculateTrade({ company, broker, quantity: qty, buyPrice: bp, sellPrice: sp, buyDate, sellDate, leverage });
+                document.getElementById('previewDays').textContent = result.holdingDays;
+                document.getElementById('previewGross').textContent = fmtDec(result.grossProfit);
+                document.getElementById('previewInterest').textContent = fmtDec(result.interest);
+                document.getElementById('previewCharges').textContent = fmtDec(result.totalCharges);
+                const netEl = document.getElementById('previewNet');
+                netEl.textContent = fmtDec(result.netProfit);
+                netEl.className = 'fw-bold ' + (result.netProfit >= 0 ? 'text-success' : 'text-danger');
+                updateLeverageBreakdown();
+            }
+
+            // ---------- SAVE TRANSACTION ----------
+            function saveTransaction() {
+                const editId = document.getElementById('txEditId').value;
+                const company = document.getElementById('txCompany').value.trim();
+                const broker = document.getElementById('txBroker').value;
+                const buyDate = document.getElementById('txBuyDate').value;
+                const sellDate = document.getElementById('txSellDate').value;
+                const quantity = parseFloat(document.getElementById('txQty').value);
+                const buyPrice = parseFloat(document.getElementById('txBuyPrice').value);
+                const sellPrice = parseFloat(document.getElementById('txSellPrice').value);
+                const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
+                const notes = document.getElementById('txNotes').value.trim();
+                const status = document.querySelector('input[name="status"]:checked')?.value || 'closed';
+
+                if (!company) { showToast('Please enter company name.', 'warning'); return; }
+                if (!broker) { showToast('Please select a broker.', 'warning'); return; }
+                if (!buyDate || !sellDate) { showToast('Please select both dates.', 'warning'); return; }
+                if (!quantity || quantity <= 0) { showToast('Please enter a valid quantity.', 'warning'); return; }
+                if (!buyPrice || buyPrice <= 0) { showToast('Please enter a valid buy price.', 'warning'); return; }
+                if (!sellPrice || sellPrice <= 0) { showToast('Please enter a valid sell price.', 'warning'); return; }
+
+                const txData = { company, broker, buyDate, sellDate, quantity, buyPrice, sellPrice, leverage, notes, status };
+                const calc = calculateTrade(txData);
+                const finalTx = { ...txData, grossProfit: calc.grossProfit, interest: calc.interest, charges: calc.totalCharges, netProfit: calc.netProfit, holdingDays: calc.holdingDays, mtfAmount: calc.mtfAmount, ownMargin: calc.ownMargin, totalInvestment: calc.totalInvestment, breakdown: calc.breakdown };
+
+                let saved;
+                if (editId) {
+                    saved = updateTransaction(editId, finalTx);
+                    if (saved) showToast('Trade updated!', 'success');
+                    else showToast('Error updating trade.', 'danger');
+                } else {
+                    saved = addTransaction(finalTx);
+                    showToast('Trade saved!', 'success');
+                }
+                txModalInstance.hide();
+                renderCurrentView();
+                renderPastTrades();
+            }
+
+            // ---------- SETTINGS ----------
+            function renderSettings() {
+                const txs = getTransactions();
+                document.getElementById('totalTxCount').textContent = txs.length + ' records';
+                document.getElementById('totalTxBadge').textContent = txs.length;
+                renderSyncStatus();
+            }
+
+            function renderSyncStatus() {
+                const statusEl = document.getElementById('cloudSyncStatus');
+                const hintEl = document.getElementById('cloudSyncHint');
+                const connectBtn = document.getElementById('syncConnectBtn');
+                const disconnectBtn = document.getElementById('syncDisconnectBtn');
+                const input = document.getElementById('syncCodeInput');
+                if (!statusEl) return;
+
+                if (!isFirebaseConfigured()) {
+                    statusEl.className = 'badge bg-secondary';
+                    statusEl.textContent = 'Not configured';
+                    if (hintEl) hintEl.textContent = 'Paste your Firebase config in the code (FIREBASE_CONFIG) to enable cloud sync. The app works offline until then.';
+                    if (connectBtn) connectBtn.disabled = true;
+                    if (disconnectBtn) disconnectBtn.style.display = 'none';
+                    return;
+                }
+                if (connectBtn) connectBtn.disabled = false;
+
+                const map = {
+                    connected: ['badge bg-success', 'Connected'],
+                    connecting: ['badge bg-warning text-dark', 'Connecting...'],
+                    error: ['badge bg-danger', 'Error'],
+                    off: ['badge bg-secondary', 'Off']
+                };
+                const [cls, label] = map[syncStatus] || map.off;
+                statusEl.className = cls;
+                statusEl.textContent = label;
+
+                if (syncCode) {
+                    if (input && document.activeElement !== input) input.value = syncCode;
+                    if (disconnectBtn) disconnectBtn.style.display = '';
+                    if (hintEl) hintEl.textContent = 'Synced under code "' + syncCode + '". Use the same code on your other device.';
+                } else {
+                    if (input && document.activeElement !== input && !input.value.trim()) {
+                        input.value = DEFAULT_SYNC_CODE;
+                    }
+                    if (disconnectBtn) disconnectBtn.style.display = 'none';
+                    if (hintEl) hintEl.textContent = 'Default code is pre-filled. Just tap Connect (or change it if you use a different one).';
+                }
+            }
+
+            function connectSyncFromInput() {
+                const input = document.getElementById('syncCodeInput');
+                connectSync(input ? input.value : '');
+            }
+
+            async function exportData() {
+                const data = getStorage();
+                const json = JSON.stringify(data, null, 2);
+                const filename = `mtf_backup_${new Date().toISOString().slice(0,10)}.json`;
+
+                // 1) Mobile / in-app browsers: use the Web Share API (share sheet -> save to Files/Drive)
+                try {
+                    if (navigator.canShare && typeof File !== 'undefined') {
+                        const file = new File([json], filename, { type: 'application/json' });
+                        if (navigator.canShare({ files: [file] })) {
+                            await navigator.share({ files: [file], title: 'MTF Backup', text: 'MTF Profit Tracker backup' });
+                            showToast('Backup shared!', 'success');
+                            return;
+                        }
+                    }
+                } catch (err) {
+                    if (err && err.name === 'AbortError') return; // user cancelled the share sheet
+                    // otherwise fall through to the download fallback
+                }
+
+                // 2) Desktop browsers: blob download via a temporary anchor
+                try {
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showToast('Data exported!', 'success');
+                    return;
+                } catch (err) {
+                    // fall through to last-resort fallback
+                }
+
+                // 3) Last resort: open the JSON in a new tab so the user can copy/save it manually
+                try {
+                    const w = window.open('', '_blank');
+                    if (w) {
+                        w.document.title = filename;
+                        w.document.body.style.margin = '0';
+                        const pre = w.document.createElement('pre');
+                        pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;padding:16px;font-size:12px;';
+                        pre.textContent = json;
+                        w.document.body.appendChild(pre);
+                        showToast('Backup opened in a new tab. Long-press to copy/save.', 'info');
+                    } else {
+                        showToast('Export blocked here. Please allow pop-ups or use a desktop browser.', 'danger');
+                    }
+                } catch (err) {
+                    showToast('Export is not supported in this browser.', 'danger');
+                }
+            }
+
+            // ---------- BACKUP AS TEXT (COPY / PASTE) ----------
+            let backupTextModalInstance = null;
+
+            function openBackupTextModal() {
+                const json = JSON.stringify(getStorage(), null, 2);
+                const ta = document.getElementById('backupTextArea');
+                ta.value = json;
+                if (!backupTextModalInstance) {
+                    backupTextModalInstance = new bootstrap.Modal(document.getElementById('backupTextModal'), { backdrop: true });
+                }
+                backupTextModalInstance.show();
+            }
+
+            async function copyBackupText() {
+                const ta = document.getElementById('backupTextArea');
+                const text = ta.value;
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(text);
+                        showToast('Backup copied to clipboard!', 'success');
+                        return;
+                    }
+                    throw new Error('Clipboard API unavailable');
+                } catch (_) {
+                    // Fallback: select the text so the user can copy manually
+                    ta.focus();
+                    ta.select();
+                    ta.setSelectionRange(0, text.length);
+                    try {
+                        const ok = document.execCommand('copy');
+                        showToast(ok ? 'Backup copied to clipboard!' : 'Text selected - long-press and Copy.', ok ? 'success' : 'info');
+                    } catch (e) {
+                        showToast('Text selected - long-press and tap Copy.', 'info');
+                    }
+                }
+            }
+
+            function restoreFromText() {
+                const text = document.getElementById('backupTextArea').value.trim();
+                if (!text) { showToast('Paste your backup text first.', 'warning'); return; }
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (_) {
+                    showToast('Invalid backup text. Check for missing/extra characters.', 'danger');
+                    return;
+                }
+                if (!data || !Array.isArray(data.transactions)) {
+                    showToast('Invalid backup format. Expected a "transactions" list.', 'danger');
+                    return;
+                }
+                if (!confirm('This will REPLACE all current data with the pasted backup. Continue?')) return;
+                saveStorage(data);
+                showToast('Data restored successfully!', 'success');
+                if (backupTextModalInstance) backupTextModalInstance.hide();
+                renderCurrentView();
+                renderPastTrades();
+                renderSettings();
+            }
+
+            function importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (Array.isArray(data.transactions)) {
+                            saveStorage(data);
+                            showToast('Data imported successfully!', 'success');
+                            renderCurrentView();
+                            renderPastTrades();
+                            renderSettings();
+                        } else {
+                            showToast('Invalid backup file.', 'danger');
+                        }
+                    } catch (_) {
+                        showToast('Error reading file.', 'danger');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+            let resetModalInstance = null;
+
+            function resetData() {
+                const noteEl = document.getElementById('resetSyncNote');
+                if (noteEl) {
+                    noteEl.style.display = syncCode ? 'block' : 'none';
+                }
+                if (!resetModalInstance) {
+                    resetModalInstance = new bootstrap.Modal(document.getElementById('resetModal'), { backdrop: 'static' });
+                }
+                resetModalInstance.show();
+            }
+
+            function performReset() {
+                setTransactions([]);
+                if (resetModalInstance) resetModalInstance.hide();
+                showToast('All data permanently deleted.', 'danger');
+                renderCurrentView();
+                renderPastTrades();
+                renderSettings();
+            }
+
+            // ---------- INIT ----------
+            document.addEventListener('DOMContentLoaded', function() {
+                initModals();
+
+                const range = getDateRange(30);
+                pastFrom = range.from;
+                pastTo = range.to;
+                document.getElementById('pastFrom').value = pastFrom;
+                document.getElementById('pastTo').value = pastTo;
+
+                renderCurrentView();
+                renderPastTrades();
+
+                // Open the native date picker when tapping anywhere on a date field
+                document.querySelectorAll('input[type="date"]').forEach(el => {
+                    const openPicker = () => { try { if (el.showPicker) el.showPicker(); } catch (_) {} };
+                    el.addEventListener('click', openPicker);
+                    el.addEventListener('focus', openPicker);
+                });
+
+                initSyncOnLoad();
+
+                document.addEventListener('visibilitychange', () => {
+                    if (!document.hidden && document.getElementById('page-trades').classList.contains('active-page')) {
+                        renderCurrentView();
+                    }
+                    if (!document.hidden && document.getElementById('page-past').classList.contains('active-page')) {
+                        renderPastTrades();
+                    }
+                });
+            });
+
+            // Expose global functions
+            window.navigateTo = navigateTo;
+            window.openAddModal = openAddModal;
+            window.openEditModal = openEditModal;
+            window.openViewModal = openViewModal;
+            window.copyTransaction = copyTransaction;
+            window.confirmDelete = confirmDelete;
+            window.saveTransaction = saveTransaction;
+            window.exportData = exportData;
+            window.openBackupTextModal = openBackupTextModal;
+            window.copyBackupText = copyBackupText;
+            window.restoreFromText = restoreFromText;
+            window.importData = importData;
+            window.resetData = resetData;
+            window.performReset = performReset;
+            window.renderCurrentView = renderCurrentView;
+            window.renderPastTrades = renderPastTrades;
+            window.renderSettings = renderSettings;
+            window.setTradeSearch = setTradeSearch;
+            window.clearTradeSearch = clearTradeSearch;
+            window.setPastSearch = setPastSearch;
+            window.clearPastSearch = clearPastSearch;
+            window.applyPastRangeFilter = applyPastRangeFilter;
+            window.setPastRange = setPastRange;
+            window.setPastTab = setPastTab;
+            window.updatePreview = updatePreview;
+            window.connectSyncFromInput = connectSyncFromInput;
+            window.disconnectSync = disconnectSync;
+
+        })();
+    </script>
+
+    <!-- BACKUP AS TEXT MODAL -->
+    <div class="modal fade bottom-sheet-modal" id="backupTextModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title"><i class="fas fa-clipboard me-2"></i>Backup as Text</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
+                    <textarea class="form-control" id="backupTextArea" rows="10" style="font-size:12px;font-family:monospace;white-space:pre;" spellcheck="false"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-danger" id="backupRestoreBtn" onclick="restoreFromText()"><i class="fas fa-file-import me-1"></i> Restore</button>
+                    <button type="button" class="btn btn-primary" id="backupCopyBtn" onclick="copyBackupText()"><i class="fas fa-copy me-1"></i> Copy</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESET ALL DATA MODAL -->
+    <div class="modal fade bottom-sheet-modal" id="resetModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Reset All Data?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-2 fw-bold">This will permanently delete ALL your transactions.</p>
+                    <p class="small text-muted mb-2">This action <span class="text-danger fw-bold">cannot be undone</span>. Once deleted, your data cannot be recovered unless you have a backup.</p>
+                    <p class="small text-muted mb-2" id="resetSyncNote" style="display:none;"><i class="fas fa-cloud me-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="fw-bold">all synced devices</span>.</p>
+                    <p class="small text-muted mb-0">Tip: use <span class="fw-bold">Backup as Text</span> or <span class="fw-bold">Export</span> first if you might need this data later.</p>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="resetConfirmBtn" onclick="performReset()"><i class="fas fa-trash-alt me-1"></i> Delete Everything</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DELETE MODAL (hidden until triggered) -->
+    <div class="modal fade bottom-sheet-modal" id="deleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body"><p class="mb-0">This action cannot be undone. Are you sure?</p></div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="deleteConfirmBtn"><i class="fas fa-trash-alt me-1"></i> Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
