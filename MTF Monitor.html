@@ -922,6 +922,85 @@
                 return calcHoldingDays(buyDate, sellDate);
             }
 
+            function isSameDayTrade(buyDate, sellDate) {
+                const buyKey = parseDateKey(buyDate);
+                const sellKey = parseDateKey(sellDate);
+                return !!buyKey && buyKey === sellKey;
+            }
+
+            /** Equity intraday statutory charges (NSE) — applied when buy & sell are same calendar day. */
+            const INTRADAY_STATUTORY = {
+                sttBuyPct: 0,
+                sttSellPct: 0.00025,
+                stampPct: 0.00003,
+                pledgeCharge: 0,
+                unpledgeCharge: 0,
+                dpCharge: 0,
+            };
+
+            /** Per-broker intraday brokerage (₹20 or % per executed order, whichever is lower). */
+            const INTRADAY_BROKERAGE = {
+                Zerodha: { brokeragePct: 0.0003, brokerageCap: 20 },
+                Dhan: { brokeragePct: 0.0003, brokerageCap: 20 },
+                Groww: { brokeragePct: 0.001, brokerageCap: 20 },
+            };
+
+            function getChargeConfig(broker, buyDate, sellDate) {
+                const base = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
+                if (!isSameDayTrade(buyDate, sellDate)) {
+                    return {
+                        ...base,
+                        sttBuyPct: base.sttPct,
+                        sttSellPct: base.sttPct,
+                        tradeType: 'mtf',
+                    };
+                }
+                const intraBrk = INTRADAY_BROKERAGE[broker] || {
+                    brokeragePct: base.brokeragePct,
+                    brokerageCap: base.brokerageCap,
+                };
+                return {
+                    ...base,
+                    ...intraBrk,
+                    ...INTRADAY_STATUTORY,
+                    tradeType: 'intraday',
+                };
+            }
+
+            function calcOrderBrokerage(amount, chargeCfg) {
+                let brk = amount * chargeCfg.brokeragePct;
+                if (chargeCfg.brokerageCap !== Infinity && brk > chargeCfg.brokerageCap) {
+                    brk = chargeCfg.brokerageCap;
+                }
+                return brk;
+            }
+
+            function recalculateStoredTrades() {
+                const txs = getTransactions();
+                let changed = false;
+                const updated = txs.map(tx => {
+                    if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice || !tx.sellPrice) return tx;
+                    const calc = calculateTrade(tx);
+                    const newTx = {
+                        ...tx,
+                        grossProfit: calc.grossProfit,
+                        interest: calc.interest,
+                        charges: calc.totalCharges,
+                        netProfit: calc.netProfit,
+                        holdingDays: calc.holdingDays,
+                        mtfAmount: calc.mtfAmount,
+                        ownMargin: calc.ownMargin,
+                        totalInvestment: calc.totalInvestment,
+                        breakdown: calc.breakdown,
+                    };
+                    if (newTx.charges !== tx.charges || newTx.netProfit !== tx.netProfit || newTx.interest !== tx.interest) {
+                        changed = true;
+                    }
+                    return newTx;
+                });
+                if (changed) setTransactions(updated);
+            }
+
             function calculateTrade(tx) {
                 const { company, broker, quantity, buyPrice, sellPrice, buyDate, sellDate, leverage = 1 } = tx;
                 const qty = Number(quantity) || 0;
@@ -942,6 +1021,7 @@
                 const interestDays = calcInterestDays(buyDate, sellDate);
 
                 const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
+                const chargeCfg = getChargeConfig(broker, buyDate, sellDate);
 
                 let dailyRate = cfg.interestRatePerDay;
                 if (broker === 'Dhan' && mtfAmount > 0) {
@@ -961,25 +1041,18 @@
                 const sellOrderValue = sp * qty;
                 const turnover = buyOrderValue + sellOrderValue;
 
-                function calcBrokerage(amount) {
-                    let brk = amount * cfg.brokeragePct;
-                    if (cfg.brokerageCap !== Infinity && brk > cfg.brokerageCap) {
-                        brk = cfg.brokerageCap;
-                    }
-                    return brk;
-                }
-                const brokerage = calcBrokerage(buyOrderValue) + calcBrokerage(sellOrderValue);
+                const brokerage = calcOrderBrokerage(buyOrderValue, chargeCfg) + calcOrderBrokerage(sellOrderValue, chargeCfg);
 
-                const stt = buyOrderValue * cfg.sttPct + sellOrderValue * cfg.sttPct;
-                const exchange = turnover * cfg.exchangePct;
-                const sebi = turnover * cfg.sebiPct;
-                const stamp = buyOrderValue * cfg.stampPct;
-                const pledge = cfg.pledgeCharge || 0;
-                const unpledge = cfg.unpledgeCharge || 0;
-                const dp = cfg.dpCharge || 0;
+                const stt = buyOrderValue * chargeCfg.sttBuyPct + sellOrderValue * chargeCfg.sttSellPct;
+                const exchange = turnover * chargeCfg.exchangePct;
+                const sebi = turnover * chargeCfg.sebiPct;
+                const stamp = buyOrderValue * chargeCfg.stampPct;
+                const pledge = chargeCfg.pledgeCharge || 0;
+                const unpledge = chargeCfg.unpledgeCharge || 0;
+                const dp = chargeCfg.dpCharge || 0;
 
                 const gstBase = brokerage + exchange + sebi + pledge + unpledge + dp;
-                const gst = gstBase * cfg.gstPct;
+                const gst = gstBase * chargeCfg.gstPct;
 
                 const totalCharges = brokerage + stt + exchange + sebi + stamp + pledge + unpledge + dp + gst;
                 const netProfit = grossProfit - interest - totalCharges;
@@ -995,6 +1068,7 @@
                     dp: Math.round(dp * 100) / 100,
                     gst: Math.round(gst * 100) / 100,
                     interest: Math.round(interest * 100) / 100,
+                    tradeType: chargeCfg.tradeType,
                 };
 
                 return {
@@ -1007,6 +1081,7 @@
                     ownMargin: Math.round(ownMargin * 100) / 100,
                     totalInvestment: Math.round(totalInvestment * 100) / 100,
                     leverage: lev,
+                    tradeType: chargeCfg.tradeType,
                     breakdown: breakdown,
                 };
             }
@@ -1639,11 +1714,11 @@
                     leverage: result.leverage
                 };
                 const intDet = interestDetails(mockTx);
-                const { buy, sell } = chargeSides(mockTx);
+                const { buy, sell, tradeType } = chargeSides(mockTx);
                 const levDisplay = result.leverage > 1 ? `${result.leverage}x` : '1x';
                 const netClass = result.netProfit >= 0 ? 'text-success' : 'text-danger';
                 const sameDayNote = intDet.sameDay
-                    ? '<div class="alert alert-info py-2 small mb-2">Same-day trade — no MTF interest is charged.</div>'
+                    ? `<div class="alert alert-info py-2 small mb-2">Same-day trade — no MTF interest. ${tradeType === 'intraday' ? `<strong>Intraday charges</strong> apply for ${broker} (STT 0.025% sell only, stamp 0.003% buy; no pledge/DP).` : ''}</div>`
                     : '';
 
                 return `
@@ -1855,45 +1930,40 @@
 
             // ---------- CHARGES BREAKDOWN ----------
             function chargeSides(t) {
-                const cfg = BROKER_CONFIG[t.broker] || BROKER_CONFIG['Zerodha'];
+                const chargeCfg = getChargeConfig(t.broker, t.buyDate, t.sellDate);
                 const qty = t.quantity || 0;
                 const buyVal = (t.buyPrice || 0) * qty;
                 const sellVal = (t.sellPrice || 0) * qty;
-                const calcBrk = (amount) => {
-                    let brk = amount * cfg.brokeragePct;
-                    if (cfg.brokerageCap !== Infinity && brk > cfg.brokerageCap) brk = cfg.brokerageCap;
-                    return brk;
-                };
 
                 const buy = {
                     orderValue: buyVal,
-                    brokerage: calcBrk(buyVal),
-                    stt: buyVal * cfg.sttPct,
-                    exchange: buyVal * cfg.exchangePct,
-                    sebi: buyVal * cfg.sebiPct,
-                    stamp: buyVal * cfg.stampPct,
-                    pledge: cfg.pledgeCharge || 0,
+                    brokerage: calcOrderBrokerage(buyVal, chargeCfg),
+                    stt: buyVal * chargeCfg.sttBuyPct,
+                    exchange: buyVal * chargeCfg.exchangePct,
+                    sebi: buyVal * chargeCfg.sebiPct,
+                    stamp: buyVal * chargeCfg.stampPct,
+                    pledge: chargeCfg.pledgeCharge || 0,
                     unpledge: 0,
                     dp: 0
                 };
-                buy.gst = (buy.brokerage + buy.exchange + buy.sebi + buy.pledge) * cfg.gstPct;
+                buy.gst = (buy.brokerage + buy.exchange + buy.sebi + buy.pledge) * chargeCfg.gstPct;
                 buy.total = buy.brokerage + buy.stt + buy.exchange + buy.sebi + buy.stamp + buy.pledge + buy.gst;
 
                 const sell = {
                     orderValue: sellVal,
-                    brokerage: calcBrk(sellVal),
-                    stt: sellVal * cfg.sttPct,
-                    exchange: sellVal * cfg.exchangePct,
-                    sebi: sellVal * cfg.sebiPct,
+                    brokerage: calcOrderBrokerage(sellVal, chargeCfg),
+                    stt: sellVal * chargeCfg.sttSellPct,
+                    exchange: sellVal * chargeCfg.exchangePct,
+                    sebi: sellVal * chargeCfg.sebiPct,
                     stamp: 0,
                     pledge: 0,
-                    unpledge: cfg.unpledgeCharge || 0,
-                    dp: cfg.dpCharge || 0
+                    unpledge: chargeCfg.unpledgeCharge || 0,
+                    dp: chargeCfg.dpCharge || 0
                 };
-                sell.gst = (sell.brokerage + sell.exchange + sell.sebi + sell.unpledge + sell.dp) * cfg.gstPct;
+                sell.gst = (sell.brokerage + sell.exchange + sell.sebi + sell.unpledge + sell.dp) * chargeCfg.gstPct;
                 sell.total = sell.brokerage + sell.stt + sell.exchange + sell.sebi + sell.unpledge + sell.dp + sell.gst;
 
-                return { buy, sell };
+                return { buy, sell, tradeType: chargeCfg.tradeType };
             }
 
             function chargesTable(buy, sell) {
@@ -1950,8 +2020,11 @@
             function openChargesModal(id) {
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const { buy, sell } = chargeSides(tx);
+                const { buy, sell, tradeType } = chargeSides(tx);
                 const grand = buy.total + sell.total;
+                const intraNote = tradeType === 'intraday'
+                    ? `<div class="alert alert-info py-2 small mb-2"><i class="fas fa-bolt me-1"></i>Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
+                    : '';
 
                 document.getElementById('chargesModalTitle').innerHTML = `<i class="fas fa-receipt me-2"></i>${tx.company} Charges`;
                 document.getElementById('chargesModalBody').innerHTML = `
@@ -1959,7 +2032,9 @@
                         <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
                         <span class="badge rounded-pill text-bg-primary">${(tx.leverage || 1) > 1 ? (tx.leverage + 'x') : '1x'}</span>
                         <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${tx.holdingDays || 0}d hold</span>
+                        ${tradeType === 'intraday' ? '<span class="badge rounded-pill text-bg-warning">Intraday</span>' : ''}
                     </div>
+                    ${intraNote}
                     ${chargesTable(buy, sell)}
                     <div class="row g-2 text-center mt-3">
                         <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Buy Side</div><div class="fw-bold">${fmtDec(buy.total)}</div></div></div>
@@ -2036,7 +2111,7 @@
                     <div class="d-flex justify-content-between fw-bold border-top pt-2">
                         <span>Total Interest</span><span class="text-warning">${fmtDec(d.interest)}</span>
                     </div>
-                    ${d.sameDay ? '<div class="small text-muted text-center mt-3">Same-day trade — no MTF interest is charged.</div>' : ''}
+                    ${d.sameDay ? '<div class="small text-muted text-center mt-3">Same-day trade — no MTF interest. Broker charges use intraday rates (tap Charges on the card).</div>' : ''}
                     ${noLeverage && !d.sameDay ? '<div class="small text-muted text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
                 `;
 
@@ -2441,6 +2516,7 @@
             // ---------- INIT ----------
             document.addEventListener('DOMContentLoaded', function() {
                 initModals();
+                recalculateStoredTrades();
 
                 const range = getDateRange(30);
                 pastFrom = range.from;
