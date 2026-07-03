@@ -211,20 +211,24 @@
                 <button class="search-clear btn btn-light position-absolute align-items-center justify-content-center rounded-circle p-0" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
-            <!-- Summary Card (Net Profit, Trades, Total Charges) -->
+            <!-- Summary Card (Net Profit, Gross, Trades, Total Charges) -->
             <div class="card border-0 shadow-sm rounded-4 mb-3" id="summaryCard">
-                <div class="card-body row g-0 text-center py-3">
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
-                        <div class="fw-bold fs-4 text-success" id="summaryNet">₹0</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
-                        <div class="fw-bold fs-4" id="summaryTrades">0</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-receipt me-1"></i>Total Charges</div>
-                        <div class="fw-bold fs-4 text-secondary" id="summaryCharges">₹0</div>
+                <div class="card-body text-center py-3">
+                    <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
+                    <div class="fw-bold fs-2 text-success mb-3" id="summaryNet">₹0</div>
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar me-1"></i>Gross</div>
+                            <div class="fw-semibold" id="summaryGross">₹0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
+                            <div class="fw-semibold" id="summaryTrades">0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-receipt me-1"></i>Charges</div>
+                            <div class="fw-semibold text-secondary" id="summaryCharges">₹0</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -252,20 +256,30 @@
                 </div>
                 <button class="btn btn-light border rounded-4 shadow-sm px-3" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h"></i></button>
             </div>
+            <!-- Selected date range indicator -->
+            <div class="text-center mb-3">
+                <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" onclick="openFilterSheet()">
+                    <i class="far fa-calendar-alt me-1 text-primary"></i><span id="pastRangeLabel">—</span>
+                </button>
+            </div>
             <!-- Summary Card (Detail tab only) -->
             <div class="card border-0 shadow-sm rounded-4 mb-3" id="pastSummaryCard">
-                <div class="card-body row g-0 text-center py-3">
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
-                        <div class="fw-bold fs-4 text-success" id="pastSummaryNet">₹0</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
-                        <div class="fw-bold fs-4" id="pastSummaryTrades">0</div>
-                    </div>
-                    <div class="col-4">
-                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-receipt me-1"></i>Total Charges</div>
-                        <div class="fw-bold fs-4 text-secondary" id="pastSummaryCharges">₹0</div>
+                <div class="card-body text-center py-3">
+                    <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
+                    <div class="fw-bold fs-2 text-success mb-3" id="pastSummaryNet">₹0</div>
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar me-1"></i>Gross</div>
+                            <div class="fw-semibold" id="pastSummaryGross">₹0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt me-1"></i>Trades</div>
+                            <div class="fw-semibold" id="pastSummaryTrades">0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;"><i class="fas fa-receipt me-1"></i>Charges</div>
+                            <div class="fw-semibold text-secondary" id="pastSummaryCharges">₹0</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -998,6 +1012,7 @@
                                     <h5 class="fw-bold mb-1">${t.company}</h5>
                                     <span class="badge rounded-pill bg-light text-dark border">${t.broker}</span>
                                     <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                                    <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${daysHeld}d hold</span>
                                 </div>
                                 <span class="badge ${isOpen ? 'text-bg-warning' : 'text-bg-success'}">${isOpen ? 'Open' : 'Closed'}</span>
                             </div>
@@ -1010,19 +1025,18 @@
                             <div class="row g-2 mb-3">${detailHtml}</div>
 
                             <div class="row g-2 text-center bg-light rounded-4 p-2 mb-3">
-                                <div class="col-3"><div class="small text-muted"><i class="fas fa-sack-dollar"></i> Gross</div><div class="fw-semibold ${t.grossProfit >= 0 ? 'text-success' : 'text-danger'}">${fmt(t.grossProfit)}</div></div>
-                                <div class="col-3"><div class="small text-muted"><i class="far fa-clock"></i> Held</div><div class="fw-semibold text-primary">${daysHeld}d</div></div>
-                                <div class="col-3"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openInterestModal('${t.id}')"><div class="small text-muted"><i class="fas fa-percent"></i> Interest <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-warning text-decoration-underline">${fmtDec(t.interest || 0)}</div></button></div>
-                                <div class="col-3"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openChargesModal('${t.id}')"><div class="small text-muted"><i class="fas fa-receipt"></i> Charges <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-secondary text-decoration-underline">${fmtDec(t.charges || 0)}</div></button></div>
+                                <div class="col-4"><div class="small text-muted"><i class="fas fa-sack-dollar"></i> Gross</div><div class="fw-semibold ${t.grossProfit >= 0 ? 'text-success' : 'text-danger'}">${fmt(t.grossProfit)}</div></div>
+                                <div class="col-4"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openInterestModal('${t.id}')"><div class="small text-muted"><i class="fas fa-percent"></i> Interest <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-warning text-decoration-underline">${fmtDec(t.interest || 0)}</div></button></div>
+                                <div class="col-4"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openChargesModal('${t.id}')"><div class="small text-muted"><i class="fas fa-receipt"></i> Charges <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-secondary text-decoration-underline">${fmtDec(t.charges || 0)}</div></button></div>
                             </div>
 
                             <div class="d-flex gap-2 border-top pt-3">
                                 <button class="btn btn-sm btn-outline-info flex-fill" onclick="openViewModal('${t.id}')"><i class="fas fa-eye"></i> View</button>
-                                <button class="btn btn-sm btn-outline-success flex-fill" onclick="copyTransaction('${t.id}')"><i class="fas fa-copy"></i> Copy</button>
+                                <button class="btn btn-sm btn-outline-success flex-fill" onclick="confirmCopy('${t.id}')"><i class="fas fa-copy"></i> Copy</button>
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i> More</button>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><button class="dropdown-item" onclick="openEditModal('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
+                                        <li><button class="dropdown-item" onclick="confirmEdit('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
                                         <li><button class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash-alt me-2"></i>Delete</button></li>
                                     </ul>
                                 </div>
@@ -1044,14 +1058,16 @@
 
                 filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
 
-                let net = 0, charges = 0;
+                let net = 0, charges = 0, gross = 0;
                 filtered.forEach(t => {
                     net += t.netProfit || 0;
                     charges += t.charges || 0;
+                    gross += t.grossProfit || 0;
                 });
 
                 document.getElementById('summaryNet').textContent = fmt(net);
-                document.getElementById('summaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('summaryNet').className = 'fw-bold fs-2 mb-3 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('summaryGross').textContent = fmt(gross);
                 document.getElementById('summaryTrades').textContent = filtered.length;
                 document.getElementById('summaryCharges').textContent = fmt(charges);
 
@@ -1107,11 +1123,15 @@
                 detailContainer.style.display = isDetail ? '' : 'none';
                 summaryCard.style.display = '';
 
-                // Shared summary (Net Profit / Trades / Total Charges) for both tabs
-                let net = 0, charges = 0;
-                filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; });
+                const rangeLabel = document.getElementById('pastRangeLabel');
+                if (rangeLabel) rangeLabel.innerHTML = `${fmtDate(pastFrom)} &ndash; ${fmtDate(pastTo)}`;
+
+                // Shared summary (Net Profit / Gross / Trades / Total Charges) for both tabs
+                let net = 0, charges = 0, gross = 0;
+                filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; gross += t.grossProfit || 0; });
                 document.getElementById('pastSummaryNet').textContent = fmt(net);
-                document.getElementById('pastSummaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('pastSummaryNet').className = 'fw-bold fs-2 mb-3 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('pastSummaryGross').textContent = fmt(gross);
                 document.getElementById('pastSummaryTrades').textContent = filtered.length;
                 document.getElementById('pastSummaryCharges').textContent = fmt(charges);
 
@@ -1379,6 +1399,7 @@
                     <div class="text-center mb-3">
                         <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
                         <span class="badge rounded-pill text-bg-primary">${(tx.leverage || 1) > 1 ? (tx.leverage + 'x') : '1x'}</span>
+                        <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${tx.holdingDays || 0}d hold</span>
                     </div>
                     ${chargesTable(buy, sell)}
                     <div class="row g-2 text-center mt-3">
@@ -1425,6 +1446,7 @@
                     <div class="text-center mb-3">
                         <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
                         <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                        <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${d.days}d hold</span>
                     </div>
                     <div class="row g-2 text-center mb-3">
                         <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Leverage Amt</div><div class="fw-bold">${fmt(d.mtf)}</div></div></div>
@@ -1460,27 +1482,86 @@
                 interestModalInstance.show();
             }
 
-            // ---------- DELETE CONFIRM ----------
-            let deleteModalInstance = null;
-            let deleteTargetId = null;
+            // ---------- CONFIRMATION DIALOG (copy / edit / delete) ----------
+            let confirmModalInstance = null;
+            let confirmPending = null;
+            let confirmRun = false;
 
-            function confirmDelete(id) {
-                deleteTargetId = id;
-                if (!deleteModalInstance) {
-                    const delEl = document.getElementById('deleteModal');
-                    deleteModalInstance = new bootstrap.Modal(delEl, { backdrop: 'static' });
-                    document.getElementById('deleteConfirmBtn').addEventListener('click', () => {
-                        if (deleteTargetId) {
-                            deleteTransaction(deleteTargetId);
-                            deleteTargetId = null;
-                            deleteModalInstance.hide();
-                            renderCurrentView();
-                            renderPastTrades();
-                            showToast('Trade deleted.', 'danger');
-                        }
+            function getConfirmModal() {
+                if (!confirmModalInstance) {
+                    const el = document.getElementById('confirmModal');
+                    confirmModalInstance = new bootstrap.Modal(el, { backdrop: 'static' });
+                    document.getElementById('confirmModalConfirmBtn').addEventListener('click', () => {
+                        confirmRun = true;
+                        confirmModalInstance.hide();
+                    });
+                    el.addEventListener('hidden.bs.modal', () => {
+                        const cb = confirmPending;
+                        const run = confirmRun;
+                        confirmPending = null;
+                        confirmRun = false;
+                        if (run && typeof cb === 'function') cb();
                     });
                 }
-                deleteModalInstance.show();
+                return confirmModalInstance;
+            }
+
+            function confirmAction({ title, titleClass = '', message, confirmLabel, confirmClass = 'btn-primary', onConfirm }) {
+                getConfirmModal();
+                confirmPending = onConfirm;
+                confirmRun = false;
+                const titleEl = document.getElementById('confirmModalTitle');
+                titleEl.innerHTML = title;
+                titleEl.className = 'modal-title ' + titleClass;
+                document.getElementById('confirmModalMessage').textContent = message;
+                const btn = document.getElementById('confirmModalConfirmBtn');
+                btn.className = 'btn ' + confirmClass;
+                btn.innerHTML = confirmLabel;
+                confirmModalInstance.show();
+            }
+
+            function confirmDelete(id) {
+                const tx = getTransaction(id);
+                const name = tx ? tx.company : 'this trade';
+                confirmAction({
+                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Trade?',
+                    titleClass: 'text-danger',
+                    message: `Delete "${name}"? This action cannot be undone.`,
+                    confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
+                    confirmClass: 'btn-danger',
+                    onConfirm: () => {
+                        deleteTransaction(id);
+                        renderCurrentView();
+                        renderPastTrades();
+                        showToast('Trade deleted.', 'danger');
+                    }
+                });
+            }
+
+            function confirmCopy(id) {
+                const tx = getTransaction(id);
+                const name = tx ? tx.company : 'this trade';
+                confirmAction({
+                    title: '<i class="fas fa-copy me-2"></i>Copy Trade?',
+                    titleClass: 'text-success',
+                    message: `Create a duplicate of "${name}"?`,
+                    confirmLabel: '<i class="fas fa-copy me-1"></i> Copy',
+                    confirmClass: 'btn-success',
+                    onConfirm: () => copyTransaction(id)
+                });
+            }
+
+            function confirmEdit(id) {
+                const tx = getTransaction(id);
+                const name = tx ? tx.company : 'this trade';
+                confirmAction({
+                    title: '<i class="fas fa-edit me-2"></i>Edit Trade?',
+                    titleClass: 'text-primary',
+                    message: `Open "${name}" for editing?`,
+                    confirmLabel: '<i class="fas fa-edit me-1"></i> Edit',
+                    confirmClass: 'btn-primary',
+                    onConfirm: () => openEditModal(id)
+                });
             }
 
             // ---------- MODAL HELPERS ----------
@@ -1907,6 +1988,8 @@
             window.openEditModal = openEditModal;
             window.openViewModal = openViewModal;
             window.copyTransaction = copyTransaction;
+            window.confirmCopy = confirmCopy;
+            window.confirmEdit = confirmEdit;
             window.confirmDelete = confirmDelete;
             window.saveTransaction = saveTransaction;
             window.exportData = exportData;
@@ -2017,18 +2100,18 @@
     </div>
 
     <!-- DELETE MODAL (hidden until triggered) -->
-    <div class="modal fade bottom-sheet-modal" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade bottom-sheet-modal" id="confirmModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm">
             <div class="modal-content">
                 <div class="modal-header border-bottom">
                     <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
-                    <h5 class="modal-title text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Delete?</h5>
+                    <h5 class="modal-title" id="confirmModalTitle"><i class="fas fa-question-circle me-2"></i>Confirm</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body"><p class="mb-0">This action cannot be undone. Are you sure?</p></div>
+                <div class="modal-body"><p class="mb-0" id="confirmModalMessage">Are you sure?</p></div>
                 <div class="modal-footer border-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="deleteConfirmBtn"><i class="fas fa-trash-alt me-1"></i> Delete</button>
+                    <button type="button" class="btn btn-primary" id="confirmModalConfirmBtn">Confirm</button>
                 </div>
             </div>
         </div>
