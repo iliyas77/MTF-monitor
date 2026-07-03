@@ -192,8 +192,41 @@
         .trade-list-section {
             padding: .85rem 1rem;
         }
-        .trade-list-section + .trade-list-section {
+        .trade-list-section-stats {
             border-top: 1px solid #e9ecef;
+        }
+        .trade-net-profit {
+            font-size: clamp(1.15rem, 4.8vw, 1.45rem);
+            font-weight: 700;
+            line-height: 1.15;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .more-hub-tile {
+            cursor: pointer;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        .more-hub-tile:active { transform: scale(.98); }
+        .more-sub-header {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+        .calc-pct-chip {
+            border: 1px solid #dee2e6;
+            border-radius: 999px;
+            padding: .25rem .7rem;
+            font-size: .78rem;
+            font-weight: 600;
+            background: #fff;
+            color: var(--app-text);
+            line-height: 1.2;
+        }
+        .calc-pct-chip.active {
+            background: var(--app-primary);
+            border-color: var(--app-primary);
+            color: #fff;
         }
 
         @media (min-width: 576px) {
@@ -207,8 +240,11 @@
     <div class="toast-container" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header class="app-header sticky-top bg-white border-bottom shadow-sm px-3 py-3">
+    <header class="app-header sticky-top bg-white border-bottom shadow-sm px-3 py-3 d-flex align-items-center justify-content-between gap-2">
         <h5 class="fw-bold mb-0 fs-5"><i class="fas fa-chart-line text-success me-2"></i>MTF Profit Tracker</h5>
+        <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.5rem;height:2.5rem;" onclick="openSettingsSheet()" title="Settings" aria-label="Settings">
+            <i class="fas fa-cog"></i>
+        </button>
     </header>
 
     <!-- ============ PAGES ============ -->
@@ -294,75 +330,140 @@
         </div>
     </section>
 
-    <!-- PAGE: SETTINGS -->
-    <section id="page-settings" class="page-section">
+    <!-- PAGE: MORE HUB -->
+    <section id="page-more" class="page-section">
         <div class="scroll-content">
+            <p class="text-muted small mb-3">Tools and reports</p>
+            <div class="row g-3">
+                <div class="col-6">
+                    <button type="button" class="more-hub-tile card border-0 shadow-sm rounded-4 w-100 h-100 text-start" onclick="openMoreFeature('transactions')">
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
+                            <div class="fw-bold">Total Transactions</div>
+                            <div class="small text-muted mt-1">Full history, broker stats &amp; date-wise list</div>
+                        </div>
+                    </button>
+                </div>
+                <div class="col-6">
+                    <button type="button" class="more-hub-tile card border-0 shadow-sm rounded-4 w-100 h-100 text-start" onclick="openMoreFeature('mtf-calc')">
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-calculator fa-2x text-success mb-2"></i>
+                            <div class="fw-bold">MTF Calculator</div>
+                            <div class="small text-muted mt-1">Plan trades &amp; compare Zerodha, Dhan, Groww</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PAGE: TOTAL TRANSACTIONS -->
+    <section id="page-transactions" class="page-section">
+        <div class="scroll-content">
+            <div class="more-sub-header">
+                <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <h6 class="fw-bold mb-0">Total Transactions</h6>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body text-center py-3">
+                    <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-database me-1"></i>Total Trades</div>
+                    <div class="fw-bold fs-2 mb-3" id="txHistTotal">0</div>
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Open</div>
+                            <div class="fw-semibold text-warning" id="txHistOpen">0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Closed</div>
+                            <div class="fw-semibold" id="txHistClosed">0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Successful</div>
+                            <div class="fw-semibold text-success" id="txHistSuccessful">0</div>
+                        </div>
+                    </div>
+                    <hr class="my-3" />
+                    <div class="row g-0">
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Net</div>
+                            <div class="fw-semibold" id="txHistNet">₹0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Gross</div>
+                            <div class="fw-semibold" id="txHistGross">₹0</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Charges</div>
+                            <div class="fw-semibold text-secondary" id="txHistCharges">₹0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="card border-0 shadow-sm rounded-4 mb-3">
                 <div class="card-body">
-                    <h6 class="fw-bold mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="me-2 small text-muted">Status:</span>
-                        <span id="cloudSyncStatus" class="badge bg-secondary">Off</span>
-                    </div>
-                    <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep data in sync. Choose a long, secret code (like a password).</p>
-                    <div class="input-group mb-2">
-                        <span class="input-group-text"><i class="fas fa-key"></i></span>
-                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
-                    </div>
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-sm btn-primary flex-fill" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug me-1"></i> Connect</button>
-                        <button class="btn btn-sm btn-outline-secondary flex-fill" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink me-1"></i> Disconnect</button>
-                    </div>
-                    <div id="cloudSyncHint" class="small text-muted mt-2"></div>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-building me-2"></i>By Broker</h6>
+                    <div id="txHistBrokerBreakdown"></div>
                 </div>
             </div>
-            <div class="card border-0 shadow-sm rounded-4">
+            <h6 class="fw-bold mb-2"><i class="far fa-calendar-alt me-2"></i>History</h6>
+            <div id="txHistList"></div>
+        </div>
+    </section>
+
+    <!-- PAGE: MTF CALCULATOR -->
+    <section id="page-mtf-calc" class="page-section">
+        <div class="scroll-content">
+            <div class="more-sub-header">
+                <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <h6 class="fw-bold mb-0">MTF Calculator</h6>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
-                        <div>
-                            <div class="fw-semibold"><i class="fas fa-file-export me-2"></i>Export Data</div>
-                            <div class="small text-muted">Download all transactions as JSON backup</div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label">Buy Date</label>
+                            <input type="date" class="form-control calc-date" id="calcBuyDate" oninput="updateMtfCalculator()" />
                         </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="exportData()"><i class="fas fa-download"></i> Export</button>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
-                        <div>
-                            <div class="fw-semibold"><i class="fas fa-file-import me-2"></i>Import Data</div>
-                            <div class="small text-muted">Restore from a JSON backup file</div>
-                        </div>
-                        <div>
-                            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importData(event)" />
-                            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('importFileInput').click()"><i class="fas fa-upload"></i> Import</button>
+                        <div class="col-6">
+                            <label class="form-label">Sell Date</label>
+                            <input type="date" class="form-control calc-date" id="calcSellDate" oninput="updateMtfCalculator()" />
                         </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
-                        <div>
-                            <div class="fw-semibold"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
-                            <div class="small text-muted">Copy your data as text, or paste it back to restore (best for mobile)</div>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4">
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control" id="calcQty" min="1" step="1" placeholder="0" oninput="updateMtfCalculator()" />
                         </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                        <div class="col-4">
+                            <label class="form-label">Buy Price</label>
+                            <input type="number" class="form-control" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcBuyPriceInput()" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label">Sell Price</label>
+                            <input type="number" class="form-control" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcSellPriceInput()" />
+                        </div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 py-3 border-bottom">
-                        <div>
-                            <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
-                            <div class="small text-muted">Permanently delete all transactions</div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted mb-1">Sell target (% on buy price)</label>
+                        <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
+                        <div class="d-flex gap-1 mt-2">
+                            <input type="number" class="form-control form-control-sm" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
+                            <button type="button" class="btn btn-sm btn-outline-primary text-nowrap" onclick="addCalcSellPctPreset()">Add</button>
                         </div>
-                        <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
+                        <p class="text-muted small mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 py-3">
-                        <div>
-                            <div class="fw-semibold"><i class="fas fa-database me-2"></i>Total Transactions</div>
-                            <div class="small text-muted" id="totalTxCount">0 records</div>
-                        </div>
-                        <span class="badge bg-secondary" id="totalTxBadge">0</span>
+                    <div class="mb-0">
+                        <label class="form-label">Leverage (X)</label>
+                        <input type="number" class="form-control" id="calcLeverage" min="1" step="0.1" value="1" oninput="updateMtfCalculator()" />
                     </div>
                 </div>
             </div>
-            <div class="card border-0 shadow-sm rounded-4 mt-3">
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
                 <div class="card-body">
-                    <h6 class="fw-bold"><i class="fas fa-info-circle me-2"></i>About</h6>
-                    <p class="small text-muted mb-1">MTF Profit Tracker v1.0</p>
-                    <p class="small text-muted mb-0">All data stored locally in your browser. No internet required.</p>
+                    <h6 class="fw-bold mb-3"><i class="fas fa-balance-scale me-2"></i>Compare All Brokers</h6>
+                    <div id="calcComparePanel" class="table-responsive">
+                        <p class="text-muted small mb-0">Fill in all fields to compare brokers.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -375,17 +476,17 @@
 
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav bg-white border-top shadow-lg d-flex align-items-stretch" id="bottomNav">
-        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2 active" data-page="trades" onclick="navigateTo('trades')">
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2 flex-fill active" data-page="trades" onclick="navigateTo('trades')">
             <i class="fas fa-list-ul"></i>
             <span>Trades</span>
         </button>
-        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2" data-page="past" onclick="navigateTo('past')">
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2 flex-fill" data-page="past" onclick="navigateTo('past')">
             <i class="fas fa-history"></i>
             <span>Past Trades</span>
         </button>
-        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2" data-page="settings" onclick="navigateTo('settings')">
-            <i class="fas fa-cog"></i>
-            <span>Settings</span>
+        <button class="nav-item d-flex flex-column align-items-center justify-content-center gap-1 py-2 flex-fill" data-page="more" onclick="navigateTo('more')">
+            <i class="fas fa-ellipsis-h"></i>
+            <span>More</span>
         </button>
     </nav>
 
@@ -523,6 +624,20 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="interestModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MTF Calculator Breakdown Bottom Sheet -->
+    <div class="modal fade bottom-sheet-modal" id="calcBreakdownModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title" id="calcBreakdownModalTitle"><i class="fas fa-calculator me-2"></i>Breakdown</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="calcBreakdownModalBody"></div>
             </div>
         </div>
     </div>
@@ -691,6 +806,14 @@
                 try { renderCurrentView(); } catch (_) {}
                 try { renderPastTrades(); } catch (_) {}
                 try { renderSettings(); } catch (_) {}
+                try { refreshActiveMoreView(); } catch (_) {}
+            }
+
+            function refreshActiveMoreView() {
+                const txPage = document.getElementById('page-transactions');
+                const calcPage = document.getElementById('page-mtf-calc');
+                if (txPage && txPage.classList.contains('active-page')) renderTransactions();
+                if (calcPage && calcPage.classList.contains('active-page')) updateMtfCalculator();
             }
 
             // Merge two transaction lists by id (remote wins on conflicts).
@@ -777,6 +900,28 @@
             }
 
             // ---------- CALCULATION ENGINE ----------
+            function parseDateKey(d) {
+                if (!d) return '';
+                return String(d).split('T')[0];
+            }
+
+            function calcHoldingDays(buyDate, sellDate) {
+                const buyKey = parseDateKey(buyDate);
+                const sellKey = parseDateKey(sellDate);
+                if (!buyKey || !sellKey) return 0;
+                const bd = new Date(buyKey + 'T12:00:00');
+                const sd = new Date(sellKey + 'T12:00:00');
+                return Math.max(0, Math.round((sd - bd) / (1000 * 60 * 60 * 24)));
+            }
+
+            /** MTF interest is not charged when buy and sell fall on the same calendar day. */
+            function calcInterestDays(buyDate, sellDate) {
+                const buyKey = parseDateKey(buyDate);
+                const sellKey = parseDateKey(sellDate);
+                if (!buyKey || !sellKey || buyKey === sellKey) return 0;
+                return calcHoldingDays(buyDate, sellDate);
+            }
+
             function calculateTrade(tx) {
                 const { company, broker, quantity, buyPrice, sellPrice, buyDate, sellDate, leverage = 1 } = tx;
                 const qty = Number(quantity) || 0;
@@ -793,9 +938,8 @@
                 }
 
                 const grossProfit = (sp - bp) * qty;
-                const bd = new Date(buyDate);
-                const sd = new Date(sellDate);
-                const days = Math.max(0, Math.ceil((sd - bd) / (1000 * 60 * 60 * 24)));
+                const days = calcHoldingDays(buyDate, sellDate);
+                const interestDays = calcInterestDays(buyDate, sellDate);
 
                 const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
 
@@ -809,8 +953,8 @@
                 }
 
                 let interest = 0;
-                if (mtfAmount > 0 && days > 0 && dailyRate > 0) {
-                    interest = mtfAmount * dailyRate * days;
+                if (mtfAmount > 0 && interestDays > 0 && dailyRate > 0) {
+                    interest = mtfAmount * dailyRate * interestDays;
                 }
 
                 const buyOrderValue = bp * qty;
@@ -915,20 +1059,57 @@
                 if (filterModalInstance) filterModalInstance.hide();
             }
 
-            // ---------- NAVIGATION ----------
-            const pageMap = { trades: 'page-trades', past: 'page-past', settings: 'page-settings' };
+            let settingsModalInstance = null;
+            function openSettingsSheet() {
+                renderSettings();
+                if (!settingsModalInstance) {
+                    settingsModalInstance = new bootstrap.Modal(document.getElementById('settingsModal'), { backdrop: true });
+                }
+                settingsModalInstance.show();
+            }
 
-            function navigateTo(page) {
+            // ---------- NAVIGATION ----------
+            const pageMap = { trades: 'page-trades', past: 'page-past', more: 'page-more' };
+            const moreFeatureMap = { transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
+            let activeMoreFeature = null;
+
+            function showPage(pageId) {
                 document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active-page'));
-                const target = document.getElementById(pageMap[page]);
+                const target = document.getElementById(pageId);
                 if (target) target.classList.add('active-page');
+            }
+
+            function setBottomNavActive(page) {
                 document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
                     el.classList.toggle('active', el.dataset.page === page);
                 });
-                if (page === 'trades') { renderCurrentView(); }
-                if (page === 'past') { renderPastTrades(); }
-                if (page === 'settings') renderSettings();
+            }
+
+            function navigateTo(page) {
+                activeMoreFeature = null;
+                showPage(pageMap[page]);
+                setBottomNavActive(page);
+                if (page === 'trades') renderCurrentView();
+                if (page === 'past') renderPastTrades();
                 document.getElementById('fabBtn').style.display = (page === 'trades') ? 'flex' : 'none';
+            }
+
+            function openMoreFeature(feature) {
+                activeMoreFeature = feature;
+                showPage(moreFeatureMap[feature]);
+                setBottomNavActive('more');
+                document.getElementById('fabBtn').style.display = 'none';
+                if (feature === 'transactions') renderTransactions();
+                if (feature === 'mtf-calc') {
+                    renderMtfCalculator();
+                    updateMtfCalculator();
+                }
+            }
+
+            function backToMoreHub() {
+                activeMoreFeature = null;
+                showPage('page-more');
+                setBottomNavActive('more');
             }
 
             // ---------- STATE ----------
@@ -1001,30 +1182,32 @@
                 return `
                     <div class="card border-0 shadow-sm rounded-4 mb-2">
                         <div class="card-body p-0">
-                            <div class="trade-list-section d-flex justify-content-between align-items-start gap-2">
-                                <div class="fw-semibold">${t.company}</div>
-                                <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                    <div class="fw-bold fs-5 ${profitClass}">${sign}${fmt(t.netProfit)}</div>
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm btn-light border rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i></button>
-                                        <ul class="dropdown-menu dropdown-menu-end">
-                                            <li><button class="dropdown-item" onclick="openViewModal('${t.id}')"><i class="fas fa-eye me-2"></i>View</button></li>
-                                            <li><button class="dropdown-item" onclick="confirmCopy('${t.id}')"><i class="fas fa-copy me-2"></i>Copy</button></li>
-                                            <li><button class="dropdown-item" onclick="confirmEdit('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
-                                            <li><button class="dropdown-item" onclick="openInterestModal('${t.id}')"><i class="fas fa-percent me-2"></i>Interest</button></li>
-                                            <li><button class="dropdown-item" onclick="openChargesModal('${t.id}')"><i class="fas fa-receipt me-2"></i>Charges</button></li>
-                                            <li><hr class="dropdown-divider"></li>
-                                            <li><button class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash-alt me-2"></i>Delete</button></li>
-                                        </ul>
+                            <div class="trade-list-section">
+                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                    <div class="fw-semibold flex-grow-1 min-w-0 pe-2 text-truncate">${t.company}</div>
+                                    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                        <div class="trade-net-profit ${profitClass}">${sign}${fmt(t.netProfit)}</div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i></button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li><button class="dropdown-item" onclick="openViewModal('${t.id}')"><i class="fas fa-eye me-2"></i>View</button></li>
+                                                <li><button class="dropdown-item" onclick="confirmCopy('${t.id}')"><i class="fas fa-copy me-2"></i>Copy</button></li>
+                                                <li><button class="dropdown-item" onclick="confirmEdit('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
+                                                <li><button class="dropdown-item" onclick="openInterestModal('${t.id}')"><i class="fas fa-percent me-2"></i>Interest</button></li>
+                                                <li><button class="dropdown-item" onclick="openChargesModal('${t.id}')"><i class="fas fa-receipt me-2"></i>Charges</button></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><button class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash-alt me-2"></i>Delete</button></li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
+                                <div class="mt-2">
+                                    <span class="badge rounded-pill bg-light text-dark border">${t.broker}</span>
+                                    <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                                    <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${daysHeld}d hold</span>
+                                </div>
                             </div>
-                            <div class="trade-list-section">
-                                <span class="badge rounded-pill bg-light text-dark border">${t.broker}</span>
-                                <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
-                                <span class="badge rounded-pill bg-light text-dark border"><i class="far fa-clock me-1"></i>${daysHeld}d hold</span>
-                            </div>
-                            <div class="trade-list-section d-flex gap-2 w-100">
+                            <div class="trade-list-section trade-list-section-stats d-flex gap-2 w-100">
                                 <div class="flex-fill bg-light rounded-3 p-2 text-center min-w-0">
                                     <div class="text-muted text-uppercase fw-semibold trade-stat-label">Buy</div>
                                     <div class="fw-semibold trade-stat-value text-nowrap">${fmtDec(t.buyPrice)}</div>
@@ -1172,6 +1355,383 @@
                 listContainer.innerHTML = renderGroupedTrades(filtered, renderTradeListItem);
             }
 
+            // ---------- TOTAL TRANSACTIONS (MORE) ----------
+            function getTransactionStats(txs) {
+                const stats = {
+                    total: txs.length,
+                    open: 0,
+                    closed: 0,
+                    successful: 0,
+                    net: 0,
+                    gross: 0,
+                    charges: 0,
+                    byBroker: {}
+                };
+                ['Zerodha', 'Dhan', 'Groww'].forEach(b => {
+                    stats.byBroker[b] = { total: 0, open: 0, closed: 0, successful: 0, net: 0 };
+                });
+                txs.forEach(t => {
+                    const isOpen = (t.status || 'closed') === 'open';
+                    if (isOpen) stats.open++;
+                    else stats.closed++;
+                    if (!isOpen && (t.netProfit || 0) >= 0) stats.successful++;
+                    stats.net += t.netProfit || 0;
+                    stats.gross += t.grossProfit || 0;
+                    stats.charges += t.charges || 0;
+                    const b = t.broker || 'Zerodha';
+                    if (!stats.byBroker[b]) {
+                        stats.byBroker[b] = { total: 0, open: 0, closed: 0, successful: 0, net: 0 };
+                    }
+                    stats.byBroker[b].total++;
+                    if (isOpen) stats.byBroker[b].open++;
+                    else stats.byBroker[b].closed++;
+                    if (!isOpen && (t.netProfit || 0) >= 0) stats.byBroker[b].successful++;
+                    stats.byBroker[b].net += t.netProfit || 0;
+                });
+                return stats;
+            }
+
+            function renderTransactionsDateGroupHeader(dateKey, items) {
+                const label = dateKey === 'unknown' ? 'No date' : fmtDate(dateKey);
+                const tradeLabel = items.length === 1 ? '1 trade' : `${items.length} trades`;
+                const counts = {};
+                items.forEach(t => {
+                    const b = t.broker || 'Other';
+                    counts[b] = (counts[b] || 0) + 1;
+                });
+                const chips = Object.entries(counts).map(([b, n]) => `${b} ${n}`).join(' · ');
+                return `
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="fw-semibold text-dark"><i class="far fa-calendar-alt me-2 text-primary"></i>${label}</div>
+                            <span class="badge rounded-pill bg-light text-dark border">${tradeLabel}</span>
+                        </div>
+                        ${chips ? `<div class="small text-muted mt-1">${chips}</div>` : ''}
+                    </div>
+                `;
+            }
+
+            function renderGroupedTradesWithChips(trades, renderItem) {
+                return groupTradesByDate(trades).map(([dateKey, items], idx) => `
+                    <section class="trade-date-group${idx ? ' mt-4' : ''}">
+                        ${renderTransactionsDateGroupHeader(dateKey, items)}
+                        ${items.map(renderItem).join('')}
+                    </section>
+                `).join('');
+            }
+
+            function renderBrokerBreakdown(byBroker) {
+                const brokers = ['Zerodha', 'Dhan', 'Groww'];
+                const html = brokers.map(b => {
+                    const s = byBroker[b];
+                    if (!s || s.total === 0) return '';
+                    const netClass = s.net >= 0 ? 'text-success' : 'text-danger';
+                    return `
+                        <div class="bg-light rounded-3 p-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold">${b}</span>
+                                <span class="badge bg-light text-dark border">${s.total} trades</span>
+                            </div>
+                            <div class="row g-2 small text-center">
+                                <div class="col-3"><div class="text-muted">Open</div><div class="fw-semibold text-warning">${s.open}</div></div>
+                                <div class="col-3"><div class="text-muted">Closed</div><div class="fw-semibold">${s.closed}</div></div>
+                                <div class="col-3"><div class="text-muted">Success</div><div class="fw-semibold text-success">${s.successful}</div></div>
+                                <div class="col-3"><div class="text-muted">Net</div><div class="fw-semibold ${netClass}">${fmt(s.net)}</div></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                return html || '<p class="text-muted small mb-0">No trades yet.</p>';
+            }
+
+            function renderTransactions() {
+                const txs = getTransactions().slice().sort((a, b) => (a.id < b.id ? 1 : -1));
+                const stats = getTransactionStats(txs);
+
+                document.getElementById('txHistTotal').textContent = stats.total;
+                document.getElementById('txHistOpen').textContent = stats.open;
+                document.getElementById('txHistClosed').textContent = stats.closed;
+                document.getElementById('txHistSuccessful').textContent = stats.successful;
+
+                const netEl = document.getElementById('txHistNet');
+                netEl.textContent = fmt(stats.net);
+                netEl.className = 'fw-semibold ' + (stats.net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('txHistGross').textContent = fmt(stats.gross);
+                document.getElementById('txHistCharges').textContent = fmt(stats.charges);
+
+                document.getElementById('txHistBrokerBreakdown').innerHTML = renderBrokerBreakdown(stats.byBroker);
+
+                const listEl = document.getElementById('txHistList');
+                if (txs.length === 0) {
+                    listEl.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="small text-muted mb-0">Add trades from the Trades tab.</p></div>`;
+                    return;
+                }
+                listEl.innerHTML = renderGroupedTradesWithChips(txs, renderTradeListItem);
+            }
+
+            // ---------- MTF CALCULATOR (MORE) ----------
+            const CALC_SELL_PCT_KEY = 'mtf_calc_sell_pct_presets';
+            const DEFAULT_CALC_SELL_PCTS = [0.5, 1, 1.3, 1.5, 2, 3];
+            let calcActiveSellPct = null;
+            let calcSellPriceProgrammatic = false;
+
+            function getCalcSellPctPresets() {
+                try {
+                    const saved = JSON.parse(localStorage.getItem(CALC_SELL_PCT_KEY));
+                    if (Array.isArray(saved) && saved.length) {
+                        return [...new Set(saved.map(p => parseFloat(p)).filter(p => p > 0))].sort((a, b) => a - b);
+                    }
+                } catch (_) {}
+                return [...DEFAULT_CALC_SELL_PCTS];
+            }
+
+            function saveCalcSellPctPresets(presets) {
+                localStorage.setItem(CALC_SELL_PCT_KEY, JSON.stringify(presets));
+            }
+
+            function fmtCalcPctLabel(pct) {
+                const n = parseFloat(pct);
+                if (!Number.isFinite(n)) return '';
+                return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '')) + '%';
+            }
+
+            function setCalcSellPriceValue(val) {
+                calcSellPriceProgrammatic = true;
+                document.getElementById('calcSellPrice').value = val;
+                calcSellPriceProgrammatic = false;
+            }
+
+            function applyCalcSellFromPct(pct) {
+                const buy = parseFloat(document.getElementById('calcBuyPrice').value) || 0;
+                if (buy <= 0) return false;
+                setCalcSellPriceValue((buy * (1 + pct / 100)).toFixed(2));
+                return true;
+            }
+
+            function renderCalcSellPctChips() {
+                const wrap = document.getElementById('calcSellPctChips');
+                if (!wrap) return;
+                const presets = getCalcSellPctPresets();
+                wrap.innerHTML = presets.map(p => {
+                    const active = calcActiveSellPct != null && Math.abs(calcActiveSellPct - p) < 0.0001;
+                    return `<button type="button" class="calc-pct-chip${active ? ' active' : ''}" onclick="setCalcSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
+                }).join('');
+            }
+
+            function setCalcSellPct(pct) {
+                calcActiveSellPct = pct;
+                if (!applyCalcSellFromPct(pct)) {
+                    showToast('Enter buy price first.', 'warning');
+                }
+                renderCalcSellPctChips();
+                updateMtfCalculator();
+            }
+
+            function onCalcBuyPriceInput() {
+                if (calcActiveSellPct != null) applyCalcSellFromPct(calcActiveSellPct);
+                updateMtfCalculator();
+            }
+
+            function onCalcSellPriceInput() {
+                if (!calcSellPriceProgrammatic) calcActiveSellPct = null;
+                renderCalcSellPctChips();
+                updateMtfCalculator();
+            }
+
+            function addCalcSellPctPreset() {
+                const el = document.getElementById('calcSellPctCustom');
+                const pct = parseFloat(el.value);
+                if (!pct || pct <= 0) {
+                    showToast('Enter a valid percentage.', 'warning');
+                    return;
+                }
+                const presets = getCalcSellPctPresets();
+                if (!presets.some(p => Math.abs(p - pct) < 0.0001)) {
+                    presets.push(pct);
+                    presets.sort((a, b) => a - b);
+                    saveCalcSellPctPresets(presets);
+                }
+                el.value = '';
+                setCalcSellPct(pct);
+            }
+
+            function getCalcInputs() {
+                return {
+                    company: 'Calculator',
+                    broker: 'Zerodha',
+                    buyDate: document.getElementById('calcBuyDate').value,
+                    sellDate: document.getElementById('calcSellDate').value,
+                    quantity: parseFloat(document.getElementById('calcQty').value) || 0,
+                    buyPrice: parseFloat(document.getElementById('calcBuyPrice').value) || 0,
+                    sellPrice: parseFloat(document.getElementById('calcSellPrice').value) || 0,
+                    leverage: parseFloat(document.getElementById('calcLeverage').value) || 1
+                };
+            }
+
+            function calcInputsValid(inp) {
+                return inp.buyDate && inp.sellDate && inp.quantity > 0 && inp.buyPrice > 0 && inp.sellPrice > 0;
+            }
+
+            function renderBrokerRatesPanel(broker, mtfAmount) {
+                const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
+                let interestLine;
+                if (broker === 'Dhan') {
+                    if (mtfAmount > 0) {
+                        const daily = getDhanInterestRate(mtfAmount);
+                        interestLine = `Slab: ${(daily * 365 * 100).toFixed(2)}% p.a. (${(daily * 100).toFixed(4)}% / day)`;
+                    } else {
+                        interestLine = 'Slab-based (set leverage &amp; prices to see rate)';
+                    }
+                } else {
+                    interestLine = `${(cfg.interestRatePerDay * 100).toFixed(4)}% / day (${(cfg.interestRatePerDay * 365 * 100).toFixed(2)}% p.a.)`;
+                }
+                const capLabel = cfg.brokerageCap === Infinity ? 'No cap' : fmtDec(cfg.brokerageCap);
+                return `
+                    <h6 class="fw-bold mb-2"><i class="fas fa-info-circle me-2"></i>${cfg.label} Broker Rates</h6>
+                    <table class="table table-sm align-middle mb-0">
+                        <tbody>
+                            <tr><td class="text-muted">Interest</td><td class="text-end small">${interestLine}</td></tr>
+                            <tr><td class="text-muted">Brokerage</td><td class="text-end">${(cfg.brokeragePct * 100).toFixed(4)}%</td></tr>
+                            <tr><td class="text-muted">Brokerage cap</td><td class="text-end">${capLabel}</td></tr>
+                            <tr><td class="text-muted">Pledge</td><td class="text-end">${fmtDec(cfg.pledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">Unpledge</td><td class="text-end">${fmtDec(cfg.unpledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">DP charges</td><td class="text-end">${fmtDec(cfg.dpCharge || 0)}</td></tr>
+                            <tr><td class="text-muted">STT</td><td class="text-end">${(cfg.sttPct * 100).toFixed(4)}%</td></tr>
+                            <tr><td class="text-muted">Exchange</td><td class="text-end">${(cfg.exchangePct * 100).toFixed(6)}%</td></tr>
+                            <tr><td class="text-muted">SEBI</td><td class="text-end">${(cfg.sebiPct * 100).toFixed(6)}%</td></tr>
+                            <tr><td class="text-muted">Stamp duty</td><td class="text-end">${(cfg.stampPct * 100).toFixed(4)}%</td></tr>
+                            <tr><td class="text-muted">GST</td><td class="text-end">${(cfg.gstPct * 100).toFixed(0)}%</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            function renderMtfCalculator() {
+                const buyEl = document.getElementById('calcBuyDate');
+                const sellEl = document.getElementById('calcSellDate');
+                if (buyEl && !buyEl.value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+                    buyEl.value = yesterday;
+                    sellEl.value = today;
+                }
+                document.querySelectorAll('#page-mtf-calc input.calc-date').forEach(el => {
+                    if (el.dataset.pickerWired) return;
+                    el.dataset.pickerWired = '1';
+                    const openPicker = () => { try { if (el.showPicker) el.showPicker(); } catch (_) {} };
+                    el.addEventListener('click', openPicker);
+                    el.addEventListener('focus', openPicker);
+                });
+                renderCalcSellPctChips();
+            }
+
+            function buildCalcBreakdownHtml(broker, inp) {
+                const calcInp = { ...inp, broker };
+                const result = calculateTrade(calcInp);
+                const mockTx = {
+                    ...calcInp,
+                    mtfAmount: result.mtfAmount,
+                    holdingDays: result.holdingDays,
+                    interest: result.interest,
+                    charges: result.totalCharges,
+                    totalInvestment: result.totalInvestment,
+                    ownMargin: result.ownMargin,
+                    leverage: result.leverage
+                };
+                const intDet = interestDetails(mockTx);
+                const { buy, sell } = chargeSides(mockTx);
+                const levDisplay = result.leverage > 1 ? `${result.leverage}x` : '1x';
+                const netClass = result.netProfit >= 0 ? 'text-success' : 'text-danger';
+                const sameDayNote = intDet.sameDay
+                    ? '<div class="alert alert-info py-2 small mb-2">Same-day trade — no MTF interest is charged.</div>'
+                    : '';
+
+                return `
+                    ${renderBrokerRatesPanel(broker, result.mtfAmount)}
+                    <hr class="my-3" />
+                    <div class="section-title"><i class="fas fa-hand-holding-usd me-2"></i>Funding</div>
+                    <div class="detail-row"><span class="detail-label">Total Investment</span><span class="detail-value">${fmtDec(result.totalInvestment)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Your Margin</span><span class="detail-value">${fmtDec(result.ownMargin)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Broker Funded</span><span class="detail-value">${fmtDec(result.mtfAmount)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Leverage</span><span class="detail-value">${levDisplay}</span></div>
+                    <div class="section-title"><i class="far fa-clock me-2"></i>Holding</div>
+                    <div class="detail-row"><span class="detail-label">Days Financed</span><span class="detail-value">${result.holdingDays} day(s)</span></div>
+                    <div class="section-title"><i class="fas fa-calculator me-2"></i>P&amp;L</div>
+                    <div class="detail-row"><span class="detail-label">Gross Profit</span><span class="detail-value text-success">${fmtDec(result.grossProfit)}</span></div>
+                    <div class="detail-row"><span class="detail-label">MTF Interest</span><span class="detail-value text-warning">- ${fmtDec(result.interest)}</span></div>
+                    <div class="detail-row"><span class="detail-label">Total Charges</span><span class="detail-value">- ${fmtDec(result.totalCharges)}</span></div>
+                    <div class="detail-row fw-bold border-top pt-2 mt-1"><span class="detail-label">Net Profit</span><span class="detail-value ${netClass}">${fmtDec(result.netProfit)}</span></div>
+                    <div class="section-title mt-3"><i class="fas fa-percent me-2"></i>Interest Detail</div>
+                    ${sameDayNote}
+                    <div class="bg-light rounded-3 p-2 my-2 small text-center">
+                        ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
+                    </div>
+                    <div class="detail-row"><span class="detail-label">Rate / day</span><span class="detail-value">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
+                    <div class="detail-row"><span class="detail-label">Rate / year</span><span class="detail-value">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
+                    <div class="section-title mt-3"><i class="fas fa-receipt me-2"></i>Charges Breakdown</div>
+                    ${chargesTable(buy, sell)}
+                `;
+            }
+
+            let calcBreakdownModalInstance = null;
+            function openCalcBreakdownSheet(broker) {
+                const inp = getCalcInputs();
+                if (!calcInputsValid(inp)) {
+                    showToast('Please fill in all calculator fields first.', 'warning');
+                    return;
+                }
+                const b = broker || inp.broker;
+                document.getElementById('calcBreakdownModalTitle').innerHTML = `<i class="fas fa-calculator me-2"></i>${b} Breakdown`;
+                document.getElementById('calcBreakdownModalBody').innerHTML = buildCalcBreakdownHtml(b, inp);
+                if (!calcBreakdownModalInstance) {
+                    calcBreakdownModalInstance = new bootstrap.Modal(document.getElementById('calcBreakdownModal'), { backdrop: true, keyboard: true });
+                }
+                calcBreakdownModalInstance.show();
+            }
+
+            function updateMtfCalculator() {
+                const inp = getCalcInputs();
+                const comparePanel = document.getElementById('calcComparePanel');
+
+                if (!calcInputsValid(inp)) {
+                    comparePanel.innerHTML = '<p class="text-muted small mb-0">Fill in all fields to compare brokers.</p>';
+                    return;
+                }
+
+                const brokers = ['Zerodha', 'Dhan', 'Groww'];
+                const rows = brokers.map(b => {
+                    const r = calculateTrade({ ...inp, broker: b });
+                    const nc = r.netProfit >= 0 ? 'text-success' : 'text-danger';
+                    return `
+                        <tr>
+                            <td class="fw-semibold">${b}</td>
+                            <td class="text-end">${fmtDec(r.interest)}</td>
+                            <td class="text-end">${fmtDec(r.totalCharges)}</td>
+                            <td class="text-end fw-semibold ${nc}">${fmtDec(r.netProfit)}</td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-light border rounded-circle" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
+                                    <i class="fas fa-circle-info text-primary"></i>
+                                </button>
+                            </td>
+                        </tr>`;
+                }).join('');
+                comparePanel.innerHTML = `
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Broker</th>
+                                <th class="text-end">Interest</th>
+                                <th class="text-end">Charges</th>
+                                <th class="text-end">Net Profit</th>
+                                <th class="text-end" style="width:2.5rem;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                    <p class="text-muted small mt-2 mb-0"><i class="fas fa-circle-info me-1"></i>Tap the info icon for full breakdown.</p>
+                `;
+            }
+
             // ---------- COPY TRANSACTION ----------
             function copyTransaction(id) {
                 const original = getTransaction(id);
@@ -1182,6 +1742,7 @@
                 showToast(`Copied trade: ${newTx.company}`, 'success');
                 renderCurrentView();
                 renderPastTrades();
+                refreshActiveMoreView();
             }
 
             // ---------- SEARCH ----------
@@ -1417,7 +1978,9 @@
             function interestDetails(t) {
                 const cfg = BROKER_CONFIG[t.broker] || BROKER_CONFIG['Zerodha'];
                 const mtf = t.mtfAmount || 0;
-                const days = t.holdingDays || 0;
+                const days = (t.buyDate && t.sellDate)
+                    ? calcInterestDays(t.buyDate, t.sellDate)
+                    : (t.holdingDays || 0);
                 let dailyRate;
                 if (t.broker === 'Dhan' && mtf > 0) {
                     dailyRate = getDhanInterestRate(mtf);
@@ -1426,8 +1989,10 @@
                 } else {
                     dailyRate = 0;
                 }
-                const interest = mtf * dailyRate * days;
-                return { mtf, days, dailyRate, annualRate: dailyRate * 365, interest };
+                const interest = (mtf > 0 && days > 0 && dailyRate > 0)
+                    ? mtf * dailyRate * days
+                    : 0;
+                return { mtf, days, dailyRate, annualRate: dailyRate * 365, interest, sameDay: parseDateKey(t.buyDate) === parseDateKey(t.sellDate) && !!t.buyDate };
             }
 
             let interestModalInstance = null;
@@ -1466,12 +2031,13 @@
                     </div>
                     <div class="bg-light rounded-3 p-2 my-3 small text-center">
                         <span class="text-muted">Leverage &times; Daily Rate &times; Days</span><br>
-                        ${fmtDec(d.mtf)} &times; ${(d.dailyRate * 100).toFixed(4)}% &times; ${d.days}
+                        ${d.sameDay ? 'No interest (same-day trade)' : `${fmtDec(d.mtf)} &times; ${(d.dailyRate * 100).toFixed(4)}% &times; ${d.days}`}
                     </div>
                     <div class="d-flex justify-content-between fw-bold border-top pt-2">
                         <span>Total Interest</span><span class="text-warning">${fmtDec(d.interest)}</span>
                     </div>
-                    ${noLeverage ? '<div class="small text-muted text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
+                    ${d.sameDay ? '<div class="small text-muted text-center mt-3">Same-day trade — no MTF interest is charged.</div>' : ''}
+                    ${noLeverage && !d.sameDay ? '<div class="small text-muted text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
                 `;
 
                 if (!interestModalInstance) {
@@ -1531,6 +2097,7 @@
                         deleteTransaction(id);
                         renderCurrentView();
                         renderPastTrades();
+                        refreshActiveMoreView();
                         showToast('Trade deleted.', 'danger');
                     }
                 });
@@ -1730,6 +2297,7 @@
                 txModalInstance.hide();
                 renderCurrentView();
                 renderPastTrades();
+                refreshActiveMoreView();
             }
 
             // ---------- SETTINGS ----------
@@ -1784,62 +2352,6 @@
             function connectSyncFromInput() {
                 const input = document.getElementById('syncCodeInput');
                 connectSync(input ? input.value : '');
-            }
-
-            async function exportData() {
-                const data = getStorage();
-                const json = JSON.stringify(data, null, 2);
-                const filename = `mtf_backup_${new Date().toISOString().slice(0,10)}.json`;
-
-                // 1) Mobile / in-app browsers: use the Web Share API (share sheet -> save to Files/Drive)
-                try {
-                    if (navigator.canShare && typeof File !== 'undefined') {
-                        const file = new File([json], filename, { type: 'application/json' });
-                        if (navigator.canShare({ files: [file] })) {
-                            await navigator.share({ files: [file], title: 'MTF Backup', text: 'MTF Profit Tracker backup' });
-                            showToast('Backup shared!', 'success');
-                            return;
-                        }
-                    }
-                } catch (err) {
-                    if (err && err.name === 'AbortError') return; // user cancelled the share sheet
-                    // otherwise fall through to the download fallback
-                }
-
-                // 2) Desktop browsers: blob download via a temporary anchor
-                try {
-                    const blob = new Blob([json], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
-                    showToast('Data exported!', 'success');
-                    return;
-                } catch (err) {
-                    // fall through to last-resort fallback
-                }
-
-                // 3) Last resort: open the JSON in a new tab so the user can copy/save it manually
-                try {
-                    const w = window.open('', '_blank');
-                    if (w) {
-                        w.document.title = filename;
-                        w.document.body.style.margin = '0';
-                        const pre = w.document.createElement('pre');
-                        pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;padding:16px;font-size:12px;';
-                        pre.textContent = json;
-                        w.document.body.appendChild(pre);
-                        showToast('Backup opened in a new tab. Long-press to copy/save.', 'info');
-                    } else {
-                        showToast('Export blocked here. Please allow pop-ups or use a desktop browser.', 'danger');
-                    }
-                } catch (err) {
-                    showToast('Export is not supported in this browser.', 'danger');
-                }
             }
 
             // ---------- BACKUP AS TEXT (COPY / PASTE) ----------
@@ -1900,30 +2412,7 @@
                 renderCurrentView();
                 renderPastTrades();
                 renderSettings();
-            }
-
-            function importData(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target.result);
-                        if (Array.isArray(data.transactions)) {
-                            saveStorage(data);
-                            showToast('Data imported successfully!', 'success');
-                            renderCurrentView();
-                            renderPastTrades();
-                            renderSettings();
-                        } else {
-                            showToast('Invalid backup file.', 'danger');
-                        }
-                    } catch (_) {
-                        showToast('Error reading file.', 'danger');
-                    }
-                };
-                reader.readAsText(file);
-                event.target.value = '';
+                refreshActiveMoreView();
             }
 
             let resetModalInstance = null;
@@ -1946,6 +2435,7 @@
                 renderCurrentView();
                 renderPastTrades();
                 renderSettings();
+                refreshActiveMoreView();
             }
 
             // ---------- INIT ----------
@@ -1971,17 +2461,21 @@
                 initSyncOnLoad();
 
                 document.addEventListener('visibilitychange', () => {
-                    if (!document.hidden && document.getElementById('page-trades').classList.contains('active-page')) {
+                    if (document.hidden) return;
+                    if (document.getElementById('page-trades').classList.contains('active-page')) {
                         renderCurrentView();
                     }
-                    if (!document.hidden && document.getElementById('page-past').classList.contains('active-page')) {
+                    if (document.getElementById('page-past').classList.contains('active-page')) {
                         renderPastTrades();
                     }
+                    refreshActiveMoreView();
                 });
             });
 
             // Expose global functions
             window.navigateTo = navigateTo;
+            window.openMoreFeature = openMoreFeature;
+            window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
             window.openEditModal = openEditModal;
             window.openViewModal = openViewModal;
@@ -1990,17 +2484,23 @@
             window.confirmEdit = confirmEdit;
             window.confirmDelete = confirmDelete;
             window.saveTransaction = saveTransaction;
-            window.exportData = exportData;
             window.openBackupTextModal = openBackupTextModal;
+            window.openSettingsSheet = openSettingsSheet;
             window.copyBackupText = copyBackupText;
             window.restoreFromText = restoreFromText;
-            window.importData = importData;
             window.resetData = resetData;
             window.performReset = performReset;
             window.openChargesModal = openChargesModal;
             window.openInterestModal = openInterestModal;
             window.renderCurrentView = renderCurrentView;
             window.renderPastTrades = renderPastTrades;
+            window.renderTransactions = renderTransactions;
+            window.updateMtfCalculator = updateMtfCalculator;
+            window.openCalcBreakdownSheet = openCalcBreakdownSheet;
+            window.setCalcSellPct = setCalcSellPct;
+            window.onCalcBuyPriceInput = onCalcBuyPriceInput;
+            window.onCalcSellPriceInput = onCalcSellPriceInput;
+            window.addCalcSellPctPreset = addCalcSellPctPreset;
             window.renderSettings = renderSettings;
             window.setTradeSearch = setTradeSearch;
             window.clearTradeSearch = clearTradeSearch;
@@ -2015,6 +2515,65 @@
 
         })();
     </script>
+
+    <!-- SETTINGS BOTTOM SHEET -->
+    <div class="modal fade bottom-sheet-modal" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title"><i class="fas fa-cog me-2"></i>Settings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card border-0 shadow-sm rounded-4 mb-3">
+                        <div class="card-body">
+                            <h6 class="fw-bold mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="me-2 small text-muted">Status:</span>
+                                <span id="cloudSyncStatus" class="badge bg-secondary">Off</span>
+                            </div>
+                            <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep data in sync. Choose a long, secret code (like a password).</p>
+                            <div class="input-group mb-2">
+                                <span class="input-group-text"><i class="fas fa-key"></i></span>
+                                <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-primary flex-fill" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug me-1"></i> Connect</button>
+                                <button class="btn btn-sm btn-outline-secondary flex-fill" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink me-1"></i> Disconnect</button>
+                            </div>
+                            <div id="cloudSyncHint" class="small text-muted mt-2"></div>
+                        </div>
+                    </div>
+                    <div class="card border-0 shadow-sm rounded-4">
+                        <div class="card-body p-0">
+                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
+                                <div>
+                                    <div class="fw-semibold"><i class="fas fa-database me-2"></i>Total Transactions</div>
+                                    <div class="small text-muted" id="totalTxCount">0 records</div>
+                                </div>
+                                <span class="badge bg-secondary" id="totalTxBadge">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
+                                <div>
+                                    <div class="fw-semibold"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
+                                    <div class="small text-muted">Copy your data as text, or paste it back to restore</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3">
+                                <div>
+                                    <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
+                                    <div class="small text-muted">Permanently delete all transactions</div>
+                                </div>
+                                <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- FILTER BOTTOM SHEET -->
     <div class="modal fade bottom-sheet-modal" id="filterModal" tabindex="-1" aria-hidden="true">
