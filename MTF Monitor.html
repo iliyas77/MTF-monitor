@@ -58,8 +58,7 @@
         }
 
         .status-tab.active,
-        .range-filter .btn.active,
-        .past-range-filter .btn.active {
+        .range-quick .btn.active {
             background: var(--app-primary);
             border-color: var(--app-primary);
             color: #fff;
@@ -244,28 +243,17 @@
                 <button class="status-tab btn btn-sm fw-semibold rounded-3 flex-fill" data-tab="detail" onclick="setPastTab('detail')">Detail</button>
             </div>
 
-            <!-- Company search -->
-            <div class="search-bar position-relative mb-3">
-                <i class="fas fa-search search-icon position-absolute"></i>
-                <input type="text" class="form-control rounded-4 shadow-sm" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
-                <button class="search-clear btn btn-light position-absolute align-items-center justify-content-center rounded-circle p-0" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="past-range-filter d-flex flex-column gap-2 bg-white border rounded-4 p-3 mb-3 shadow-sm">
-                <div class="row-1 d-flex flex-wrap gap-2 justify-content-center">
-                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(7)">1W</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(10)">10D</button>
-                    <button class="btn btn-outline-secondary btn-sm active" onclick="setPastRange(30)">1M</button>
-                    <button class="btn btn-outline-secondary btn-sm" onclick="setPastRange(90)">3M</button>
+            <!-- Company search + filter -->
+            <div class="d-flex gap-2 mb-3">
+                <div class="search-bar position-relative flex-grow-1">
+                    <i class="fas fa-search search-icon position-absolute"></i>
+                    <input type="text" class="form-control rounded-4 shadow-sm" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
+                    <button class="search-clear btn btn-light position-absolute align-items-center justify-content-center rounded-circle p-0" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="row-2 d-flex flex-wrap gap-2 align-items-center justify-content-center">
-                    <input type="date" class="form-control form-control-sm rounded-3 flex-fill" id="pastFrom" />
-                    <span class="small text-muted">to</span>
-                    <input type="date" class="form-control form-control-sm rounded-3 flex-fill" id="pastTo" />
-                    <button class="btn btn-primary btn-sm" onclick="applyPastRangeFilter()"><i class="fas fa-check"></i> Apply</button>
-                </div>
+                <button class="btn btn-light border rounded-4 shadow-sm px-3" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h"></i></button>
             </div>
             <!-- Summary Card (Detail tab only) -->
-            <div class="card border-0 shadow-sm rounded-4 mb-3" id="pastSummaryCard" style="display:none;">
+            <div class="card border-0 shadow-sm rounded-4 mb-3" id="pastSummaryCard">
                 <div class="card-body row g-0 text-center py-3">
                     <div class="col-4">
                         <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-wallet me-1"></i>Net Profit</div>
@@ -488,6 +476,34 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="viewModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charges Breakdown Bottom Sheet -->
+    <div class="modal fade bottom-sheet-modal" id="chargesModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title" id="chargesModalTitle"><i class="fas fa-receipt me-2"></i>Charges Breakdown</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="chargesModalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interest Breakdown Bottom Sheet -->
+    <div class="modal fade bottom-sheet-modal" id="interestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title" id="interestModalTitle"><i class="fas fa-percent me-2"></i>Interest Breakdown</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="interestModalBody"></div>
             </div>
         </div>
     </div>
@@ -868,6 +884,18 @@
                 setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
             }
 
+            // ---------- FILTER SHEET ----------
+            let filterModalInstance = null;
+            function openFilterSheet() {
+                if (!filterModalInstance) {
+                    filterModalInstance = new bootstrap.Modal(document.getElementById('filterModal'), { backdrop: true });
+                }
+                filterModalInstance.show();
+            }
+            function closeFilterSheet() {
+                if (filterModalInstance) filterModalInstance.hide();
+            }
+
             // ---------- NAVIGATION ----------
             const pageMap = { trades: 'page-trades', past: 'page-past', settings: 'page-settings' };
 
@@ -907,13 +935,14 @@
                 pastTo = range.to;
                 document.getElementById('pastFrom').value = pastFrom;
                 document.getElementById('pastTo').value = pastTo;
-                document.querySelectorAll('.past-range-filter .row-1 .btn').forEach(b => b.classList.remove('active'));
-                const btns = document.querySelectorAll('.past-range-filter .row-1 .btn');
+                const btns = document.querySelectorAll('#pastRangeButtons .btn');
+                btns.forEach(b => b.classList.remove('active'));
                 if (days === 7) btns[0].classList.add('active');
                 else if (days === 10) btns[1].classList.add('active');
                 else if (days === 30) btns[2].classList.add('active');
                 else if (days === 90) btns[3].classList.add('active');
                 renderPastTrades();
+                closeFilterSheet();
             }
 
             function applyPastRangeFilter() {
@@ -923,7 +952,9 @@
                 if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
                 pastFrom = from;
                 pastTo = to;
+                document.querySelectorAll('#pastRangeButtons .btn').forEach(b => b.classList.remove('active'));
                 renderPastTrades();
+                closeFilterSheet();
                 showToast('Range applied.', 'success');
             }
 
@@ -941,16 +972,10 @@
                     daysHeld = Math.max(0, Math.ceil((new Date() - buyDt) / (1000 * 60 * 60 * 24)));
                 }
 
-                const bigLabel = isOpen ? 'Target Sell Price' : 'Net Profit';
-                const bigValue = isOpen ? fmtDec(t.sellPrice) : `${sign}${fmt(t.netProfit)}`;
-                const bigClass = isOpen ? 'text-success' : profitClass;
-                const detailItems = isOpen ? [
-                    ['Buy Date', fmtDate(t.buyDate), '', 'col-6'],
-                    ['Sell Date', fmtDate(t.sellDate), '', 'col-6'],
-                    ['Buy Price', fmtDec(t.buyPrice), '', 'col-6'],
-                    ['Net Profit', `${sign}${fmt(t.netProfit)}`, profitClass, 'col-6'],
-                    ['Quantity', t.quantity, '', 'col-12']
-                ] : [
+                const bigLabel = 'Net Profit';
+                const bigValue = `${sign}${fmt(t.netProfit)}`;
+                const bigClass = profitClass;
+                const detailItems = [
                     ['Buy Price', fmtDec(t.buyPrice), '', 'col-4'],
                     ['Sell Price', fmtDec(t.sellPrice), 'text-success', 'col-4'],
                     ['Quantity', t.quantity, '', 'col-4']
@@ -987,8 +1012,8 @@
                             <div class="row g-2 text-center bg-light rounded-4 p-2 mb-3">
                                 <div class="col-3"><div class="small text-muted"><i class="fas fa-sack-dollar"></i> Gross</div><div class="fw-semibold ${t.grossProfit >= 0 ? 'text-success' : 'text-danger'}">${fmt(t.grossProfit)}</div></div>
                                 <div class="col-3"><div class="small text-muted"><i class="far fa-clock"></i> Held</div><div class="fw-semibold text-primary">${daysHeld}d</div></div>
-                                <div class="col-3"><div class="small text-muted"><i class="fas fa-percent"></i> Interest</div><div class="fw-semibold text-warning">${fmtDec(t.interest || 0)}</div></div>
-                                <div class="col-3"><div class="small text-muted"><i class="fas fa-receipt"></i> Charges</div><div class="fw-semibold text-secondary">${fmtDec(t.charges || 0)}</div></div>
+                                <div class="col-3"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openInterestModal('${t.id}')"><div class="small text-muted"><i class="fas fa-percent"></i> Interest <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-warning text-decoration-underline">${fmtDec(t.interest || 0)}</div></button></div>
+                                <div class="col-3"><button type="button" class="btn p-0 border-0 bg-transparent w-100" onclick="openChargesModal('${t.id}')"><div class="small text-muted"><i class="fas fa-receipt"></i> Charges <i class="fas fa-chevron-down" style="font-size:.6rem;"></i></div><div class="fw-semibold text-secondary text-decoration-underline">${fmtDec(t.charges || 0)}</div></button></div>
                             </div>
 
                             <div class="d-flex gap-2 border-top pt-3">
@@ -1080,48 +1105,31 @@
 
                 listContainer.style.display = isDetail ? 'none' : '';
                 detailContainer.style.display = isDetail ? '' : 'none';
-                summaryCard.style.display = isDetail ? '' : 'none';
+                summaryCard.style.display = '';
+
+                // Shared summary (Net Profit / Trades / Total Charges) for both tabs
+                let net = 0, charges = 0;
+                filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; });
+                document.getElementById('pastSummaryNet').textContent = fmt(net);
+                document.getElementById('pastSummaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
+                document.getElementById('pastSummaryTrades').textContent = filtered.length;
+                document.getElementById('pastSummaryCharges').textContent = fmt(charges);
+
+                const emptyHtml = pastQuery
+                    ? `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`
+                    : `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
 
                 if (isDetail) {
-                    let net = 0, charges = 0;
-                    filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; });
-                    document.getElementById('pastSummaryNet').textContent = fmt(net);
-                    document.getElementById('pastSummaryNet').className = 'fw-bold fs-4 ' + (net >= 0 ? 'text-success' : 'text-danger');
-                    document.getElementById('pastSummaryTrades').textContent = filtered.length;
-                    document.getElementById('pastSummaryCharges').textContent = fmt(charges);
-
-                    if (filtered.length === 0) {
-                        detailContainer.innerHTML = pastQuery
-                            ? `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`
-                            : `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
-                        return;
-                    }
-                    detailContainer.innerHTML = filtered.map(renderTradeCard).join('');
+                    detailContainer.innerHTML = filtered.length === 0 ? emptyHtml : filtered.map(renderTradeCard).join('');
                     return;
                 }
 
                 if (filtered.length === 0) {
-                    listContainer.innerHTML = pastQuery
-                        ? `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-muted mb-0">Try a different company name or clear the search.</p></div>`
-                        : `<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
+                    listContainer.innerHTML = emptyHtml;
                     return;
                 }
 
-                let totalNet = 0;
-                filtered.forEach(t => { totalNet += t.netProfit || 0; });
-                const totalClass = totalNet >= 0 ? 'text-success' : 'text-danger';
-                const summaryHtml = `
-                    <div class="card border-0 shadow-sm rounded-4 mb-3">
-                        <div class="card-body d-flex justify-content-between align-items-center gap-3">
-                            <div>
-                                <div class="fw-bold">Total Profit/Loss</div>
-                                <div class="small text-muted">${filtered.length} trades \u00b7 ${fmtDate(pastFrom)} to ${fmtDate(pastTo)}</div>
-                            </div>
-                            <div class="fs-3 fw-bold ${totalClass}">${fmt(totalNet)}</div>
-                        </div>
-                    </div>
-                `;
-                const html = filtered.map(t => {
+                listContainer.innerHTML = filtered.map(t => {
                     const sign = t.netProfit >= 0 ? '+' : '';
                     const profitClass = t.netProfit >= 0 ? 'text-success' : 'text-danger';
                     return `
@@ -1136,7 +1144,6 @@
                         </div>
                     `;
                 }).join('');
-                listContainer.innerHTML = summaryHtml + html;
             }
 
             function setPastTab(tab) {
@@ -1265,6 +1272,192 @@
                     viewModalInstance = new bootstrap.Modal(el, { backdrop: true, keyboard: true });
                 }
                 viewModalInstance.show();
+            }
+
+            // ---------- CHARGES BREAKDOWN ----------
+            function chargeSides(t) {
+                const cfg = BROKER_CONFIG[t.broker] || BROKER_CONFIG['Zerodha'];
+                const qty = t.quantity || 0;
+                const buyVal = (t.buyPrice || 0) * qty;
+                const sellVal = (t.sellPrice || 0) * qty;
+                const calcBrk = (amount) => {
+                    let brk = amount * cfg.brokeragePct;
+                    if (cfg.brokerageCap !== Infinity && brk > cfg.brokerageCap) brk = cfg.brokerageCap;
+                    return brk;
+                };
+
+                const buy = {
+                    orderValue: buyVal,
+                    brokerage: calcBrk(buyVal),
+                    stt: buyVal * cfg.sttPct,
+                    exchange: buyVal * cfg.exchangePct,
+                    sebi: buyVal * cfg.sebiPct,
+                    stamp: buyVal * cfg.stampPct,
+                    pledge: cfg.pledgeCharge || 0,
+                    unpledge: 0,
+                    dp: 0
+                };
+                buy.gst = (buy.brokerage + buy.exchange + buy.sebi + buy.pledge) * cfg.gstPct;
+                buy.total = buy.brokerage + buy.stt + buy.exchange + buy.sebi + buy.stamp + buy.pledge + buy.gst;
+
+                const sell = {
+                    orderValue: sellVal,
+                    brokerage: calcBrk(sellVal),
+                    stt: sellVal * cfg.sttPct,
+                    exchange: sellVal * cfg.exchangePct,
+                    sebi: sellVal * cfg.sebiPct,
+                    stamp: 0,
+                    pledge: 0,
+                    unpledge: cfg.unpledgeCharge || 0,
+                    dp: cfg.dpCharge || 0
+                };
+                sell.gst = (sell.brokerage + sell.exchange + sell.sebi + sell.unpledge + sell.dp) * cfg.gstPct;
+                sell.total = sell.brokerage + sell.stt + sell.exchange + sell.sebi + sell.unpledge + sell.dp + sell.gst;
+
+                return { buy, sell };
+            }
+
+            function chargesTable(buy, sell) {
+                const rows = [
+                    ['Brokerage', buy.brokerage, sell.brokerage],
+                    ['STT', buy.stt, sell.stt],
+                    ['Exchange / Txn', buy.exchange, sell.exchange],
+                    ['SEBI', buy.sebi, sell.sebi],
+                    ['Stamp Duty', buy.stamp, sell.stamp],
+                    ['Pledge', buy.pledge, sell.pledge],
+                    ['Unpledge', buy.unpledge, sell.unpledge],
+                    ['DP Charges', buy.dp, sell.dp],
+                    ['GST (18%)', buy.gst, sell.gst]
+                ].filter(([, b, s]) => (b + s) > 0);
+                const body = rows.map(([l, b, s]) => `
+                    <tr>
+                        <td class="text-muted">${l}</td>
+                        <td class="text-end">${fmtDec(b)}</td>
+                        <td class="text-end">${fmtDec(s)}</td>
+                        <td class="text-end fw-semibold">${fmtDec(b + s)}</td>
+                    </tr>`).join('');
+                return `
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Charge</th>
+                                    <th class="text-end"><i class="fas fa-arrow-down text-success me-1"></i>Buy</th>
+                                    <th class="text-end"><i class="fas fa-arrow-up text-danger me-1"></i>Sell</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="small">
+                                    <td class="text-muted">Order Value</td>
+                                    <td class="text-end">${fmtDec(buy.orderValue)}</td>
+                                    <td class="text-end">${fmtDec(sell.orderValue)}</td>
+                                    <td class="text-end fw-semibold">${fmtDec(buy.orderValue + sell.orderValue)}</td>
+                                </tr>
+                                ${body}
+                                <tr class="fw-bold border-top">
+                                    <td>Total Charges</td>
+                                    <td class="text-end">${fmtDec(buy.total)}</td>
+                                    <td class="text-end">${fmtDec(sell.total)}</td>
+                                    <td class="text-end text-secondary">${fmtDec(buy.total + sell.total)}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+
+            let chargesModalInstance = null;
+            function openChargesModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const { buy, sell } = chargeSides(tx);
+                const grand = buy.total + sell.total;
+
+                document.getElementById('chargesModalTitle').innerHTML = `<i class="fas fa-receipt me-2"></i>${tx.company} Charges`;
+                document.getElementById('chargesModalBody').innerHTML = `
+                    <div class="text-center mb-3">
+                        <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
+                        <span class="badge rounded-pill text-bg-primary">${(tx.leverage || 1) > 1 ? (tx.leverage + 'x') : '1x'}</span>
+                    </div>
+                    ${chargesTable(buy, sell)}
+                    <div class="row g-2 text-center mt-3">
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Buy Side</div><div class="fw-bold">${fmtDec(buy.total)}</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Sell Side</div><div class="fw-bold">${fmtDec(sell.total)}</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Total</div><div class="fw-bold text-secondary">${fmtDec(grand)}</div></div></div>
+                    </div>
+                `;
+
+                if (!chargesModalInstance) {
+                    chargesModalInstance = new bootstrap.Modal(document.getElementById('chargesModal'), { backdrop: true, keyboard: true });
+                }
+                chargesModalInstance.show();
+            }
+
+            // ---------- INTEREST BREAKDOWN ----------
+            function interestDetails(t) {
+                const cfg = BROKER_CONFIG[t.broker] || BROKER_CONFIG['Zerodha'];
+                const mtf = t.mtfAmount || 0;
+                const days = t.holdingDays || 0;
+                let dailyRate;
+                if (t.broker === 'Dhan' && mtf > 0) {
+                    dailyRate = getDhanInterestRate(mtf);
+                } else if (cfg.interestRatePerDay !== null && cfg.interestRatePerDay !== undefined) {
+                    dailyRate = cfg.interestRatePerDay;
+                } else {
+                    dailyRate = 0;
+                }
+                const interest = mtf * dailyRate * days;
+                return { mtf, days, dailyRate, annualRate: dailyRate * 365, interest };
+            }
+
+            let interestModalInstance = null;
+            function openInterestModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const d = interestDetails(tx);
+                const lev = tx.leverage || 1;
+                const levDisplay = lev > 1 ? (lev + 'x') : '1x';
+                const noLeverage = d.mtf <= 0;
+
+                document.getElementById('interestModalTitle').innerHTML = `<i class="fas fa-percent me-2"></i>${tx.company} Interest`;
+                document.getElementById('interestModalBody').innerHTML = `
+                    <div class="text-center mb-3">
+                        <span class="badge rounded-pill bg-light text-dark border">${tx.broker}</span>
+                        <span class="badge rounded-pill text-bg-primary">${levDisplay}</span>
+                    </div>
+                    <div class="row g-2 text-center mb-3">
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Leverage Amt</div><div class="fw-bold">${fmt(d.mtf)}</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Days</div><div class="fw-bold text-primary">${d.days}d</div></div></div>
+                        <div class="col-4"><div class="bg-light rounded-3 p-2"><div class="small text-muted">Interest</div><div class="fw-bold text-warning">${fmtDec(d.interest)}</div></div></div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle mb-0">
+                            <tbody>
+                                <tr><td class="text-muted">Total Investment</td><td class="text-end">${fmtDec(tx.totalInvestment || 0)}</td></tr>
+                                <tr><td class="text-muted">Your Margin</td><td class="text-end">${fmtDec(tx.ownMargin || 0)}</td></tr>
+                                <tr><td class="text-muted">Broker Funded (Leverage)</td><td class="text-end fw-semibold">${fmtDec(d.mtf)}</td></tr>
+                                <tr><td class="text-muted">Leverage</td><td class="text-end">${levDisplay}</td></tr>
+                                <tr><td class="text-muted">Interest Rate / day</td><td class="text-end">${(d.dailyRate * 100).toFixed(4)}%</td></tr>
+                                <tr><td class="text-muted">Interest Rate / year</td><td class="text-end">${(d.annualRate * 100).toFixed(2)}%</td></tr>
+                                <tr><td class="text-muted">Days Financed</td><td class="text-end">${d.days} day(s)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="bg-light rounded-3 p-2 my-3 small text-center">
+                        <span class="text-muted">Leverage &times; Daily Rate &times; Days</span><br>
+                        ${fmtDec(d.mtf)} &times; ${(d.dailyRate * 100).toFixed(4)}% &times; ${d.days}
+                    </div>
+                    <div class="d-flex justify-content-between fw-bold border-top pt-2">
+                        <span>Total Interest</span><span class="text-warning">${fmtDec(d.interest)}</span>
+                    </div>
+                    ${noLeverage ? '<div class="small text-muted text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
+                `;
+
+                if (!interestModalInstance) {
+                    interestModalInstance = new bootstrap.Modal(document.getElementById('interestModal'), { backdrop: true, keyboard: true });
+                }
+                interestModalInstance.show();
             }
 
             // ---------- DELETE CONFIRM ----------
@@ -1723,6 +1916,8 @@
             window.importData = importData;
             window.resetData = resetData;
             window.performReset = performReset;
+            window.openChargesModal = openChargesModal;
+            window.openInterestModal = openInterestModal;
             window.renderCurrentView = renderCurrentView;
             window.renderPastTrades = renderPastTrades;
             window.renderSettings = renderSettings;
@@ -1733,12 +1928,49 @@
             window.applyPastRangeFilter = applyPastRangeFilter;
             window.setPastRange = setPastRange;
             window.setPastTab = setPastTab;
+            window.openFilterSheet = openFilterSheet;
             window.updatePreview = updatePreview;
             window.connectSyncFromInput = connectSyncFromInput;
             window.disconnectSync = disconnectSync;
 
         })();
     </script>
+
+    <!-- FILTER BOTTOM SHEET -->
+    <div class="modal fade bottom-sheet-modal" id="filterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title"><i class="fas fa-sliders-h me-2"></i>Filter Past Trades</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">Quick range</label>
+                        <div class="range-quick d-flex flex-wrap gap-2" id="pastRangeButtons">
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="setPastRange(7)">1W</button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="setPastRange(10)">10D</button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill active" onclick="setPastRange(30)">1M</button>
+                            <button class="btn btn-outline-secondary btn-sm flex-fill" onclick="setPastRange(90)">3M</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">From</label>
+                        <input type="date" class="form-control rounded-3" id="pastFrom" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">To</label>
+                        <input type="date" class="form-control rounded-3" id="pastTo" />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="applyPastRangeFilter()"><i class="fas fa-check me-1"></i> Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- BACKUP AS TEXT MODAL -->
     <div class="modal fade bottom-sheet-modal" id="backupTextModal" tabindex="-1" aria-hidden="true">
