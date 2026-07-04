@@ -32,7 +32,7 @@
         const abs = Math.abs(n);
         if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(1) + 'Cr';
         if (abs >= 100000) return sign + '₹' + (abs / 100000).toFixed(1) + 'L';
-        return sign + '₹' + abs.toFixed(0);
+        return sign + '₹' + Math.round(abs).toLocaleString('en-IN');
     }
 
     function fmtINR(n) {
@@ -44,7 +44,9 @@
 
     function fmtDec(n) {
         if (n === undefined || n === null || isNaN(n)) return '₹0.00';
-        return '₹' + n.toFixed(2);
+        const sign = n < 0 ? '-' : '';
+        const abs = Math.abs(n);
+        return sign + '₹' + abs.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function amountInWords(num) {
@@ -76,12 +78,12 @@
 
     // ---------- AMOUNT COMPONENT ----------
     const AMOUNT_SIZES = {
-        xs: { shell: 'px-2 py-0.5 rounded-lg', value: 'text-xs font-semibold', words: 'text-[0.65rem] mt-0.5' },
-        sm: { shell: 'px-2 py-0.5 rounded-lg', value: 'text-sm font-semibold', words: 'text-[0.65rem] mt-0.5' },
-        md: { shell: 'px-2.5 py-1 rounded-xl', value: 'text-base font-semibold', words: 'text-xs mt-0.5' },
+        xs: { shell: 'px-2 py-0.5 rounded-lg', value: 'text-xs font-semibold', words: 'text-[0.65rem] mt-1' },
+        sm: { shell: 'px-2 py-0.5 rounded-lg', value: 'text-sm font-semibold', words: 'text-[0.65rem] mt-1' },
+        md: { shell: 'px-2.5 py-1 rounded-xl', value: 'text-base font-semibold', words: 'text-xs mt-1' },
         lg: { shell: 'px-3 py-1.5 rounded-2xl', value: 'text-3xl font-bold leading-none', words: 'text-xs mt-1' },
         xl: { shell: 'px-3 py-1.5 rounded-2xl', value: 'text-2xl font-bold leading-tight', words: 'text-xs mt-1' },
-        hero: { shell: 'px-4 py-2 rounded-2xl mb-3', value: 'text-6xl font-bold leading-none', words: 'text-xs mt-1.5' }
+        hero: { shell: 'px-4 py-2 rounded-2xl', value: 'text-6xl font-bold leading-none', words: 'text-xs mt-1.5' }
     };
 
     const AMOUNT_TONE_SHELL = {
@@ -120,7 +122,7 @@
     }
 
     /**
-     * Reusable amount display — number on top, optional words on second row.
+     * Reusable amount display — value in a coloured pill; optional words below (plain text).
      */
     function renderAmount(amount, opts = {}) {
         const {
@@ -152,12 +154,17 @@
         const iconHtml = icon
             ? `<span class="amount-display__icon ${iconSizes[iconSize] || iconSizes.sm} opacity-80 mb-0.5"><i class="fas ${icon}"></i></span>`
             : '';
+        const valueHtml = `<span class="amount-display__value ${cfg.value} whitespace-nowrap">${formatted}</span>`;
+        const pillHtml = pill
+            ? `<span class="amount-display__pill inline-flex flex-col ${shellTone} ${cfg.shell}">${iconHtml}${valueHtml}</span>`
+            : `<span class="amount-display__pill inline-flex flex-col ${shellTone}">${iconHtml}${valueHtml}</span>`;
         const wordsHtml = words
-            ? `<span class="amount-display__words block ${cfg.words}">${amountInWords(amount)}</span>`
+            ? `<span class="amount-display__words block ${cfg.words} text-base-content/55 font-normal">${amountInWords(amount)}</span>`
             : '';
         const idAttr = id ? ` id="${id}"` : '';
+        const outerMb = size === 'hero' ? 'mb-3' : '';
 
-        return `<span class="amount-display tabular-nums ${alignMap[align] || ''} ${shellTone} ${cfg.shell} ${className}"${idAttr}>${iconHtml}<span class="amount-display__value ${cfg.value} whitespace-nowrap">${formatted}</span>${wordsHtml}</span>`;
+        return `<span class="amount-display tabular-nums ${alignMap[align] || ''} ${outerMb} ${className}"${idAttr}>${pillHtml}${wordsHtml}</span>`;
     }
 
     function paintAmount(el, amount, opts = {}) {
@@ -168,13 +175,13 @@
     }
 
     function fmtMoneyRich(n, opts = {}) {
-        return renderAmount(n, { words: true, size: 'md', align: 'right', ...opts });
+        return renderAmount(n, { size: 'md', align: 'right', ...opts });
     }
 
     function pnlToneClass(n, size = 'md') {
         const cfg = AMOUNT_SIZES[size] || AMOUNT_SIZES.md;
         const tone = resolveAmountTone(n, 'auto');
-        return `amount-display tabular-nums ${AMOUNT_TONE_SHELL[tone]} ${cfg.shell} ${cfg.value}`;
+        return `amount-display__pill inline-flex flex-col tabular-nums ${AMOUNT_TONE_SHELL[tone]} ${cfg.shell} ${cfg.value}`;
     }
 
     // ---------- BUTTON COMPONENT ----------

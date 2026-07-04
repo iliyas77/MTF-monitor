@@ -89,12 +89,187 @@
     max-width: 100%;
 }
 
+.amount-display__pill {
+    display: inline-flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
 .amount-display__value {
     line-height: 1.15;
 }
 
 .amount-display__words {
-    font-weight: 500;
     line-height: 1.35;
-    opacity: 0.72;
+}
+
+/* Money page — amount pills fit text width only */
+.money-stat-amount {
+    flex-shrink: 0;
+    width: auto;
+    max-width: 100%;
+}
+
+.money-stat-amount .amount-display {
+    display: inline-flex;
+    flex-direction: column;
+    width: auto;
+    max-width: 100%;
+}
+
+.money-stat-amount--center .amount-display {
+    align-items: center;
+}
+
+.money-stat-amount--right .amount-display {
+    align-items: flex-end;
+}
+
+.money-stat-amount .amount-display__pill {
+    width: auto;
+    box-sizing: border-box;
+}
+
+.money-stat-amount--center .amount-display__pill {
+    align-items: center;
+}
+
+.money-stat-amount--right .amount-display__pill {
+    align-items: flex-end;
+}
+
+.money-stat-amount .amount-display__value {
+    width: auto;
+}
+
+/* Bottom nav + FAB chrome */
+.app-bottom-chrome {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.app-bottom-nav {
+    position: relative;
+}
+
+.app-fab {
+    position: absolute;
+    right: 1rem;
+    bottom: calc(100% + 0.75rem);
+    z-index: 40;
+    width: 3.5rem;
+    height: 3.5rem;
+    min-height: 0;
+    border-radius: 9999px;
+    border: 0;
+    background: #60a5fa;
+    color: #fff;
+    box-shadow: 0 10px 15px -3px rgb(96 165 250 / 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background-color 0.15s ease;
+    cursor: pointer;
+}
+
+.app-fab:hover {
+    background: rgb(96 165 250 / 0.9);
+}
+
+.app-fab:active {
+    transform: scale(0.95);
+}
+
+.app-page-pad {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* App dropdowns — neutral selection, no pale-blue wash */
+.app-dropdown-menu {
+    background: oklch(100% 0 0);
+    border-color: oklch(92% 0.006 260);
+}
+
+.app-dropdown-menu .menu li > button {
+    border-radius: 0.625rem;
+    color: oklch(35% 0.02 260);
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-dropdown-menu .menu li > button:hover {
+    background: oklch(98.5% 0.003 260);
+}
+
+.app-dropdown-item--active {
+    background: oklch(96% 0.006 260) !important;
+    color: oklch(28% 0.02 260) !important;
+    font-weight: 600;
+}
+
+.app-menu-icon--broker {
+    background: rgb(20 83 45 / 0.1);
+    color: #14532d;
+}
+
+/* More hub — compact option rows */
+.more-hub-option {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    width: 100%;
+    min-height: 2.5rem;
+    padding: 0.5rem 0.625rem;
+    border: 0;
+    border-radius: 0.625rem;
+    background: transparent;
+    color: oklch(35% 0.02 260);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.more-hub-option:hover {
+    background: oklch(97% 0.004 260);
+}
+
+.more-hub-option:active,
+.more-hub-option:focus-visible {
+    background: oklch(94% 0.012 260);
+    outline: none;
+}
+
+.more-hub-option__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+}
+
+.more-hub-option__icon--primary {
+    background: rgb(30 64 175 / 0.1);
+    color: #1e40af;
+}
+
+.more-hub-option__icon--success {
+    background: rgb(20 83 45 / 0.1);
+    color: #14532d;
+}
+
+.more-hub-option__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.more-hub-option__chevron {
+    font-size: 0.625rem;
+    color: oklch(65% 0.01 260);
+    flex-shrink: 0;
 }
