@@ -6,21 +6,13 @@
     <title>MTF Profit Tracker</title>
 
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-                    maxWidth: { app: '480px' }
-                }
-            }
-        };
-    </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { corePlugins: { preflight: false } };</script>
+
 
     <style>
         :root {
@@ -30,10 +22,21 @@
             --app-primary: #1a73e8;
         }
         * { box-sizing: border-box; }
-        body {
-            min-height: 100vh; margin: 0; background: var(--app-bg); color: var(--app-text);
-            font-family: "Inter", system-ui, sans-serif; overflow-x: hidden;
+
+        html, body {
+            min-height: 100vh; margin: 0;
+            background: #f3f5f8 !important;
+            color: var(--app-text);
+            font-family: "Inter", system-ui, sans-serif;
+            overflow-x: hidden;
         }
+        h5, h6 { margin-top: 0; }
+        .text-app-muted { color: var(--app-muted); }
+        .text-app-secondary { color: #6c757d; }
+        .app-z-menu { z-index: 50; }
+        .app-min-w-menu { min-width: 11.5rem; }
+        .app-max-w-shell { max-width: 480px; }
+        .hidden { display: none !important; }
         .app-header, .bottom-nav, .scroll-content { max-width: 480px; margin: 0 auto; }
         .scroll-content { padding: 12px 14px 120px; }
         .page-section { display: none; animation: fadeIn .18s ease; }
@@ -42,7 +45,7 @@
 
         .search-bar .input { padding-left: 2.65rem; padding-right: 2.65rem; }
         .search-icon { left: 1rem; top: 50%; transform: translateY(-50%); color: var(--app-muted); pointer-events: none; }
-        .search-clear { right: .45rem; top: 50%; transform: translateY(-50%); display: none; width: 2rem; height: 2rem; }
+        .search-clear { right: .45rem; top: 50%; transform: translateY(-50%); display: none; width: 2rem; height: 2rem; align-items: center; justify-content: center; }
         .search-clear.visible { display: inline-flex; }
 
         .app-icon { width: 2rem; height: 2rem; border-radius: .6rem; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: .78rem; }
@@ -65,22 +68,30 @@
         .money-action-btn.withdraw { background: #f8d7da; color: #dc3545; }
         .money-action-btn.more { background: #f1f3f5; color: #495057; border: 1px solid #e8ecf1; }
 
-        .detail-row { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0; border-b border-base-300: 1px solid #eef1f5; }
-        .detail-row:last-child { border-b border-base-300: 0; }
+        .detail-row { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0; border-bottom: 1px solid #eef1f5; }
+        .detail-row:last-child { border-bottom: 0; }
         .detail-label { color: var(--app-muted); font-size: .82rem; }
         .detail-value { font-size: .85rem; font-weight: 600; text-align: right; }
-        .section-title { margin: 1rem 0 .45rem; padding-bottom: .35rem; border-b border-base-300: 1px solid #e8edf3; font-size: .95rem; font-weight: 700; }
+        .section-title { margin: 1rem 0 .45rem; padding-bottom: .35rem; border-bottom: 1px solid #e8edf3; font-size: .95rem; font-weight: 700; }
 
-        .fab { position: fixed; right: max(16px, calc((100vw - 480px) / 2 + 16px)); bottom: 74px; z-index: 40; width: 56px; height: 56px; border: 0; border-radius: 50%; background: var(--app-primary); color: #fff; box-shadow: 0 .75rem 1.8rem rgba(26,115,232,.35); cursor: pointer; }
-        .bottom-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 30; padding: .3rem .5rem; background: #fff; border-t border-base-300: 1px solid #e8ecf1; box-shadow: 0 -4px 20px rgba(0,0,0,.08); }
-        .bottom-nav .nav-item { flex: 1; min-width: 0; border: 0; border-radius: 1rem; background: transparent; color: var(--app-muted); cursor: pointer; }
+        .fab {
+            position: fixed; right: max(16px, calc((100vw - 480px) / 2 + 16px)); bottom: 74px; z-index: 40;
+            width: 56px; height: 56px; border: 0; border-radius: 50%;
+            background: var(--app-primary); color: #fff;
+            box-shadow: 0 .75rem 1.8rem rgba(26,115,232,.35); cursor: pointer;
+            font-size: 1.25rem;
+        }
+        .bottom-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 30; }
+        .bottom-nav .nav-item { border: 0; border-radius: 1rem; background: transparent; color: var(--app-muted); cursor: pointer; }
+        .bottom-nav .nav-item:focus { outline: none; }
+        .bottom-nav .nav-item:focus-visible { outline: 2px solid var(--app-primary); outline-offset: -2px; }
         .bottom-nav .nav-item.active { background: rgba(26,115,232,.1); color: var(--app-primary); }
         .bottom-nav .nav-item i { font-size: 1.2rem; }
         .bottom-nav .nav-item span { font-size: .68rem; font-weight: 600; }
 
         .toast-container { position: fixed; top: .75rem; left: 50%; z-index: 2000; width: min(92vw, 420px); transform: translateX(-50%); }
         .trade-list-section { padding: .85rem 1rem; }
-        .trade-list-section-stats { border-t border-base-300: 1px solid #e9ecef; }
+        .trade-list-section-stats { border-top: 1px solid #e9ecef; }
         .trade-stat-label { font-size: .65rem; line-height: 1.2; white-space: nowrap; }
         .trade-stat-value { font-size: .85rem; line-height: 1.3; }
         .trade-net-profit { font-size: clamp(1.15rem, 4.8vw, 1.45rem); font-weight: 700; line-height: 1.15; white-space: nowrap; flex-shrink: 0; }
@@ -95,13 +106,13 @@
         .company-ac-wrap { position: relative; }
         .company-ac-list { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 50; max-height: 240px; overflow-y: auto; background: #fff; border: 1px solid #dee2e6; border-radius: .75rem; box-shadow: 0 .5rem 1.25rem rgba(0,0,0,.12); display: none; }
         .company-ac-list.show { display: block; }
-        .company-ac-item { padding: .55rem .75rem; cursor: pointer; border-b border-base-300: 1px solid #f0f2f5; }
+        .company-ac-item { padding: .55rem .75rem; cursor: pointer; border-bottom: 1px solid #f0f2f5; }
         .company-ac-item:hover, .company-ac-item.active { background: #eef4ff; }
         .company-ac-symbol { font-weight: 700; font-size: .88rem; }
         .company-ac-name { font-size: .75rem; color: var(--app-muted); }
         .company-ac-status { font-size: .72rem; color: var(--app-muted); }
 
-        .money-entry-header { position: relative; flex-direction: column; align-items: stretch; gap: .65rem; padding: 1rem; border-b border-base-300: 0 !important; }
+        .money-entry-header { position: relative; flex-direction: column; align-items: stretch; gap: .65rem; padding: 1rem; border-bottom: 0 !important; }
         .money-entry-header.deposit { background: linear-gradient(135deg, #edf7f0, #d8f0de); color: #1f6b43; }
         .money-entry-header.withdraw { background: linear-gradient(135deg, #fff0f1, #fde2e4); color: #a52834; }
         .money-entry-toggle { position: relative; display: inline-block; width: 2.85rem; height: 1.6rem; }
@@ -114,7 +125,6 @@
         .money-entry-save-btn.deposit { background: #d4edda; border-color: #bfe3c8; color: #1f6b43; }
         .money-entry-save-btn.withdraw { background: #f8d7da; border-color: #f1c2c7; color: #a52834; }
 
-        #appSheet .modal-box { max-width: 480px; width: 100%; max-height: 90vh; padding: 0; border-radius: 1.5rem 1.5rem 0 0; }
         #appSheet .sheet-body { overflow-y: auto; max-height: calc(90vh - 8rem); padding: 1rem; }
         .sheet-handle { width: 42px; height: 4px; border-radius: 999px; background: #d7dde5; display: inline-block; }
 
@@ -126,6 +136,83 @@
 
         .stat-label { font-size: .68rem; text-transform: uppercase; color: var(--app-muted); font-weight: 600; }
         @media (min-width: 576px) { .scroll-content { border-inline: 1px solid #e1e7ef; } }
+
+        .empty-state { text-align: center; color: var(--app-muted); padding: 1.5rem 1rem; }
+        .empty-state i { font-size: 2rem; opacity: .25; display: block; margin-bottom: .5rem; }
+
+        /* Dropdown menus */
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            min-width: 11.5rem;
+            background: #fff;
+            border-radius: 1rem;
+            box-shadow: 0 .85rem 2rem rgba(15, 23, 42, .14);
+            padding: .45rem;
+            z-index: 100;
+            list-style: none;
+            margin: 0;
+        }
+        .dropdown.dropdown-end .dropdown-content { right: 0; left: auto; }
+        .dropdown.dropdown-open .dropdown-content,
+        .dropdown:focus-within .dropdown-content { display: block; }
+        .dropdown-content li { list-style: none; }
+        .dropdown-content .dropdown-item,
+        .dropdown-content button { width: 100%; border: 0; background: transparent; cursor: pointer; border-radius: .7rem; }
+        .dropdown-content button:hover { background: #f4f7fb; }
+
+        /* Bottom sheets & dialogs */
+        dialog.modal {
+            margin: 0; padding: 0; border: none;
+            width: 100%; max-width: 100%; height: 100%; max-height: 100%;
+            background: transparent;
+        }
+        dialog.modal:not([open]) { display: none !important; }
+        dialog.modal[open] {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+        }
+        dialog.modal::backdrop { background: rgba(15, 23, 42, 0.45); }
+        dialog.modal.modal-bottom[open] { align-items: flex-end; justify-content: center; }
+        dialog.modal .modal-box {
+            background: #fff;
+            width: 100%;
+            max-width: 480px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -1rem 3rem rgba(15, 23, 42, .22);
+        }
+        dialog.modal .modal-scroll {
+            overflow-y: auto;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+        .sheet-body .dropdown .dropdown-content,
+        .modal-scroll .dropdown .dropdown-content {
+            z-index: 200;
+        }
+        dialog.modal.modal-bottom .modal-box {
+            border-radius: 1.5rem 1.5rem 0 0;
+            margin-bottom: 0;
+        }
+        dialog.modal:not(.modal-bottom) .modal-box {
+            border-radius: 1rem;
+            margin: 1rem;
+            max-height: calc(100vh - 2rem);
+        }
+        dialog.modal .modal-backdrop {
+            position: fixed; inset: 0; border: 0; background: transparent; cursor: default;
+        }
+        #moneyEntryModal .modal-box { max-width: min(92vw, 400px); border-radius: 1rem; overflow: hidden; }
     </style>
 </head>
 
@@ -137,7 +224,7 @@
     <!-- ============ HEADER ============ -->
     <header class="app-header sticky top-0 z-40 bg-base-100 border-b border-base-300 shadow-sm px-3 py-3 flex items-center justify-between gap-2">
         <h5 class="font-bold mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
-        <button type="button" class="btn btn-ghost border border-base-300 rounded-circle flex items-center justify-center" style="width:2.5rem;height:2.5rem;" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
+        <button type="button" class="btn btn-ghost btn-circle border border-base-300" style="width:2.5rem;height:2.5rem;" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
             <i class="fas fa-cog"></i>
         </button>
     </header>
@@ -151,26 +238,26 @@
             <div class="search-bar relative mb-3">
                 <i class="fas fa-search search-icon absolute"></i>
                 <input type="text" class="input input-bordered w-full rounded-2xl shadow-sm" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
-                <button class="search-clear btn btn-ghost absolute items-center justify-center rounded-circle p-0" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
+                <button class="search-clear btn btn-ghost btn-circle absolute p-0" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
             <!-- Summary Card (Net Profit, Gross, Trades, Total Charges) -->
             <div class="card border-0 shadow-sm rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body text-center py-3">
-                    <div class="small uppercase text-base-content/60 font-semibold"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
+                    <div class="text-sm uppercase text-app-muted font-semibold"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
                     <div class="font-bold text-3xl text-success mb-3" id="summaryNet">₹0</div>
                     <div class="grid grid-cols-3 gap-0">
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
                             <div class="font-semibold" id="summaryGross">₹0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
                             <div class="font-semibold" id="summaryTrades">0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-receipt mr-1"></i>Charges</div>
-                            <div class="font-semibold text-base-content/70" id="summaryCharges">₹0</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-receipt mr-1"></i>Charges</div>
+                            <div class="font-semibold text-app-secondary" id="summaryCharges">₹0</div>
                         </div>
                     </div>
                 </div>
@@ -189,33 +276,33 @@
                 <div class="search-bar relative flex-1">
                     <i class="fas fa-search search-icon absolute"></i>
                     <input type="text" class="input input-bordered w-full rounded-2xl shadow-sm" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
-                    <button class="search-clear btn btn-ghost absolute items-center justify-center rounded-circle p-0" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
+                    <button class="search-clear btn btn-ghost btn-circle absolute p-0" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
                 </div>
                 <button class="btn btn-ghost border border-base-300 rounded-2xl shadow-sm px-3" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h"></i></button>
             </div>
             <!-- Selected date range indicator -->
             <div class="text-center mb-3">
-                <button type="button" class="btn btn-sm btn-light border rounded-full px-3" onclick="openFilterSheet()">
+                <button type="button" class="btn btn-sm btn-ghost rounded-full px-3" onclick="openFilterSheet()">
                     <i class="far fa-calendar-alt mr-1 text-primary"></i><span id="pastRangeLabel">—</span>
                 </button>
             </div>
             <!-- Summary Card -->
             <div class="card border-0 shadow-sm rounded-2xl mb-3" id="pastSummaryCard">
                 <div class="card-body text-center py-3">
-                    <div class="small uppercase text-base-content/60 font-semibold"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
+                    <div class="text-sm uppercase text-app-muted font-semibold"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
                     <div class="font-bold text-3xl text-success mb-3" id="pastSummaryNet">₹0</div>
                     <div class="grid grid-cols-3 gap-0">
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
                             <div class="font-semibold" id="pastSummaryGross">₹0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
                             <div class="font-semibold" id="pastSummaryTrades">0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;"><i class="fas fa-receipt mr-1"></i>Charges</div>
-                            <div class="font-semibold text-base-content/70" id="pastSummaryCharges">₹0</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;"><i class="fas fa-receipt mr-1"></i>Charges</div>
+                            <div class="font-semibold text-app-secondary" id="pastSummaryCharges">₹0</div>
                         </div>
                     </div>
                 </div>
@@ -231,15 +318,15 @@
             <div id="moneyPageDefaultView">
                 <div class="card border-0 shadow-sm rounded-2xl mb-3" id="moneySummaryCard">
                     <div class="card-body text-center py-3">
-                        <div class="small uppercase text-base-content/60 font-semibold"><i class="fas fa-coins mr-1"></i>Total Value</div>
+                        <div class="text-sm uppercase text-app-muted font-semibold"><i class="fas fa-coins mr-1"></i>Total Value</div>
                         <div class="font-bold text-3xl mb-3" id="moneyTotalValueHero">₹0</div>
                         <div class="grid grid-cols-3 gap-0">
                             <div class="">
-                                <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Deposited</div>
+                                <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Deposited</div>
                                 <div class="font-semibold" id="moneyTotalDeposited">₹0</div>
                             </div>
                             <div class="">
-                                <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Withdrawn</div>
+                                <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Withdrawn</div>
                                 <div class="font-semibold" id="moneyTotalWithdrawn">₹0</div>
                             </div>
                         </div>
@@ -248,13 +335,13 @@
                 <div class="flex items-center justify-between gap-2 mb-2">
                     <h6 class="font-bold mb-0"><i class="fas fa-university mr-2"></i>Accounts</h6>
                     <div class="flex items-center gap-2">
-                        <div class="dropdown app-select-dropdown">
+                        <div class="dropdown dropdown-end app-select-dropdown">
                             <button type="button" class="btn btn-ghost border border-base-300 app-select-trigger" id="moneyAccountFilterTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter accounts">
                                 <span class="app-icon app-icon--account" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
                                 <span class="app-select-label" id="moneyAccountFilterLabel">All</span>
                                 <i class="fas fa-chevron-down app-select-chevron"></i>
                             </button>
-                            <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
+                            <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 app-min-w-menu" id="moneyAccountFilterMenu"></ul>
                         </div>
                         <button type="button" class="btn btn-ghost border border-base-300 btn-sm flex items-center justify-center" id="moneyPageFilterBtn" style="width:2.1rem;height:2.1rem;" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
                             <i class="fas fa-filter"></i>
@@ -266,18 +353,18 @@
 
             <div id="moneyPageFilterView" class="hidden">
                 <div class="money-filter-sub-header">
-                    <button type="button" class="btn btn-ghost border border-base-300 rounded-circle flex items-center justify-center shrink-0" style="width:2.25rem;height:2.25rem;" onclick="clearMoneyPageFilters()" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></button>
+                    <button type="button" class="btn btn-ghost btn-circle border border-base-300 shrink-0" style="width:2.25rem;height:2.25rem;" onclick="clearMoneyPageFilters()" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></button>
                     <div class="money-filter-title-wrap">
                         <h6 class="money-filter-title" id="moneyPageFilterViewTitle">Filtered</h6>
                         <div class="money-filter-meta" id="moneyPageFilterViewMeta"></div>
                     </div>
-                    <div class="dropdown app-select-dropdown">
+                    <div class="dropdown dropdown-end app-select-dropdown">
                         <button type="button" class="btn btn-ghost border border-base-300 app-select-trigger money-filter-type-select shrink-0" id="moneyPageFilterTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
                             <span class="app-icon app-icon--muted" id="moneyPageFilterTypeIcon"><i class="fas fa-layer-group"></i></span>
                             <span class="app-select-label" id="moneyPageFilterTypeLabel">All</span>
                             <i class="fas fa-chevron-down app-select-chevron"></i>
                         </button>
-                        <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
+                        <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 app-min-w-menu" id="moneyPageFilterTypeMenu"></ul>
                     </div>
                     <button type="button" class="btn btn-ghost border border-base-300 btn-sm flex items-center justify-center shrink-0 active" id="moneyPageFilterBtnActive" style="width:2.1rem;height:2.1rem;" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
                         <i class="fas fa-filter"></i>
@@ -297,26 +384,26 @@
     <section id="page-settings" class="page-section">
         <div class="scroll-content">
             <div class="more-sub-header">
-                <button type="button" class="btn btn-ghost border border-base-300 rounded-circle flex items-center justify-center" style="width:2.25rem;height:2.25rem;" onclick="backFromSettings()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <button type="button" class="btn btn-ghost btn-circle border border-base-300" style="width:2.25rem;height:2.25rem;" onclick="backFromSettings()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
                 <h6 class="font-bold mb-0"><i class="fas fa-cog mr-2"></i>Settings</h6>
             </div>
             <div class="card border-0 shadow-sm rounded-2xl mb-3">
                 <div class="card-body">
                     <h6 class="font-bold mb-2"><i class="fas fa-cloud mr-2"></i>Cloud Sync</h6>
                     <div class="flex items-center mb-2">
-                        <span class="mr-2 small text-base-content/60">Status:</span>
+                        <span class="mr-2 text-sm text-app-muted">Status:</span>
                         <span id="cloudSyncStatus" class="badge badge-neutral">Off</span>
                     </div>
-                    <p class="small text-base-content/60 mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
+                    <p class="text-sm text-app-muted mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
                     <div class="join w-full mb-2">
                         <span class="join-item bg-base-200 px-3 flex items-center"><i class="fas fa-key"></i></span>
                         <input type="text" class="input input-bordered w-full" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
                     </div>
                     <div class="flex gap-2">
                         <button class="btn btn-sm btn-primary flex-1" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug mr-1"></i> Connect</button>
-                        <button class="btn btn-sm btn-outline-secondary flex-1" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink mr-1"></i> Disconnect</button>
+                        <button class="btn btn-sm btn-outline btn-neutral flex-1" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink mr-1"></i> Disconnect</button>
                     </div>
-                    <div id="cloudSyncHint" class="small text-base-content/60 mt-2"></div>
+                    <div id="cloudSyncHint" class="text-sm text-app-muted mt-2"></div>
                 </div>
             </div>
             <div class="card border-0 shadow-sm rounded-2xl mb-3">
@@ -324,7 +411,7 @@
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-300">
                         <div>
                             <div class="font-semibold"><i class="fas fa-university mr-2"></i>Money Accounts</div>
-                            <div class="small text-base-content/60" id="settingsMoneyAccountCount">0 accounts</div>
+                            <div class="text-sm text-app-muted" id="settingsMoneyAccountCount">0 accounts</div>
                         </div>
                         <span class="badge badge-neutral" id="settingsMoneyAccountBadge">0</span>
                     </div>
@@ -339,23 +426,23 @@
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-300">
                         <div>
                             <div class="font-semibold"><i class="fas fa-database mr-2"></i>Total Transactions</div>
-                            <div class="small text-base-content/60" id="totalTxCount">0 records</div>
+                            <div class="text-sm text-app-muted" id="totalTxCount">0 records</div>
                         </div>
                         <span class="badge badge-neutral" id="totalTxBadge">0</span>
                     </div>
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-300">
                         <div>
                             <div class="font-semibold"><i class="fas fa-clipboard mr-2"></i>Backup as Text</div>
-                            <div class="small text-base-content/60">Copy your data as text, or paste it back to restore</div>
+                            <div class="text-sm text-app-muted">Copy your data as text, or paste it back to restore</div>
                         </div>
-                        <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                        <button class="btn btn-sm btn-outline btn-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
                     </div>
                     <div class="flex justify-between items-center gap-3 px-3 py-3">
                         <div>
                             <div class="font-semibold text-error"><i class="fas fa-trash-alt mr-2"></i>Reset All Data</div>
-                            <div class="small text-base-content/60">Permanently delete all transactions</div>
+                            <div class="text-sm text-app-muted">Permanently delete all transactions</div>
                         </div>
-                        <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
+                        <button class="btn btn-sm btn-outline btn-error" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
                     </div>
                 </div>
             </div>
@@ -365,14 +452,14 @@
     <!-- PAGE: MORE HUB -->
     <section id="page-more" class="page-section">
         <div class="scroll-content">
-            <p class="text-base-content/60 small mb-3">Tools and reports</p>
+            <p class="text-app-muted text-sm mb-3">Tools and reports</p>
             <div class="grid grid-cols-2 gap-3">
                 <div class="">
                     <button type="button" class="more-hub-tile card border-0 shadow-sm rounded-2xl w-full h-full text-start" onclick="openMoreFeature('transactions')">
                         <div class="card-body text-center py-4">
                             <i class="fas fa-database fa-2x text-primary mb-2"></i>
                             <div class="font-bold">Total Transactions</div>
-                            <div class="small text-base-content/60 mt-1">Full history, broker stats &amp; date-wise list</div>
+                            <div class="text-sm text-app-muted mt-1">Full history, broker stats &amp; date-wise list</div>
                         </div>
                     </button>
                 </div>
@@ -381,7 +468,7 @@
                         <div class="card-body text-center py-4">
                             <i class="fas fa-calculator fa-2x text-success mb-2"></i>
                             <div class="font-bold">MTF Calculator</div>
-                            <div class="small text-base-content/60 mt-1">Plan trades &amp; compare Zerodha, Dhan, Groww</div>
+                            <div class="text-sm text-app-muted mt-1">Plan trades &amp; compare Zerodha, Dhan, Groww</div>
                         </div>
                     </button>
                 </div>
@@ -393,40 +480,40 @@
     <section id="page-transactions" class="page-section">
         <div class="scroll-content">
             <div class="more-sub-header">
-                <button type="button" class="btn btn-ghost border border-base-300 rounded-circle flex items-center justify-center" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <button type="button" class="btn btn-ghost btn-circle border border-base-300" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
                 <h6 class="font-bold mb-0">Total Transactions</h6>
             </div>
             <div class="card border-0 shadow-sm rounded-2xl mb-3">
                 <div class="card-body text-center py-3">
-                    <div class="small uppercase text-base-content/60 font-semibold"><i class="fas fa-database mr-1"></i>Total Trades</div>
+                    <div class="text-sm uppercase text-app-muted font-semibold"><i class="fas fa-database mr-1"></i>Total Trades</div>
                     <div class="font-bold text-3xl mb-3" id="txHistTotal">0</div>
                     <div class="grid grid-cols-3 gap-0">
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Open</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Open</div>
                             <div class="font-semibold text-warning" id="txHistOpen">0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Closed</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Closed</div>
                             <div class="font-semibold" id="txHistClosed">0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Successful</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Successful</div>
                             <div class="font-semibold text-success" id="txHistSuccessful">0</div>
                         </div>
                     </div>
                     <hr class="my-3" />
                     <div class="grid grid-cols-3 gap-0">
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Net</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Net</div>
                             <div class="font-semibold" id="txHistNet">₹0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Gross</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Gross</div>
                             <div class="font-semibold" id="txHistGross">₹0</div>
                         </div>
                         <div class="">
-                            <div class="uppercase text-base-content/60 font-semibold" style="font-size:.68rem;">Charges</div>
-                            <div class="font-semibold text-base-content/70" id="txHistCharges">₹0</div>
+                            <div class="uppercase text-app-muted font-semibold" style="font-size:.68rem;">Charges</div>
+                            <div class="font-semibold text-app-secondary" id="txHistCharges">₹0</div>
                         </div>
                     </div>
                 </div>
@@ -446,7 +533,7 @@
     <section id="page-mtf-calc" class="page-section">
         <div class="scroll-content">
             <div class="more-sub-header">
-                <button type="button" class="btn btn-ghost border border-base-300 rounded-circle flex items-center justify-center" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <button type="button" class="btn btn-ghost btn-circle border border-base-300" style="width:2.25rem;height:2.25rem;" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
                 <h6 class="font-bold mb-0">MTF Calculator</h6>
             </div>
             <div class="card border-0 shadow-sm rounded-2xl mb-3">
@@ -462,8 +549,8 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-1 mb-3">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcSameDay()">Same day (intraday)</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcTodayPair()">Today → Tomorrow</button>
+                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setCalcSameDay()">Same day (intraday)</button>
+                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setCalcTodayPair()">Today → Tomorrow</button>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-2">
                         <div class="">
@@ -480,13 +567,13 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small text-base-content/60 mb-1">Sell target (% on buy price)</label>
+                        <label class="label-text font-medium text-sm text-app-muted mb-1">Sell target (% on buy price)</label>
                         <div class="flex flex-wrap gap-1 items-center" id="calcSellPctChips"></div>
                         <div class="flex gap-1 mt-2">
                             <input type="number" class="input input-bordered w-full input input-bordered input-sm w-full" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
-                            <button type="button" class="btn btn-sm btn-outline-primary whitespace-nowrap" onclick="addCalcSellPctPreset()">Add</button>
+                            <button type="button" class="btn btn-sm btn-outline btn-primary whitespace-nowrap" onclick="addCalcSellPctPreset()">Add</button>
                         </div>
-                        <p class="text-base-content/60 small mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
+                        <p class="text-app-muted text-sm mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
                     </div>
                     <div class="mb-0">
                         <label class="label-text font-medium">Leverage (X)</label>
@@ -498,11 +585,11 @@
                 <div class="card-body">
                     <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
                         <h6 class="font-bold mb-0"><i class="fas fa-balance-scale mr-2"></i>Compare All Brokers</h6>
-                        <span id="calcModeBadge" class="badge rounded-full bg-base-200 text-dark border hidden"></span>
+                        <span id="calcModeBadge" class="badge badge-ghost hidden"></span>
                     </div>
                     <div id="calcIntradayBanner" class="hidden"></div>
                     <div id="calcComparePanel" class="overflow-x-auto">
-                        <p class="text-base-content/60 small mb-0">Fill in all fields to compare brokers.</p>
+                        <p class="text-app-muted text-sm mb-0">Fill in all fields to compare brokers.</p>
                     </div>
                 </div>
             </div>
@@ -537,8 +624,8 @@
 
     <!-- GENERIC BOTTOM SHEET -->
     <dialog id="appSheet" class="modal modal-bottom">
-        <div class="modal-box max-w-[480px] w-full p-0 rounded-t-3xl">
-            <div class="p-4 border-b border-base-300">
+        <div class="modal-box app-max-w-shell w-full p-0 rounded-t-3xl">
+            <div class="p-4 border-b border-base-300 relative">
                 <div class="text-center mb-2"><span class="sheet-handle"></span></div>
                 <div class="flex justify-between items-center pr-8">
                     <h3 class="font-bold text-lg" id="appSheetTitle"></h3>
@@ -564,19 +651,19 @@
     <!-- HIDDEN SHEET PANELS (persistent form fields) -->
     <div id="sheetPanels" class="hidden">
         <div id="panelMoneyPageFilter"><div class="mb-3 app-form-select-wrap">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">Type</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">Type</label>
                         <input type="hidden" id="moneyPageTypeFilter" value="all" />
-                        <div class="dropdown app-select-dropdown w-full">
+                        <div class="dropdown dropdown-end app-select-dropdown w-full">
                             <button type="button" class="btn btn-ghost border border-base-300 app-select-trigger w-full" id="moneyPageTypeFilterTrigger" tabindex="0" role="button" aria-expanded="false">
                                 <span class="app-icon app-icon--muted" id="moneyPageTypeFilterIcon"><i class="fas fa-layer-group"></i></span>
                                 <span class="app-select-label" id="moneyPageTypeFilterLabel">All</span>
                                 <i class="fas fa-chevron-down app-select-chevron"></i>
                             </button>
-                            <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
+                            <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="moneyPageRangeButtons">
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1 active" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
@@ -586,15 +673,15 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageFrom" onchange="onMoneyPageDateInputChange()" />
                     </div>
                     <div class="mb-0">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageTo" onchange="onMoneyPageDateInputChange()" />
                     </div></div>
         <div id="panelMoneyHistoryRange"><div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="moneyHistoryRangeButtons">
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1 active" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
@@ -604,15 +691,15 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryFrom" />
                     </div>
                     <div class="mb-0">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryTo" />
                     </div></div>
         <div id="panelPastFilter"><div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="pastRangeButtons">
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setPastRange('yesterday')">Yesterday</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="7" onclick="setPastRange(7)">1W</button>
@@ -622,11 +709,11 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="pastFrom" />
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium small uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="label-text font-medium text-sm uppercase text-app-muted font-semibold">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="pastTo" />
                     </div></div>
         <div id="panelMoneyHistory"><div class="p-4 border-b border-base-300 relative border-b border-base-300 money-history-header">
@@ -637,20 +724,20 @@
                             <span class="money-history-meta" id="moneyHistoryMeta">All time</span>
                         </div>
                         <div class="money-history-controls">
-                            <div class="dropdown app-select-dropdown">
+                            <div class="dropdown dropdown-end app-select-dropdown">
                                 <button type="button" class="btn btn-ghost border border-base-300 app-select-trigger" id="moneyHistoryTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
                                     <span class="app-icon app-icon--muted" id="moneyHistoryTypeIcon"><i class="fas fa-layer-group"></i></span>
                                     <span class="app-select-label" id="moneyHistoryTypeLabel">All</span>
                                     <i class="fas fa-chevron-down app-select-chevron"></i>
                                 </button>
-                                <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
+                                <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 app-min-w-menu" id="moneyHistoryTypeMenu"></ul>
                             </div>
                             <button type="button" class="btn btn-ghost border border-base-300 money-history-filter-btn" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
                                 <i class="fas fa-filter"></i>
                             </button>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3" onclick="closeSheet()"></button>
+                    <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
                 </div>
                 <div class="p-4">
                     <div class="card border-0 shadow-sm rounded-2xl mb-3">
@@ -674,19 +761,19 @@
                         <div class="label-text-alt">Starting amount already in this account before tracked deposits.</div>
                         <div class="money-entry-amount-preview hidden mt-2" id="moneyAccountOpeningPreview"></div>
                     </div></div>
-        <div id="panelBackup"><p class="small text-base-content/60 mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
+        <div id="panelBackup"><p class="text-sm text-app-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
                     <textarea class="input input-bordered w-full" id="backupTextArea" rows="10" style="font-size:12px;font-family:monospace;white-space:pre;" spellcheck="false"></textarea></div>
     </div>
 
     <!-- MODAL: ADD/EDIT -->
     <dialog id="txModal" class="modal modal-bottom">
-        <div class="modal-box max-w-[480px] w-full max-h-[90vh] p-0 rounded-t-3xl">
+        <div class="modal-box app-max-w-shell w-full max-h-[90vh] p-0 rounded-t-3xl">
                 <div class="p-4 border-b border-base-300 relative border-b border-base-300">
                     <div class="text-center"><span class="sheet-handle inline-block"></span></div>
                     <h5 class="font-bold text-lg" id="txModalTitle"><i class="fas fa-plus-circle mr-2"></i>Add Trade</h5>
                     <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
                 </div>
-                <div class="p-4">
+                <div class="p-4 modal-scroll">
                     <form id="txForm" novalidate>
                         <input type="hidden" id="txEditId" value="" />
                         <div class="mb-3">
@@ -701,13 +788,13 @@
                         <div class="mb-3 app-form-select-wrap">
                             <label class="label-text font-medium">Broker <span class="text-error">*</span></label>
                             <input type="hidden" id="txBroker" value="" />
-                            <div class="dropdown app-select-dropdown w-full">
+                            <div class="dropdown dropdown-end app-select-dropdown w-full">
                                 <button type="button" class="btn btn-ghost border border-base-300 app-select-trigger w-full" id="txBrokerTrigger" tabindex="0" role="button" aria-expanded="false">
                                     <span class="app-icon app-icon--broker" id="txBrokerIcon"><i class="fas fa-building"></i></span>
                                     <span class="app-select-label" id="txBrokerLabel">Select Broker</span>
                                     <i class="fas fa-chevron-down app-select-chevron"></i>
                                 </button>
-                                <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 w-full" id="txBrokerMenu"></ul>
+                                <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 w-full" id="txBrokerMenu"></ul>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -748,10 +835,10 @@
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label class="label-text font-medium">Leverage (X) <span class="small text-base-content/60">(e.g., 3, 4, 5)</span></label>
+                            <label class="label-text font-medium">Leverage (X) <span class="text-sm text-app-muted">(e.g., 3, 4, 5)</span></label>
                             <input type="number" class="input input-bordered w-full" id="txLeverage" placeholder="1" min="1" step="0.1" value="1" />
                             <div class="label-text-alt">Your own margin = Total Investment / Leverage. Broker funds the rest.</div>
-                            <div id="leverageBreakdown" class="mt-2 small text-base-content/60">
+                            <div id="leverageBreakdown" class="mt-2 text-sm text-app-muted">
                                 Total Investment: <span id="previewTotalInv">₹0</span> &nbsp;|&nbsp; 
                                 Your Margin: <span id="previewOwnMargin">₹0</span> &nbsp;|&nbsp; 
                                 Broker Funded: <span id="previewMtfAmt">₹0</span>
@@ -762,10 +849,10 @@
                             <textarea class="input input-bordered w-full" id="txNotes" rows="2" placeholder="Any notes..."></textarea>
                         </div>
                         <div class="bg-base-200 border rounded-xl p-3" id="calcPreview">
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Holding Days</span><span class="font-semibold" id="previewDays">0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Gross Profit</span><span class="font-semibold text-success" id="previewGross">₹0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">MTF Interest</span><span class="font-semibold" id="previewInterest">₹0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Total Charges</span><span class="font-semibold" id="previewCharges">₹0</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-app-muted">Holding Days</span><span class="font-semibold" id="previewDays">0</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-app-muted">Gross Profit</span><span class="font-semibold text-success" id="previewGross">₹0</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-app-muted">MTF Interest</span><span class="font-semibold" id="previewInterest">₹0</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-app-muted">Total Charges</span><span class="font-semibold" id="previewCharges">₹0</span></div>
                             <hr class="my-2" />
                             <div class="flex justify-between font-bold"><span>Net Profit</span><span id="previewNet">₹0</span></div>
                         </div>
@@ -783,7 +870,7 @@
 
     <!-- MONEY ENTRY MODAL -->
     <dialog id="moneyEntryModal" class="modal">
-        <div class="modal-box max-w-[400px] p-0 overflow-hidden">
+        <div class="modal-box p-0 overflow-hidden">
             <div class="money-entry-header deposit" id="moneyEntryHeader">
                 <div class="flex items-start justify-between gap-3 pr-8">
                     <h5 class="font-bold text-lg flex-1 min-w-0" id="moneyEntryAccountTitle">Account</h5>
@@ -851,7 +938,7 @@
                         <div class="font-semibold ${s.cls || ''}" ${s.id ? `id="${s.id}"` : ''}>${s.value ?? '0'}</div></div>`).join('');
                     return `<div class="${UI.card} mb-3" ${cardId ? `id="${cardId}"` : ''}>
                         <div class="card-body text-center py-3">
-                            <div class="text-sm uppercase text-base-content/60 font-semibold"><i class="fas ${heroIcon} mr-1"></i>${heroLabel}</div>
+                            <div class="text-sm uppercase text-app-muted font-semibold"><i class="fas ${heroIcon} mr-1"></i>${heroLabel}</div>
                             <div class="font-bold text-3xl mb-3 ${heroId.includes('Net') || heroId.includes('Value') ? 'text-success' : ''}" id="${heroId}">₹0</div>
                             <div class="grid ${cols} gap-0">${statHtml}</div>
                         </div></div>`;
@@ -872,10 +959,10 @@
                     return `<div class="detail-row ${extra}"><span class="detail-label">${label}</span><span class="detail-value">${value}</span></div>`;
                 },
                 emptyState(icon, msg) {
-                    return `<div class="text-center text-base-content/60 py-5"><i class="fas ${icon} text-4xl opacity-25 block mb-2"></i><p class="mb-0">${msg}</p></div>`;
+                    return `<div class="text-center text-app-muted py-5"><i class="fas ${icon} text-4xl opacity-25 block mb-2"></i><p class="mb-0">${msg}</p></div>`;
                 },
                 actionDropdown(items) {
-                    return `<ul class="dropdown-content menu app-dropdown-menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]">${items}</ul>`;
+                    return `<ul class="dropdown-content menu app-dropdown-menu rounded-box shadow-lg app-z-menu p-2 app-min-w-menu">${items}</ul>`;
                 },
                 dropdownItem(icon, variant, label, onclick, danger = false) {
                     return `<li><button type="button" class="flex items-center gap-3 w-full ${danger ? 'text-error' : ''}" onclick="${onclick}">
@@ -942,6 +1029,8 @@
 
             function closeSheet() { Sheet.close(); }
             function closeDialog() { AppDialog.close(); }
+            window.closeSheet = closeSheet;
+            window.closeDialog = closeDialog;
 
 
 
@@ -2271,7 +2360,7 @@
                 return options.map(o => {
                     const active = o.value === selectedValue ? ' active' : '';
                     const danger = o.danger ? ' text-error' : '';
-                    const badge = o.badge ? `<span class="badge rounded-full bg-primary-subtle text-primary badge badge-primary badge-outline text-xs">${o.badge}</span>` : '';
+                    const badge = o.badge ? `<span class="badge badge-primary badge-outline badge-sm">${o.badge}</span>` : '';
                     const arg = escapeValues
                         ? `decodeURIComponent('${encodeURIComponent(o.value)}')`
                         : `'${String(o.value).replace(/'/g, "\\'")}'`;
@@ -2443,40 +2532,40 @@
                         <div class="card-body p-0">
                             <div class="trade-list-section">
                                 <div class="flex justify-between items-start gap-2">
-                                    <div class="font-semibold flex-1 min-w-0 pe-2 truncate">${t.company}</div>
+                                    <div class="font-semibold flex-1 min-w-0 pr-2 truncate">${t.company}</div>
                                     <div class="flex items-center gap-2 shrink-0">
                                         <div class="trade-net-profit ${profitClass}">${sign}${fmt(t.netProfit)}</div>
-                                        <div class="dropdown">
+                                        <div class="dropdown dropdown-end">
                                             <button type="button" class="money-action-btn more" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v"></i></button>
-                                            <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]">
+                                            <ul class="dropdown-content menu app-min-w-menu app-z-menu p-2 shadow-lg rounded-box">
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="app-icon app-icon--view"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="app-icon app-icon--copy"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmEdit('${t.id}')"><span class="app-icon app-icon--edit"><i class="fas fa-edit"></i></span><span class="flex-1 text-left">Edit</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openInterestModal('${t.id}')"><span class="app-icon app-icon--interest"><i class="fas fa-percent"></i></span><span class="flex-1 text-left">Interest</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openChargesModal('${t.id}')"><span class="app-icon app-icon--charges"><i class="fas fa-receipt"></i></span><span class="flex-1 text-left">Charges</span></button></li>
-                                                <li><hr class="dropdown-divider"></li>
+                                                <li><li class="menu-title p-0"><hr class="my-0 opacity-20"></li></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200 text-error" onclick="confirmDelete('${t.id}')"><span class="app-icon app-icon--delete"><i class="fas fa-trash-alt"></i></span><span class="flex-1 text-left">Delete</span></button></li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="mt-2">
-                                    <span class="badge rounded-full bg-base-200 text-dark border">${t.broker}</span>
+                                    <span class="badge badge-ghost">${t.broker}</span>
                                     <span class="badge rounded-full badge-primary">${levDisplay}</span>
-                                    <span class="badge rounded-full bg-base-200 text-dark border"><i class="far fa-clock mr-1"></i>${daysHeld}d hold</span>
+                                    <span class="badge badge-ghost"><i class="far fa-clock mr-1"></i>${daysHeld}d hold</span>
                                 </div>
                             </div>
                             <div class="trade-list-section trade-list-section-stats flex gap-2 w-full">
                                 <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-base-content/60 uppercase font-semibold trade-stat-label">Buy</div>
+                                    <div class="text-app-muted uppercase font-semibold trade-stat-label">Buy</div>
                                     <div class="font-semibold trade-stat-value whitespace-nowrap">${fmtDec(t.buyPrice)}</div>
                                 </div>
                                 <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-base-content/60 uppercase font-semibold trade-stat-label">Sell</div>
+                                    <div class="text-app-muted uppercase font-semibold trade-stat-label">Sell</div>
                                     <div class="font-semibold trade-stat-value text-success whitespace-nowrap">${fmtDec(t.sellPrice)}</div>
                                 </div>
                                 <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-base-content/60 uppercase font-semibold trade-stat-label">Qty</div>
+                                    <div class="text-app-muted uppercase font-semibold trade-stat-label">Qty</div>
                                     <div class="font-semibold trade-stat-value whitespace-nowrap">${t.quantity}</div>
                                 </div>
                             </div>
@@ -2506,8 +2595,8 @@
                 const tradeLabel = count === 1 ? '1 trade' : `${count} trades`;
                 return `
                     <div class="flex justify-between items-center mb-2">
-                        <div class="font-semibold text-dark"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
-                        <span class="badge rounded-full bg-base-200 text-dark border">${tradeLabel}</span>
+                        <div class="font-semibold text-base-content"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
+                        <span class="badge badge-ghost">${tradeLabel}</span>
                     </div>
                 `;
             }
@@ -2550,10 +2639,10 @@
 
                 if (filtered.length === 0) {
                     if (tradeQuery) {
-                        container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="small text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
+                        container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-app-muted mb-0">Try a different company name or clear the search.</p></div>`;
                         return;
                     }
-                    container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="small text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
+                    container.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-app-muted mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
                     return;
                 }
 
@@ -2603,7 +2692,7 @@
                 document.getElementById('pastSummaryCharges').textContent = fmt(charges);
 
                 const emptyHtml = pastQuery
-                    ? `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="small text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
+                    ? `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-app-muted mb-0">Try a different company name or clear the search.</p></div>`
                     : `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
 
                 if (filtered.length === 0) {
@@ -2725,8 +2814,8 @@
             function renderMoneyFilterListItem(e, showAccount, hideTypeBadge) {
                 const isDeposit = e.type === 'deposit';
                 const typeBadge = hideTypeBadge ? '' : (isDeposit
-                    ? '<span class="badge bg-success-subtle text-success border border-success-subtle money-filter-type-chip">Invest</span>'
-                    : '<span class="badge bg-danger-subtle text-error border border-danger-subtle money-filter-type-chip">Withdraw</span>');
+                    ? '<span class="badge badge-success badge-outline money-filter-type-chip">Invest</span>'
+                    : '<span class="badge badge-error badge-outline money-filter-type-chip">Withdraw</span>');
                 const accounts = getMoneyAccounts();
                 const acc = accounts.find(a => a.id === e.accountId);
                 const accountChip = showAccount && acc
@@ -2766,13 +2855,13 @@
 
                 if (isWithdrawOnly) {
                     summaryEl.innerHTML = `
-                        <div class="small uppercase text-base-content/60 font-semibold">Total Withdrawn</div>
+                        <div class="text-sm uppercase text-app-muted font-semibold">Total Withdrawn</div>
                         <div class="font-bold text-3xl text-error mb-1">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
                         <div class="money-stat-count">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                     `;
                 } else if (isDepositOnly) {
                     summaryEl.innerHTML = `
-                        <div class="small uppercase text-base-content/60 font-semibold">Total Deposited</div>
+                        <div class="text-sm uppercase text-app-muted font-semibold">Total Deposited</div>
                         <div class="font-bold text-3xl text-success mb-1">${fmtMoneyRich(displayPortfolio.deposited)}</div>
                         <div class="money-stat-count">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                     `;
@@ -2780,12 +2869,12 @@
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
                             <div class="">
-                                <div class="small text-base-content/60">Deposited</div>
+                                <div class="text-sm text-app-muted">Deposited</div>
                                 <div class="font-bold text-success">${fmtMoneyRich(displayPortfolio.deposited)}</div>
                                 <div class="money-stat-count">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                             </div>
                             <div class="">
-                                <div class="small text-base-content/60">Withdrawn</div>
+                                <div class="text-sm text-app-muted">Withdrawn</div>
                                 <div class="font-bold text-error">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
                                 <div class="money-stat-count">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                             </div>
@@ -2794,7 +2883,7 @@
                 }
 
                 if (entries.length === 0) {
-                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="small text-base-content/60 mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-light border" onclick="openMoneyPageFilterSheet()">Change filter</button></div>';
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-app-muted mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-ghost" onclick="openMoneyPageFilterSheet()">Change filter</button></div>';
                     return;
                 }
 
@@ -3074,11 +3163,11 @@
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
                             <div class="">
-                                <div class="small text-base-content/60">Deposited</div>
+                                <div class="text-sm text-app-muted">Deposited</div>
                                 <div class="font-bold text-success">${fmtMoneyRich(deposited)}</div>
                             </div>
                             <div class="">
-                                <div class="small text-base-content/60">Withdrawn</div>
+                                <div class="text-sm text-app-muted">Withdrawn</div>
                                 <div class="font-bold text-error">${fmtMoneyRich(withdrawn)}</div>
                             </div>
                         </div>
@@ -3086,32 +3175,32 @@
                 }
 
                 if (allEntries.length === 0) {
-                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-inbox mb-2 opacity-25"></i><p class="small text-base-content/60 mb-0">No deposits or withdrawals yet.</p></div>';
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-inbox mb-2 opacity-25"></i><p class="text-sm text-app-muted mb-0">No deposits or withdrawals yet.</p></div>';
                     return;
                 }
 
                 if (entries.length === 0) {
-                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="small text-base-content/60 mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-light border mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>';
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-app-muted mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-ghost mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>';
                     return;
                 }
 
                 listEl.innerHTML = entries.map(e => {
                     const isDeposit = e.type === 'deposit';
                     const typeBadge = isDeposit
-                        ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Deposit</span>'
-                        : '<span class="badge bg-danger-subtle text-error border border-danger-subtle">Withdraw</span>';
-                    const note = e.note ? `<div class="small text-base-content/60 mt-1">${e.note}</div>` : '';
+                        ? '<span class="badge badge-success badge-outline">Deposit</span>'
+                        : '<span class="badge badge-error badge-outline">Withdraw</span>';
+                    const note = e.note ? `<div class="text-sm text-app-muted mt-1">${e.note}</div>` : '';
                     return `
                         <div class="money-history-sheet-item flex justify-between items-start gap-2">
                             <div class="min-w-0">
                                 <div class="mb-1">${typeBadge}</div>
                                 <div class="font-bold">${fmtMoneyRich(e.amount)}</div>
-                                <div class="small text-base-content/60 mt-1"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
+                                <div class="text-sm text-app-muted mt-1"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
                                 ${note}
                             </div>
                             <div class="flex gap-1 shrink-0">
-                                <button type="button" class="btn btn-sm btn-light border" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit"><i class="fas fa-pen"></i></button>
-                                <button type="button" class="btn btn-sm btn-light text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                                <button type="button" class="btn btn-sm btn-ghost" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                                <button type="button" class="btn btn-sm btn-ghost text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
                             </div>
                         </div>
                     `;
@@ -3134,7 +3223,7 @@
             function renderMoneyAccountCard(stats) {
                 const acc = stats.account;
                 const holderLine = acc.holderName
-                    ? `<div class="small text-primary font-semibold mt-1"><i class="fas fa-user mr-1"></i>${acc.holderName}</div>`
+                    ? `<div class="text-sm text-primary font-semibold mt-1"><i class="fas fa-user mr-1"></i>${acc.holderName}</div>`
                     : '';
                 const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
                 return `
@@ -3152,16 +3241,16 @@
                                     <button type="button" class="money-action-btn withdraw" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" title="Withdraw" aria-label="Withdraw">
                                         <i class="fas fa-minus"></i>
                                     </button>
-                                    <div class="dropdown money-account-actions">
+                                    <div class="dropdown dropdown-end money-account-actions">
                                         <button type="button" class="money-action-btn more" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
-                                        <ul class="dropdown-content menu rounded-box shadow-lg z-[50] p-2 min-w-[11.5rem]">
+                                        <ul class="dropdown-content menu rounded-box shadow-lg app-z-menu p-2 app-min-w-menu">
                                             <li>
                                                 <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
                                                     <span class="app-icon app-icon--history"><i class="fas fa-history"></i></span>
                                                     <span class="flex-1 text-left">History</span>
-                                                    ${historyCount ? `<span class="badge rounded-full bg-primary-subtle text-primary badge badge-primary badge-outline text-xs">${historyCount}</span>` : ''}
+                                                    ${historyCount ? `<span class="badge badge-primary badge-outline badge-sm">${historyCount}</span>` : ''}
                                                 </button>
                                             </li>
                                             <li>
@@ -3246,7 +3335,7 @@
                 const accountList = document.getElementById('moneyAccountList');
                 if (accountList) {
                     if (visibleAccounts.length === 0) {
-                        accountList.innerHTML = '<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-university mb-3"></i><h6>No accounts yet</h6><p class="small text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
+                        accountList.innerHTML = '<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-university mb-3"></i><h6>No accounts yet</h6><p class="text-sm text-app-muted mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
                     } else {
                         accountList.innerHTML = visibleAccounts.map(renderMoneyAccountCard).join('');
                     }
@@ -3618,10 +3707,10 @@
                 return `
                     <div class="mb-2">
                         <div class="flex justify-between items-center">
-                            <div class="font-semibold text-dark"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
-                            <span class="badge rounded-full bg-base-200 text-dark border">${tradeLabel}</span>
+                            <div class="font-semibold text-base-content"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
+                            <span class="badge badge-ghost">${tradeLabel}</span>
                         </div>
-                        ${chips ? `<div class="small text-base-content/60 mt-1">${chips}</div>` : ''}
+                        ${chips ? `<div class="text-sm text-app-muted mt-1">${chips}</div>` : ''}
                     </div>
                 `;
             }
@@ -3645,18 +3734,18 @@
                         <div class="bg-base-200 rounded-xl p-3 mb-2">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="font-semibold">${b}</span>
-                                <span class="badge bg-base-200 text-dark border">${s.total} trades</span>
+                                <span class="badge badge-ghost">${s.total} trades</span>
                             </div>
-                            <div class="grid grid-cols-2 gap-2 small text-center">
-                                <div class="col-3"><div class="text-base-content/60">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
-                                <div class="col-3"><div class="text-base-content/60">Closed</div><div class="font-semibold">${s.closed}</div></div>
-                                <div class="col-3"><div class="text-base-content/60">Success</div><div class="font-semibold text-success">${s.successful}</div></div>
-                                <div class="col-3"><div class="text-base-content/60">Net</div><div class="font-semibold ${netClass}">${fmt(s.net)}</div></div>
+                            <div class="grid grid-cols-2 gap-2 text-sm text-center">
+                                <div><div class="text-app-muted">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
+                                <div><div class="text-app-muted">Closed</div><div class="font-semibold">${s.closed}</div></div>
+                                <div><div class="text-app-muted">Success</div><div class="font-semibold text-success">${s.successful}</div></div>
+                                <div><div class="text-app-muted">Net</div><div class="font-semibold ${netClass}">${fmt(s.net)}</div></div>
                             </div>
                         </div>
                     `;
                 }).join('');
-                return html || '<p class="text-base-content/60 small mb-0">No trades yet.</p>';
+                return html || '<p class="text-app-muted text-sm mb-0">No trades yet.</p>';
             }
 
             function renderTransactions() {
@@ -3678,7 +3767,7 @@
 
                 const listEl = document.getElementById('txHistList');
                 if (txs.length === 0) {
-                    listEl.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="small text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
+                    listEl.innerHTML = `<div class="empty-state card border-0 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-app-muted mb-0">Add trades from the Trades tab.</p></div>`;
                     return;
                 }
                 listEl.innerHTML = renderGroupedTradesWithChips(txs, renderTradeListItem);
@@ -3812,21 +3901,21 @@
                 const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
                 const typeBadge = isIntraday
                     ? '<span class="badge rounded-full badge-warning ml-1">Intraday</span>'
-                    : '<span class="badge rounded-full bg-base-200 text-dark border ml-1">MTF</span>';
+                    : '<span class="badge badge-ghost ml-1">MTF</span>';
                 return `
                     <h6 class="font-bold mb-2"><i class="fas fa-info-circle mr-2"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
                     <table class="table table-sm w-full w-full">
                         <tbody>
-                            <tr><td class="text-base-content/60">Interest</td><td class="text-end small">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
-                            <tr><td class="text-base-content/60">Brokerage</td><td class="text-end small">${brkLabel}</td></tr>
-                            <tr><td class="text-base-content/60">Pledge</td><td class="text-end">${fmtDec(chargeCfg.pledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">Unpledge</td><td class="text-end">${fmtDec(chargeCfg.unpledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">DP charges</td><td class="text-end">${fmtDec(chargeCfg.dpCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">STT</td><td class="text-end small">${sttLabel}</td></tr>
-                            <tr><td class="text-base-content/60">Exchange</td><td class="text-end">${(cfg.exchangePct * 100).toFixed(6)}%</td></tr>
-                            <tr><td class="text-base-content/60">SEBI</td><td class="text-end">${(cfg.sebiPct * 100).toFixed(6)}%</td></tr>
-                            <tr><td class="text-base-content/60">Stamp duty</td><td class="text-end small">${stampLabel}</td></tr>
-                            <tr><td class="text-base-content/60">GST</td><td class="text-end">${(cfg.gstPct * 100).toFixed(0)}%</td></tr>
+                            <tr><td class="text-app-muted">Interest</td><td class="text-end text-sm">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
+                            <tr><td class="text-app-muted">Brokerage</td><td class="text-end text-sm">${brkLabel}</td></tr>
+                            <tr><td class="text-app-muted">Pledge</td><td class="text-end">${fmtDec(chargeCfg.pledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-app-muted">Unpledge</td><td class="text-end">${fmtDec(chargeCfg.unpledgeCharge || 0)}</td></tr>
+                            <tr><td class="text-app-muted">DP charges</td><td class="text-end">${fmtDec(chargeCfg.dpCharge || 0)}</td></tr>
+                            <tr><td class="text-app-muted">STT</td><td class="text-end text-sm">${sttLabel}</td></tr>
+                            <tr><td class="text-app-muted">Exchange</td><td class="text-end">${(cfg.exchangePct * 100).toFixed(6)}%</td></tr>
+                            <tr><td class="text-app-muted">SEBI</td><td class="text-end">${(cfg.sebiPct * 100).toFixed(6)}%</td></tr>
+                            <tr><td class="text-app-muted">Stamp duty</td><td class="text-end text-sm">${stampLabel}</td></tr>
+                            <tr><td class="text-app-muted">GST</td><td class="text-end">${(cfg.gstPct * 100).toFixed(0)}%</td></tr>
                         </tbody>
                     </table>
                 `;
@@ -3883,11 +3972,11 @@
                     badge.textContent = 'Intraday';
                     badge.className = 'badge rounded-full badge-warning';
                     badge.classList.remove('hidden');
-                    banner.className = 'alert alert-info py-2 small mb-3';
+                    banner.className = 'alert alert-info py-2 text-sm mb-3';
                     banner.innerHTML = '<i class="fas fa-bolt mr-1"></i><strong>Same-day trade</strong> — charges use <strong>intraday rates</strong> for all brokers (STT 0.025% on sell only, stamp 0.003% on buy; no MTF interest, pledge, unpledge or DP).';
                 } else if (inp.buyDate && inp.sellDate && calcInputsValid(inp)) {
                     badge.textContent = 'MTF / Delivery';
-                    badge.className = 'badge rounded-full bg-base-200 text-dark border';
+                    badge.className = 'badge badge-ghost';
                     badge.classList.remove('hidden');
                     banner.className = 'hidden';
                     banner.innerHTML = '';
@@ -3917,7 +4006,7 @@
                 const netClass = result.netProfit >= 0 ? 'text-success' : 'text-error';
                 const isIntraday = tradeType === 'intraday' || result.tradeType === 'intraday';
                 const sameDayNote = intDet.sameDay
-                    ? `<div class="alert alert-info py-2 small mb-3"><i class="fas fa-bolt mr-1"></i>Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
+                    ? `<div class="alert alert-info py-2 text-sm mb-3"><i class="fas fa-bolt mr-1"></i>Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
                     : '';
 
                 return `
@@ -3937,7 +4026,7 @@
                     <div class="detail-row"><span class="detail-label">Total Charges</span><span class="detail-value">- ${fmtDec(result.totalCharges)}</span></div>
                     <div class="detail-row font-bold border-t border-base-300 pt-2 mt-1"><span class="detail-label">Net Profit</span><span class="detail-value ${netClass}">${fmtDec(result.netProfit)}</span></div>
                     <div class="section-title mt-3"><i class="fas fa-percent mr-2"></i>Interest Detail</div>
-                    <div class="bg-base-200 rounded-xl p-2 my-2 small text-center">
+                    <div class="bg-base-200 rounded-xl p-2 my-2 text-sm text-center">
                         ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
                     </div>
                     <div class="detail-row"><span class="detail-label">Rate / day</span><span class="detail-value">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
@@ -3963,7 +4052,7 @@
                 renderCalcChargeMode(inp);
 
                 if (!calcInputsValid(inp)) {
-                    comparePanel.innerHTML = '<p class="text-base-content/60 small mb-0">Fill in all fields to compare brokers.</p>';
+                    comparePanel.innerHTML = '<p class="text-app-muted text-sm mb-0">Fill in all fields to compare brokers.</p>';
                     return;
                 }
 
@@ -3982,7 +4071,7 @@
                             <td class="text-end">${fmtDec(r.totalCharges)}</td>
                             <td class="text-end font-semibold ${nc}">${fmtDec(r.netProfit)}</td>
                             <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-light border rounded-circle" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
+                                <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
                                     <i class="fas fa-circle-info text-primary"></i>
                                 </button>
                             </td>
@@ -4004,7 +4093,7 @@
                         </thead>
                         <tbody>${rows}</tbody>
                     </table>
-                    <p class="text-base-content/60 small mt-2 mb-0">${footnote}</p>
+                    <p class="text-app-muted text-sm mt-2 mb-0">${footnote}</p>
                 `;
             }
 
@@ -4075,19 +4164,19 @@
                     <div class="flex justify-between items-start gap-3 mb-3">
                         <div>
                             <h5 class="font-bold mb-2">${tx.company}</h5>
-                            <span class="badge rounded-full bg-base-200 text-dark border">${tx.broker}</span>
+                            <span class="badge badge-ghost">${tx.broker}</span>
                             ${statusLabel}
                             <span class="badge rounded-full badge-primary">${levDisplay}</span>
                         </div>
                         <div class="text-end">
-                            <div class="small text-base-content/60">Net Profit</div>
+                            <div class="text-sm text-app-muted">Net Profit</div>
                             <div class="font-bold text-2xl ${tx.netProfit >= 0 ? 'text-success' : 'text-error'}">${fmt(tx.netProfit)}</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="small text-base-content/60">Gross</div><div class="font-bold">${fmt(tx.grossProfit)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="small text-base-content/60">Holding</div><div class="font-bold">${tx.holdingDays || 0}d</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="small text-base-content/60">Qty</div><div class="font-bold">${tx.quantity}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-app-muted">Gross</div><div class="font-bold">${fmt(tx.grossProfit)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-app-muted">Holding</div><div class="font-bold">${tx.holdingDays || 0}d</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-app-muted">Qty</div><div class="font-bold">${tx.quantity}</div></div></div>
                     </div>
                     <div class="section-title"><i class="fas fa-hand-holding-usd mr-2"></i>Funding</div>
                     <div class="detail-row"><span class="detail-label">Total Investment</span><span class="detail-value">${fmtDec(totalInv)}</span></div>
@@ -4116,8 +4205,8 @@
                     <div class="detail-row"><span class="detail-label">Total Charges</span><span class="detail-value">- ${fmtDec(tx.charges || 0)}</span></div>
                     <div class="detail-row"><span class="detail-label">Total Cost</span><span class="detail-value">${fmtDec(totalCost)}</span></div>
                     <div class="detail-row font-bold border-t border-base-300 pt-2 mt-1"><span class="detail-label">Net Profit</span><span class="detail-value ${tx.netProfit >= 0 ? 'text-success' : 'text-error'}">${fmtDec(tx.netProfit || 0)}</span></div>
-                    ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt mr-2"></i>Notes</div><p class="small text-base-content/60 mb-0">${tx.notes}</p>` : ''}
-                    <div class="small text-base-content/60 mt-3 text-center">ID: ${tx.id}</div>
+                    ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt mr-2"></i>Notes</div><p class="text-sm text-app-muted mb-0">${tx.notes}</p>` : ''}
+                    <div class="text-sm text-app-muted mt-3 text-center">ID: ${tx.id}</div>
                 `;
 
                 Sheet.open(`${tx.company} Details`, html, '');
@@ -4175,7 +4264,7 @@
                 ].filter(([, b, s]) => (b + s) > 0);
                 const body = rows.map(([l, b, s]) => `
                     <tr>
-                        <td class="text-base-content/60">${l}</td>
+                        <td class="text-app-muted">${l}</td>
                         <td class="text-end">${fmtDec(b)}</td>
                         <td class="text-end">${fmtDec(s)}</td>
                         <td class="text-end font-semibold">${fmtDec(b + s)}</td>
@@ -4192,8 +4281,8 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="small">
-                                    <td class="text-base-content/60">Order Value</td>
+                                <tr class="text-sm">
+                                    <td class="text-app-muted">Order Value</td>
                                     <td class="text-end">${fmtDec(buy.orderValue)}</td>
                                     <td class="text-end">${fmtDec(sell.orderValue)}</td>
                                     <td class="text-end font-semibold">${fmtDec(buy.orderValue + sell.orderValue)}</td>
@@ -4203,7 +4292,7 @@
                                     <td>Total Charges</td>
                                     <td class="text-end">${fmtDec(buy.total)}</td>
                                     <td class="text-end">${fmtDec(sell.total)}</td>
-                                    <td class="text-end text-base-content/70">${fmtDec(buy.total + sell.total)}</td>
+                                    <td class="text-end text-app-secondary">${fmtDec(buy.total + sell.total)}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -4218,22 +4307,22 @@
                 const { buy, sell, tradeType } = chargeSides(tx);
                 const grand = buy.total + sell.total;
                 const intraNote = tradeType === 'intraday'
-                    ? `<div class="alert alert-info py-2 small mb-2"><i class="fas fa-bolt mr-1"></i>Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
+                    ? `<div class="alert alert-info py-2 text-sm mb-2"><i class="fas fa-bolt mr-1"></i>Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
                     : '';
 
                 const chargesHtml = `
                     <div class="text-center mb-3">
-                        <span class="badge rounded-full bg-base-200 text-dark border">${tx.broker}</span>
+                        <span class="badge badge-ghost">${tx.broker}</span>
                         <span class="badge rounded-full badge-primary">${(tx.leverage || 1) > 1 ? (tx.leverage + 'x') : '1x'}</span>
-                        <span class="badge rounded-full bg-base-200 text-dark border"><i class="far fa-clock mr-1"></i>${tx.holdingDays || 0}d hold</span>
+                        <span class="badge badge-ghost"><i class="far fa-clock mr-1"></i>${tx.holdingDays || 0}d hold</span>
                         ${tradeType === 'intraday' ? '<span class="badge rounded-full badge-warning">Intraday</span>' : ''}
                     </div>
                     ${intraNote}
                     ${chargesTable(buy, sell)}
                     <div class="grid grid-cols-3 gap-2 text-center mt-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Buy Side</div><div class="font-bold">${fmtDec(buy.total)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Sell Side</div><div class="font-bold">${fmtDec(sell.total)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Total</div><div class="font-bold text-base-content/70">${fmtDec(grand)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Buy Side</div><div class="font-bold">${fmtDec(buy.total)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Sell Side</div><div class="font-bold">${fmtDec(sell.total)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Total</div><div class="font-bold text-app-secondary">${fmtDec(grand)}</div></div></div>
                     </div>
                 `;
 
@@ -4272,37 +4361,37 @@
 
                 Sheet.open(`<i class=\"fas fa-percent mr-2\"></i>${tx.company} Interest`, `
                     <div class="text-center mb-3">
-                        <span class="badge rounded-full bg-base-200 text-dark border">${tx.broker}</span>
+                        <span class="badge badge-ghost">${tx.broker}</span>
                         <span class="badge rounded-full badge-primary">${levDisplay}</span>
-                        <span class="badge rounded-full bg-base-200 text-dark border"><i class="far fa-clock mr-1"></i>${d.days}d hold</span>
+                        <span class="badge badge-ghost"><i class="far fa-clock mr-1"></i>${d.days}d hold</span>
                     </div>
                     <div class="grid grid-cols-3 gap-2 text-center mb-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Leverage Amt</div><div class="font-bold">${fmt(d.mtf)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Days</div><div class="font-bold text-primary">${d.days}d</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="small text-base-content/60">Interest</div><div class="font-bold text-warning">${fmtDec(d.interest)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Leverage Amt</div><div class="font-bold">${fmt(d.mtf)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Days</div><div class="font-bold text-primary">${d.days}d</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-app-muted">Interest</div><div class="font-bold text-warning">${fmtDec(d.interest)}</div></div></div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="table table-sm w-full w-full">
                             <tbody>
-                                <tr><td class="text-base-content/60">Total Investment</td><td class="text-end">${fmtDec(tx.totalInvestment || 0)}</td></tr>
-                                <tr><td class="text-base-content/60">Your Margin</td><td class="text-end">${fmtDec(tx.ownMargin || 0)}</td></tr>
-                                <tr><td class="text-base-content/60">Broker Funded (Leverage)</td><td class="text-end font-semibold">${fmtDec(d.mtf)}</td></tr>
-                                <tr><td class="text-base-content/60">Leverage</td><td class="text-end">${levDisplay}</td></tr>
-                                <tr><td class="text-base-content/60">Interest Rate / day</td><td class="text-end">${(d.dailyRate * 100).toFixed(4)}%</td></tr>
-                                <tr><td class="text-base-content/60">Interest Rate / year</td><td class="text-end">${(d.annualRate * 100).toFixed(2)}%</td></tr>
-                                <tr><td class="text-base-content/60">Days Financed</td><td class="text-end">${d.days} day(s)</td></tr>
+                                <tr><td class="text-app-muted">Total Investment</td><td class="text-end">${fmtDec(tx.totalInvestment || 0)}</td></tr>
+                                <tr><td class="text-app-muted">Your Margin</td><td class="text-end">${fmtDec(tx.ownMargin || 0)}</td></tr>
+                                <tr><td class="text-app-muted">Broker Funded (Leverage)</td><td class="text-end font-semibold">${fmtDec(d.mtf)}</td></tr>
+                                <tr><td class="text-app-muted">Leverage</td><td class="text-end">${levDisplay}</td></tr>
+                                <tr><td class="text-app-muted">Interest Rate / day</td><td class="text-end">${(d.dailyRate * 100).toFixed(4)}%</td></tr>
+                                <tr><td class="text-app-muted">Interest Rate / year</td><td class="text-end">${(d.annualRate * 100).toFixed(2)}%</td></tr>
+                                <tr><td class="text-app-muted">Days Financed</td><td class="text-end">${d.days} day(s)</td></tr>
                             </tbody>
                         </table>
                     </div>
-                    <div class="bg-base-200 rounded-xl p-2 my-3 small text-center">
-                        <span class="text-base-content/60">Leverage &times; Daily Rate &times; Days</span><br>
+                    <div class="bg-base-200 rounded-xl p-2 my-3 text-sm text-center">
+                        <span class="text-app-muted">Leverage &times; Daily Rate &times; Days</span><br>
                         ${d.sameDay ? 'No interest (same-day trade)' : `${fmtDec(d.mtf)} &times; ${(d.dailyRate * 100).toFixed(4)}% &times; ${d.days}`}
                     </div>
                     <div class="flex justify-between font-bold border-t border-base-300 pt-2">
                         <span>Total Interest</span><span class="text-warning">${fmtDec(d.interest)}</span>
                     </div>
-                    ${d.sameDay ? '<div class="small text-base-content/60 text-center mt-3">Same-day trade — no MTF interest. Broker charges use intraday rates (tap Charges on the card).</div>' : ''}
-                    ${noLeverage && !d.sameDay ? '<div class="small text-base-content/60 text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
+                    ${d.sameDay ? '<div class="text-sm text-app-muted text-center mt-3">Same-day trade — no MTF interest. Broker charges use intraday rates (tap Charges on the card).</div>' : ''}
+                    ${noLeverage && !d.sameDay ? '<div class="text-sm text-app-muted text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
                 `, '');
             }
 
@@ -4389,6 +4478,25 @@
             }
 
             // ---------- MODAL HELPERS ----------
+            function initDropdowns() {
+                document.addEventListener('click', (e) => {
+                    if (e.target.closest('.dropdown-content button, .dropdown-content a, .dropdown-content li button')) {
+                        document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
+                        return;
+                    }
+                    const trigger = e.target.closest('.dropdown > button, .dropdown > [tabindex="0"]');
+                    if (trigger && trigger.closest('.dropdown')) {
+                        e.stopPropagation();
+                        const dd = trigger.closest('.dropdown');
+                        const wasOpen = dd.classList.contains('dropdown-open');
+                        document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
+                        if (!wasOpen) dd.classList.add('dropdown-open');
+                        return;
+                    }
+                    document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
+                });
+            }
+
             function initModals() {
                 const txEl = document.getElementById('txModal');
                 txEl.addEventListener('close', () => {
@@ -4580,11 +4688,11 @@
                 if (badgeEl) badgeEl.textContent = accounts.length;
                 if (!listEl) return;
                 if (!accounts.length) {
-                    listEl.innerHTML = '<p class="small text-base-content/60 mb-0">No accounts yet. Tap Add Account above to create one.</p>';
+                    listEl.innerHTML = '<p class="text-sm text-app-muted mb-0">No accounts yet. Tap Add Account above to create one.</p>';
                     return;
                 }
                 listEl.innerHTML = accounts.map(a => {
-                    const holder = a.holderName ? `<div class="small text-base-content/60">${a.holderName}</div>` : '';
+                    const holder = a.holderName ? `<div class="text-sm text-app-muted">${a.holderName}</div>` : '';
                     return `
                         <button type="button" class="btn btn-ghost border border-base-300 w-full text-start mb-2 rounded-xl" onclick="openMoneyAccountModal('${a.id}')">
                             <div class="font-semibold">${a.name}</div>
@@ -4613,9 +4721,9 @@
                 if (connectBtn) connectBtn.disabled = false;
 
                 const map = {
-                    connected: ['badge bg-success', 'Connected'],
-                    connecting: ['badge bg-warning text-dark', 'Connecting...'],
-                    error: ['badge bg-danger', 'Error'],
+                    connected: ['badge badge-success', 'Connected'],
+                    connecting: ['badge badge-warning', 'Connecting...'],
+                    error: ['badge badge-error', 'Error'],
                     off: ['badge badge-neutral', 'Off']
                 };
                 const [cls, label] = map[syncStatus] || map.off;
@@ -4699,12 +4807,12 @@
             }
 
             function resetData() {
-                const syncNote = syncCode ? '<p class="text-sm text-base-content/60 mb-2"><i class="fas fa-cloud mr-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="font-bold">all synced devices</span>.</p>' : '';
+                const syncNote = syncCode ? '<p class="text-sm text-app-muted mb-2"><i class="fas fa-cloud mr-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="font-bold">all synced devices</span>.</p>' : '';
                 AppDialog.open(
                     '<span class="text-error"><i class="fas fa-exclamation-triangle mr-2"></i>Reset All Data?</span>',
                     `<p class="mb-2 font-bold">This will permanently delete ALL your transactions.</p>
-                    <p class="text-sm text-base-content/60 mb-2">This action <span class="text-error font-bold">cannot be undone</span>.</p>${syncNote}
-                    <p class="text-sm text-base-content/60 mb-0">Tip: use <span class="font-bold">Backup as Text</span> first.</p>`,
+                    <p class="text-sm text-app-muted mb-2">This action <span class="text-error font-bold">cannot be undone</span>.</p>${syncNote}
+                    <p class="text-sm text-app-muted mb-0">Tip: use <span class="font-bold">Backup as Text</span> first.</p>`,
                     '<button type="button" class="btn btn-ghost" onclick="closeDialog()">Cancel</button><button type="button" class="btn btn-error" onclick="performReset()"><i class="fas fa-trash-alt mr-1"></i> Delete Everything</button>'
                 );
             }
@@ -4732,6 +4840,7 @@
             // ---------- INIT ----------
             document.addEventListener('DOMContentLoaded', function() {
                 initModals();
+                initDropdowns();
                 initCompanyAutocomplete();
                 migrateChargeLogic();
 
@@ -4862,8 +4971,6 @@
             window.saveMoneyAccount = saveMoneyAccount;
             window.confirmDeleteMoneyAccount = confirmDeleteMoneyAccount;
             window.confirmDeleteMoneyEntry = confirmDeleteMoneyEntry;
-            window.closeSheet = closeSheet;
-            window.closeDialog = closeDialog;
 
         })();
     </script>
