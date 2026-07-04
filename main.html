@@ -2,7 +2,7 @@
 <html lang="en" data-theme="corporate">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>MTF Profit Tracker</title>
 
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.css" rel="stylesheet" type="text/css" />
@@ -33,18 +33,26 @@
     <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[2000] w-[min(92vw,420px)]" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header class="sticky top-0 z-40 bg-base-100 border-b border-base-200 shadow-sm px-3 py-3 flex items-center justify-between gap-2 max-w-[480px] mx-auto w-full">
-        <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
-        <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
-            <i class="fas fa-cog text-base-content/55"></i>
-        </button>
+    <header id="appHeader" class="sticky top-0 z-40 bg-base-100 border-b border-base-200 shadow-sm px-3 py-3 max-w-[480px] mx-auto w-full">
+        <div id="appHeaderDefault" class="flex items-center justify-between gap-2">
+            <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
+            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
+                <i class="fas fa-cog text-base-content/55"></i>
+            </button>
+        </div>
+        <div id="appHeaderSettings" class="hidden flex items-center gap-3">
+            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="backFromSettings()" aria-label="Back">
+                <i class="fas fa-arrow-left text-base-content/55"></i>
+            </button>
+            <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-cog mr-2"></i>Settings</h5>
+        </div>
     </header>
 
     <!-- ============ PAGES ============ -->
 
     <!-- PAGE: TRADES -->
     <section id="page-trades" class="page-section">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <!-- Company search -->
             <div class="relative mb-3">
                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
@@ -81,7 +89,7 @@
 
     <!-- PAGE: PAST TRADES -->
     <section id="page-past" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <!-- Company search + filter -->
             <div class="flex items-center gap-2 mb-3">
                 <div class="relative flex-1 min-w-0">
@@ -125,20 +133,26 @@
 
     <!-- PAGE: MONEY -->
     <section id="page-money" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div id="moneyPageDefaultView">
                 <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="moneySummaryCard">
                     <div class="card-body text-center py-4">
                         <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-coins mr-1"></i>Total Value</div>
-                        <div id="moneyTotalValueHero"></div>
+                        <div class="money-stat-amount money-stat-amount--center mx-auto mb-1">
+                            <div id="moneyTotalValueHero"></div>
+                        </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <div>
+                            <div class="flex flex-col items-center">
                                 <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Deposited</div>
-                                <div id="moneyTotalDeposited"></div>
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    <div id="moneyTotalDeposited"></div>
+                                </div>
                             </div>
-                            <div>
+                            <div class="flex flex-col items-center">
                                 <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Withdrawn</div>
-                                <div id="moneyTotalWithdrawn"></div>
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    <div id="moneyTotalWithdrawn"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -148,11 +162,11 @@
                     <div class="flex items-center gap-2 shrink-0">
                         <div class="dropdown dropdown-end">
                             <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none" id="moneyAccountFilterTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter accounts">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-primary/15 text-primary" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
                                 <span class="truncate max-w-[5.5rem]" id="moneyAccountFilterLabel">All</span>
                                 <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                             </button>
-                            <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
+                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
                         </div>
                         <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
                             <i class="fas fa-filter text-base-content/55"></i>
@@ -175,7 +189,7 @@
                             <span class="truncate max-w-[5.5rem]" id="moneyPageFilterTypeLabel">All</span>
                             <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                         </button>
-                        <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
+                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
                     </div>
                     <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
                         <i class="fas fa-filter text-base-content/55"></i>
@@ -193,11 +207,7 @@
 
     <!-- PAGE: SETTINGS -->
     <section id="page-settings" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
-            <div class="flex items-center gap-3 mb-4">
-                <button type="button" class="btn btn-ghost btn-circle border border-base-200 w-9 h-9 min-h-0" onclick="backFromSettings()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
-                <h6 class="font-semibold text-base-content/80 mb-0"><i class="fas fa-cog mr-2"></i>Settings</h6>
-            </div>
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
                 <div class="card-body">
                     <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-cloud mr-2"></i>Cloud Sync</h6>
@@ -241,14 +251,14 @@
                             <div class="font-medium text-base-content/75"><i class="fas fa-clipboard mr-2"></i>Backup as Text</div>
                             <div class="text-sm text-base-content/60">Copy your data as text, or paste it back to restore</div>
                         </div>
-                        <button class="btn btn-sm btn-outline btn-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                        <div id="settingsBackupBtnHost" class="shrink-0"></div>
                     </div>
                     <div class="flex justify-between items-center gap-3 px-3 py-3">
                         <div>
                             <div class="font-semibold text-error"><i class="fas fa-trash-alt mr-2"></i>Reset All Data</div>
                             <div class="text-sm text-base-content/60">Permanently delete all transactions</div>
                         </div>
-                        <button class="btn btn-sm btn-outline btn-error" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
+                        <div id="settingsResetBtnHost" class="shrink-0"></div>
                     </div>
                 </div>
             </div>
@@ -257,25 +267,19 @@
 
     <!-- PAGE: MORE HUB -->
     <section id="page-more" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
-            <p class="text-base-content/60 text-sm mb-3">Tools and reports</p>
-            <div class="grid grid-cols-2 gap-3">
-                <div class="">
-                    <button type="button" class="card bg-base-100 shadow-sm rounded-2xl w-full h-full text-start transition-transform active:scale-[0.98]" onclick="openMoreFeature('transactions')">
-                        <div class="card-body text-center py-4">
-                            <i class="fas fa-database fa-2x text-primary mb-2"></i>
-                            <div class="font-semibold text-base-content/80">Total Transactions</div>
-                            <div class="text-sm text-base-content/60 mt-1">Full history, broker stats &amp; date-wise list</div>
-                        </div>
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+            <p class="text-base-content/60 text-xs uppercase tracking-wide font-medium mb-2">Tools and reports</p>
+            <div class="card bg-base-100 shadow-sm rounded-xl">
+                <div class="card-body p-1.5 flex flex-col gap-0.5">
+                    <button type="button" class="more-hub-option" onclick="openMoreFeature('transactions')">
+                        <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-database"></i></span>
+                        <span class="more-hub-option__label">Total Transactions</span>
+                        <i class="fas fa-chevron-right more-hub-option__chevron"></i>
                     </button>
-                </div>
-                <div class="">
-                    <button type="button" class="card bg-base-100 shadow-sm rounded-2xl w-full h-full text-start transition-transform active:scale-[0.98]" onclick="openMoreFeature('mtf-calc')">
-                        <div class="card-body text-center py-4">
-                            <i class="fas fa-calculator fa-2x text-success mb-2"></i>
-                            <div class="font-semibold text-base-content/80">MTF Calculator</div>
-                            <div class="text-sm text-base-content/60 mt-1">Plan trades &amp; compare Zerodha, Dhan, Groww</div>
-                        </div>
+                    <button type="button" class="more-hub-option" onclick="openMoreFeature('mtf-calc')">
+                        <span class="more-hub-option__icon more-hub-option__icon--success"><i class="fas fa-calculator"></i></span>
+                        <span class="more-hub-option__label">MTF Calculator</span>
+                        <i class="fas fa-chevron-right more-hub-option__chevron"></i>
                     </button>
                 </div>
             </div>
@@ -284,7 +288,7 @@
 
     <!-- PAGE: TOTAL TRANSACTIONS -->
     <section id="page-transactions" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div class="flex items-center gap-3 mb-4">
                 <button type="button" class="btn btn-ghost btn-circle border border-base-200 w-9 h-9 min-h-0" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
                 <h6 class="font-semibold text-base-content/80 mb-0">Total Transactions</h6>
@@ -337,7 +341,7 @@
 
     <!-- PAGE: MTF CALCULATOR -->
     <section id="page-mtf-calc" class="page-section hidden">
-        <div class="px-3.5 pb-28 pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div class="flex items-center gap-3 mb-4">
                 <button type="button" class="btn btn-ghost btn-circle border border-base-200 w-9 h-9 min-h-0" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
                 <h6 class="font-semibold text-base-content/80 mb-0">MTF Calculator</h6>
@@ -402,29 +406,31 @@
         </div>
     </section>
 
-    <!-- FAB -->
-    <button type="button" class="fixed z-40 w-14 h-14 min-h-0 rounded-full bg-primary text-white border-0 shadow-lg shadow-primary/25 flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all duration-150 bottom-[74px] right-[max(1rem,calc(50%-220px))]" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
-        <i class="fas fa-plus text-lg text-white"></i>
-    </button>
-
-    <!-- BOTTOM NAV -->
-    <div class="btm-nav btm-nav-md bg-base-100 border-t border-base-200 shadow-lg fixed bottom-0 inset-x-0 z-30 max-w-[480px] mx-auto w-full" id="bottomNav">
-        <button type="button" class="border-t-2 border-transparent" data-page="trades" onclick="navigateTo('trades')">
-            <i class="fas fa-list-ul text-lg nav-icon text-base-content/55"></i>
-            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Trades</span>
-        </button>
-        <button type="button" class="border-t-2 border-transparent" data-page="past" onclick="navigateTo('past')">
-            <i class="fas fa-history text-lg nav-icon text-base-content/55"></i>
-            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Past Trades</span>
-        </button>
-        <button type="button" class="border-t-2 border-transparent" data-page="money" onclick="navigateTo('money')">
-            <i class="fas fa-coins text-lg nav-icon text-base-content/55"></i>
-            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Money</span>
-        </button>
-        <button type="button" class="border-t-2 border-transparent" data-page="more" onclick="navigateTo('more')">
-            <i class="fas fa-ellipsis-h text-lg nav-icon text-base-content/55"></i>
-            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">More</span>
-        </button>
+    <!-- BOTTOM CHROME (nav + FAB) -->
+    <div class="fixed bottom-0 inset-x-0 z-30 flex justify-center pointer-events-none" id="bottomChrome">
+        <div class="app-bottom-chrome relative w-full max-w-[480px] pointer-events-none">
+            <button type="button" class="app-fab pointer-events-auto" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
+                <i class="fas fa-plus text-lg text-white"></i>
+            </button>
+            <div class="app-bottom-nav btm-nav btm-nav-md bg-base-100 border-t border-base-200 shadow-lg pointer-events-auto w-full" id="bottomNav">
+                <button type="button" class="border-t-2 border-transparent" data-page="trades" onclick="navigateTo('trades')">
+                    <i class="fas fa-list-ul text-lg nav-icon text-base-content/55"></i>
+                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Trades</span>
+                </button>
+                <button type="button" class="border-t-2 border-transparent" data-page="past" onclick="navigateTo('past')">
+                    <i class="fas fa-history text-lg nav-icon text-base-content/55"></i>
+                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Past Trades</span>
+                </button>
+                <button type="button" class="border-t-2 border-transparent" data-page="money" onclick="navigateTo('money')">
+                    <i class="fas fa-coins text-lg nav-icon text-base-content/55"></i>
+                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Money</span>
+                </button>
+                <button type="button" class="border-t-2 border-transparent" data-page="more" onclick="navigateTo('more')">
+                    <i class="fas fa-ellipsis-h text-lg nav-icon text-base-content/55"></i>
+                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">More</span>
+                </button>
+            </div>
+        </div>
     </div>
 
 
@@ -465,7 +471,7 @@
                                 <span class="truncate max-w-[5.5rem]" id="moneyPageTypeFilterLabel">All</span>
                                 <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                             </button>
-                            <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
+                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -536,7 +542,7 @@
                                     <span class="truncate max-w-[5.5rem]" id="moneyHistoryTypeLabel">All</span>
                                     <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                                 </button>
-                                <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
+                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
                             </div>
                             <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
                                 <i class="fas fa-filter text-base-content/55"></i>
@@ -583,7 +589,7 @@
                         <div class="mb-3">
                             <label class="label-text font-normal text-base-content/65">Company Name <span class="text-error">*</span></label>
                             <div class="relative">
-                                <input type="text" class="input input-bordered w-full" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
+                                <input type="text" class="input input-bordered w-full" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
                                 <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl shadow-lg hidden" id="txCompanyAcList" role="listbox" aria-label="Stock suggestions"></div>
                             </div>
                             <div id="txCompanyMeta" class="text-xs text-base-content/60 mt-1 hidden"></div>
@@ -594,11 +600,11 @@
                             <input type="hidden" id="txBroker" value="" />
                             <div class="dropdown dropdown-end w-full">
                                 <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] w-full max-w-none" id="txBrokerTrigger" tabindex="0" role="button" aria-expanded="false">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-primary/15 text-primary" id="txBrokerIcon"><i class="fas fa-building"></i></span>
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="txBrokerIcon"><i class="fas fa-building"></i></span>
                                     <span class="truncate max-w-[5.5rem]" id="txBrokerLabel">Select Broker</span>
                                     <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                                 </button>
-                                <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="txBrokerMenu"></ul>
+                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="txBrokerMenu"></ul>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -763,17 +769,19 @@
                 moneyToneNegative: 'bg-error/15 text-error',
                 moneyActionDeposit: 'bg-success/15 text-success border-0 hover:bg-success/25',
                 moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
-                fab: 'fixed z-40 w-14 h-14 min-h-0 rounded-full bg-primary text-white border-0 shadow-lg shadow-primary/25 flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all duration-150 bottom-[74px] right-[max(1rem,calc(50%-220px))]',
+                fab: 'app-fab pointer-events-auto',
                 selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none text-base-content/75',
                 selectLabel: 'truncate max-w-[5.5rem]',
                 selectChevron: 'text-[0.6rem] opacity-50 ml-auto',
+                dropdownItemActive: 'app-dropdown-item--active',
+                dropdownMenu: 'dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]',
                 menuIconStyles: {
                     deposit: 'bg-success/15 text-success', withdraw: 'bg-error/15 text-error',
-                    history: 'bg-primary/15 text-primary', view: 'bg-primary/15 text-primary',
+                    history: 'bg-base-200 text-base-content/60', view: 'bg-base-200 text-base-content/60',
                     edit: 'bg-base-200 text-base-content/55', copy: 'bg-base-200 text-base-content/55',
                     muted: 'bg-base-200 text-base-content/55', charges: 'bg-base-200 text-base-content/55',
                     interest: 'bg-warning/20 text-warning', delete: 'bg-error/20 text-error',
-                    account: 'bg-primary/15 text-primary', broker: 'bg-primary/15 text-primary'
+                    account: 'bg-base-200 text-base-content/60', broker: 'app-menu-icon--broker'
                 },
                 menuIcon: (v) => `inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 ${UI.menuIconStyles[v] || UI.menuIconStyles.muted}`,
                 summaryCard(heroIcon, heroLabel, heroId, stats, cardId) {
@@ -806,7 +814,6 @@
                 emptyState(icon, msg) {
                     return `<div class="text-center text-base-content/50 py-5"><i class="fas ${icon} text-4xl opacity-25 block mb-2"></i><p class="mb-0">${msg}</p></div>`;
                 },
-                dropdownMenu: 'dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-md z-50 p-2 min-w-[11.5rem]',
                 sheetDialog: 'modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0',
                 sheetBox: 'modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-lg',
                 actionDropdown(items) {
@@ -1409,7 +1416,7 @@
                     const meta = it.sector
                         ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
                         : (it.i ? `${escapeHtml(it.i)} · ${escapeHtml(it.e || 'NSE')}` : escapeHtml(it.e || 'NSE'));
-                    const activeCls = idx === stockAcActiveIdx ? ' bg-primary/5' : '';
+                    const activeCls = idx === stockAcActiveIdx ? ' bg-base-200' : '';
                     return `
                     <div class="px-3 py-2 cursor-pointer hover:bg-base-200 border-b border-base-200 last:border-0${activeCls}" role="option" data-idx="${idx}" onmousedown="selectStockSymbol(${idx})">
                         <div class="font-medium text-base-content/80 text-sm">${escapeHtml(it.s)}</div>
@@ -1439,14 +1446,14 @@
                 }
                 el.classList.remove('hidden');
                 const extra = meta.sector ? ` · ${meta.sector}` : (meta.i ? ` · ${meta.i}` : '');
-                el.textContent = `${meta.n}${extra}`;
+                el.textContent = `${meta.s} · ${meta.e || 'NSE'}${extra}`;
             }
 
             function selectStockSymbol(idx) {
                 const item = stockAcResults[idx];
                 if (!item) return;
                 if (stockAcBlurTimer) clearTimeout(stockAcBlurTimer);
-                document.getElementById('txCompany').value = item.s;
+                document.getElementById('txCompany').value = item.n;
                 setTxCompanyMeta(item);
                 hideCompanyAcList();
             }
@@ -1520,6 +1527,23 @@
                 const key = (symbol || '').trim().toUpperCase();
                 if (!key) return null;
                 return stockSymbols.find(s => s.s.toUpperCase() === key) || null;
+            }
+
+            function findStockMetaForCompany(value) {
+                const key = (value || '').trim();
+                if (!key) return null;
+                const bySymbol = findStockMetaForSymbol(key);
+                if (bySymbol) return bySymbol;
+                const keyUp = key.toUpperCase();
+                return stockSymbols.find(s => s.n.toUpperCase() === keyUp) || null;
+            }
+
+            function resolveCompanyName(raw) {
+                const trimmed = (raw || '').trim();
+                if (!trimmed) return '';
+                const meta = selectedStockMeta || findStockMetaForCompany(trimmed);
+                if (meta && trimmed.toUpperCase() === meta.s.toUpperCase()) return meta.n;
+                return trimmed;
             }
 
             // ---------- CLOUD SYNC (Firebase Firestore, sync-code based) ----------
@@ -1972,11 +1996,33 @@
                 });
             }
 
+            function paintSettingsActionButtons() {
+                const backupHost = document.getElementById('settingsBackupBtnHost');
+                if (backupHost) {
+                    backupHost.innerHTML = renderAppButton('Copy / Paste', {
+                        variant: 'action',
+                        onclick: 'openBackupTextModal()',
+                        icon: 'fa-copy',
+                        size: 'sm'
+                    });
+                }
+                const resetHost = document.getElementById('settingsResetBtnHost');
+                if (resetHost) {
+                    resetHost.innerHTML = renderAppButton('Reset', {
+                        variant: 'danger',
+                        onclick: 'resetData()',
+                        icon: 'fa-trash-alt',
+                        size: 'sm'
+                    });
+                }
+            }
+
             function initAppButtons() {
                 renderTxModalFooter(false);
                 renderMoneyEntryFooter('Add Deposit', 'fa-plus');
                 renderSyncConnectRow();
                 paintAddMoneyAccountBtn();
+                paintSettingsActionButtons();
                 const calcAdd = document.getElementById('calcAddPctBtnHost');
                 if (calcAdd) {
                     calcAdd.innerHTML = renderAppButton('Add', {
@@ -2154,6 +2200,16 @@
                 document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
                 const target = document.getElementById(pageId);
                 if (target) target.classList.remove('hidden');
+                updateAppHeader(pageId);
+            }
+
+            function updateAppHeader(pageId) {
+                const def = document.getElementById('appHeaderDefault');
+                const settings = document.getElementById('appHeaderSettings');
+                if (!def || !settings) return;
+                const onSettings = pageId === 'page-settings';
+                def.classList.toggle('hidden', onSettings);
+                settings.classList.toggle('hidden', !onSettings);
             }
 
             function setBottomNavActive(page) {
@@ -2244,7 +2300,7 @@
 
             function buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues) {
                 return options.map(o => {
-                    const active = o.value === selectedValue ? ' bg-primary/5 text-primary font-medium' : '';
+                    const active = o.value === selectedValue ? ` ${UI.dropdownItemActive}` : '';
                     const danger = o.danger ? ' text-error' : '';
                     const badge = o.badge ? appTag(o.badge, 'accent') : '';
                     const arg = escapeValues
@@ -2273,12 +2329,12 @@
             function setFilterBtnHighlight(btn, active) {
                 if (!btn) return;
                 btn.classList.remove('btn-primary');
-                btn.classList.toggle('border-primary/40', active);
-                btn.classList.toggle('bg-primary/5', active);
-                btn.classList.toggle('text-primary', active);
+                btn.classList.toggle('border-base-300', active);
+                btn.classList.toggle('bg-base-200', active);
+                btn.classList.toggle('text-base-content', active);
                 btn.classList.toggle('border-base-200', !active);
                 const icon = btn.querySelector('i');
-                if (icon) icon.classList.toggle('text-primary', active);
+                if (icon) icon.classList.toggle('text-base-content/70', active);
                 if (icon) icon.classList.toggle('text-base-content/55', !active);
             }
 
@@ -2444,7 +2500,7 @@
                                         ${renderAmount(t.netProfit, { size: 'lg', compact: true, showSign: true, align: 'right' })}
                                         <div class="dropdown dropdown-end">
                                             <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
-                                            <ul class="dropdown-content menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 shadow-lg rounded-box">
+                                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 shadow-lg rounded-box">
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="${UI.menuIcon('view')}"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="${UI.menuIcon('copy')}"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmEdit('${t.id}')"><span class="${UI.menuIcon('edit')}"><i class="fas fa-edit"></i></span><span class="flex-1 text-left">Edit</span></button></li>
@@ -2735,7 +2791,7 @@
                             ${topRow}
                             <div class="text-sm text-base-content/60"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
                         </div>
-                        <div class="text-end shrink-0">${renderAmount(e.amount, { size: 'md', words: true, tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
+                        <div class="money-stat-amount money-stat-amount--right shrink-0">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
                     </div>
                 `;
             }
@@ -2761,26 +2817,34 @@
                 if (isWithdrawOnly) {
                     summaryEl.innerHTML = `
                         <div class="${UI.statLabel}">Total Withdrawn</div>
-                        ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', words: true, tone: 'withdraw', align: 'center' })}
+                        <div class="money-stat-amount money-stat-amount--center mx-auto">
+                            ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', tone: 'withdraw', align: 'center' })}
+                        </div>
                         <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                     `;
                 } else if (isDepositOnly) {
                     summaryEl.innerHTML = `
                         <div class="${UI.statLabel}">Total Deposited</div>
-                        ${renderAmount(displayPortfolio.deposited, { size: 'lg', words: true, tone: 'deposit', align: 'center' })}
+                        <div class="money-stat-amount money-stat-amount--center mx-auto">
+                            ${renderAmount(displayPortfolio.deposited, { size: 'lg', tone: 'deposit', align: 'center' })}
+                        </div>
                         <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                     `;
                 } else {
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="">
+                            <div class="flex flex-col items-center">
                                 <div class="${UI.statLabel}">Deposited</div>
-                                ${renderAmount(displayPortfolio.deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' })}
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    ${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}
+                                </div>
                                 <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                             </div>
-                            <div class="">
+                            <div class="flex flex-col items-center">
                                 <div class="${UI.statLabel}">Withdrawn</div>
-                                ${renderAmount(displayPortfolio.withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' })}
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    ${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
+                                </div>
                                 <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                             </div>
                         </div>
@@ -3066,13 +3130,17 @@
                 if (summaryEl) {
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="">
+                            <div class="flex flex-col items-center">
                                 <div class="${UI.statLabel}">Deposited</div>
-                                ${renderAmount(deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' })}
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    ${renderAmount(deposited, { size: 'md', tone: 'deposit', align: 'center' })}
+                                </div>
                             </div>
-                            <div class="">
+                            <div class="flex flex-col items-center">
                                 <div class="${UI.statLabel}">Withdrawn</div>
-                                ${renderAmount(withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' })}
+                                <div class="money-stat-amount money-stat-amount--center">
+                                    ${renderAmount(withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -3098,7 +3166,7 @@
                         <div class="money-history-sheet-item flex justify-between items-start gap-2">
                             <div class="min-w-0">
                                 <div class="mb-1 flex flex-wrap gap-1.5">${typeBadge}</div>
-                                ${renderAmount(e.amount, { size: 'md', words: true, tone: isDeposit ? 'deposit' : 'withdraw', align: 'left' })}
+                                ${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'left' })}
                                 <div class="text-sm text-base-content/60 mt-1"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
                                 ${note}
                             </div>
@@ -3131,7 +3199,7 @@
                     : '';
                 const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
                 const row = (label, amount, extra = '', tone = 'positive') =>
-                    `<div class="flex justify-between items-start gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/60 shrink-0">${label}</span>${renderAmount(amount, { size: 'md', words: true, tone, align: 'right' })}</div>`;
+                    `<div class="flex justify-between items-center gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/60 shrink-0">${label}</span><div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right' })}</div></div>`;
                 return `
                     <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
                         <div class="card-body p-4">
@@ -3151,7 +3219,7 @@
                                         <button type="button" class="${UI.actionBtn} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
-                                        <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]">
+                                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]">
                                             <li>
                                                 <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
                                                     <span class="${UI.menuIcon('history')}"><i class="fas fa-history"></i></span>
@@ -3224,9 +3292,9 @@
                 if (filterView) filterView.classList.add('hidden');
 
                 const heroEl = document.getElementById('moneyTotalValueHero');
-                if (heroEl) paintAmount(heroEl, displayPortfolio.totalValue, { size: 'hero', words: true, tone: 'positive', align: 'center', icon: 'fa-coins', iconSize: 'md' });
-                paintAmount(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' });
-                paintAmount(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' });
+                if (heroEl) paintAmount(heroEl, displayPortfolio.totalValue, { size: 'hero', tone: 'positive', align: 'center', icon: 'fa-coins', iconSize: 'md' });
+                paintAmount(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' });
+                paintAmount(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' });
 
                 const filterEl = document.getElementById('moneyAccountFilterMenu');
                 if (filterEl) {
@@ -3358,7 +3426,6 @@
                 }
                 previewEl.innerHTML = renderAmount(amount, {
                     size: 'md',
-                    words: true,
                     tone: document.getElementById('moneyEntryType')?.value === 'withdraw' ? 'withdraw' : 'deposit',
                     align: 'left'
                 });
@@ -3460,7 +3527,6 @@
                 }
                 previewEl.innerHTML = renderAmount(amount, {
                     size: 'md',
-                    words: true,
                     tone: 'positive',
                     align: 'left'
                 });
@@ -4448,9 +4514,9 @@
                 document.getElementById('txEditId').value = id;
                 setTxSaveBtnLabel(true);
 
-                document.getElementById('txCompany').value = tx.company || '';
                 resetCompanyAutocomplete();
-                const editMatch = findStockMetaForSymbol(tx.company || '');
+                const editMatch = findStockMetaForCompany(tx.company || '');
+                document.getElementById('txCompany').value = editMatch ? editMatch.n : (tx.company || '');
                 if (editMatch) setTxCompanyMeta(editMatch);
                 setTxBroker(tx.broker || '');
                 document.getElementById('txBuyDate').value = tx.buyDate || '';
@@ -4539,7 +4605,7 @@
 
             async function saveTransaction() {
                 const editId = document.getElementById('txEditId').value;
-                const company = document.getElementById('txCompany').value.trim();
+                const company = resolveCompanyName(document.getElementById('txCompany').value);
                 const broker = document.getElementById('txBroker').value;
                 const buyDate = document.getElementById('txBuyDate').value;
                 const sellDate = document.getElementById('txSellDate').value;
@@ -4655,34 +4721,48 @@
 
             // ---------- BACKUP AS TEXT (COPY / PASTE) ----------
             function openBackupTextModal() {
-                const data = getStorageData();
-                document.getElementById('backupTextArea').value = JSON.stringify(data, null, 2);
-                Sheet.mountPanel('<i class="fas fa-clipboard mr-2"></i>Backup as Text', 'panelBackup',
-                    `<div class="app-btn-row">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
+                try {
+                    const data = getStorage();
+                    const ta = document.getElementById('backupTextArea');
+                    if (!ta) {
+                        showToast('Backup panel unavailable.', 'danger');
+                        return;
+                    }
+                    ta.value = JSON.stringify(data, null, 2);
+                    Sheet.mountPanel('<i class="fas fa-clipboard mr-2"></i>Backup as Text', 'panelBackup',
+                        `<div class="app-btn-row">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
+                } catch (_) {
+                    showToast('Could not open backup.', 'danger');
+                }
             }
 
             async function copyBackupText() {
                 const ta = document.getElementById('backupTextArea');
+                if (!ta) {
+                    showToast('Backup area not found.', 'danger');
+                    return;
+                }
                 const text = ta.value;
+                if (!text) {
+                    showToast('Nothing to copy.', 'warning');
+                    return;
+                }
                 try {
-                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                    if (navigator.clipboard?.writeText) {
                         await navigator.clipboard.writeText(text);
                         showToast('Backup copied to clipboard!', 'success');
                         return;
                     }
-                    throw new Error('Clipboard API unavailable');
-                } catch (_) {
-                    // Fallback: select the text so the user can copy manually
-                    ta.focus();
-                    ta.select();
-                    ta.setSelectionRange(0, text.length);
-                    try {
-                        const ok = document.execCommand('copy');
-                        showToast(ok ? 'Backup copied to clipboard!' : 'Text selected - long-press and Copy.', ok ? 'success' : 'info');
-                    } catch (e) {
-                        showToast('Text selected - long-press and tap Copy.', 'info');
-                    }
-                }
+                } catch (_) { /* fall through to manual copy */ }
+                ta.focus({ preventScroll: true });
+                ta.select();
+                ta.setSelectionRange(0, text.length);
+                let copied = false;
+                try { copied = document.execCommand('copy'); } catch (_) {}
+                showToast(
+                    copied ? 'Backup copied to clipboard!' : 'Text selected — use your keyboard Copy button.',
+                    copied ? 'success' : 'info'
+                );
             }
 
             function restoreFromText() {
