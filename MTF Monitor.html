@@ -94,6 +94,159 @@
         .detail-row:last-child { border-bottom: 0; }
         .detail-label { color: var(--app-muted); font-size: .82rem; }
         .detail-value { font-size: .85rem; font-weight: 600; text-align: right; }
+        .money-account-actions { position: relative; }
+        .money-account-card-actions {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            flex-shrink: 0;
+        }
+        .money-action-btn {
+            width: 2.15rem;
+            height: 2.15rem;
+            border: 0;
+            border-radius: .6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .78rem;
+            padding: 0;
+            cursor: pointer;
+            transition: transform .12s ease, opacity .12s ease;
+        }
+        .money-action-btn:active { transform: scale(.94); }
+        .money-action-btn.deposit { background: #d1e7dd; color: #198754; }
+        .money-action-btn.withdraw { background: #f8d7da; color: #dc3545; }
+        .money-action-btn.more {
+            background: #f1f3f5;
+            color: #495057;
+            border: 1px solid #e8ecf1;
+        }
+        .money-action-btn.more.show,
+        .money-action-btn.more:hover {
+            background: #e9ecef;
+            color: #1e293b;
+        }
+        .app-dropdown-menu,
+        .money-account-menu {
+            border: 0;
+            border-radius: 1rem;
+            box-shadow: 0 .85rem 2rem rgba(15, 23, 42, .14);
+            padding: .45rem;
+            min-width: 11.5rem;
+            margin-top: .35rem !important;
+        }
+        .app-dropdown-menu .dropdown-item,
+        .money-account-menu .dropdown-item {
+            border-radius: .7rem;
+            padding: .62rem .7rem;
+            display: flex;
+            align-items: center;
+            gap: .7rem;
+            font-weight: 500;
+            font-size: .88rem;
+            color: #1e293b;
+        }
+        .app-dropdown-menu .dropdown-item:hover,
+        .app-dropdown-menu .dropdown-item:focus,
+        .app-dropdown-menu .dropdown-item.active,
+        .money-account-menu .dropdown-item:hover,
+        .money-account-menu .dropdown-item:focus,
+        .money-account-menu .dropdown-item.active {
+            background: #f4f7fb;
+        }
+        .app-dropdown-menu .dropdown-divider,
+        .money-account-menu .dropdown-divider {
+            margin: .35rem .4rem;
+            border-color: #eef1f5;
+        }
+        .app-menu-icon,
+        .money-menu-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: .6rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: .78rem;
+        }
+        .app-menu-icon.deposit,
+        .money-menu-icon.deposit { background: #d1e7dd; color: #198754; }
+        .app-menu-icon.withdraw,
+        .money-menu-icon.withdraw { background: #f8d7da; color: #dc3545; }
+        .app-menu-icon.history,
+        .money-menu-icon.history { background: #cfe2ff; color: #0d6efd; }
+        .app-menu-icon.edit,
+        .money-menu-icon.edit { background: #e9ecef; color: #495057; }
+        .app-menu-icon.view { background: #cfe2ff; color: #0d6efd; }
+        .app-menu-icon.copy { background: #e9ecef; color: #495057; }
+        .app-menu-icon.interest { background: #fff3cd; color: #997404; }
+        .app-menu-icon.charges { background: #e2e3e5; color: #495057; }
+        .app-menu-icon.delete { background: #f8d7da; color: #dc3545; }
+        .app-menu-icon.muted { background: #e9ecef; color: #495057; }
+        .app-menu-icon.account { background: #cfe2ff; color: #0d6efd; }
+        .app-menu-icon.broker { background: #e7f1ff; color: #0d6efd; }
+        .app-menu-label,
+        .money-menu-label { flex: 1 1 auto; text-align: left; }
+        .app-menu-badge,
+        .money-menu-badge {
+            font-size: .68rem;
+            font-weight: 600;
+            padding: .2rem .45rem;
+        }
+        .app-select-dropdown { position: relative; }
+        .app-select-trigger {
+            display: inline-flex;
+            align-items: center;
+            gap: .45rem;
+            border-radius: .65rem !important;
+            padding: .32rem .55rem !important;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #1e293b;
+            background: #fff;
+            min-height: 2.1rem;
+            max-width: 11rem;
+        }
+        .app-select-trigger .app-menu-icon {
+            width: 1.55rem;
+            height: 1.55rem;
+            font-size: .68rem;
+        }
+        .app-select-label {
+            flex: 1 1 auto;
+            min-width: 0;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .app-select-chevron {
+            font-size: .58rem;
+            color: var(--app-muted);
+            flex-shrink: 0;
+        }
+        .app-select-trigger.show,
+        .app-select-trigger:hover {
+            background: #f8f9fb;
+            border-color: #dde3ea !important;
+        }
+        .money-filter-type-select.app-select-trigger {
+            max-width: 6.75rem;
+        }
+        #moneyHistoryModal .app-select-trigger {
+            width: 6.5rem;
+            min-width: 6.5rem;
+            max-width: 6.5rem;
+            padding-right: .45rem !important;
+        }
+        .app-form-select-wrap .app-select-trigger {
+            width: 100%;
+            max-width: none;
+            justify-content: flex-start;
+        }
         .section-title {
             margin: 1rem 0 .45rem;
             padding-bottom: .35rem;
@@ -115,19 +268,370 @@
             color: #fff;
             box-shadow: 0 .75rem 1.8rem rgba(26, 115, 232, .35);
         }
-        .money-fab {
-            position: fixed;
-            right: max(16px, calc((100vw - 480px) / 2 + 16px));
-            bottom: 74px;
-            z-index: 1030;
-            width: 56px;
-            height: 56px;
+        .money-account-history {
+            margin-top: .75rem;
+            padding-top: .65rem;
+            border-top: 1px solid #eef1f5;
+        }
+        .money-history-item {
+            padding: .5rem 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .money-history-item:last-child { border-bottom: 0; }
+        .money-amount-words {
+            display: block;
+            font-size: .72rem;
+            color: var(--app-muted);
+            font-weight: 500;
+            margin-top: .15rem;
+            line-height: 1.3;
+        }
+        .money-entry-header {
+            position: relative;
+            flex-direction: column;
+            align-items: stretch;
+            gap: .65rem;
+            border-bottom: 0 !important;
+            padding: 1rem 1rem .95rem;
+        }
+        .money-entry-header.deposit {
+            background: linear-gradient(135deg, #edf7f0 0%, #d8f0de 100%);
+            color: #1f6b43;
+        }
+        .money-entry-header.withdraw {
+            background: linear-gradient(135deg, #fff0f1 0%, #fde2e4 100%);
+            color: #a52834;
+        }
+        .money-entry-header .btn-close {
+            position: absolute;
+            top: .85rem;
+            right: .85rem;
+            opacity: .55;
+        }
+        .money-entry-header.deposit .btn-close { filter: none; }
+        .money-entry-header.withdraw .btn-close { filter: none; }
+        #moneyEntryModal .modal-dialog {
+            max-width: min(92vw, 400px);
+            margin: 1rem auto;
+        }
+        #moneyEntryModal .modal-content {
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 1rem 2.5rem rgba(15, 23, 42, .2);
+        }
+        #moneyEntryModal .modal-body { padding: 1rem; }
+        #moneyEntryModal .modal-footer {
+            padding: .75rem 1rem 1rem;
+            border-top: 0;
+        }
+        .money-entry-header-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: .75rem;
+            padding-right: 1.5rem;
+        }
+        .money-entry-account-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.25;
+            flex: 1;
+            min-width: 0;
+        }
+        .money-entry-header-actions {
+            display: flex;
+            align-items: center;
+            gap: .55rem;
+            flex-shrink: 0;
+        }
+        .money-entry-datetime-row {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            min-height: 1.35rem;
+        }
+        .money-entry-datetime-display {
+            font-size: .8rem;
+            font-weight: 500;
+            line-height: 1.3;
+            opacity: .88;
+        }
+        .money-entry-header.deposit .money-entry-datetime-display { color: #2f6f4d; }
+        .money-entry-header.withdraw .money-entry-datetime-display { color: #9b3640; }
+        .money-entry-header .money-entry-datetime-edit-btn {
+            width: 1.65rem;
+            height: 1.65rem;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: .45rem;
             border: 0;
+            font-size: .72rem;
+        }
+        .money-entry-header.deposit .money-entry-datetime-edit-btn {
+            background: rgba(31, 107, 67, .1);
+            color: #1f6b43;
+        }
+        .money-entry-header.deposit .money-entry-datetime-edit-btn:hover {
+            background: rgba(31, 107, 67, .16);
+            color: #1f6b43;
+        }
+        .money-entry-header.withdraw .money-entry-datetime-edit-btn {
+            background: rgba(165, 40, 52, .1);
+            color: #a52834;
+        }
+        .money-entry-header.withdraw .money-entry-datetime-edit-btn:hover {
+            background: rgba(165, 40, 52, .16);
+            color: #a52834;
+        }
+        .money-entry-datetime-fields {
+            display: flex;
+            gap: .45rem;
+        }
+        .money-entry-datetime-fields .form-control {
+            font-size: .78rem;
+            padding: .3rem .45rem;
+            background: rgba(255, 255, 255, .95);
+            border: 0;
+        }
+        .money-entry-type-row {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .money-entry-toggle {
+            position: relative;
+            display: inline-block;
+            width: 2.85rem;
+            height: 1.6rem;
+            flex-shrink: 0;
+            margin: 0;
+        }
+        .money-entry-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
+        .money-entry-toggle-slider {
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            background: rgba(255, 255, 255, .32);
+            border-radius: 999px;
+            transition: background .2s ease;
+        }
+        .money-entry-header.deposit .money-entry-toggle-slider {
+            background: rgba(31, 107, 67, .18);
+        }
+        .money-entry-header.withdraw .money-entry-toggle-slider {
+            background: rgba(165, 40, 52, .18);
+        }
+        .money-entry-toggle-slider::before {
+            content: '';
+            position: absolute;
+            height: 1.2rem;
+            width: 1.2rem;
+            left: .2rem;
+            top: .2rem;
+            background: #fff;
             border-radius: 50%;
-            background: #198754;
+            transition: transform .2s ease;
+            box-shadow: 0 .1rem .3rem rgba(0, 0, 0, .12);
+        }
+        .money-entry-header.deposit .money-entry-toggle input:checked + .money-entry-toggle-slider {
+            background: rgba(31, 107, 67, .28);
+        }
+        .money-entry-header.withdraw .money-entry-toggle input:checked + .money-entry-toggle-slider {
+            background: rgba(165, 40, 52, .28);
+        }
+        .money-entry-toggle input:checked + .money-entry-toggle-slider::before {
+            transform: translateX(1.25rem);
+        }
+        .money-entry-save-btn.deposit {
+            background: #d4edda;
+            border-color: #bfe3c8;
+            color: #1f6b43;
+        }
+        .money-entry-save-btn.deposit:hover,
+        .money-entry-save-btn.deposit:focus {
+            background: #c3e6cb;
+            border-color: #a8d9b4;
+            color: #1a5c39;
+        }
+        .money-entry-save-btn.withdraw {
+            background: #f8d7da;
+            border-color: #f1c2c7;
+            color: #a52834;
+        }
+        .money-entry-save-btn.withdraw:hover,
+        .money-entry-save-btn.withdraw:focus {
+            background: #f3c8cc;
+            border-color: #ebb3b9;
+            color: #8f222c;
+        }
+        .money-entry-amount-preview {
+            padding: .6rem .75rem;
+            background: #f8f9fb;
+            border-radius: .65rem;
+            border: 1px solid #eef1f5;
+            font-weight: 600;
+        }
+        .money-history-sheet-item {
+            padding: .75rem 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .money-history-sheet-item:last-child { border-bottom: 0; }
+        #moneyHistoryModal .modal-header.money-history-header {
+            gap: .45rem;
+            padding-bottom: .65rem;
+        }
+        #moneyHistoryModal .money-history-toolbar {
+            display: flex;
+            align-items: center;
+            gap: .45rem;
+            width: 100%;
+            padding-right: 1.6rem;
+        }
+        #moneyHistoryModal .money-history-toolbar-main {
+            flex: 1 1 auto;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+            overflow: hidden;
+        }
+        #moneyHistoryModal .money-history-title {
+            font-size: .92rem;
+            font-weight: 700;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 1;
+            min-width: 0;
+        }
+        #moneyHistoryModal .money-history-meta {
+            font-size: .68rem;
+            color: var(--app-muted);
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 2;
+            min-width: 0;
+        }
+        #moneyHistoryModal .money-history-meta::before {
+            content: '·';
+            margin-right: .35rem;
+            color: #c5ccd6;
+        }
+        #moneyHistoryModal .money-history-meta.is-filtered { color: #0d6efd; }
+        #moneyHistoryModal .money-history-controls {
+            display: flex;
+            gap: .35rem;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        #moneyHistoryModal .money-history-filter-btn {
+            width: 1.85rem;
+            height: 1.85rem;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            font-size: .7rem;
+            border-radius: .45rem;
+        }
+        #moneyHistoryModal .money-history-filter-btn.active {
+            background: var(--app-primary, #0d6efd);
             color: #fff;
-            box-shadow: 0 .75rem 1.8rem rgba(25, 135, 84, .35);
-            display: none;
+            border-color: var(--app-primary, #0d6efd) !important;
+        }
+        #moneyPageFilterBtn.active {
+            background: var(--app-primary, #0d6efd);
+            color: #fff;
+            border-color: var(--app-primary, #0d6efd) !important;
+        }
+        #moneyPageFilterBtnActive.active {
+            background: var(--app-primary, #0d6efd);
+            color: #fff;
+            border-color: var(--app-primary, #0d6efd) !important;
+        }
+        .money-stat-count {
+            font-size: .68rem;
+            color: var(--app-muted);
+            margin-top: .1rem;
+        }
+        .money-filter-sub-header {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin-bottom: 1rem;
+        }
+        .money-filter-sub-header .money-filter-title-wrap {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        .money-filter-sub-header .money-filter-title {
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .money-filter-sub-header .money-filter-meta {
+            font-size: .78rem;
+            color: var(--app-muted);
+            margin-top: .1rem;
+        }
+        .money-filter-list-item {
+            padding: .65rem 0;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .money-filter-list-item:last-child { border-bottom: 0; }
+        .money-filter-list-top {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: .35rem;
+            margin-bottom: .2rem;
+        }
+        .money-filter-list-date {
+            font-size: .58rem;
+            color: var(--app-muted);
+            line-height: 1.2;
+        }
+        .money-filter-list-date i {
+            font-size: .52rem;
+        }
+        .money-filter-list-amount {
+            min-width: 5.5rem;
+            max-width: 46%;
+        }
+        .money-filter-list-amount .money-amount-words {
+            font-size: .58rem;
+            line-height: 1.2;
+            margin-top: .08rem;
+        }
+        .money-filter-type-select {
+            max-width: 6.75rem;
+        }
+        .money-filter-account-chip {
+            display: inline-flex;
+            align-items: center;
+            font-size: .66rem;
+            font-weight: 600;
+            color: var(--app-primary);
+            background: rgba(13, 110, 253, .08);
+            border-radius: 999px;
+            padding: .12rem .45rem;
+        }
+        .money-filter-type-chip {
+            font-size: .62rem;
+            font-weight: 600;
+            padding: .12rem .4rem;
         }
 
         .bottom-nav {
@@ -305,7 +809,7 @@
     <!-- ============ HEADER ============ -->
     <header class="app-header sticky-top bg-white border-bottom shadow-sm px-3 py-3 d-flex align-items-center justify-content-between gap-2">
         <h5 class="fw-bold mb-0 fs-5"><i class="fas fa-chart-line text-success me-2"></i>MTF Profit Tracker</h5>
-        <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.5rem;height:2.5rem;" onclick="openSettingsSheet()" title="Settings" aria-label="Settings">
+        <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.5rem;height:2.5rem;" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
             <i class="fas fa-cog"></i>
         </button>
     </header>
@@ -396,39 +900,137 @@
     <!-- PAGE: MONEY -->
     <section id="page-money" class="page-section">
         <div class="scroll-content">
-            <div class="card border-0 shadow-sm rounded-4 mb-3" id="moneySummaryCard">
-                <div class="card-body text-center py-3">
-                    <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-coins me-1"></i>Net Invested</div>
-                    <div class="fw-bold fs-2 mb-3" id="moneyNetInvestedHero">₹0</div>
-                    <div class="row g-0">
-                        <div class="col-6">
-                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Deposited</div>
-                            <div class="fw-semibold" id="moneyTotalDeposited">₹0</div>
-                        </div>
-                        <div class="col-6">
-                            <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Withdrawn</div>
-                            <div class="fw-semibold" id="moneyTotalWithdrawn">₹0</div>
+            <div id="moneyPageDefaultView">
+                <div class="card border-0 shadow-sm rounded-4 mb-3" id="moneySummaryCard">
+                    <div class="card-body text-center py-3">
+                        <div class="small text-uppercase text-muted fw-semibold"><i class="fas fa-coins me-1"></i>Total Value</div>
+                        <div class="fw-bold fs-2 mb-3" id="moneyTotalValueHero">₹0</div>
+                        <div class="row g-0">
+                            <div class="col-6">
+                                <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Deposited</div>
+                                <div class="fw-semibold" id="moneyTotalDeposited">₹0</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-uppercase text-muted fw-semibold" style="font-size:.68rem;">Withdrawn</div>
+                                <div class="fw-semibold" id="moneyTotalWithdrawn">₹0</div>
+                            </div>
                         </div>
                     </div>
                 </div>
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-university me-2"></i>Accounts</h6>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="dropdown app-select-dropdown">
+                            <button type="button" class="btn btn-light border app-select-trigger" id="moneyAccountFilterTrigger" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Filter accounts">
+                                <span class="app-menu-icon account" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
+                                <span class="app-select-label" id="moneyAccountFilterLabel">All</span>
+                                <i class="fas fa-chevron-down app-select-chevron"></i>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu" id="moneyAccountFilterMenu"></ul>
+                        </div>
+                        <button type="button" class="btn btn-light border btn-sm d-flex align-items-center justify-content-center" id="moneyPageFilterBtn" style="width:2.1rem;height:2.1rem;" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
+                            <i class="fas fa-filter"></i>
+                        </button>
+                    </div>
+                </div>
+                <div id="moneyAccountList"></div>
             </div>
-            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                <h6 class="fw-bold mb-0"><i class="fas fa-university me-2"></i>Accounts</h6>
-                <select class="form-select form-select-sm w-auto" id="moneyAccountFilter" onchange="setMoneyAccountFilter(this.value)" style="max-width:11rem;">
-                    <option value="all">All</option>
-                </select>
+
+            <div id="moneyPageFilterView" class="d-none">
+                <div class="money-filter-sub-header">
+                    <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:2.25rem;height:2.25rem;" onclick="clearMoneyPageFilters()" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></button>
+                    <div class="money-filter-title-wrap">
+                        <h6 class="money-filter-title" id="moneyPageFilterViewTitle">Filtered</h6>
+                        <div class="money-filter-meta" id="moneyPageFilterViewMeta"></div>
+                    </div>
+                    <div class="dropdown app-select-dropdown">
+                        <button type="button" class="btn btn-light border app-select-trigger money-filter-type-select flex-shrink-0" id="moneyPageFilterTypeTrigger" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Filter type">
+                            <span class="app-menu-icon muted" id="moneyPageFilterTypeIcon"><i class="fas fa-layer-group"></i></span>
+                            <span class="app-select-label" id="moneyPageFilterTypeLabel">All</span>
+                            <i class="fas fa-chevron-down app-select-chevron"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu" id="moneyPageFilterTypeMenu"></ul>
+                    </div>
+                    <button type="button" class="btn btn-light border btn-sm d-flex align-items-center justify-content-center flex-shrink-0 active" id="moneyPageFilterBtnActive" style="width:2.1rem;height:2.1rem;" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4 mb-3" id="moneyPageFilterSummaryCard">
+                    <div class="card-body text-center py-3" id="moneyPageFilterSummary"></div>
+                </div>
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-body py-2" id="moneyPageFilterList"></div>
+                </div>
             </div>
-            <div id="moneyAccountList"></div>
-            <h6 class="fw-bold mb-2 mt-3"><i class="fas fa-arrow-circle-up me-2"></i>Withdrawal Report</h6>
+        </div>
+    </section>
+
+    <!-- PAGE: SETTINGS -->
+    <section id="page-settings" class="page-section">
+        <div class="scroll-content">
+            <div class="more-sub-header">
+                <button type="button" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2.25rem;height:2.25rem;" onclick="backFromSettings()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                <h6 class="fw-bold mb-0"><i class="fas fa-cog me-2"></i>Settings</h6>
+            </div>
             <div class="card border-0 shadow-sm rounded-4 mb-3">
-                <div class="card-body py-2 px-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="small text-muted">Total Withdrawn</span>
-                        <span class="fw-bold" id="moneyWithdrawReportTotal">₹0</span>
+                <div class="card-body">
+                    <h6 class="fw-bold mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2 small text-muted">Status:</span>
+                        <span id="cloudSyncStatus" class="badge bg-secondary">Off</span>
+                    </div>
+                    <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text"><i class="fas fa-key"></i></span>
+                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-primary flex-fill" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug me-1"></i> Connect</button>
+                        <button class="btn btn-sm btn-outline-secondary flex-fill" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink me-1"></i> Disconnect</button>
+                    </div>
+                    <div id="cloudSyncHint" class="small text-muted mt-2"></div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-3">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-university me-2"></i>Money Accounts</div>
+                            <div class="small text-muted" id="settingsMoneyAccountCount">0 accounts</div>
+                        </div>
+                        <span class="badge bg-secondary" id="settingsMoneyAccountBadge">0</span>
+                    </div>
+                    <div class="px-3 py-3 border-bottom">
+                        <button type="button" class="btn btn-sm btn-success w-100" onclick="openAddMoneyAccountModal()"><i class="fas fa-plus me-1"></i> Add Account</button>
+                    </div>
+                    <div class="px-3 py-3" id="settingsMoneyAccountList"></div>
+                </div>
+            </div>
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-0">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-database me-2"></i>Total Transactions</div>
+                            <div class="small text-muted" id="totalTxCount">0 records</div>
+                        </div>
+                        <span class="badge bg-secondary" id="totalTxBadge">0</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
+                        <div>
+                            <div class="fw-semibold"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
+                            <div class="small text-muted">Copy your data as text, or paste it back to restore</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3">
+                        <div>
+                            <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
+                            <div class="small text-muted">Permanently delete all transactions</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
                     </div>
                 </div>
             </div>
-            <div id="moneyWithdrawList"></div>
         </div>
     </section>
 
@@ -583,9 +1185,6 @@
     <button class="fab d-flex align-items-center justify-content-center" id="fabBtn" onclick="openAddModal()">
         <i class="fas fa-plus"></i>
     </button>
-    <button class="money-fab d-flex align-items-center justify-content-center" id="moneyFabBtn" onclick="openAddMoneyAccountModal()" title="Add account">
-        <i class="fas fa-plus"></i>
-    </button>
 
     <!-- BOTTOM NAV -->
     <nav class="bottom-nav bg-white border-top shadow-lg d-flex align-items-stretch" id="bottomNav">
@@ -628,14 +1227,17 @@
                             <div id="txCompanyMeta" class="company-ac-status mt-1 d-none"></div>
                             <div id="txCompanyCatalogStatus" class="company-ac-status mt-1"></div>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3 app-form-select-wrap">
                             <label class="form-label">Broker <span class="text-danger">*</span></label>
-                            <select class="form-select" id="txBroker" required>
-                                <option value="">Select Broker</option>
-                                <option value="Zerodha">Zerodha</option>
-                                <option value="Dhan">Dhan</option>
-                                <option value="Groww">Groww</option>
-                            </select>
+                            <input type="hidden" id="txBroker" value="" />
+                            <div class="dropdown app-select-dropdown w-100">
+                                <button type="button" class="btn btn-light border app-select-trigger w-100" id="txBrokerTrigger" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <span class="app-menu-icon broker" id="txBrokerIcon"><i class="fas fa-building"></i></span>
+                                    <span class="app-select-label" id="txBrokerLabel">Select Broker</span>
+                                    <i class="fas fa-chevron-down app-select-chevron"></i>
+                                </button>
+                                <ul class="dropdown-menu w-100 app-dropdown-menu" id="txBrokerMenu"></ul>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Trade Status</label>
@@ -859,7 +1461,8 @@
                     id: acc.id,
                     name: acc.name || 'Unnamed',
                     holderName: acc.holderName || '',
-                    broker: acc.broker || 'None'
+                    broker: acc.broker || 'None',
+                    openingBalance: Number(acc.openingBalance) || 0
                 };
             }
 
@@ -867,7 +1470,20 @@
                 if (!Array.isArray(data.moneyAccounts)) data.moneyAccounts = [];
                 data.moneyAccounts = data.moneyAccounts.map(normalizeMoneyAccount);
                 if (!Array.isArray(data.moneyEntries)) data.moneyEntries = [];
+                data.moneyEntries = data.moneyEntries.map(normalizeMoneyEntry);
                 return data;
+            }
+
+            function normalizeMoneyEntry(entry) {
+                return {
+                    id: entry.id,
+                    accountId: entry.accountId,
+                    type: entry.type,
+                    amount: entry.amount,
+                    date: entry.date || '',
+                    time: entry.time || '',
+                    note: entry.note || ''
+                };
             }
 
             function getStorage() {
@@ -951,6 +1567,13 @@
                 const data = getStorage();
                 data.moneyEntries = data.moneyEntries.filter(e => e.id !== id);
                 return saveStorage(data);
+            }
+            function updateMoneyEntry(id, updates) {
+                const data = getStorage();
+                const idx = data.moneyEntries.findIndex(e => e.id === id);
+                if (idx === -1) return Promise.resolve(null);
+                data.moneyEntries[idx] = { ...data.moneyEntries[idx], ...updates };
+                return saveStorage(data).then(() => data.moneyEntries[idx]);
             }
             function getMoneyEntry(id) { return getMoneyEntries().find(e => e.id === id) || null; }
 
@@ -1803,6 +2426,41 @@
                 if (abs >= 100000) return sign + '₹' + (abs / 100000).toFixed(1) + 'L';
                 return sign + '₹' + abs.toFixed(0);
             }
+            function fmtINR(n) {
+                if (n === undefined || n === null || isNaN(n)) return '₹0';
+                const sign = n < 0 ? '-' : '';
+                const abs = Math.round(Math.abs(n));
+                return sign + '₹' + abs.toLocaleString('en-IN');
+            }
+            function amountInWords(num) {
+                if (num === undefined || num === null || isNaN(num)) return 'Zero Rupees';
+                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+                const spellBelow100 = (n) => n < 20 ? ones[n] : tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+                const spellBelow1000 = (n) => {
+                    if (n >= 100) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + spellBelow100(n % 100) : '');
+                    return spellBelow100(n);
+                };
+                let n = Math.round(Math.abs(num));
+                if (n === 0) return 'Zero Rupees';
+                const parts = [];
+                const crore = Math.floor(n / 10000000);
+                n %= 10000000;
+                const lakh = Math.floor(n / 100000);
+                n %= 100000;
+                const thousand = Math.floor(n / 1000);
+                n %= 1000;
+                if (crore) parts.push(spellBelow100(crore) + ' Crore');
+                if (lakh) parts.push(spellBelow100(lakh) + ' Lakh');
+                if (thousand) parts.push(spellBelow100(thousand) + ' Thousand');
+                if (n) parts.push(spellBelow1000(n));
+                const text = parts.join(' ');
+                const label = Math.round(Math.abs(num)) === 1 ? 'Rupee' : 'Rupees';
+                return (num < 0 ? 'Minus ' : '') + text + ' ' + label;
+            }
+            function fmtMoneyRich(n) {
+                return `${fmtINR(n)}<span class="money-amount-words">${amountInWords(n)}</span>`;
+            }
             function fmtDec(n) {
                 if (n === undefined || n === null || isNaN(n)) return '₹0.00';
                 return '₹' + n.toFixed(2);
@@ -1816,6 +2474,23 @@
                 if (!d) return '-';
                 const dt = new Date(d);
                 return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+            }
+            function getNowTime() {
+                const d = new Date();
+                return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+            }
+            function fmtDateTime(date, time) {
+                if (!date) return '-';
+                const dateStr = fmtDate(date);
+                if (!time) return dateStr;
+                const parts = time.split(':');
+                const h = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10);
+                if (isNaN(h) || isNaN(m)) return dateStr;
+                const dt = new Date();
+                dt.setHours(h, m, 0, 0);
+                const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                return dateStr + ' · ' + timeStr;
             }
             function fmtPct(n) {
                 if (n === null || n === undefined || isNaN(n)) return '—';
@@ -1848,13 +2523,108 @@
                 if (filterModalInstance) filterModalInstance.hide();
             }
 
-            let settingsModalInstance = null;
-            function openSettingsSheet() {
-                renderSettings();
-                if (!settingsModalInstance) {
-                    settingsModalInstance = new bootstrap.Modal(document.getElementById('settingsModal'), { backdrop: true });
+            let settingsReturnPage = 'trades';
+            let settingsReturnMoreFeature = null;
+
+            function getCurrentAppPage() {
+                const active = document.querySelector('.page-section.active-page');
+                if (!active) return { page: 'trades', moreFeature: null };
+                const id = active.id;
+                if (id === 'page-trades') return { page: 'trades', moreFeature: null };
+                if (id === 'page-past') return { page: 'past', moreFeature: null };
+                if (id === 'page-money') return { page: 'money', moreFeature: null };
+                if (id === 'page-more') return { page: 'more', moreFeature: null };
+                if (id === 'page-settings') return { page: 'settings', moreFeature: null };
+                if (id === 'page-transactions') return { page: 'more', moreFeature: 'transactions' };
+                if (id === 'page-mtf-calc') return { page: 'more', moreFeature: 'mtf-calc' };
+                return { page: 'trades', moreFeature: null };
+            }
+
+            const NAV_STATE_KEY = 'mtf_nav_state';
+
+            function saveNavState() {
+                const current = getCurrentAppPage();
+                const payload = {
+                    page: current.page,
+                    moreFeature: current.moreFeature
+                };
+                if (current.page === 'settings') {
+                    payload.settingsReturnPage = settingsReturnPage;
+                    payload.settingsReturnMoreFeature = settingsReturnMoreFeature;
                 }
-                settingsModalInstance.show();
+                try { sessionStorage.setItem(NAV_STATE_KEY, JSON.stringify(payload)); } catch (_) {}
+            }
+
+            function getSavedNavState() {
+                try {
+                    const raw = sessionStorage.getItem(NAV_STATE_KEY);
+                    return raw ? JSON.parse(raw) : null;
+                } catch (_) {
+                    return null;
+                }
+            }
+
+            function isNavStateMismatch(saved) {
+                if (!saved || !saved.page) return false;
+                if (saved.page === 'settings') {
+                    return !document.getElementById('page-settings')?.classList.contains('active-page');
+                }
+                if (saved.moreFeature) {
+                    const featPage = moreFeatureMap[saved.moreFeature];
+                    return !document.getElementById(featPage)?.classList.contains('active-page');
+                }
+                const expected = pageMap[saved.page];
+                return expected ? !document.getElementById(expected)?.classList.contains('active-page') : false;
+            }
+
+            function restoreNavState() {
+                const saved = getSavedNavState();
+                if (!saved || !saved.page) return false;
+                if (saved.page === 'settings') {
+                    settingsReturnPage = saved.settingsReturnPage || 'trades';
+                    settingsReturnMoreFeature = saved.settingsReturnMoreFeature || null;
+                    renderSettings();
+                    showPage('page-settings');
+                    setBottomNavActive(null);
+                    updateFabVisibility('settings');
+                    return true;
+                }
+                if (saved.moreFeature) {
+                    openMoreFeature(saved.moreFeature);
+                    return true;
+                }
+                if (pageMap[saved.page]) {
+                    navigateTo(saved.page);
+                    return true;
+                }
+                return false;
+            }
+
+            function restoreNavStateIfNeeded() {
+                const saved = getSavedNavState();
+                if (!saved || !isNavStateMismatch(saved)) return;
+                restoreNavState();
+            }
+
+            function openSettingsPage() {
+                const current = getCurrentAppPage();
+                if (current.page !== 'settings') {
+                    settingsReturnPage = current.page === 'settings' ? settingsReturnPage : current.page;
+                    settingsReturnMoreFeature = current.moreFeature;
+                }
+                renderSettings();
+                showPage('page-settings');
+                setBottomNavActive(null);
+                updateFabVisibility('settings');
+                saveNavState();
+            }
+
+            function backFromSettings() {
+                if (settingsReturnMoreFeature) {
+                    openMoreFeature(settingsReturnMoreFeature);
+                } else {
+                    navigateTo(settingsReturnPage || 'trades');
+                }
             }
 
             // ---------- NAVIGATION ----------
@@ -1870,7 +2640,7 @@
 
             function setBottomNavActive(page) {
                 document.querySelectorAll('.bottom-nav .nav-item').forEach(el => {
-                    el.classList.toggle('active', el.dataset.page === page);
+                    el.classList.toggle('active', !!page && el.dataset.page === page);
                 });
             }
 
@@ -1882,6 +2652,7 @@
                 if (page === 'past') renderPastTrades();
                 if (page === 'money') renderMoney();
                 updateFabVisibility(page);
+                saveNavState();
             }
 
             function openMoreFeature(feature) {
@@ -1894,6 +2665,7 @@
                     renderMtfCalculator();
                     updateMtfCalculator();
                 }
+                saveNavState();
             }
 
             function backToMoreHub() {
@@ -1901,6 +2673,7 @@
                 showPage('page-more');
                 setBottomNavActive('more');
                 updateFabVisibility('more');
+                saveNavState();
             }
 
             // ---------- STATE ----------
@@ -1910,20 +2683,150 @@
             let tradeSearchQuery = '';
             let pastSearchQuery = '';
             let moneyAccountFilter = 'all';
+            let moneyPageTypeFilter = 'all';
+            let moneyPageFrom = null;
+            let moneyPageTo = null;
+            let moneyPageRangeKey = 'all';
+            let moneyHistorySheetAccountId = null;
+            let moneyHistoryTypeFilter = 'all';
+            let moneyHistoryFrom = null;
+            let moneyHistoryTo = null;
+            let moneyHistoryRangeKey = 'all';
+
+            const APP_MONEY_TYPE_OPTIONS = [
+                { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
+                { value: 'withdraw', label: 'Withdraw', icon: 'fa-minus', variant: 'withdraw' },
+                { value: 'deposit', label: 'Invest', icon: 'fa-plus', variant: 'deposit' }
+            ];
+            const APP_MONEY_TYPE_FILTER_OPTIONS = [
+                { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
+                { value: 'deposit', label: 'Invest only', icon: 'fa-plus', variant: 'deposit' },
+                { value: 'withdraw', label: 'Withdrawals only', icon: 'fa-minus', variant: 'withdraw' }
+            ];
+            const APP_BROKER_OPTIONS = [
+                { value: '', label: 'Select Broker', icon: 'fa-building', variant: 'muted' },
+                { value: 'Zerodha', label: 'Zerodha', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Dhan', label: 'Dhan', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' }
+            ];
+
+            function buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues) {
+                return options.map(o => {
+                    const active = o.value === selectedValue ? ' active' : '';
+                    const danger = o.danger ? ' text-danger' : '';
+                    const badge = o.badge ? `<span class="badge rounded-pill bg-primary-subtle text-primary app-menu-badge">${o.badge}</span>` : '';
+                    const arg = escapeValues
+                        ? `decodeURIComponent('${encodeURIComponent(o.value)}')`
+                        : `'${String(o.value).replace(/'/g, "\\'")}'`;
+                    return `<li><button type="button" class="dropdown-item${active}${danger}" onclick="${selectHandler}(${arg})">
+                        <span class="app-menu-icon ${o.variant || 'muted'}"><i class="fas ${o.icon}"></i></span>
+                        <span class="app-menu-label">${o.label}</span>${badge}
+                    </button></li>`;
+                }).join('');
+            }
+
+            function syncAppSelectDropdown({ options, selectedValue, labelId, iconId, menuId, selectHandler, escapeValues }) {
+                const selected = options.find(o => o.value === selectedValue) || options[0];
+                const labelEl = document.getElementById(labelId);
+                const iconEl = document.getElementById(iconId);
+                const menuEl = document.getElementById(menuId);
+                if (labelEl) labelEl.textContent = selected.label;
+                if (iconEl) {
+                    iconEl.className = `app-menu-icon ${selected.variant || 'muted'}`;
+                    iconEl.innerHTML = `<i class="fas ${selected.icon}"></i>`;
+                }
+                if (menuEl) menuEl.innerHTML = buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues);
+            }
+
+            function syncMoneyTypeDropdowns() {
+                syncAppSelectDropdown({
+                    options: APP_MONEY_TYPE_OPTIONS,
+                    selectedValue: moneyPageTypeFilter,
+                    labelId: 'moneyPageFilterTypeLabel',
+                    iconId: 'moneyPageFilterTypeIcon',
+                    menuId: 'moneyPageFilterTypeMenu',
+                    selectHandler: 'setMoneyPageTypeFilter'
+                });
+                syncAppSelectDropdown({
+                    options: APP_MONEY_TYPE_FILTER_OPTIONS,
+                    selectedValue: moneyPageTypeFilter,
+                    labelId: 'moneyPageTypeFilterLabel',
+                    iconId: 'moneyPageTypeFilterIcon',
+                    menuId: 'moneyPageTypeFilterMenu',
+                    selectHandler: 'pickMoneyPageTypeFilter'
+                });
+                const hiddenType = document.getElementById('moneyPageTypeFilter');
+                if (hiddenType) hiddenType.value = moneyPageTypeFilter;
+            }
+
+            function syncMoneyHistoryTypeDropdown() {
+                syncAppSelectDropdown({
+                    options: APP_MONEY_TYPE_OPTIONS,
+                    selectedValue: moneyHistoryTypeFilter,
+                    labelId: 'moneyHistoryTypeLabel',
+                    iconId: 'moneyHistoryTypeIcon',
+                    menuId: 'moneyHistoryTypeMenu',
+                    selectHandler: 'setMoneyHistoryTypeFilter'
+                });
+            }
+
+            function syncMoneyAccountFilterDropdown(accounts) {
+                const options = [
+                    { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
+                    ...accounts.map(a => ({ value: a.id, label: a.name, icon: 'fa-university', variant: 'account' }))
+                ];
+                syncAppSelectDropdown({
+                    options,
+                    selectedValue: moneyAccountFilter,
+                    labelId: 'moneyAccountFilterLabel',
+                    iconId: 'moneyAccountFilterIcon',
+                    menuId: 'moneyAccountFilterMenu',
+                    selectHandler: 'setMoneyAccountFilter',
+                    escapeValues: true
+                });
+            }
+
+            function setTxBroker(value) {
+                const hidden = document.getElementById('txBroker');
+                if (hidden) {
+                    hidden.value = value || '';
+                    hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                syncAppSelectDropdown({
+                    options: APP_BROKER_OPTIONS,
+                    selectedValue: value || '',
+                    labelId: 'txBrokerLabel',
+                    iconId: 'txBrokerIcon',
+                    menuId: 'txBrokerMenu',
+                    selectHandler: 'setTxBroker'
+                });
+            }
+
+            function pickMoneyPageTypeFilter(value) {
+                moneyPageTypeFilter = value || 'all';
+                const hiddenType = document.getElementById('moneyPageTypeFilter');
+                if (hiddenType) hiddenType.value = moneyPageTypeFilter;
+                syncMoneyTypeDropdowns();
+            }
 
             function updateFabVisibility(page) {
                 const tradeFab = document.getElementById('fabBtn');
-                const moneyFab = document.getElementById('moneyFabBtn');
                 if (tradeFab) tradeFab.style.display = (page === 'trades') ? 'flex' : 'none';
-                if (moneyFab) moneyFab.style.display = (page === 'money') ? 'flex' : 'none';
             }
 
             // ---------- RANGE HELPERS ----------
+            function localDateStr(d) {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
+
             function getDateRange(days) {
                 const to = new Date();
                 const from = new Date();
                 from.setDate(from.getDate() - days);
-                return { from: from.toISOString().split('T')[0], to: to.toISOString().split('T')[0] };
+                return { from: localDateStr(from), to: localDateStr(to) };
             }
 
             function setPastRange(daysOrKey) {
@@ -1987,15 +2890,15 @@
                                     <div class="d-flex align-items-center gap-2 flex-shrink-0">
                                         <div class="trade-net-profit ${profitClass}">${sign}${fmt(t.netProfit)}</div>
                                         <div class="dropdown">
-                                            <button class="btn btn-sm btn-light border rounded-circle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fas fa-ellipsis-v"></i></button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li><button class="dropdown-item" onclick="openViewModal('${t.id}')"><i class="fas fa-eye me-2"></i>View</button></li>
-                                                <li><button class="dropdown-item" onclick="confirmCopy('${t.id}')"><i class="fas fa-copy me-2"></i>Copy</button></li>
-                                                <li><button class="dropdown-item" onclick="confirmEdit('${t.id}')"><i class="fas fa-edit me-2"></i>Edit</button></li>
-                                                <li><button class="dropdown-item" onclick="openInterestModal('${t.id}')"><i class="fas fa-percent me-2"></i>Interest</button></li>
-                                                <li><button class="dropdown-item" onclick="openChargesModal('${t.id}')"><i class="fas fa-receipt me-2"></i>Charges</button></li>
+                                            <button type="button" class="money-action-btn more" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v"></i></button>
+                                            <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
+                                                <li><button type="button" class="dropdown-item" onclick="openViewModal('${t.id}')"><span class="app-menu-icon view"><i class="fas fa-eye"></i></span><span class="app-menu-label">View</span></button></li>
+                                                <li><button type="button" class="dropdown-item" onclick="confirmCopy('${t.id}')"><span class="app-menu-icon copy"><i class="fas fa-copy"></i></span><span class="app-menu-label">Copy</span></button></li>
+                                                <li><button type="button" class="dropdown-item" onclick="confirmEdit('${t.id}')"><span class="app-menu-icon edit"><i class="fas fa-edit"></i></span><span class="app-menu-label">Edit</span></button></li>
+                                                <li><button type="button" class="dropdown-item" onclick="openInterestModal('${t.id}')"><span class="app-menu-icon interest"><i class="fas fa-percent"></i></span><span class="app-menu-label">Interest</span></button></li>
+                                                <li><button type="button" class="dropdown-item" onclick="openChargesModal('${t.id}')"><span class="app-menu-icon charges"><i class="fas fa-receipt"></i></span><span class="app-menu-label">Charges</span></button></li>
                                                 <li><hr class="dropdown-divider"></li>
-                                                <li><button class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><i class="fas fa-trash-alt me-2"></i>Delete</button></li>
+                                                <li><button type="button" class="dropdown-item text-danger" onclick="confirmDelete('${t.id}')"><span class="app-menu-icon delete"><i class="fas fa-trash-alt"></i></span><span class="app-menu-label">Delete</span></button></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -2155,29 +3058,527 @@
             }
 
             // ---------- MONEY TRACKER ----------
+            function computeAccountTotalValue(acc, entries) {
+                let total = Number(acc.openingBalance) || 0;
+                entries.filter(e => e.accountId === acc.id).forEach(e => {
+                    const amt = Number(e.amount) || 0;
+                    if (e.type === 'deposit') total += amt;
+                    else if (e.type === 'withdraw') total -= amt;
+                });
+                return total;
+            }
+
+            function summarizeMoneyEntries(entries) {
+                let deposited = 0, withdrawn = 0, depositCount = 0, withdrawCount = 0;
+                entries.forEach(e => {
+                    const amt = Number(e.amount) || 0;
+                    if (e.type === 'deposit') { deposited += amt; depositCount++; }
+                    else if (e.type === 'withdraw') { withdrawn += amt; withdrawCount++; }
+                });
+                return { deposited, withdrawn, depositCount, withdrawCount };
+            }
+
+            function moneyPageDateFilterActive() {
+                return moneyPageRangeKey !== 'all' && (moneyPageFrom || moneyPageTo);
+            }
+
+            function moneyPageFiltersActive() {
+                return moneyPageTypeFilter !== 'all' || moneyPageDateFilterActive();
+            }
+
+            function matchesMoneyPageEntryFilter(e) {
+                if (moneyPageTypeFilter !== 'all' && e.type !== moneyPageTypeFilter) return false;
+                if (moneyPageDateFilterActive()) {
+                    const d = e.date || '';
+                    if (!d) return false;
+                    if (moneyPageFrom && d < moneyPageFrom) return false;
+                    if (moneyPageTo && d > moneyPageTo) return false;
+                }
+                return true;
+            }
+
+            function getMoneyPageRangeLabel() {
+                if (!moneyPageDateFilterActive()) return 'All time';
+                const quickLabels = { yesterday: 'Yesterday', 7: 'Last 1 week', 30: 'Last 1 month', 90: 'Last 3 months' };
+                const prefix = quickLabels[moneyPageRangeKey] || '';
+                if (moneyPageFrom && moneyPageTo) {
+                    if (moneyPageFrom === moneyPageTo) {
+                        return prefix ? `${prefix} · ${fmtDate(moneyPageFrom)}` : fmtDate(moneyPageFrom);
+                    }
+                    const range = `${fmtDate(moneyPageFrom)} – ${fmtDate(moneyPageTo)}`;
+                    return prefix ? `${prefix} · ${range}` : range;
+                }
+                return prefix || 'Custom range';
+            }
+
             function computeMoneyStats() {
                 const accounts = getMoneyAccounts();
-                const entries = getMoneyEntries();
-                const portfolio = { deposited: 0, withdrawn: 0, netInvested: 0 };
+                const allEntries = getMoneyEntries();
+                const pageFiltered = moneyPageFiltersActive()
+                    ? allEntries.filter(matchesMoneyPageEntryFilter)
+                    : allEntries;
+                const portfolio = { deposited: 0, withdrawn: 0, totalValue: 0, depositCount: 0, withdrawCount: 0 };
 
                 const perAccount = accounts.map(acc => {
-                    const acctEntries = entries.filter(e => e.accountId === acc.id);
-                    let deposited = 0, withdrawn = 0;
-                    acctEntries.forEach(e => {
-                        const amt = Number(e.amount) || 0;
-                        if (e.type === 'deposit') deposited += amt;
-                        else if (e.type === 'withdraw') withdrawn += amt;
-                    });
-                    const netInvested = deposited - withdrawn;
+                    const acctAll = allEntries.filter(e => e.accountId === acc.id);
+                    const acctDisplay = moneyPageFiltersActive()
+                        ? pageFiltered.filter(e => e.accountId === acc.id)
+                        : acctAll;
+                    const summary = summarizeMoneyEntries(acctDisplay);
+                    const totalValue = computeAccountTotalValue(acc, allEntries);
 
-                    portfolio.deposited += deposited;
-                    portfolio.withdrawn += withdrawn;
-                    portfolio.netInvested += netInvested;
+                    portfolio.deposited += summary.deposited;
+                    portfolio.withdrawn += summary.withdrawn;
+                    portfolio.depositCount += summary.depositCount;
+                    portfolio.withdrawCount += summary.withdrawCount;
+                    portfolio.totalValue += totalValue;
 
-                    return { account: acc, deposited, withdrawn, netInvested };
+                    return { account: acc, ...summary, totalValue };
                 });
 
                 return { perAccount, portfolio };
+            }
+
+            let moneyPageFilterModalInstance = null;
+
+            function getMoneyPageFilterViewTitle() {
+                const titles = { deposit: 'Investments', withdraw: 'Withdrawals' };
+                return titles[moneyPageTypeFilter] || 'Transactions';
+            }
+
+            function getMoneyPageFilterViewMeta() {
+                const parts = [];
+                if (moneyAccountFilter !== 'all') {
+                    const acc = getMoneyAccounts().find(a => a.id === moneyAccountFilter);
+                    if (acc) parts.push(acc.name);
+                }
+                const range = getMoneyPageRangeLabel();
+                if (range !== 'All time') parts.push(range);
+                return parts.join(' · ') || 'All accounts · All time';
+            }
+
+            function getMoneyPageFilteredEntries() {
+                let entries = getMoneyEntries().filter(matchesMoneyPageEntryFilter);
+                if (moneyAccountFilter !== 'all') {
+                    entries = entries.filter(e => e.accountId === moneyAccountFilter);
+                }
+                return sortMoneyEntries(entries);
+            }
+
+            function renderMoneyFilterListItem(e, showAccount, hideTypeBadge) {
+                const isDeposit = e.type === 'deposit';
+                const typeBadge = hideTypeBadge ? '' : (isDeposit
+                    ? '<span class="badge bg-success-subtle text-success border border-success-subtle money-filter-type-chip">Invest</span>'
+                    : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle money-filter-type-chip">Withdraw</span>');
+                const accounts = getMoneyAccounts();
+                const acc = accounts.find(a => a.id === e.accountId);
+                const accountChip = showAccount && acc
+                    ? `<span class="money-filter-account-chip"><i class="fas fa-university me-1"></i>${acc.name}</span>`
+                    : '';
+                const topRow = (accountChip || typeBadge)
+                    ? `<div class="money-filter-list-top">${accountChip}${typeBadge}</div>`
+                    : '';
+                return `
+                    <div class="money-filter-list-item d-flex justify-content-between align-items-center gap-3">
+                        <div class="min-w-0 flex-grow-1">
+                            ${topRow}
+                            <div class="money-filter-list-date"><i class="far fa-clock me-1"></i>${fmtDateTime(e.date, e.time)}</div>
+                        </div>
+                        <div class="text-end money-filter-list-amount flex-shrink-0">${fmtMoneyRich(e.amount)}</div>
+                    </div>
+                `;
+            }
+
+            function renderMoneyFilterView(displayPortfolio) {
+                const titleEl = document.getElementById('moneyPageFilterViewTitle');
+                const metaEl = document.getElementById('moneyPageFilterViewMeta');
+                const summaryEl = document.getElementById('moneyPageFilterSummary');
+                const listEl = document.getElementById('moneyPageFilterList');
+                if (!titleEl || !summaryEl || !listEl) return;
+
+                const entries = getMoneyPageFilteredEntries();
+                const showAccount = moneyAccountFilter === 'all';
+                const isWithdrawOnly = moneyPageTypeFilter === 'withdraw';
+                const isDepositOnly = moneyPageTypeFilter === 'deposit';
+
+                titleEl.textContent = getMoneyPageFilterViewTitle();
+                if (metaEl) metaEl.textContent = getMoneyPageFilterViewMeta();
+
+                const typeSelect = document.getElementById('moneyPageFilterTypeLabel');
+                if (typeSelect) syncMoneyTypeDropdowns();
+
+                if (isWithdrawOnly) {
+                    summaryEl.innerHTML = `
+                        <div class="small text-uppercase text-muted fw-semibold">Total Withdrawn</div>
+                        <div class="fw-bold fs-2 text-danger mb-1">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
+                        <div class="money-stat-count">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
+                    `;
+                } else if (isDepositOnly) {
+                    summaryEl.innerHTML = `
+                        <div class="small text-uppercase text-muted fw-semibold">Total Deposited</div>
+                        <div class="fw-bold fs-2 text-success mb-1">${fmtMoneyRich(displayPortfolio.deposited)}</div>
+                        <div class="money-stat-count">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
+                    `;
+                } else {
+                    summaryEl.innerHTML = `
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="small text-muted">Deposited</div>
+                                <div class="fw-bold text-success">${fmtMoneyRich(displayPortfolio.deposited)}</div>
+                                <div class="money-stat-count">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted">Withdrawn</div>
+                                <div class="fw-bold text-danger">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
+                                <div class="money-stat-count">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (entries.length === 0) {
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="small text-muted mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-light border" onclick="openMoneyPageFilterSheet()">Change filter</button></div>';
+                    return;
+                }
+
+                listEl.innerHTML = entries.map(e => renderMoneyFilterListItem(e, showAccount, isWithdrawOnly || isDepositOnly)).join('');
+            }
+
+            function syncMoneyPageFilterUI() {
+                syncMoneyTypeDropdowns();
+                const fromEl = document.getElementById('moneyPageFrom');
+                const toEl = document.getElementById('moneyPageTo');
+                if (fromEl) fromEl.value = moneyPageFrom || '';
+                if (toEl) toEl.value = moneyPageTo || '';
+                document.querySelectorAll('#moneyPageRangeButtons .btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.range === moneyPageRangeKey);
+                });
+                const filterBtn = document.getElementById('moneyPageFilterBtn');
+                if (filterBtn) filterBtn.classList.toggle('active', moneyPageFiltersActive());
+                const filterBtnActive = document.getElementById('moneyPageFilterBtnActive');
+                if (filterBtnActive) filterBtnActive.classList.toggle('active', moneyPageFiltersActive());
+            }
+
+            function openMoneyPageFilterSheet() {
+                syncMoneyPageFilterUI();
+                if (!moneyPageFilterModalInstance) {
+                    moneyPageFilterModalInstance = new bootstrap.Modal(document.getElementById('moneyPageFilterModal'), { backdrop: true });
+                }
+                moneyPageFilterModalInstance.show();
+            }
+
+            function closeMoneyPageFilterSheet() {
+                if (moneyPageFilterModalInstance) moneyPageFilterModalInstance.hide();
+            }
+
+            function setMoneyPageRangeInForm(daysOrKey) {
+                moneyPageRangeKey = String(daysOrKey);
+                if (daysOrKey === 'all') {
+                    moneyPageFrom = null;
+                    moneyPageTo = null;
+                } else if (daysOrKey === 'yesterday') {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const date = localDateStr(y);
+                    moneyPageFrom = date;
+                    moneyPageTo = date;
+                } else {
+                    const range = getDateRange(daysOrKey);
+                    moneyPageFrom = range.from;
+                    moneyPageTo = range.to;
+                }
+                syncMoneyPageFilterUI();
+            }
+
+            function applyMoneyPageFilter() {
+                moneyPageTypeFilter = document.getElementById('moneyPageTypeFilter')?.value || moneyPageTypeFilter || 'all';
+                let from = document.getElementById('moneyPageFrom')?.value || '';
+                let to = document.getElementById('moneyPageTo')?.value || '';
+                if (!from && !to && moneyPageFrom && moneyPageTo) {
+                    from = moneyPageFrom;
+                    to = moneyPageTo;
+                }
+                if ((from && !to) || (!from && to)) {
+                    showToast('Please select both From and To dates.', 'warning');
+                    return;
+                }
+                if (from && to && from > to) {
+                    showToast('From date must be before To date.', 'warning');
+                    return;
+                }
+                if (!from && !to && moneyPageRangeKey === 'custom') {
+                    moneyPageRangeKey = 'all';
+                }
+                if (from && to) {
+                    moneyPageFrom = from;
+                    moneyPageTo = to;
+                    if (!document.querySelector(`#moneyPageRangeButtons .btn[data-range="${moneyPageRangeKey}"]`)?.classList.contains('active')) {
+                        moneyPageRangeKey = 'custom';
+                    }
+                } else {
+                    moneyPageFrom = null;
+                    moneyPageTo = null;
+                }
+                closeMoneyPageFilterSheet();
+                renderMoney();
+                if (moneyPageFiltersActive()) showToast('Filter applied.', 'success');
+            }
+
+            function onMoneyPageDateInputChange() {
+                moneyPageRangeKey = 'custom';
+                document.querySelectorAll('#moneyPageRangeButtons .btn').forEach(b => b.classList.remove('active'));
+            }
+
+            function setMoneyPageTypeFilter(value) {
+                moneyPageTypeFilter = value || 'all';
+                const hiddenType = document.getElementById('moneyPageTypeFilter');
+                if (hiddenType) hiddenType.value = moneyPageTypeFilter;
+                syncMoneyTypeDropdowns();
+                renderMoney();
+            }
+
+            function clearMoneyPageFilters() {
+                moneyPageTypeFilter = 'all';
+                moneyPageFrom = null;
+                moneyPageTo = null;
+                moneyPageRangeKey = 'all';
+                closeMoneyPageFilterSheet();
+                renderMoney();
+            }
+
+            function openAccountHistorySheet(accountId) {
+                moneyHistorySheetAccountId = accountId;
+                resetMoneyHistoryFilters();
+                renderAccountHistorySheet();
+                if (!moneyHistoryModalInstance) {
+                    moneyHistoryModalInstance = new bootstrap.Modal(document.getElementById('moneyHistoryModal'), { backdrop: true });
+                }
+                moneyHistoryModalInstance.show();
+            }
+
+            function resetMoneyHistoryFilters() {
+                moneyHistoryTypeFilter = 'all';
+                moneyHistoryFrom = null;
+                moneyHistoryTo = null;
+                moneyHistoryRangeKey = 'all';
+            }
+
+            function moneyHistoryDateFilterActive() {
+                return moneyHistoryRangeKey !== 'all' && (moneyHistoryFrom || moneyHistoryTo);
+            }
+
+            function getMoneyHistoryRangeLabel() {
+                if (!moneyHistoryDateFilterActive()) return 'All time';
+                const quickLabels = {
+                    yesterday: 'Yesterday',
+                    7: 'Last 1 week',
+                    30: 'Last 1 month',
+                    90: 'Last 3 months'
+                };
+                const prefix = quickLabels[moneyHistoryRangeKey] || '';
+                if (moneyHistoryFrom && moneyHistoryTo) {
+                    if (moneyHistoryFrom === moneyHistoryTo) {
+                        return prefix ? `${prefix} · ${fmtDate(moneyHistoryFrom)}` : fmtDate(moneyHistoryFrom);
+                    }
+                    const range = `${fmtDate(moneyHistoryFrom)} – ${fmtDate(moneyHistoryTo)}`;
+                    return prefix ? `${prefix} · ${range}` : range;
+                }
+                return prefix || 'Custom range';
+            }
+
+            function getMoneyHistoryActiveFilterLabel() {
+                const typeLabels = { deposit: 'Deposit', withdraw: 'Withdraw' };
+                const typePart = typeLabels[moneyHistoryTypeFilter] || '';
+                const rangePart = getMoneyHistoryRangeLabel();
+                if (typePart && rangePart !== 'All time') return `${typePart} · ${rangePart}`;
+                if (typePart) return typePart;
+                return rangePart;
+            }
+
+            function syncMoneyHistoryRangeSheetUI() {
+                const fromEl = document.getElementById('moneyHistoryFrom');
+                const toEl = document.getElementById('moneyHistoryTo');
+                if (fromEl) fromEl.value = moneyHistoryFrom || '';
+                if (toEl) toEl.value = moneyHistoryTo || '';
+                document.querySelectorAll('#moneyHistoryRangeButtons .btn').forEach(b => {
+                    b.classList.toggle('active', b.dataset.range === moneyHistoryRangeKey);
+                });
+            }
+
+            function syncMoneyHistoryFilterUI() {
+                syncMoneyHistoryTypeDropdown();
+                const filterBtn = document.getElementById('moneyHistoryRangeFilterBtn');
+                if (filterBtn) filterBtn.classList.toggle('active', moneyHistoryDateFilterActive());
+            }
+
+            function openMoneyHistoryRangeSheet() {
+                syncMoneyHistoryRangeSheetUI();
+                if (!moneyHistoryRangeModalInstance) {
+                    moneyHistoryRangeModalInstance = new bootstrap.Modal(document.getElementById('moneyHistoryRangeModal'), { backdrop: true });
+                }
+                moneyHistoryRangeModalInstance.show();
+            }
+
+            function closeMoneyHistoryRangeSheet() {
+                if (moneyHistoryRangeModalInstance) moneyHistoryRangeModalInstance.hide();
+            }
+
+            function setMoneyHistoryTypeFilter(value) {
+                moneyHistoryTypeFilter = value || 'all';
+                renderAccountHistorySheet();
+            }
+
+            function setMoneyHistoryRange(daysOrKey) {
+                moneyHistoryRangeKey = String(daysOrKey);
+                if (daysOrKey === 'all') {
+                    moneyHistoryFrom = null;
+                    moneyHistoryTo = null;
+                } else if (daysOrKey === 'yesterday') {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const date = y.toISOString().split('T')[0];
+                    moneyHistoryFrom = date;
+                    moneyHistoryTo = date;
+                } else {
+                    const range = getDateRange(daysOrKey);
+                    moneyHistoryFrom = range.from;
+                    moneyHistoryTo = range.to;
+                }
+                closeMoneyHistoryRangeSheet();
+                renderAccountHistorySheet();
+            }
+
+            function applyMoneyHistoryDateRange() {
+                const from = document.getElementById('moneyHistoryFrom')?.value || '';
+                const to = document.getElementById('moneyHistoryTo')?.value || '';
+                if (!from && !to) {
+                    moneyHistoryFrom = null;
+                    moneyHistoryTo = null;
+                    moneyHistoryRangeKey = 'all';
+                    closeMoneyHistoryRangeSheet();
+                    renderAccountHistorySheet();
+                    return;
+                }
+                if (!from || !to) { showToast('Please select both From and To dates.', 'warning'); return; }
+                if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
+                moneyHistoryFrom = from;
+                moneyHistoryTo = to;
+                moneyHistoryRangeKey = 'custom';
+                closeMoneyHistoryRangeSheet();
+                renderAccountHistorySheet();
+                showToast('Date range applied.', 'success');
+            }
+
+            function clearMoneyHistoryFilters() {
+                resetMoneyHistoryFilters();
+                renderAccountHistorySheet();
+            }
+
+            function filterMoneyHistoryEntries(entries) {
+                return entries.filter(e => {
+                    if (moneyHistoryTypeFilter !== 'all' && e.type !== moneyHistoryTypeFilter) return false;
+                    if (moneyHistoryFrom || moneyHistoryTo) {
+                        const d = e.date || '';
+                        if (!d) return false;
+                        if (moneyHistoryFrom && d < moneyHistoryFrom) return false;
+                        if (moneyHistoryTo && d > moneyHistoryTo) return false;
+                    }
+                    return true;
+                });
+            }
+
+            function moneyHistoryFiltersActive() {
+                return moneyHistoryTypeFilter !== 'all' || moneyHistoryDateFilterActive();
+            }
+
+            function renderAccountHistorySheet() {
+                const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
+                const titleEl = document.getElementById('moneyHistoryModalTitle');
+                const metaEl = document.getElementById('moneyHistoryMeta');
+                const summaryEl = document.getElementById('moneyHistorySheetSummary');
+                const listEl = document.getElementById('moneyHistorySheetList');
+                if (!acc || !titleEl || !listEl) return;
+
+                syncMoneyHistoryFilterUI();
+
+                const holder = acc.holderName ? ` · ${acc.holderName}` : '';
+                titleEl.textContent = `${acc.name}${holder}`;
+
+                const allEntries = sortMoneyEntries(getMoneyEntries().filter(e => e.accountId === acc.id));
+                const entries = filterMoneyHistoryEntries(allEntries);
+                let deposited = 0, withdrawn = 0;
+                entries.forEach(e => {
+                    const amt = Number(e.amount) || 0;
+                    if (e.type === 'deposit') deposited += amt;
+                    else if (e.type === 'withdraw') withdrawn += amt;
+                });
+
+                if (metaEl) {
+                    let meta = getMoneyHistoryActiveFilterLabel();
+                    if (moneyHistoryFiltersActive()) meta += ` · ${entries.length} of ${allEntries.length}`;
+                    metaEl.textContent = meta;
+                    metaEl.classList.toggle('is-filtered', moneyHistoryFiltersActive());
+                }
+
+                if (summaryEl) {
+                    summaryEl.innerHTML = `
+                        <div class="row g-2 text-center">
+                            <div class="col-6">
+                                <div class="small text-muted">Deposited</div>
+                                <div class="fw-bold text-success">${fmtMoneyRich(deposited)}</div>
+                            </div>
+                            <div class="col-6">
+                                <div class="small text-muted">Withdrawn</div>
+                                <div class="fw-bold text-danger">${fmtMoneyRich(withdrawn)}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (allEntries.length === 0) {
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-inbox mb-2 opacity-25"></i><p class="small text-muted mb-0">No deposits or withdrawals yet.</p></div>';
+                    return;
+                }
+
+                if (entries.length === 0) {
+                    listEl.innerHTML = '<div class="empty-state py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="small text-muted mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-light border mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>';
+                    return;
+                }
+
+                listEl.innerHTML = entries.map(e => {
+                    const isDeposit = e.type === 'deposit';
+                    const typeBadge = isDeposit
+                        ? '<span class="badge bg-success-subtle text-success border border-success-subtle">Deposit</span>'
+                        : '<span class="badge bg-danger-subtle text-danger border border-danger-subtle">Withdraw</span>';
+                    const note = e.note ? `<div class="small text-muted mt-1">${e.note}</div>` : '';
+                    return `
+                        <div class="money-history-sheet-item d-flex justify-content-between align-items-start gap-2">
+                            <div class="min-w-0">
+                                <div class="mb-1">${typeBadge}</div>
+                                <div class="fw-bold">${fmtMoneyRich(e.amount)}</div>
+                                <div class="small text-muted mt-1"><i class="far fa-clock me-1"></i>${fmtDateTime(e.date, e.time)}</div>
+                                ${note}
+                            </div>
+                            <div class="d-flex gap-1 flex-shrink-0">
+                                <button type="button" class="btn btn-sm btn-light border" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit"><i class="fas fa-pen"></i></button>
+                                <button type="button" class="btn btn-sm btn-light text-danger" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            function refreshMoneyHistorySheetIfOpen() {
+                if (moneyHistorySheetAccountId) renderAccountHistorySheet();
+            }
+
+            function sortMoneyEntries(entries) {
+                return [...entries].sort((a, b) => {
+                    const da = (a.date || '') + 'T' + (a.time || '00:00');
+                    const db = (b.date || '') + 'T' + (b.time || '00:00');
+                    if (db !== da) return db.localeCompare(da);
+                    return (a.id < b.id ? 1 : -1);
+                });
             }
 
             function renderMoneyAccountCard(stats) {
@@ -2185,23 +3586,47 @@
                 const holderLine = acc.holderName
                     ? `<div class="small text-primary fw-semibold mt-1"><i class="fas fa-user me-1"></i>${acc.holderName}</div>`
                     : '';
+                const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
                 return `
                     <div class="card border-0 shadow-sm rounded-4 mb-3">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
+                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                <div class="min-w-0">
                                     <div class="fw-bold">${acc.name}</div>
                                     ${holderLine}
                                 </div>
-                                <button type="button" class="btn btn-sm btn-light border rounded-circle d-flex align-items-center justify-content-center" style="width:2rem;height:2rem;" onclick="openMoneyAccountModal('${acc.id}')" title="Edit account"><i class="fas fa-pen"></i></button>
+                                <div class="money-account-card-actions">
+                                    <button type="button" class="money-action-btn deposit" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" title="Deposit" aria-label="Deposit">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button type="button" class="money-action-btn withdraw" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" title="Withdraw" aria-label="Withdraw">
+                                        <i class="fas fa-minus"></i>
+                                    </button>
+                                    <div class="dropdown money-account-actions">
+                                        <button type="button" class="money-action-btn more" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More">
+                                            <i class="fas fa-ellipsis-v"></i>
+                                        </button>
+                                        <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu">
+                                            <li>
+                                                <button type="button" class="dropdown-item" onclick="openAccountHistorySheet('${acc.id}')">
+                                                    <span class="app-menu-icon history"><i class="fas fa-history"></i></span>
+                                                    <span class="app-menu-label">History</span>
+                                                    ${historyCount ? `<span class="badge rounded-pill bg-primary-subtle text-primary app-menu-badge">${historyCount}</span>` : ''}
+                                                </button>
+                                            </li>
+                                            <li>
+                                                <button type="button" class="dropdown-item" onclick="openMoneyAccountModal('${acc.id}')">
+                                                    <span class="app-menu-icon edit"><i class="fas fa-pen"></i></span>
+                                                    <span class="app-menu-label">Edit account</span>
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="detail-row"><span class="detail-label">Deposited</span><span class="detail-value">${fmt(stats.deposited)}</span></div>
-                            <div class="detail-row"><span class="detail-label">Withdrawn</span><span class="detail-value">${fmt(stats.withdrawn)}</span></div>
-                            <div class="detail-row"><span class="detail-label fw-semibold">Net Invested</span><span class="detail-value fw-bold">${fmt(stats.netInvested)}</span></div>
-                            <div class="d-flex gap-2 mt-2">
-                                <button type="button" class="btn btn-sm btn-success flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'deposit')"><i class="fas fa-plus me-1"></i>Deposit</button>
-                                <button type="button" class="btn btn-sm btn-outline-danger flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')"><i class="fas fa-minus me-1"></i>Withdraw</button>
-                            </div>
+                            <div class="detail-row"><span class="detail-label">Deposited</span><span class="detail-value text-end">${fmtMoneyRich(stats.deposited)}</span></div>
+                            <div class="detail-row"><span class="detail-label">Withdrawn</span><span class="detail-value text-end">${fmtMoneyRich(stats.withdrawn)}</span></div>
+                            <div class="detail-row"><span class="detail-label fw-semibold">Total Value</span><span class="detail-value fw-bold text-end">${fmtMoneyRich(stats.totalValue)}</span></div>
                         </div>
                     </div>
                 `;
@@ -2218,88 +3643,181 @@
 
                 const { perAccount, portfolio } = computeMoneyStats();
                 const accounts = getMoneyAccounts();
-                const accountById = {};
-                accounts.forEach(a => { accountById[a.id] = a; });
-
-                const heroEl = document.getElementById('moneyNetInvestedHero');
-                if (heroEl) heroEl.textContent = fmt(portfolio.netInvested);
-                const depositedEl = document.getElementById('moneyTotalDeposited');
-                if (depositedEl) depositedEl.textContent = fmt(portfolio.deposited);
-                const withdrawnEl = document.getElementById('moneyTotalWithdrawn');
-                if (withdrawnEl) withdrawnEl.textContent = fmt(portfolio.withdrawn);
-
-                const filterEl = document.getElementById('moneyAccountFilter');
-                if (filterEl) {
-                    if (moneyAccountFilter !== 'all' && !accounts.find(a => a.id === moneyAccountFilter)) {
-                        moneyAccountFilter = 'all';
-                    }
-                    filterEl.innerHTML = '<option value="all">All</option>' + accounts.map(a =>
-                        `<option value="${a.id}"${a.id === moneyAccountFilter ? ' selected' : ''}>${a.name}</option>`
-                    ).join('');
-                }
+                const filterActive = moneyPageFiltersActive();
+                const defaultView = document.getElementById('moneyPageDefaultView');
+                const filterView = document.getElementById('moneyPageFilterView');
 
                 let visibleAccounts = perAccount;
                 if (moneyAccountFilter !== 'all') {
                     visibleAccounts = perAccount.filter(s => s.account.id === moneyAccountFilter);
                 }
 
+                let displayPortfolio = portfolio;
+                if (moneyAccountFilter !== 'all') {
+                    const one = perAccount.find(s => s.account.id === moneyAccountFilter);
+                    if (one) {
+                        displayPortfolio = {
+                            deposited: one.deposited,
+                            withdrawn: one.withdrawn,
+                            depositCount: one.depositCount,
+                            withdrawCount: one.withdrawCount,
+                            totalValue: one.totalValue
+                        };
+                    }
+                }
+
+                syncMoneyPageFilterUI();
+
+                if (filterActive) {
+                    if (defaultView) defaultView.classList.add('d-none');
+                    if (filterView) filterView.classList.remove('d-none');
+                    renderMoneyFilterView(displayPortfolio);
+                    return;
+                }
+
+                if (defaultView) defaultView.classList.remove('d-none');
+                if (filterView) filterView.classList.add('d-none');
+
+                const heroEl = document.getElementById('moneyTotalValueHero');
+                if (heroEl) heroEl.innerHTML = fmtMoneyRich(displayPortfolio.totalValue);
+                const depositedEl = document.getElementById('moneyTotalDeposited');
+                if (depositedEl) depositedEl.innerHTML = fmtMoneyRich(displayPortfolio.deposited);
+                const withdrawnEl = document.getElementById('moneyTotalWithdrawn');
+                if (withdrawnEl) withdrawnEl.innerHTML = fmtMoneyRich(displayPortfolio.withdrawn);
+
+                const filterEl = document.getElementById('moneyAccountFilterMenu');
+                if (filterEl) {
+                    if (moneyAccountFilter !== 'all' && !accounts.find(a => a.id === moneyAccountFilter)) {
+                        moneyAccountFilter = 'all';
+                    }
+                    syncMoneyAccountFilterDropdown(accounts);
+                }
+
                 const accountList = document.getElementById('moneyAccountList');
                 if (accountList) {
                     if (visibleAccounts.length === 0) {
-                        accountList.innerHTML = '<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-university mb-3"></i><h6>No accounts yet</h6><p class="small text-muted mb-0">Tap the green + button to add your first trading account.</p></div>';
+                        accountList.innerHTML = '<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-university mb-3"></i><h6>No accounts yet</h6><p class="small text-muted mb-0">Go to <span class="fw-semibold">Settings</span> and tap <span class="fw-semibold">Add Account</span> to create your first trading account.</p></div>';
                     } else {
                         accountList.innerHTML = visibleAccounts.map(renderMoneyAccountCard).join('');
                     }
                 }
-
-                let withdrawals = getMoneyEntries()
-                    .filter(e => e.type === 'withdraw')
-                    .sort((a, b) => (a.id < b.id ? 1 : -1));
-                if (moneyAccountFilter !== 'all') {
-                    withdrawals = withdrawals.filter(e => e.accountId === moneyAccountFilter);
-                }
-
-                const filteredWithdrawn = withdrawals.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-                const withdrawTotalEl = document.getElementById('moneyWithdrawReportTotal');
-                if (withdrawTotalEl) {
-                    withdrawTotalEl.textContent = fmt(moneyAccountFilter === 'all' ? portfolio.withdrawn : filteredWithdrawn);
-                }
-
-                const withdrawList = document.getElementById('moneyWithdrawList');
-                if (!withdrawList) return;
-
-                if (withdrawals.length === 0) {
-                    withdrawList.innerHTML = '<div class="empty-state card border-0 shadow-sm rounded-4 p-4"><i class="fas fa-arrow-circle-up mb-3"></i><h6>No withdrawals yet</h6><p class="small text-muted mb-0">Withdrawals you record will appear here.</p></div>';
-                    return;
-                }
-
-                withdrawList.innerHTML = withdrawals.map(e => {
-                    const acc = accountById[e.accountId];
-                    const accName = acc ? acc.name : 'Unknown';
-                    const note = e.note ? ` · ${e.note}` : '';
-                    return `
-                        <div class="card border-0 shadow-sm rounded-4 mb-2">
-                            <div class="card-body py-2 px-3 d-flex justify-content-between align-items-center gap-2">
-                                <div>
-                                    <div class="fw-semibold">${accName} · ${fmt(e.amount)}</div>
-                                    <div class="small text-muted">${fmtDate(e.date)}${note}</div>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-light text-danger" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
             }
 
             let moneyEntryModalInstance = null;
             let moneyAccountModalInstance = null;
+            let moneyHistoryModalInstance = null;
+            let moneyHistoryRangeModalInstance = null;
+            let moneyEntryIsEdit = false;
+            let moneyEntryDateTimeEditing = false;
 
-            function populateMoneyAccountSelect(selectId, selectedId) {
-                const sel = document.getElementById(selectId);
-                if (!sel) return;
-                sel.innerHTML = getMoneyAccounts().map(a =>
-                    `<option value="${a.id}"${a.id === selectedId ? ' selected' : ''}>${a.name}</option>`
-                ).join('');
+            function formatMoneyEntryTimeDisplay(time) {
+                if (!time) return '-';
+                const parts = time.split(':');
+                const h = parseInt(parts[0], 10);
+                const m = parseInt(parts[1], 10) || 0;
+                if (isNaN(h)) return time;
+                const ampm = h >= 12 ? 'PM' : 'AM';
+                const hr = h % 12 || 12;
+                return `${String(hr).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+            }
+
+            function getMoneyEntryType() {
+                return document.getElementById('moneyEntryType')?.value || 'deposit';
+            }
+
+            function updateMoneyEntryDateTimeDisplay() {
+                const date = document.getElementById('moneyEntryDate')?.value || '';
+                const time = document.getElementById('moneyEntryTime')?.value || '';
+                const el = document.getElementById('moneyEntryDateTimeDisplay');
+                if (!el) return;
+                el.textContent = date ? `${fmtDate(date)} · ${formatMoneyEntryTimeDisplay(time)}` : '—';
+            }
+
+            function setMoneyEntryDateTimeEditing(editing) {
+                moneyEntryDateTimeEditing = editing;
+                const row = document.getElementById('moneyEntryDateTimeRow');
+                const fields = document.getElementById('moneyEntryDateTimeFields');
+                const btn = document.getElementById('moneyEntryDateTimeEditBtn');
+                if (row) row.classList.toggle('d-none', editing);
+                if (fields) {
+                    fields.classList.toggle('d-none', !editing);
+                    fields.classList.toggle('d-flex', editing);
+                }
+                if (btn) {
+                    btn.innerHTML = editing ? '<i class="fas fa-check"></i>' : '<i class="fas fa-pen"></i>';
+                    btn.title = editing ? 'Done' : 'Edit date & time';
+                }
+                if (!editing) updateMoneyEntryDateTimeDisplay();
+            }
+
+            function toggleMoneyEntryDateTimeEdit() {
+                setMoneyEntryDateTimeEditing(!moneyEntryDateTimeEditing);
+            }
+
+            function onMoneyEntryDateTimeChange() {
+                updateMoneyEntryDateTimeDisplay();
+            }
+
+            function onMoneyEntryTypeToggle(isWithdraw) {
+                setMoneyEntryType(isWithdraw ? 'withdraw' : 'deposit');
+            }
+
+            function setMoneyEntryType(type) {
+                const entryType = type === 'withdraw' ? 'withdraw' : 'deposit';
+                const typeEl = document.getElementById('moneyEntryType');
+                if (typeEl) typeEl.value = entryType;
+                const header = document.getElementById('moneyEntryHeader');
+                if (header) {
+                    header.classList.remove('deposit', 'withdraw');
+                    header.classList.add(entryType);
+                }
+                const toggle = document.getElementById('moneyEntryTypeToggle');
+                if (toggle) toggle.checked = entryType === 'withdraw';
+                const saveBtn = document.getElementById('moneyEntrySaveBtn');
+                if (saveBtn) {
+                    saveBtn.classList.remove('deposit', 'withdraw', 'btn-primary');
+                    saveBtn.classList.add(entryType);
+                }
+                setMoneyEntryModalMode(moneyEntryIsEdit, entryType);
+            }
+
+            function applyMoneyEntryForm(accountId, type, isEdit) {
+                moneyEntryIsEdit = !!isEdit;
+                const acc = getMoneyAccounts().find(a => a.id === accountId);
+                const accountIdEl = document.getElementById('moneyEntryAccountId');
+                if (accountIdEl) accountIdEl.value = accountId || '';
+                const titleEl = document.getElementById('moneyEntryAccountTitle');
+                if (titleEl) titleEl.textContent = acc ? acc.name : 'Account';
+                setMoneyEntryType(type || 'deposit');
+                setMoneyEntryDateTimeEditing(false);
+                updateMoneyEntryDateTimeDisplay();
+            }
+
+            function setMoneyEntryModalMode(isEdit, type) {
+                const saveBtn = document.getElementById('moneyEntrySaveBtn');
+                if (!saveBtn) return;
+                const isWithdraw = type === 'withdraw';
+                if (isEdit) {
+                    saveBtn.innerHTML = '<i class="fas fa-save me-1"></i> Update';
+                } else {
+                    saveBtn.innerHTML = isWithdraw
+                        ? '<i class="fas fa-minus me-1"></i> Record Withdrawal'
+                        : '<i class="fas fa-plus me-1"></i> Add Deposit';
+                }
+            }
+
+            function updateMoneyEntryAmountPreview() {
+                const previewEl = document.getElementById('moneyEntryAmountPreview');
+                const inputEl = document.getElementById('moneyEntryAmount');
+                if (!previewEl || !inputEl) return;
+                const amount = parseFloat(inputEl.value);
+                if (!amount || amount <= 0 || isNaN(amount)) {
+                    previewEl.innerHTML = '';
+                    previewEl.classList.add('d-none');
+                    return;
+                }
+                previewEl.innerHTML = fmtMoneyRich(amount);
+                previewEl.classList.remove('d-none');
             }
 
             function openMoneyEntryModal(accountId, type) {
@@ -2308,35 +3826,78 @@
                     showToast('Add an account first.', 'warning');
                     return;
                 }
-                populateMoneyAccountSelect('moneyEntryAccount', accountId || accounts[0]?.id);
-                document.getElementById('moneyEntryType').value = type || 'deposit';
+                const resolvedAccountId = accountId || accounts[0]?.id;
+                document.getElementById('moneyEntryEditId').value = '';
                 document.getElementById('moneyEntryAmount').value = '';
                 document.getElementById('moneyEntryDate').value = new Date().toISOString().split('T')[0];
-                document.getElementById('moneyEntryNote').value = '';
-                const title = type === 'withdraw' ? 'Record Withdrawal' : 'Add Deposit';
-                document.getElementById('moneyEntryModalTitle').innerHTML = `<i class="fas fa-coins me-2"></i>${title}`;
+                document.getElementById('moneyEntryTime').value = getNowTime();
+                applyMoneyEntryForm(resolvedAccountId, type || 'deposit', false);
+                updateMoneyEntryAmountPreview();
                 if (!moneyEntryModalInstance) {
                     moneyEntryModalInstance = new bootstrap.Modal(document.getElementById('moneyEntryModal'), { backdrop: true });
                 }
                 moneyEntryModalInstance.show();
             }
 
-            async function saveMoneyEntry() {
-                const accountId = document.getElementById('moneyEntryAccount').value;
-                const type = document.getElementById('moneyEntryType').value;
+            function openEditMoneyEntryModal(entryId) {
+                const entry = getMoneyEntry(entryId);
+                if (!entry) { showToast('Entry not found.', 'danger'); return; }
+                document.getElementById('moneyEntryEditId').value = entry.id;
+                document.getElementById('moneyEntryAmount').value = entry.amount || '';
+                document.getElementById('moneyEntryDate').value = entry.date || '';
+                document.getElementById('moneyEntryTime').value = entry.time || getNowTime();
+                applyMoneyEntryForm(entry.accountId, entry.type || 'deposit', true);
+                updateMoneyEntryAmountPreview();
+                if (!moneyEntryModalInstance) {
+                    moneyEntryModalInstance = new bootstrap.Modal(document.getElementById('moneyEntryModal'), { backdrop: true });
+                }
+                moneyEntryModalInstance.show();
+            }
+
+            function saveMoneyEntry() {
+                const editId = document.getElementById('moneyEntryEditId').value;
+                const accountId = document.getElementById('moneyEntryAccountId').value;
+                const type = getMoneyEntryType();
                 const amount = parseFloat(document.getElementById('moneyEntryAmount').value);
                 const date = document.getElementById('moneyEntryDate').value;
-                const note = document.getElementById('moneyEntryNote').value.trim();
+                const time = document.getElementById('moneyEntryTime').value;
+                const note = '';
 
                 if (!accountId) { showToast('Please select an account.', 'warning'); return; }
                 if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
                 if (!date) { showToast('Please select a date.', 'warning'); return; }
+                if (!time) { showToast('Please select a time.', 'warning'); return; }
 
-                await addMoneyEntry({ accountId, type, amount, date, note });
-                if (moneyEntryModalInstance) moneyEntryModalInstance.hide();
-                renderMoney();
+                const payload = { accountId, type, amount, date, time, note };
+                const typeLabel = type === 'withdraw' ? 'withdrawal' : 'deposit';
                 const synced = syncCode && fbDb ? ' and synced' : '';
-                showToast(type === 'withdraw' ? `Withdrawal recorded${synced}!` : `Deposit added${synced}!`, 'success');
+
+                const finish = async () => {
+                    if (editId) {
+                        await updateMoneyEntry(editId, payload);
+                        showToast(`Entry updated${synced}!`, 'success');
+                    } else {
+                        await addMoneyEntry(payload);
+                        showToast(type === 'withdraw' ? `Withdrawal recorded${synced}!` : `Deposit added${synced}!`, 'success');
+                    }
+                    if (moneyEntryModalInstance) moneyEntryModalInstance.hide();
+                    moneyHistorySheetAccountId = accountId;
+                    renderMoney();
+                    refreshMoneyHistorySheetIfOpen();
+                };
+
+                if (editId) {
+                    confirmAction({
+                        title: '<i class="fas fa-pen me-2"></i>Update Entry?',
+                        titleClass: 'text-primary',
+                        message: `Save changes to this ${typeLabel} of ${fmtINR(amount)}?`,
+                        confirmLabel: '<i class="fas fa-save me-1"></i> Update',
+                        confirmClass: 'btn-primary',
+                        onConfirm: finish
+                    });
+                } else {
+                    finish();
+                }
             }
 
             function setMoneyAccountModalMode(isEdit) {
@@ -2354,10 +3915,26 @@
                 moneyAccountModalInstance.show();
             }
 
+            function updateMoneyAccountOpeningPreview() {
+                const previewEl = document.getElementById('moneyAccountOpeningPreview');
+                const inputEl = document.getElementById('moneyAccountOpeningBalance');
+                if (!previewEl || !inputEl) return;
+                const amount = parseFloat(inputEl.value);
+                if (!amount || amount <= 0 || isNaN(amount)) {
+                    previewEl.innerHTML = '';
+                    previewEl.classList.add('d-none');
+                    return;
+                }
+                previewEl.innerHTML = fmtMoneyRich(amount);
+                previewEl.classList.remove('d-none');
+            }
+
             function openAddMoneyAccountModal() {
                 document.getElementById('moneyAccountEditId').value = '';
                 document.getElementById('moneyAccountName').value = '';
                 document.getElementById('moneyAccountHolderName').value = '';
+                document.getElementById('moneyAccountOpeningBalance').value = '';
+                updateMoneyAccountOpeningPreview();
                 setMoneyAccountModalMode(false);
                 showMoneyAccountModal();
             }
@@ -2368,6 +3945,8 @@
                 document.getElementById('moneyAccountEditId').value = acc.id;
                 document.getElementById('moneyAccountName').value = acc.name;
                 document.getElementById('moneyAccountHolderName').value = acc.holderName || '';
+                document.getElementById('moneyAccountOpeningBalance').value = acc.openingBalance || '';
+                updateMoneyAccountOpeningPreview();
                 setMoneyAccountModalMode(true);
                 showMoneyAccountModal();
             }
@@ -2376,6 +3955,7 @@
                 const id = document.getElementById('moneyAccountEditId').value;
                 const name = document.getElementById('moneyAccountName').value.trim();
                 const holderName = document.getElementById('moneyAccountHolderName').value.trim();
+                const openingBalance = parseFloat(document.getElementById('moneyAccountOpeningBalance').value) || 0;
                 if (!name) { showToast('Please enter an account name.', 'warning'); return; }
 
                 const isEdit = !!id;
@@ -2394,14 +3974,15 @@
                     confirmClass: 'btn-primary',
                     onConfirm: async () => {
                         if (isEdit) {
-                            await updateMoneyAccount(id, { name, holderName, broker: existing?.broker || 'None' });
+                            await updateMoneyAccount(id, { name, holderName, broker: existing?.broker || 'None', openingBalance });
                             showToast(syncCode && fbDb ? 'Account updated and synced!' : 'Account updated!', 'success');
                         } else {
-                            await addMoneyAccount({ name, holderName, broker: 'None' });
+                            await addMoneyAccount({ name, holderName, broker: 'None', openingBalance });
                             showToast(syncCode && fbDb ? 'Account added and synced!' : 'Account added!', 'success');
                         }
                         if (moneyAccountModalInstance) moneyAccountModalInstance.hide();
                         renderMoney();
+                        renderSettings();
                     }
                 });
             }
@@ -2422,8 +4003,13 @@
                     onConfirm: async () => {
                         await deleteMoneyAccount(id);
                         if (moneyAccountFilter === id) moneyAccountFilter = 'all';
+                        if (moneyHistorySheetAccountId === id) {
+                            moneyHistorySheetAccountId = null;
+                            if (moneyHistoryModalInstance) moneyHistoryModalInstance.hide();
+                        }
                         if (moneyAccountModalInstance) moneyAccountModalInstance.hide();
                         renderMoney();
+                        renderSettings();
                         showToast(syncCode && fbDb ? 'Account deleted and synced.' : 'Account deleted.', 'danger');
                     }
                 });
@@ -2431,16 +4017,19 @@
 
             function confirmDeleteMoneyEntry(id) {
                 const entry = getMoneyEntry(id);
-                const amt = entry ? fmt(entry.amount) : 'this entry';
+                const amt = entry ? fmtINR(entry.amount) : 'this entry';
+                const typeLabel = entry?.type === 'deposit' ? 'deposit' : 'withdrawal';
                 confirmAction({
                     title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Entry?',
                     titleClass: 'text-danger',
-                    message: `Delete withdrawal of ${amt}? This cannot be undone.`,
+                    message: `Delete this ${typeLabel} of ${amt}? This cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-danger',
                     onConfirm: async () => {
                         await deleteMoneyEntry(id);
+                        if (moneyEntryModalInstance) moneyEntryModalInstance.hide();
                         renderMoney();
+                        refreshMoneyHistorySheetIfOpen();
                         showToast(syncCode && fbDb ? 'Entry deleted and synced.' : 'Entry deleted.', 'danger');
                     }
                 });
@@ -3304,6 +4893,7 @@
                     document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save';
                     document.getElementById('statusClosed').checked = true;
                     document.getElementById('txLeverage').value = 1;
+                    setTxBroker('');
                     resetCompanyAutocomplete();
                     clearPreview();
                 });
@@ -3318,6 +4908,7 @@
                 document.getElementById('txForm').reset();
                 document.getElementById('statusClosed').checked = true;
                 document.getElementById('txLeverage').value = 1;
+                setTxBroker('');
                 const today = new Date().toISOString().split('T')[0];
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
                 document.getElementById('txBuyDate').value = yesterday;
@@ -3339,7 +4930,7 @@
                 resetCompanyAutocomplete();
                 const editMatch = findStockMetaForSymbol(tx.company || '');
                 if (editMatch) setTxCompanyMeta(editMatch);
-                document.getElementById('txBroker').value = tx.broker || '';
+                setTxBroker(tx.broker || '');
                 document.getElementById('txBuyDate').value = tx.buyDate || '';
                 document.getElementById('txSellDate').value = tx.sellDate || '';
                 document.getElementById('txQty').value = tx.quantity || '';
@@ -3471,7 +5062,31 @@
                 const txs = getTransactions();
                 document.getElementById('totalTxCount').textContent = txs.length + ' records';
                 document.getElementById('totalTxBadge').textContent = txs.length;
+                renderSettingsMoneyAccounts();
                 renderSyncStatus();
+            }
+
+            function renderSettingsMoneyAccounts() {
+                const accounts = getMoneyAccounts();
+                const countEl = document.getElementById('settingsMoneyAccountCount');
+                const badgeEl = document.getElementById('settingsMoneyAccountBadge');
+                const listEl = document.getElementById('settingsMoneyAccountList');
+                if (countEl) countEl.textContent = accounts.length === 1 ? '1 account' : `${accounts.length} accounts`;
+                if (badgeEl) badgeEl.textContent = accounts.length;
+                if (!listEl) return;
+                if (!accounts.length) {
+                    listEl.innerHTML = '<p class="small text-muted mb-0">No accounts yet. Tap Add Account above to create one.</p>';
+                    return;
+                }
+                listEl.innerHTML = accounts.map(a => {
+                    const holder = a.holderName ? `<div class="small text-muted">${a.holderName}</div>` : '';
+                    return `
+                        <button type="button" class="btn btn-light border w-100 text-start mb-2 rounded-3" onclick="openMoneyAccountModal('${a.id}')">
+                            <div class="fw-semibold">${a.name}</div>
+                            ${holder}
+                        </button>
+                    `;
+                }).join('');
             }
 
             function renderSyncStatus() {
@@ -3604,6 +5219,10 @@
                 });
                 if (resetModalInstance) resetModalInstance.hide();
                 moneyAccountFilter = 'all';
+                moneyPageTypeFilter = 'all';
+                moneyPageFrom = null;
+                moneyPageTo = null;
+                moneyPageRangeKey = 'all';
                 showToast('All data permanently deleted.', 'danger');
                 renderCurrentView();
                 renderPastTrades();
@@ -3624,8 +5243,15 @@
                 document.getElementById('pastFrom').value = pastFrom;
                 document.getElementById('pastTo').value = pastTo;
 
-                renderCurrentView();
-                renderPastTrades();
+                if (!restoreNavState()) {
+                    renderCurrentView();
+                    renderPastTrades();
+                }
+
+                setTxBroker('');
+                syncMoneyTypeDropdowns();
+                syncMoneyHistoryTypeDropdown();
+                syncMoneyAccountFilterDropdown(getMoneyAccounts());
 
                 // Open the native date picker when tapping anywhere on a date field
                 document.querySelectorAll('input[type="date"]').forEach(el => {
@@ -3636,8 +5262,16 @@
 
                 initSyncOnLoad();
 
+                window.addEventListener('pageshow', (e) => {
+                    if (e.persisted) restoreNavStateIfNeeded();
+                });
+
                 document.addEventListener('visibilitychange', () => {
-                    if (document.hidden) return;
+                    if (document.hidden) {
+                        saveNavState();
+                        return;
+                    }
+                    restoreNavStateIfNeeded();
                     if (document.getElementById('page-trades').classList.contains('active-page')) {
                         renderCurrentView();
                     }
@@ -3669,7 +5303,8 @@
             window.confirmDelete = confirmDelete;
             window.saveTransaction = saveTransaction;
             window.openBackupTextModal = openBackupTextModal;
-            window.openSettingsSheet = openSettingsSheet;
+            window.openSettingsPage = openSettingsPage;
+            window.backFromSettings = backFromSettings;
             window.copyBackupText = copyBackupText;
             window.restoreFromText = restoreFromText;
             window.resetData = resetData;
@@ -3701,9 +5336,30 @@
             window.disconnectSync = disconnectSync;
             window.renderMoney = renderMoney;
             window.setMoneyAccountFilter = setMoneyAccountFilter;
+            window.openAccountHistorySheet = openAccountHistorySheet;
+            window.setMoneyHistoryTypeFilter = setMoneyHistoryTypeFilter;
+            window.setMoneyHistoryRange = setMoneyHistoryRange;
+            window.applyMoneyHistoryDateRange = applyMoneyHistoryDateRange;
+            window.openMoneyHistoryRangeSheet = openMoneyHistoryRangeSheet;
+            window.openMoneyPageFilterSheet = openMoneyPageFilterSheet;
+            window.setMoneyPageTypeFilter = setMoneyPageTypeFilter;
+            window.pickMoneyPageTypeFilter = pickMoneyPageTypeFilter;
+            window.setTxBroker = setTxBroker;
+            window.setMoneyPageRangeInForm = setMoneyPageRangeInForm;
+            window.applyMoneyPageFilter = applyMoneyPageFilter;
+            window.clearMoneyPageFilters = clearMoneyPageFilters;
+            window.onMoneyPageDateInputChange = onMoneyPageDateInputChange;
+            window.clearMoneyHistoryFilters = clearMoneyHistoryFilters;
+            window.onMoneyEntryTypeToggle = onMoneyEntryTypeToggle;
+            window.setMoneyEntryType = setMoneyEntryType;
+            window.toggleMoneyEntryDateTimeEdit = toggleMoneyEntryDateTimeEdit;
+            window.onMoneyEntryDateTimeChange = onMoneyEntryDateTimeChange;
             window.openMoneyEntryModal = openMoneyEntryModal;
+            window.updateMoneyEntryAmountPreview = updateMoneyEntryAmountPreview;
+            window.openEditMoneyEntryModal = openEditMoneyEntryModal;
             window.saveMoneyEntry = saveMoneyEntry;
             window.openAddMoneyAccountModal = openAddMoneyAccountModal;
+            window.updateMoneyAccountOpeningPreview = updateMoneyAccountOpeningPreview;
             window.openMoneyAccountModal = openMoneyAccountModal;
             window.saveMoneyAccount = saveMoneyAccount;
             window.confirmDeleteMoneyAccount = confirmDeleteMoneyAccount;
@@ -3712,42 +5368,171 @@
         })();
     </script>
 
-    <!-- MONEY ENTRY BOTTOM SHEET -->
-    <div class="modal fade bottom-sheet-modal" id="moneyEntryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
+    <!-- MONEY PAGE FILTER BOTTOM SHEET -->
+    <div class="modal fade bottom-sheet-modal" id="moneyPageFilterModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header border-bottom">
                     <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
-                    <h5 class="modal-title" id="moneyEntryModalTitle"><i class="fas fa-coins me-2"></i>Add Deposit</h5>
+                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter Money</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3 app-form-select-wrap">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">Type</label>
+                        <input type="hidden" id="moneyPageTypeFilter" value="all" />
+                        <div class="dropdown app-select-dropdown w-100">
+                            <button type="button" class="btn btn-light border app-select-trigger w-100" id="moneyPageTypeFilterTrigger" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span class="app-menu-icon muted" id="moneyPageTypeFilterIcon"><i class="fas fa-layer-group"></i></span>
+                                <span class="app-select-label" id="moneyPageTypeFilterLabel">All</span>
+                                <i class="fas fa-chevron-down app-select-chevron"></i>
+                            </button>
+                            <ul class="dropdown-menu w-100 app-dropdown-menu" id="moneyPageTypeFilterMenu"></ul>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">Quick range</label>
+                        <div class="range-quick d-flex flex-wrap gap-2" id="moneyPageRangeButtons">
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill active" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyPageRangeInForm(7)">1W</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyPageRangeInForm(30)">1M</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyPageRangeInForm(90)">3M</button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">From</label>
+                        <input type="date" class="form-control rounded-3" id="moneyPageFrom" onchange="onMoneyPageDateInputChange()" />
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">To</label>
+                        <input type="date" class="form-control rounded-3" id="moneyPageTo" onchange="onMoneyPageDateInputChange()" />
+                    </div>
+                </div>
+                <div class="modal-footer d-flex gap-2">
+                    <button type="button" class="btn btn-light flex-fill" onclick="clearMoneyPageFilters()">Clear</button>
+                    <button type="button" class="btn btn-primary flex-fill" onclick="applyMoneyPageFilter()"><i class="fas fa-check me-1"></i> Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MONEY HISTORY BOTTOM SHEET -->
+    <div class="modal fade bottom-sheet-modal" id="moneyHistoryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header border-bottom money-history-header">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <div class="money-history-toolbar">
+                        <div class="money-history-toolbar-main">
+                            <span class="money-history-title" id="moneyHistoryModalTitle">History</span>
+                            <span class="money-history-meta" id="moneyHistoryMeta">All time</span>
+                        </div>
+                        <div class="money-history-controls">
+                            <div class="dropdown app-select-dropdown">
+                                <button type="button" class="btn btn-light border app-select-trigger" id="moneyHistoryTypeTrigger" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Filter type">
+                                    <span class="app-menu-icon muted" id="moneyHistoryTypeIcon"><i class="fas fa-layer-group"></i></span>
+                                    <span class="app-select-label" id="moneyHistoryTypeLabel">All</span>
+                                    <i class="fas fa-chevron-down app-select-chevron"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu" id="moneyHistoryTypeMenu"></ul>
+                            </div>
+                            <button type="button" class="btn btn-light border money-history-filter-btn" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card border-0 shadow-sm rounded-4 mb-3">
+                        <div class="card-body py-3" id="moneyHistorySheetSummary"></div>
+                    </div>
+                    <div id="moneyHistorySheetList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MONEY HISTORY DATE RANGE BOTTOM SHEET -->
+    <div class="modal fade bottom-sheet-modal" id="moneyHistoryRangeModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header border-bottom">
+                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
+                    <h5 class="modal-title"><i class="fas fa-calendar-alt me-2"></i>Date Range</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Account</label>
-                        <select class="form-select" id="moneyEntryAccount"></select>
+                        <label class="form-label small text-uppercase text-muted fw-semibold">Quick range</label>
+                        <div class="range-quick d-flex flex-wrap gap-2" id="moneyHistoryRangeButtons">
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill active" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyHistoryRange(7)">1W</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyHistoryRange(30)">1M</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyHistoryRange(90)">3M</button>
+                        </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Type</label>
-                        <select class="form-select" id="moneyEntryType">
-                            <option value="deposit">Deposit</option>
-                            <option value="withdraw">Withdraw</option>
-                        </select>
+                        <label class="form-label small text-uppercase text-muted fw-semibold">From</label>
+                        <input type="date" class="form-control rounded-3" id="moneyHistoryFrom" />
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Amount <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="moneyEntryAmount" min="1" step="1" placeholder="0" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="moneyEntryDate" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Note</label>
-                        <input type="text" class="form-control" id="moneyEntryNote" placeholder="Optional" />
+                    <div class="mb-0">
+                        <label class="form-label small text-uppercase text-muted fw-semibold">To</label>
+                        <input type="date" class="form-control rounded-3" id="moneyHistoryTo" />
                     </div>
                 </div>
-                <div class="modal-footer border-top">
-                    <button type="button" class="btn btn-primary w-100" onclick="saveMoneyEntry()"><i class="fas fa-save me-1"></i> Save</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="applyMoneyHistoryDateRange()"><i class="fas fa-check me-1"></i> Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MONEY ENTRY MODAL -->
+    <div class="modal fade" id="moneyEntryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 overflow-hidden">
+                <div class="modal-header money-entry-header deposit" id="moneyEntryHeader">
+                    <div class="money-entry-header-top">
+                        <h5 class="money-entry-account-title" id="moneyEntryAccountTitle">Account</h5>
+                        <div class="money-entry-header-actions">
+                            <label class="money-entry-toggle" aria-label="Toggle deposit or withdraw">
+                                <input type="checkbox" id="moneyEntryTypeToggle" onchange="onMoneyEntryTypeToggle(this.checked)" />
+                                <span class="money-entry-toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-2">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="money-entry-datetime-row" id="moneyEntryDateTimeRow">
+                                <span class="money-entry-datetime-display" id="moneyEntryDateTimeDisplay">—</span>
+                            </div>
+                            <div class="money-entry-datetime-fields d-none" id="moneyEntryDateTimeFields">
+                                <input type="date" class="form-control rounded-2 flex-fill" id="moneyEntryDate" onchange="onMoneyEntryDateTimeChange()" />
+                                <input type="time" class="form-control rounded-2 flex-fill" id="moneyEntryTime" onchange="onMoneyEntryDateTimeChange()" />
+                            </div>
+                        </div>
+                        <button type="button" class="money-entry-datetime-edit-btn flex-shrink-0" id="moneyEntryDateTimeEditBtn" onclick="toggleMoneyEntryDateTimeEdit()" title="Edit date &amp; time" aria-label="Edit date and time">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="moneyEntryEditId" value="" />
+                    <input type="hidden" id="moneyEntryAccountId" value="" />
+                    <input type="hidden" id="moneyEntryType" value="deposit" />
+                    <div class="mb-0">
+                        <label class="form-label">Amount <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-lg rounded-3" id="moneyEntryAmount" min="1" step="1" placeholder="0" oninput="updateMoneyEntryAmountPreview()" />
+                        <div class="money-entry-amount-preview d-none mt-2" id="moneyEntryAmountPreview"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn w-100 money-entry-save-btn deposit" id="moneyEntrySaveBtn" onclick="saveMoneyEntry()"><i class="fas fa-plus me-1"></i> Add Deposit</button>
                 </div>
             </div>
         </div>
@@ -3773,69 +5558,16 @@
                         <input type="text" class="form-control" id="moneyAccountHolderName" placeholder="e.g. Iliyas" />
                         <div class="form-text">Helps identify whose account this is.</div>
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Opening Balance</label>
+                        <input type="number" class="form-control" id="moneyAccountOpeningBalance" min="0" step="1" placeholder="0" oninput="updateMoneyAccountOpeningPreview()" />
+                        <div class="form-text">Starting amount already in this account before tracked deposits.</div>
+                        <div class="money-entry-amount-preview d-none mt-2" id="moneyAccountOpeningPreview"></div>
+                    </div>
                 </div>
                 <div class="modal-footer border-top d-flex flex-column gap-2">
                     <button type="button" class="btn btn-primary w-100" onclick="saveMoneyAccount()"><i class="fas fa-save me-1"></i> Save</button>
                     <button type="button" class="btn btn-outline-danger w-100" id="moneyAccountDeleteBtn" onclick="confirmDeleteMoneyAccount()" style="display:none;"><i class="fas fa-trash-alt me-1"></i> Delete Account</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- SETTINGS BOTTOM SHEET -->
-    <div class="modal fade bottom-sheet-modal" id="settingsModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header border-bottom">
-                    <div class="text-center"><span class="sheet-handle d-inline-block"></span></div>
-                    <h5 class="modal-title"><i class="fas fa-cog me-2"></i>Settings</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="card border-0 shadow-sm rounded-4 mb-3">
-                        <div class="card-body">
-                            <h6 class="fw-bold mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
-                            <div class="d-flex align-items-center mb-2">
-                                <span class="me-2 small text-muted">Status:</span>
-                                <span id="cloudSyncStatus" class="badge bg-secondary">Off</span>
-                            </div>
-                            <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
-                            <div class="input-group mb-2">
-                                <span class="input-group-text"><i class="fas fa-key"></i></span>
-                                <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
-                            </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-primary flex-fill" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug me-1"></i> Connect</button>
-                                <button class="btn btn-sm btn-outline-secondary flex-fill" id="syncDisconnectBtn" onclick="disconnectSync()" style="display:none;"><i class="fas fa-unlink me-1"></i> Disconnect</button>
-                            </div>
-                            <div id="cloudSyncHint" class="small text-muted mt-2"></div>
-                        </div>
-                    </div>
-                    <div class="card border-0 shadow-sm rounded-4">
-                        <div class="card-body p-0">
-                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
-                                <div>
-                                    <div class="fw-semibold"><i class="fas fa-database me-2"></i>Total Transactions</div>
-                                    <div class="small text-muted" id="totalTxCount">0 records</div>
-                                </div>
-                                <span class="badge bg-secondary" id="totalTxBadge">0</span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom">
-                                <div>
-                                    <div class="fw-semibold"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
-                                    <div class="small text-muted">Copy your data as text, or paste it back to restore</div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-primary" onclick="openBackupTextModal()"><i class="fas fa-copy"></i> Copy / Paste</button>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3">
-                                <div>
-                                    <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
-                                    <div class="small text-muted">Permanently delete all transactions</div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-danger" onclick="resetData()"><i class="fas fa-trash-alt"></i> Reset</button>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
