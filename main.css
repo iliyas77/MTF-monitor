@@ -1,0 +1,100 @@
+/* Reusable UI components — buttons & amounts */
+
+.app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 3rem;
+    min-height: 3rem;
+    padding: 0 1rem;
+    border-radius: 0.75rem;
+    font-size: 0.9375rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    border: 1px solid;
+    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+}
+
+.app-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.app-btn--cancel {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: #64748b;
+}
+
+.app-btn--cancel:hover:not(:disabled) {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #475569;
+}
+
+.app-btn--action {
+    background: #1e40af;
+    border-color: #1e3a8a;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.app-btn--action:hover:not(:disabled) {
+    background: #1d4ed8;
+    border-color: #1e40af;
+    color: #ffffff;
+}
+
+.app-btn--danger {
+    background: #b91c1c;
+    border-color: #991b1b;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.app-btn--danger:hover:not(:disabled) {
+    background: #dc2626;
+    border-color: #b91c1c;
+    color: #ffffff;
+}
+
+.app-btn-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: stretch;
+}
+
+.app-btn-row .app-btn.flex-1,
+.app-btn-row form.flex-1 {
+    flex: 1 1 0%;
+    min-width: 0;
+}
+
+.app-btn-row form.flex-1 .app-btn {
+    width: 100%;
+}
+
+.app-btn--sm {
+    height: 2rem;
+    min-height: 2rem;
+    padding: 0 0.75rem;
+    font-size: 0.875rem;
+}
+
+.amount-display {
+    display: inline-flex;
+    flex-direction: column;
+    max-width: 100%;
+}
+
+.amount-display__value {
+    line-height: 1.15;
+}
+
+.amount-display__words {
+    font-weight: 500;
+    line-height: 1.35;
+    opacity: 0.72;
+}

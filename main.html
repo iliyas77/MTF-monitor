@@ -10,13 +10,24 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="main.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { fontFamily: { sans: ['Roboto', 'sans-serif'] }, colors: { primary: '#60a5fa' } } } };</script>
-
-
+    <script>tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { fontFamily: { sans: ['Roboto', 'sans-serif'] }, colors: { primary: '#60a5fa', success: '#14532d' } } } };</script>
+    <style>
+        [data-theme="corporate"] {
+            --color-base-100: oklch(100% 0 0);
+            --color-base-200: oklch(98.5% 0.003 260);
+            --color-base-300: oklch(96% 0.006 260);
+            --color-success: #14532d;
+            --color-success-content: #ffffff;
+        }
+        body {
+            background-color: oklch(98.5% 0.003 260);
+        }
+    </style>
 </head>
 
-<body class="min-h-screen bg-base-200 font-sans text-base-content/75 overflow-x-hidden">
+<body class="min-h-screen bg-base-200 font-sans text-base-content/80 overflow-x-hidden">
 
     <!-- ============ TOAST ============ -->
     <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[2000] w-[min(92vw,420px)]" id="toastContainer"></div>
@@ -45,11 +56,11 @@
             <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body text-center py-4">
                     <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
-                    <div class="font-semibold text-2xl text-success mb-3" id="summaryNet">₹0</div>
+                    <div id="summaryNet"></div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
-                            <div class="font-medium text-base-content/80" id="summaryGross">₹0</div>
+                            <div id="summaryGross"></div>
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
@@ -57,7 +68,7 @@
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-receipt mr-1"></i>Charges</div>
-                            <div class="font-semibold text-base-content/55" id="summaryCharges">₹0</div>
+                            <div id="summaryCharges"></div>
                         </div>
                     </div>
                 </div>
@@ -78,7 +89,7 @@
                     <input type="text" class="input input-bordered w-full rounded-full shadow-sm pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
                     <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
                 </div>
-                <button class="btn btn-ghost btn-square border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h text-base-content/55"></i></button>
+                <button class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h text-base-content/55"></i></button>
             </div>
             <!-- Selected date range indicator -->
             <div class="text-center mb-3">
@@ -90,11 +101,11 @@
             <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="pastSummaryCard">
                 <div class="card-body text-center py-4">
                     <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
-                    <div class="font-semibold text-2xl text-success mb-3" id="pastSummaryNet">₹0</div>
+                    <div id="pastSummaryNet"></div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
-                            <div class="font-medium text-base-content/80" id="pastSummaryGross">₹0</div>
+                            <div id="pastSummaryGross"></div>
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
@@ -102,7 +113,7 @@
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-receipt mr-1"></i>Charges</div>
-                            <div class="font-semibold text-base-content/55" id="pastSummaryCharges">₹0</div>
+                            <div id="pastSummaryCharges"></div>
                         </div>
                     </div>
                 </div>
@@ -119,15 +130,15 @@
                 <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="moneySummaryCard">
                     <div class="card-body text-center py-4">
                         <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-coins mr-1"></i>Total Value</div>
-                        <div class="font-semibold text-2xl text-base-content/85 mb-3" id="moneyTotalValueHero">₹0</div>
+                        <div id="moneyTotalValueHero"></div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Deposited</div>
-                                <div class="font-medium text-base-content/80" id="moneyTotalDeposited">₹0</div>
+                                <div id="moneyTotalDeposited"></div>
                             </div>
                             <div>
                                 <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Withdrawn</div>
-                                <div class="font-medium text-base-content/80" id="moneyTotalWithdrawn">₹0</div>
+                                <div id="moneyTotalWithdrawn"></div>
                             </div>
                         </div>
                     </div>
@@ -143,7 +154,7 @@
                             </button>
                             <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
                         </div>
-                        <button type="button" class="btn btn-ghost btn-square border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
+                        <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
                             <i class="fas fa-filter text-base-content/55"></i>
                         </button>
                     </div>
@@ -166,7 +177,7 @@
                         </button>
                         <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
                     </div>
-                    <button type="button" class="btn btn-ghost btn-square border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
+                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
                         <i class="fas fa-filter text-base-content/55"></i>
                     </button>
                 </div>
@@ -192,17 +203,14 @@
                     <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-cloud mr-2"></i>Cloud Sync</h6>
                     <div class="flex items-center mb-2">
                         <span class="mr-2 text-sm text-base-content/60">Status:</span>
-                        <span id="cloudSyncStatus" class="badge badge-neutral">Off</span>
+                        <span id="cloudSyncStatus" class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80">Off</span>
                     </div>
                     <p class="text-sm text-base-content/60 mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
                     <div class="join w-full mb-2">
                         <span class="join-item bg-base-200 px-3 flex items-center"><i class="fas fa-key"></i></span>
                         <input type="text" class="input input-bordered w-full" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
                     </div>
-                    <div class="flex gap-2">
-                        <button class="btn btn-sm btn-primary flex-1" id="syncConnectBtn" onclick="connectSyncFromInput()"><i class="fas fa-plug mr-1"></i> Connect</button>
-                        <button class="btn btn-sm btn-outline btn-neutral flex-1 hidden" id="syncDisconnectBtn" onclick="disconnectSync()"><i class="fas fa-unlink mr-1"></i> Disconnect</button>
-                    </div>
+                    <div class="flex gap-2" id="syncConnectRow"></div>
                     <div id="cloudSyncHint" class="text-sm text-base-content/60 mt-2"></div>
                 </div>
             </div>
@@ -213,11 +221,9 @@
                             <div class="font-medium text-base-content/75"><i class="fas fa-university mr-2"></i>Money Accounts</div>
                             <div class="text-sm text-base-content/60" id="settingsMoneyAccountCount">0 accounts</div>
                         </div>
-                        <span class="badge badge-neutral" id="settingsMoneyAccountBadge">0</span>
+                        <span class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80" id="settingsMoneyAccountBadge">0</span>
                     </div>
-                    <div class="px-3 py-3 border-b border-base-200">
-                        <button type="button" class="btn btn-sm btn-success w-full" onclick="openAddMoneyAccountModal()"><i class="fas fa-plus mr-1"></i> Add Account</button>
-                    </div>
+                    <div class="px-3 py-3 border-b border-base-200" id="addMoneyAccountBtnHost"></div>
                     <div class="px-3 py-3" id="settingsMoneyAccountList"></div>
                 </div>
             </div>
@@ -228,7 +234,7 @@
                             <div class="font-medium text-base-content/75"><i class="fas fa-database mr-2"></i>Total Transactions</div>
                             <div class="text-sm text-base-content/60" id="totalTxCount">0 records</div>
                         </div>
-                        <span class="badge badge-neutral" id="totalTxBadge">0</span>
+                        <span class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80" id="totalTxBadge">0</span>
                     </div>
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
                         <div>
@@ -298,22 +304,22 @@
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Successful</div>
-                            <div class="font-semibold text-success" id="txHistSuccessful">0</div>
+                            <div class="inline-flex items-center justify-center rounded-xl px-3 py-1 font-semibold bg-success/15 text-success" id="txHistSuccessful">0</div>
                         </div>
                     </div>
                     <div class="divider my-2"></div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Net</div>
-                            <div class="font-semibold" id="txHistNet">₹0</div>
+                            <div id="txHistNet"></div>
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Gross</div>
-                            <div class="font-medium text-base-content/80" id="txHistGross">₹0</div>
+                            <div id="txHistGross"></div>
                         </div>
                         <div>
                             <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Charges</div>
-                            <div class="font-semibold text-base-content/55" id="txHistCharges">₹0</div>
+                            <div id="txHistCharges"></div>
                         </div>
                     </div>
                 </div>
@@ -371,7 +377,7 @@
                         <div class="flex flex-wrap gap-1 items-center" id="calcSellPctChips"></div>
                         <div class="flex gap-1 mt-2">
                             <input type="number" class="input input-bordered input-sm w-full" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
-                            <button type="button" class="btn btn-sm btn-primary whitespace-nowrap" onclick="addCalcSellPctPreset()">Add</button>
+                            <span id="calcAddPctBtnHost"></span>
                         </div>
                         <p class="text-base-content/60 text-sm mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
                     </div>
@@ -385,7 +391,7 @@
                 <div class="card-body">
                     <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
                         <h6 class="font-semibold text-base-content/80 mb-0"><i class="fas fa-balance-scale mr-2"></i>Compare All Brokers</h6>
-                        <span id="calcModeBadge" class="badge badge-ghost hidden"></span>
+                        <span id="calcModeBadge" class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80 hidden"></span>
                     </div>
                     <div id="calcIntradayBanner" class="hidden"></div>
                     <div id="calcComparePanel" class="overflow-x-auto">
@@ -397,27 +403,27 @@
     </section>
 
     <!-- FAB -->
-    <button class="btn btn-circle btn-primary fixed z-40 w-14 h-14 min-h-0 text-xl shadow-xl border-0 bottom-[74px] right-[max(1rem,calc(50%-220px))]" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
-        <i class="fas fa-plus"></i>
+    <button type="button" class="fixed z-40 w-14 h-14 min-h-0 rounded-full bg-primary text-white border-0 shadow-lg shadow-primary/25 flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all duration-150 bottom-[74px] right-[max(1rem,calc(50%-220px))]" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
+        <i class="fas fa-plus text-lg text-white"></i>
     </button>
 
     <!-- BOTTOM NAV -->
     <div class="btm-nav btm-nav-md bg-base-100 border-t border-base-200 shadow-lg fixed bottom-0 inset-x-0 z-30 max-w-[480px] mx-auto w-full" id="bottomNav">
-        <button type="button" class="active" data-page="trades" onclick="navigateTo('trades')">
-            <i class="fas fa-list-ul text-lg"></i>
-            <span class="btm-nav-label text-xs font-medium text-base-content/55">Trades</span>
+        <button type="button" class="border-t-2 border-transparent" data-page="trades" onclick="navigateTo('trades')">
+            <i class="fas fa-list-ul text-lg nav-icon text-base-content/55"></i>
+            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Trades</span>
         </button>
-        <button type="button" data-page="past" onclick="navigateTo('past')">
-            <i class="fas fa-history text-lg"></i>
-            <span class="btm-nav-label text-xs font-medium text-base-content/55">Past Trades</span>
+        <button type="button" class="border-t-2 border-transparent" data-page="past" onclick="navigateTo('past')">
+            <i class="fas fa-history text-lg nav-icon text-base-content/55"></i>
+            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Past Trades</span>
         </button>
-        <button type="button" data-page="money" onclick="navigateTo('money')">
-            <i class="fas fa-coins text-lg"></i>
-            <span class="btm-nav-label text-xs font-medium text-base-content/55">Money</span>
+        <button type="button" class="border-t-2 border-transparent" data-page="money" onclick="navigateTo('money')">
+            <i class="fas fa-coins text-lg nav-icon text-base-content/55"></i>
+            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Money</span>
         </button>
-        <button type="button" data-page="more" onclick="navigateTo('more')">
-            <i class="fas fa-ellipsis-h text-lg"></i>
-            <span class="btm-nav-label text-xs font-medium text-base-content/55">More</span>
+        <button type="button" class="border-t-2 border-transparent" data-page="more" onclick="navigateTo('more')">
+            <i class="fas fa-ellipsis-h text-lg nav-icon text-base-content/55"></i>
+            <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">More</span>
         </button>
     </div>
 
@@ -443,7 +449,7 @@
         <div class="modal-box max-w-sm">
             <h3 class="font-semibold text-base-content/80 text-lg" id="appDialogTitle"></h3>
             <div id="appDialogBody" class="py-3"></div>
-            <div id="appDialogFooter" class="modal-action flex gap-2 justify-end"></div>
+            <div id="appDialogFooter" class="modal-action app-btn-row"></div>
         </div>
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
@@ -451,7 +457,7 @@
     <!-- HIDDEN SHEET PANELS (persistent form fields) -->
     <div id="sheetPanels" class="hidden">
         <div id="panelMoneyPageFilter"><div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">Type</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Type</label>
                         <input type="hidden" id="moneyPageTypeFilter" value="all" />
                         <div class="dropdown dropdown-end w-full">
                             <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] w-full max-w-none" id="moneyPageTypeFilterTrigger" tabindex="0" role="button" aria-expanded="false">
@@ -463,7 +469,7 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="moneyPageRangeButtons">
                             <button type="button" class="btn btn-outline btn-primary btn-sm flex-1" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
@@ -473,15 +479,15 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageFrom" onchange="onMoneyPageDateInputChange()" />
                     </div>
                     <div class="mb-0">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageTo" onchange="onMoneyPageDateInputChange()" />
                     </div></div>
         <div id="panelMoneyHistoryRange"><div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="moneyHistoryRangeButtons">
                             <button type="button" class="btn btn-outline btn-primary btn-sm flex-1" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
@@ -491,15 +497,15 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryFrom" />
                     </div>
                     <div class="mb-0">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryTo" />
                     </div></div>
         <div id="panelPastFilter"><div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">Quick range</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
                         <div class="range-quick flex flex-wrap gap-2" id="pastRangeButtons">
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setPastRange('yesterday')">Yesterday</button>
                             <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="7" onclick="setPastRange(7)">1W</button>
@@ -509,11 +515,11 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">From</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="pastFrom" />
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm uppercase text-base-content/60 font-semibold">To</label>
+                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="pastTo" />
                     </div></div>
         <div id="panelMoneyHistory"><div class="p-4 border-b border-base-200 relative">
@@ -532,7 +538,7 @@
                                 </button>
                                 <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
                             </div>
-                            <button type="button" class="btn btn-ghost btn-square border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
+                            <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
                                 <i class="fas fa-filter text-base-content/55"></i>
                             </button>
                         </div>
@@ -567,13 +573,11 @@
 
     <!-- MODAL: ADD/EDIT -->
     <dialog id="txModal" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
-        <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[90vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-xl">
-                <div class="p-4 border-b border-base-200 relative">
-                    <div class="text-center mb-2"><span class="inline-block w-[42px] h-1 rounded-full bg-base-300"></span></div>
-                    <h5 class="font-semibold text-base-content/80 text-lg" id="txModalTitle"><i class="fas fa-plus-circle mr-2"></i>Add Trade</h5>
-                    <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
+        <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[92vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-xl flex flex-col overflow-hidden">
+                <div class="shrink-0 flex justify-end px-3 pt-3 pb-1">
+                    <form method="dialog"><button type="submit" class="btn btn-sm btn-circle btn-ghost" aria-label="Close">✕</button></form>
                 </div>
-                <div class="p-4 overflow-y-auto max-h-[70vh]">
+                <div class="flex-1 min-h-0 overflow-y-auto px-4 pb-2">
                     <form id="txForm" novalidate>
                         <input type="hidden" id="txEditId" value="" />
                         <div class="mb-3">
@@ -650,20 +654,15 @@
                         </div>
                         <div class="bg-base-200 border rounded-xl p-3" id="calcPreview">
                             <div class="flex justify-between mb-1"><span class="text-base-content/60">Holding Days</span><span class="font-semibold" id="previewDays">0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Gross Profit</span><span class="font-semibold text-success" id="previewGross">₹0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">MTF Interest</span><span class="font-semibold" id="previewInterest">₹0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Total Charges</span><span class="font-semibold" id="previewCharges">₹0</span></div>
+                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Gross Profit</span><span id="previewGross"></span></div>
+                            <div class="flex justify-between mb-1"><span class="text-base-content/60">MTF Interest</span><span id="previewInterest"></span></div>
+                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Total Charges</span><span id="previewCharges"></span></div>
                             <hr class="my-2" />
-                            <div class="flex justify-between font-medium text-base-content/80"><span>Net Profit</span><span id="previewNet">₹0</span></div>
+                            <div class="flex justify-between font-medium text-base-content/80 items-center"><span>Net Profit</span><span id="previewNet"></span></div>
                         </div>
                     </form>
                 </div>
-                <div class="p-4 border-t border-base-200 flex gap-2">
-                    <form method="dialog" class="flex-1"><button type="submit" class="btn btn-ghost w-full">Cancel</button></form>
-                    <button type="button" class="btn btn-primary flex-1" id="txSaveBtn" onclick="saveTransaction()">
-                        <i class="fas fa-save mr-1"></i> Save
-                    </button>
-                </div>
+                <div class="shrink-0 px-4 py-3 border-t border-base-200/80 bg-base-50/80" id="txModalFooter"></div>
             </div>
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
@@ -671,7 +670,7 @@
     <!-- MONEY ENTRY MODAL -->
     <dialog id="moneyEntryModal" class="modal">
         <div class="modal-box p-0 overflow-hidden">
-            <div class="p-4 bg-success text-success-content relative" id="moneyEntryHeader">
+            <div class="p-4 bg-success/15 text-success border-b border-success/20 relative" id="moneyEntryHeader">
                 <div class="flex items-start justify-between gap-3 pr-8">
                     <h5 class="font-semibold text-base-content/80 text-lg flex-1 min-w-0" id="moneyEntryAccountTitle">Account</h5>
                     <label class="label cursor-pointer gap-1 shrink-0 p-0" aria-label="Toggle deposit or withdraw">
@@ -690,7 +689,7 @@
                     </div>
                     <button type="button" class="btn btn-ghost btn-circle btn-xs shrink-0 opacity-90" id="moneyEntryDateTimeEditBtn" onclick="toggleMoneyEntryDateTimeEdit()" title="Edit date &amp; time"><i class="fas fa-pen"></i></button>
                 </div>
-                <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost text-success-content">✕</button></form>
+                <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
             </div>
             <div class="p-4">
                 <input type="hidden" id="moneyEntryEditId" value="" />
@@ -698,11 +697,9 @@
                 <input type="hidden" id="moneyEntryType" value="deposit" />
                 <label class="label-text font-normal text-base-content/65">Amount <span class="text-error">*</span></label>
                 <input type="number" class="input input-bordered input-lg w-full rounded-xl mt-1" id="moneyEntryAmount" min="1" step="1" placeholder="0" oninput="updateMoneyEntryAmountPreview()" />
-                <div class="hidden mt-2 p-2 bg-base-200 rounded-lg font-semibold" id="moneyEntryAmountPreview"></div>
+                <div class="hidden mt-2" id="moneyEntryAmountPreview"></div>
             </div>
-            <div class="p-4 pt-0">
-                <button type="button" class="btn btn-success w-full" id="moneyEntrySaveBtn" onclick="saveMoneyEntry()"><i class="fas fa-plus mr-1"></i> Add Deposit</button>
-            </div>
+            <div class="p-4 pt-0" id="moneyEntryFooter"></div>
         </div>
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
@@ -718,6 +715,7 @@
     <!-- Firebase (compat SDK) for cloud sync -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="main.js"></script>
 
     <script>
         // ======================================================================
@@ -726,19 +724,51 @@
 
         (function() {
             'use strict';
+
+            const {
+                appTag,
+                setAppTagElement,
+                fmt,
+                fmtINR,
+                fmtDec,
+                amountInWords,
+                renderAmount,
+                paintAmount,
+                fmtMoneyRich,
+                pnlToneClass,
+                renderAppButton,
+                renderAppButtonRow,
+                paintAppButton,
+                resolveAppButtonVariant
+            } = window.MTFComponents;
+
             // ---------- UI HELPERS ----------
             const UI = {
                 card: 'card bg-base-100 shadow-sm rounded-2xl border-0',
                 statLabel: 'text-xs uppercase text-base-content/50 font-medium tracking-wide',
+                sheetLabel: 'block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5',
+                heroValue: 'font-bold text-6xl leading-none mb-3',
                 iconBtn: 'btn btn-ghost btn-circle border border-base-200 shrink-0 focus:outline-none text-base-content/55',
                 toolbarRow: 'flex items-center gap-2 mb-3',
                 toolbarInput: 'input input-bordered border-base-200 w-full rounded-full shadow-sm pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary/50 text-base-content/80 placeholder:text-base-content/40',
-                toolbarIconBtn: 'btn btn-ghost btn-square border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none text-base-content/55',
+                toolbarIconBtn: 'btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none text-base-content/55 p-0',
+                actionBtn: 'btn btn-sm min-h-0 h-9 w-9 rounded-xl p-0 flex items-center justify-center',
+                actionBtnSm: 'btn btn-sm min-h-0 h-8 w-8 rounded-lg p-0 flex items-center justify-center',
+                tradeStatBox: 'flex-1 bg-base-200/25 border border-base-200/60 rounded-xl p-2.5 text-center min-w-0',
+                tradeStatLabel: 'text-[0.65rem] uppercase text-base-content/45 font-medium leading-tight',
+                tradeStatValue: 'text-base font-semibold text-base-content/90 whitespace-nowrap tabular-nums tracking-tight mt-0.5',
+                tradeStatValueSuccess: 'text-base font-semibold text-success whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-success/15',
+                tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15',
+                moneyTonePositive: 'bg-success/15 text-success',
+                moneyToneNegative: 'bg-error/15 text-error',
+                moneyActionDeposit: 'bg-success/15 text-success border-0 hover:bg-success/25',
+                moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
+                fab: 'fixed z-40 w-14 h-14 min-h-0 rounded-full bg-primary text-white border-0 shadow-lg shadow-primary/25 flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all duration-150 bottom-[74px] right-[max(1rem,calc(50%-220px))]',
                 selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none text-base-content/75',
                 selectLabel: 'truncate max-w-[5.5rem]',
                 selectChevron: 'text-[0.6rem] opacity-50 ml-auto',
                 menuIconStyles: {
-                    deposit: 'bg-success/20 text-success', withdraw: 'bg-error/20 text-error',
+                    deposit: 'bg-success/15 text-success', withdraw: 'bg-error/15 text-error',
                     history: 'bg-primary/15 text-primary', view: 'bg-primary/15 text-primary',
                     edit: 'bg-base-200 text-base-content/55', copy: 'bg-base-200 text-base-content/55',
                     muted: 'bg-base-200 text-base-content/55', charges: 'bg-base-200 text-base-content/55',
@@ -754,7 +784,7 @@
                     return `<div class="${UI.card} mb-3" ${cardId ? `id="${cardId}"` : ''}>
                         <div class="card-body text-center py-4">
                             <div class="${UI.statLabel}"><i class="fas ${heroIcon} mr-1"></i>${heroLabel}</div>
-                            <div class="font-semibold text-2xl mb-3 ${heroId.includes('Net') || heroId.includes('Value') ? 'text-success' : 'text-base-content/85'}" id="${heroId}">₹0</div>
+                            <div class="${UI.heroValue} ${heroId.includes('Net') || heroId.includes('Value') ? 'text-success' : 'text-base-content/85'}" id="${heroId}">₹0</div>
                             <div class="grid ${cols} gap-2">${statHtml}</div>
                         </div></div>`;
                 },
@@ -787,6 +817,18 @@
                         <span class="${UI.menuIcon(variant)}"><i class="fas ${icon}"></i></span><span class="flex-1 text-left">${label}</span></button></li>`;
                 }
             };
+
+            function buildTradeMetaTags(tx, extras = []) {
+                const lev = tx.leverage || 1;
+                const levDisplay = lev > 1 ? `${parseFloat(Number(lev).toFixed(2))}x` : '1x';
+                const daysHeld = typeof tx.holdingDays === 'number' ? tx.holdingDays : getDaysHeld(tx);
+                const tags = [
+                    appTag(tx.broker || '—'),
+                    appTag(levDisplay, 'accent'),
+                    appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d hold`)
+                ].concat(extras);
+                return `<div class="flex flex-wrap gap-1.5 justify-center mb-3">${tags.join('')}</div>`;
+            }
 
             const Sheet = {
                 el: () => document.getElementById('appSheet'),
@@ -1888,54 +1930,65 @@
                 };
             }
 
+            // ---------- APP BUTTON WIRING ----------
+            function renderTxModalFooter(isEdit = false) {
+                const footer = document.getElementById('txModalFooter');
+                if (!footer) return;
+                footer.innerHTML = renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
+                    actionId: 'txSaveBtn',
+                    actionOnClick: 'saveTransaction()'
+                });
+            }
+
+            function renderMoneyEntryFooter(label, icon = 'fa-plus') {
+                const footer = document.getElementById('moneyEntryFooter');
+                if (!footer) return;
+                footer.innerHTML = renderAppButton(label, {
+                    variant: 'action',
+                    id: 'moneyEntrySaveBtn',
+                    onclick: 'saveMoneyEntry()',
+                    icon,
+                    fullWidth: true
+                });
+            }
+
+            function renderSyncConnectRow() {
+                const row = document.getElementById('syncConnectRow');
+                if (!row) return;
+                row.className = 'flex gap-2';
+                row.innerHTML =
+                    renderAppButton('Connect', { id: 'syncConnectBtn', variant: 'action', onclick: 'connectSyncFromInput()', icon: 'fa-plug', flex: true }) +
+                    renderAppButton('Disconnect', { id: 'syncDisconnectBtn', variant: 'cancel', onclick: 'disconnectSync()', icon: 'fa-unlink', flex: true, className: 'hidden' });
+            }
+
+            function paintAddMoneyAccountBtn() {
+                const host = document.getElementById('addMoneyAccountBtnHost');
+                if (!host) return;
+                host.innerHTML = renderAppButton('Add Account', {
+                    variant: 'action',
+                    onclick: 'openAddMoneyAccountModal()',
+                    icon: 'fa-plus',
+                    fullWidth: true
+                });
+            }
+
+            function initAppButtons() {
+                renderTxModalFooter(false);
+                renderMoneyEntryFooter('Add Deposit', 'fa-plus');
+                renderSyncConnectRow();
+                paintAddMoneyAccountBtn();
+                const calcAdd = document.getElementById('calcAddPctBtnHost');
+                if (calcAdd) {
+                    calcAdd.innerHTML = renderAppButton('Add', {
+                        variant: 'action',
+                        onclick: 'addCalcSellPctPreset()',
+                        size: 'sm',
+                        className: 'whitespace-nowrap'
+                    });
+                }
+            }
+
             // ---------- FORMAT HELPERS ----------
-            function fmt(n) {
-                if (n === undefined || n === null || isNaN(n)) return '₹0';
-                const sign = n < 0 ? '-' : '';
-                const abs = Math.abs(n);
-                if (abs >= 10000000) return sign + '₹' + (abs / 10000000).toFixed(1) + 'Cr';
-                if (abs >= 100000) return sign + '₹' + (abs / 100000).toFixed(1) + 'L';
-                return sign + '₹' + abs.toFixed(0);
-            }
-            function fmtINR(n) {
-                if (n === undefined || n === null || isNaN(n)) return '₹0';
-                const sign = n < 0 ? '-' : '';
-                const abs = Math.round(Math.abs(n));
-                return sign + '₹' + abs.toLocaleString('en-IN');
-            }
-            function amountInWords(num) {
-                if (num === undefined || num === null || isNaN(num)) return 'Zero Rupees';
-                const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
-                const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-                const spellBelow100 = (n) => n < 20 ? ones[n] : tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-                const spellBelow1000 = (n) => {
-                    if (n >= 100) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + spellBelow100(n % 100) : '');
-                    return spellBelow100(n);
-                };
-                let n = Math.round(Math.abs(num));
-                if (n === 0) return 'Zero Rupees';
-                const parts = [];
-                const crore = Math.floor(n / 10000000);
-                n %= 10000000;
-                const lakh = Math.floor(n / 100000);
-                n %= 100000;
-                const thousand = Math.floor(n / 1000);
-                n %= 1000;
-                if (crore) parts.push(spellBelow100(crore) + ' Crore');
-                if (lakh) parts.push(spellBelow100(lakh) + ' Lakh');
-                if (thousand) parts.push(spellBelow100(thousand) + ' Thousand');
-                if (n) parts.push(spellBelow1000(n));
-                const text = parts.join(' ');
-                const label = Math.round(Math.abs(num)) === 1 ? 'Rupee' : 'Rupees';
-                return (num < 0 ? 'Minus ' : '') + text + ' ' + label;
-            }
-            function fmtMoneyRich(n) {
-                return `${fmtINR(n)}<span class="block text-xs text-base-content/60 font-medium mt-0.5 leading-snug">${amountInWords(n)}</span>`;
-            }
-            function fmtDec(n) {
-                if (n === undefined || n === null || isNaN(n)) return '₹0.00';
-                return '₹' + n.toFixed(2);
-            }
             function fmtDate(d) {
                 if (!d) return '-';
                 const dt = new Date(d);
@@ -1984,7 +2037,7 @@
             // ---------- FILTER SHEET ----------
             function openFilterSheet() {
                 Sheet.mountPanel('<i class="fas fa-sliders-h mr-2"></i>Filter Past Trades', 'panelPastFilter',
-                    '<button type="button" class="btn btn-ghost flex-1" onclick="closeSheet()">Close</button><button type="button" class="btn btn-primary flex-1" onclick="applyPastRangeFilter()"><i class="fas fa-check mr-1"></i> Apply</button>');
+                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyPastRangeFilter()', actionIcon: 'fa-check' }));
             }
             function closeFilterSheet() { Sheet.close(); }
 
@@ -2105,7 +2158,21 @@
 
             function setBottomNavActive(page) {
                 document.querySelectorAll('#bottomNav button[data-page]').forEach(el => {
-                    el.classList.toggle('active', !!page && el.dataset.page === page);
+                    const on = !!page && el.dataset.page === page;
+                    el.classList.toggle('active', on);
+                    el.classList.toggle('border-primary', on);
+                    el.classList.toggle('border-transparent', !on);
+                    el.classList.toggle('text-primary', on);
+                    const icon = el.querySelector('.nav-icon');
+                    const label = el.querySelector('.nav-label');
+                    if (icon) {
+                        icon.classList.toggle('text-primary', on);
+                        icon.classList.toggle('text-base-content/55', !on);
+                    }
+                    if (label) {
+                        label.classList.toggle('text-primary', on);
+                        label.classList.toggle('text-base-content/55', !on);
+                    }
                 });
             }
 
@@ -2179,7 +2246,7 @@
                 return options.map(o => {
                     const active = o.value === selectedValue ? ' bg-primary/5 text-primary font-medium' : '';
                     const danger = o.danger ? ' text-error' : '';
-                    const badge = o.badge ? `<span class="badge badge-primary badge-outline badge-sm">${o.badge}</span>` : '';
+                    const badge = o.badge ? appTag(o.badge, 'accent') : '';
                     const arg = escapeValues
                         ? `decodeURIComponent('${encodeURIComponent(o.value)}')`
                         : `'${String(o.value).replace(/'/g, "\\'")}'`;
@@ -2298,7 +2365,7 @@
 
             function updateFabVisibility(page) {
                 const tradeFab = document.getElementById('fabBtn');
-                if (tradeFab) tradeFab.style.display = (page === 'trades') ? '' : 'none';
+                if (tradeFab) tradeFab.style.display = (page === 'trades' || page === 'past') ? '' : 'none';
             }
 
             // ---------- RANGE HELPERS ----------
@@ -2364,8 +2431,6 @@
             }
 
             function renderTradeListItem(t) {
-                const sign = t.netProfit >= 0 ? '+' : '';
-                const profitClass = t.netProfit >= 0 ? 'text-success' : 'text-error';
                 const lev = t.leverage || 1;
                 const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
                 const daysHeld = getDaysHeld(t);
@@ -2376,9 +2441,9 @@
                                 <div class="flex justify-between items-start gap-2">
                                     <div class="font-medium text-base-content/80 flex-1 min-w-0 pr-2 truncate">${t.company}</div>
                                     <div class="flex items-center gap-2 shrink-0">
-                                        <div class="text-lg font-semibold whitespace-nowrap shrink-0 ${profitClass}">${sign}${fmt(t.netProfit)}</div>
+                                        ${renderAmount(t.netProfit, { size: 'lg', compact: true, showSign: true, align: 'right' })}
                                         <div class="dropdown dropdown-end">
-                                            <button type="button" class="btn btn-square btn-sm btn-ghost bg-base-200 border border-base-200 min-h-0 h-8 w-8" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
+                                            <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
                                             <ul class="dropdown-content menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 shadow-lg rounded-box">
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="${UI.menuIcon('view')}"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
                                                 <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="${UI.menuIcon('copy')}"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
@@ -2391,24 +2456,24 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex flex-wrap gap-1 mt-2">
-                                    <span class="badge badge-ghost badge-sm rounded-full">${t.broker}</span>
-                                    <span class="badge badge-primary badge-sm rounded-full">${levDisplay}</span>
-                                    <span class="badge badge-ghost badge-sm rounded-full"><i class="far fa-clock mr-1"></i>${daysHeld}d hold</span>
+                                <div class="flex flex-wrap gap-1.5 mt-2">
+                                    ${appTag(t.broker)}
+                                    ${appTag(levDisplay, 'accent')}
+                                    ${appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d hold`)}
                                 </div>
                             </div>
                             <div class="flex gap-2 px-3 pb-3 border-t border-base-200 pt-3">
-                                <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-[0.65rem] uppercase text-base-content/60 font-semibold leading-tight">Buy</div>
-                                    <div class="text-sm font-semibold whitespace-nowrap">${fmtDec(t.buyPrice)}</div>
+                                <div class="${UI.tradeStatBox}">
+                                    <div class="${UI.tradeStatLabel}">Buy</div>
+                                    ${renderAmount(t.buyPrice, { size: 'sm', decimals: true, tone: 'neutral', align: 'center' })}
                                 </div>
-                                <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-[0.65rem] uppercase text-base-content/60 font-semibold leading-tight">Sell</div>
-                                    <div class="text-sm font-semibold text-success whitespace-nowrap">${fmtDec(t.sellPrice)}</div>
+                                <div class="${UI.tradeStatBox}">
+                                    <div class="${UI.tradeStatLabel}">Sell</div>
+                                    ${renderAmount(t.sellPrice, { size: 'sm', decimals: true, tone: 'positive', align: 'center' })}
                                 </div>
-                                <div class="flex-1 bg-base-200 rounded-xl p-2 text-center min-w-0">
-                                    <div class="text-[0.65rem] uppercase text-base-content/60 font-semibold leading-tight">Qty</div>
-                                    <div class="text-sm font-semibold whitespace-nowrap">${t.quantity}</div>
+                                <div class="${UI.tradeStatBox}">
+                                    <div class="${UI.tradeStatLabel}">Qty</div>
+                                    <div class="${UI.tradeStatValue}">${t.quantity}</div>
                                 </div>
                             </div>
                         </div>
@@ -2438,7 +2503,7 @@
                 return `
                     <div class="flex justify-between items-center mb-2">
                         <div class="font-semibold text-base"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
-                        <span class="badge badge-ghost badge-sm rounded-full">${tradeLabel}</span>
+                        ${appTag(tradeLabel)}
                     </div>
                 `;
             }
@@ -2471,11 +2536,10 @@
                     gross += t.grossProfit || 0;
                 });
 
-                document.getElementById('summaryNet').textContent = fmt(net);
-                document.getElementById('summaryNet').className = 'font-semibold text-2xl mb-3 ' + (net >= 0 ? 'text-success' : 'text-error');
-                document.getElementById('summaryGross').textContent = fmt(gross);
+                paintAmount(document.getElementById('summaryNet'), net, { size: 'hero', compact: true, align: 'center' });
+                paintAmount(document.getElementById('summaryGross'), gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
                 document.getElementById('summaryTrades').textContent = filtered.length;
-                document.getElementById('summaryCharges').textContent = fmt(charges);
+                paintAmount(document.getElementById('summaryCharges'), charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
 
                 const container = document.getElementById('transactionList');
 
@@ -2527,11 +2591,10 @@
 
                 let net = 0, charges = 0, gross = 0;
                 filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; gross += t.grossProfit || 0; });
-                document.getElementById('pastSummaryNet').textContent = fmt(net);
-                document.getElementById('pastSummaryNet').className = 'font-semibold text-2xl mb-3 ' + (net >= 0 ? 'text-success' : 'text-error');
-                document.getElementById('pastSummaryGross').textContent = fmt(gross);
+                paintAmount(document.getElementById('pastSummaryNet'), net, { size: 'hero', compact: true, align: 'center' });
+                paintAmount(document.getElementById('pastSummaryGross'), gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
                 document.getElementById('pastSummaryTrades').textContent = filtered.length;
-                document.getElementById('pastSummaryCharges').textContent = fmt(charges);
+                paintAmount(document.getElementById('pastSummaryCharges'), charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
 
                 const emptyHtml = pastQuery
                     ? `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
@@ -2656,15 +2719,15 @@
             function renderMoneyFilterListItem(e, showAccount, hideTypeBadge) {
                 const isDeposit = e.type === 'deposit';
                 const typeBadge = hideTypeBadge ? '' : (isDeposit
-                    ? '<span class="badge badge-success badge-outline">Invest</span>'
-                    : '<span class="badge badge-error badge-outline">Withdraw</span>');
+                    ? appTag('Invest', 'success')
+                    : appTag('Withdraw', 'error'));
                 const accounts = getMoneyAccounts();
                 const acc = accounts.find(a => a.id === e.accountId);
                 const accountChip = showAccount && acc
-                    ? `<span class="badge badge-ghost badge-sm"><i class="fas fa-university mr-1"></i>${acc.name}</span>`
+                    ? appTag(`<i class="fas fa-university mr-1"></i>${acc.name}`)
                     : '';
                 const topRow = (accountChip || typeBadge)
-                    ? `<div class="flex flex-wrap gap-1 mb-1">${accountChip}${typeBadge}</div>`
+                    ? `<div class="flex flex-wrap gap-1.5 mb-1">${accountChip}${typeBadge}</div>`
                     : '';
                 return `
                     <div class="flex justify-between items-center gap-3 py-3 border-b border-base-200 last:border-0">
@@ -2672,7 +2735,7 @@
                             ${topRow}
                             <div class="text-sm text-base-content/60"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
                         </div>
-                        <div class="text-end shrink-0">${fmtMoneyRich(e.amount)}</div>
+                        <div class="text-end shrink-0">${renderAmount(e.amount, { size: 'md', words: true, tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
                     </div>
                 `;
             }
@@ -2697,27 +2760,27 @@
 
                 if (isWithdrawOnly) {
                     summaryEl.innerHTML = `
-                        <div class="text-sm uppercase text-base-content/60 font-semibold">Total Withdrawn</div>
-                        <div class="font-semibold text-3xl text-error mb-1">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
+                        <div class="${UI.statLabel}">Total Withdrawn</div>
+                        ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', words: true, tone: 'withdraw', align: 'center' })}
                         <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                     `;
                 } else if (isDepositOnly) {
                     summaryEl.innerHTML = `
-                        <div class="text-sm uppercase text-base-content/60 font-semibold">Total Deposited</div>
-                        <div class="font-semibold text-3xl text-success mb-1">${fmtMoneyRich(displayPortfolio.deposited)}</div>
+                        <div class="${UI.statLabel}">Total Deposited</div>
+                        ${renderAmount(displayPortfolio.deposited, { size: 'lg', words: true, tone: 'deposit', align: 'center' })}
                         <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                     `;
                 } else {
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
                             <div class="">
-                                <div class="text-sm text-base-content/60">Deposited</div>
-                                <div class="font-semibold text-success">${fmtMoneyRich(displayPortfolio.deposited)}</div>
+                                <div class="${UI.statLabel}">Deposited</div>
+                                ${renderAmount(displayPortfolio.deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' })}
                                 <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                             </div>
                             <div class="">
-                                <div class="text-sm text-base-content/60">Withdrawn</div>
-                                <div class="font-semibold text-error">${fmtMoneyRich(displayPortfolio.withdrawn)}</div>
+                                <div class="${UI.statLabel}">Withdrawn</div>
+                                ${renderAmount(displayPortfolio.withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' })}
                                 <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                             </div>
                         </div>
@@ -2748,7 +2811,7 @@
             function openMoneyPageFilterSheet() {
                 syncMoneyPageFilterUI();
                 Sheet.mountPanel('<i class="fas fa-filter mr-2"></i>Filter Money', 'panelMoneyPageFilter',
-                    '<button type="button" class="btn btn-ghost flex-1" onclick="clearMoneyPageFilters()">Clear</button><button type="button" class="btn btn-primary flex-1" onclick="applyMoneyPageFilter()"><i class="fas fa-check mr-1"></i> Apply</button>');
+                    renderAppButtonRow('Clear', 'Apply', { cancelOnClick: 'clearMoneyPageFilters()', actionOnClick: 'applyMoneyPageFilter()', actionIcon: 'fa-check' }));
             }
 
             function closeMoneyPageFilterSheet() {
@@ -2896,7 +2959,7 @@
             function openMoneyHistoryRangeSheet() {
                 syncMoneyHistoryRangeSheetUI();
                 Sheet.mountPanel('<i class="fas fa-calendar-alt mr-2"></i>Date Range', 'panelMoneyHistoryRange',
-                    '<button type="button" class="btn btn-ghost flex-1" onclick="closeSheet()">Close</button><button type="button" class="btn btn-primary flex-1" onclick="applyMoneyHistoryDateRange()"><i class="fas fa-check mr-1"></i> Apply</button>');
+                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyMoneyHistoryDateRange()', actionIcon: 'fa-check' }));
             }
 
             function closeMoneyHistoryRangeSheet() {
@@ -3004,12 +3067,12 @@
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
                             <div class="">
-                                <div class="text-sm text-base-content/60">Deposited</div>
-                                <div class="font-semibold text-success">${fmtMoneyRich(deposited)}</div>
+                                <div class="${UI.statLabel}">Deposited</div>
+                                ${renderAmount(deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' })}
                             </div>
                             <div class="">
-                                <div class="text-sm text-base-content/60">Withdrawn</div>
-                                <div class="font-semibold text-error">${fmtMoneyRich(withdrawn)}</div>
+                                <div class="${UI.statLabel}">Withdrawn</div>
+                                ${renderAmount(withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' })}
                             </div>
                         </div>
                     `;
@@ -3028,14 +3091,14 @@
                 listEl.innerHTML = entries.map(e => {
                     const isDeposit = e.type === 'deposit';
                     const typeBadge = isDeposit
-                        ? '<span class="badge badge-success badge-outline">Deposit</span>'
-                        : '<span class="badge badge-error badge-outline">Withdraw</span>';
+                        ? appTag('Deposit', 'success')
+                        : appTag('Withdraw', 'error');
                     const note = e.note ? `<div class="text-sm text-base-content/60 mt-1">${e.note}</div>` : '';
                     return `
                         <div class="money-history-sheet-item flex justify-between items-start gap-2">
                             <div class="min-w-0">
-                                <div class="mb-1">${typeBadge}</div>
-                                <div class="font-semibold text-base-content/85">${fmtMoneyRich(e.amount)}</div>
+                                <div class="mb-1 flex flex-wrap gap-1.5">${typeBadge}</div>
+                                ${renderAmount(e.amount, { size: 'md', words: true, tone: isDeposit ? 'deposit' : 'withdraw', align: 'left' })}
                                 <div class="text-sm text-base-content/60 mt-1"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
                                 ${note}
                             </div>
@@ -3067,8 +3130,8 @@
                     ? `<div class="text-sm text-primary font-semibold mt-1"><i class="fas fa-user mr-1"></i>${acc.holderName}</div>`
                     : '';
                 const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
-                const row = (label, value, extra = '') =>
-                    `<div class="flex justify-between items-start gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/60 shrink-0">${label}</span><span class="text-sm font-semibold text-right">${value}</span></div>`;
+                const row = (label, amount, extra = '', tone = 'positive') =>
+                    `<div class="flex justify-between items-start gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/60 shrink-0">${label}</span>${renderAmount(amount, { size: 'md', words: true, tone, align: 'right' })}</div>`;
                 return `
                     <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
                         <div class="card-body p-4">
@@ -3078,14 +3141,14 @@
                                     ${holderLine}
                                 </div>
                                 <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" class="btn btn-square btn-sm bg-success/15 text-success border-0 hover:bg-success/25 min-h-0 h-9 w-9" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" title="Deposit" aria-label="Deposit">
+                                    <button type="button" class="${UI.actionBtn} ${UI.moneyActionDeposit}" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" title="Deposit" aria-label="Deposit">
                                         <i class="fas fa-plus"></i>
                                     </button>
-                                    <button type="button" class="btn btn-square btn-sm bg-error/15 text-error border-0 hover:bg-error/25 min-h-0 h-9 w-9" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" title="Withdraw" aria-label="Withdraw">
+                                    <button type="button" class="${UI.actionBtn} ${UI.moneyActionWithdraw}" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" title="Withdraw" aria-label="Withdraw">
                                         <i class="fas fa-minus"></i>
                                     </button>
                                     <div class="dropdown dropdown-end">
-                                        <button type="button" class="btn btn-square btn-sm btn-ghost bg-base-200 border border-base-200 min-h-0 h-9 w-9" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
+                                        <button type="button" class="${UI.actionBtn} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-content menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]">
@@ -3093,7 +3156,7 @@
                                                 <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
                                                     <span class="${UI.menuIcon('history')}"><i class="fas fa-history"></i></span>
                                                     <span class="flex-1 text-left">History</span>
-                                                    ${historyCount ? `<span class="badge badge-primary badge-outline badge-sm">${historyCount}</span>` : ''}
+                                                    ${historyCount ? appTag(String(historyCount), 'accent') : ''}
                                                 </button>
                                             </li>
                                             <li>
@@ -3106,9 +3169,9 @@
                                     </div>
                                 </div>
                             </div>
-                            ${row('Deposited', fmtMoneyRich(stats.deposited))}
-                            ${row('Withdrawn', fmtMoneyRich(stats.withdrawn))}
-                            ${row('<span class="font-medium text-base-content/80">Total Value</span>', fmtMoneyRich(stats.totalValue), 'border-b-0 border-t border-base-200 pt-2 mt-1 font-medium text-base-content/80')}
+                            ${row('Deposited', stats.deposited, '', 'deposit')}
+                            ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
+                            ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 border-t border-base-200 pt-2 mt-1 font-medium text-base-content/80', 'positive')}
                         </div>
                     </div>
                 `;
@@ -3161,11 +3224,9 @@
                 if (filterView) filterView.classList.add('hidden');
 
                 const heroEl = document.getElementById('moneyTotalValueHero');
-                if (heroEl) heroEl.innerHTML = fmtMoneyRich(displayPortfolio.totalValue);
-                const depositedEl = document.getElementById('moneyTotalDeposited');
-                if (depositedEl) depositedEl.innerHTML = fmtMoneyRich(displayPortfolio.deposited);
-                const withdrawnEl = document.getElementById('moneyTotalWithdrawn');
-                if (withdrawnEl) withdrawnEl.innerHTML = fmtMoneyRich(displayPortfolio.withdrawn);
+                if (heroEl) paintAmount(heroEl, displayPortfolio.totalValue, { size: 'hero', words: true, tone: 'positive', align: 'center', icon: 'fa-coins', iconSize: 'md' });
+                paintAmount(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, { size: 'md', words: true, tone: 'deposit', align: 'center' });
+                paintAmount(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, { size: 'md', words: true, tone: 'withdraw', align: 'center' });
 
                 const filterEl = document.getElementById('moneyAccountFilterMenu');
                 if (filterEl) {
@@ -3247,15 +3308,19 @@
                 if (typeEl) typeEl.value = entryType;
                 const header = document.getElementById('moneyEntryHeader');
                 if (header) {
-                    header.classList.remove('bg-success', 'text-success-content', 'bg-error', 'text-error-content');
-                    header.classList.add(isWithdraw ? 'bg-error' : 'bg-success', isWithdraw ? 'text-error-content' : 'text-success-content');
+                    header.classList.remove('bg-success', 'text-success-content', 'bg-error', 'text-error-content', 'bg-success/15', 'bg-error/15', 'text-success', 'text-error', 'border-success/20', 'border-error/20');
+                    header.classList.add(
+                        isWithdraw ? 'bg-error/15' : 'bg-success/15',
+                        isWithdraw ? 'text-error' : 'text-success',
+                        isWithdraw ? 'border-error/20' : 'border-success/20',
+                        'border-b'
+                    );
                 }
                 const toggle = document.getElementById('moneyEntryTypeToggle');
                 if (toggle) toggle.checked = isWithdraw;
-                const saveBtn = document.getElementById('moneyEntrySaveBtn');
-                if (saveBtn) {
-                    saveBtn.classList.remove('btn-success', 'btn-error');
-                    saveBtn.classList.add(isWithdraw ? 'btn-error' : 'btn-success');
+                const previewEl = document.getElementById('moneyEntryAmountPreview');
+                if (previewEl) {
+                    previewEl.classList.remove('bg-success/15', 'bg-error/15', 'text-success', 'text-error', 'p-2', 'rounded-xl', 'font-semibold');
                 }
                 setMoneyEntryModalMode(moneyEntryIsEdit, entryType);
             }
@@ -3273,15 +3338,11 @@
             }
 
             function setMoneyEntryModalMode(isEdit, type) {
-                const saveBtn = document.getElementById('moneyEntrySaveBtn');
-                if (!saveBtn) return;
                 const isWithdraw = type === 'withdraw';
                 if (isEdit) {
-                    saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Update';
+                    renderMoneyEntryFooter('Update', 'fa-save');
                 } else {
-                    saveBtn.innerHTML = isWithdraw
-                        ? '<i class="fas fa-minus mr-1"></i> Record Withdrawal'
-                        : '<i class="fas fa-plus mr-1"></i> Add Deposit';
+                    renderMoneyEntryFooter(isWithdraw ? 'Record Withdrawal' : 'Add Deposit', isWithdraw ? 'fa-minus' : 'fa-plus');
                 }
             }
 
@@ -3295,7 +3356,12 @@
                     previewEl.classList.add('hidden');
                     return;
                 }
-                previewEl.innerHTML = fmtMoneyRich(amount);
+                previewEl.innerHTML = renderAmount(amount, {
+                    size: 'md',
+                    words: true,
+                    tone: document.getElementById('moneyEntryType')?.value === 'withdraw' ? 'withdraw' : 'deposit',
+                    align: 'left'
+                });
                 previewEl.classList.remove('hidden');
             }
 
@@ -3375,9 +3441,8 @@
 
             function setMoneyAccountModalMode(isEdit) {
                 const title = isEdit ? '<i class="fas fa-pen mr-2"></i>Edit Account' : '<i class="fas fa-plus mr-2"></i>Add Account';
-                const footer = `<button type="button" class="btn btn-ghost flex-1" onclick="closeSheet()">Cancel</button>
-                    <button type="button" class="btn btn-primary flex-1" onclick="saveMoneyAccount()"><i class="fas fa-save mr-1"></i> Save</button>
-                    ${isEdit ? '<button type="button" class="btn btn-outline btn-error w-full mt-2" id="moneyAccountDeleteBtn" onclick="confirmDeleteMoneyAccount()"><i class="fas fa-trash-alt mr-1"></i> Delete Account</button>' : ''}`;
+                const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
+                    ${isEdit ? renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true, className: 'mt-2' }) : ''}`;
                 Sheet.mountPanel(title, 'panelMoneyAccount', footer);
             }
 
@@ -3393,7 +3458,12 @@
                     previewEl.classList.add('hidden');
                     return;
                 }
-                previewEl.innerHTML = fmtMoneyRich(amount);
+                previewEl.innerHTML = renderAmount(amount, {
+                    size: 'md',
+                    words: true,
+                    tone: 'positive',
+                    align: 'left'
+                });
                 previewEl.classList.remove('hidden');
             }
 
@@ -3547,14 +3617,14 @@
                     const b = t.broker || 'Other';
                     counts[b] = (counts[b] || 0) + 1;
                 });
-                const chips = Object.entries(counts).map(([b, n]) => `${b} ${n}`).join(' · ');
+                const chips = Object.entries(counts).map(([b, n]) => appTag(`${b} ${n}`)).join('');
                 return `
                     <div class="mb-2">
                         <div class="flex justify-between items-center">
                             <div class="font-semibold text-base-content"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
-                            <span class="badge badge-ghost">${tradeLabel}</span>
+                            ${appTag(tradeLabel)}
                         </div>
-                        ${chips ? `<div class="text-sm text-base-content/60 mt-1">${chips}</div>` : ''}
+                        ${chips ? `<div class="flex flex-wrap gap-1.5 mt-1">${chips}</div>` : ''}
                     </div>
                 `;
             }
@@ -3573,18 +3643,17 @@
                 const html = brokers.map(b => {
                     const s = byBroker[b];
                     if (!s || s.total === 0) return '';
-                    const netClass = s.net >= 0 ? 'text-success' : 'text-error';
                     return `
                         <div class="bg-base-200 rounded-xl p-3 mb-2">
                             <div class="flex justify-between items-center mb-2">
                                 <span class="font-semibold">${b}</span>
-                                <span class="badge badge-ghost">${s.total} trades</span>
+                                ${appTag(`${s.total} trades`)}
                             </div>
                             <div class="grid grid-cols-4 gap-1 text-center">
-                                <div><div class="text-xs uppercase text-base-content/60 font-semibold">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
-                                <div><div class="text-xs uppercase text-base-content/60 font-semibold">Closed</div><div class="font-semibold">${s.closed}</div></div>
-                                <div><div class="text-xs uppercase text-base-content/60 font-semibold">Success</div><div class="font-semibold text-success">${s.successful}</div></div>
-                                <div><div class="text-xs uppercase text-base-content/60 font-semibold">Net</div><div class="font-semibold ${netClass}">${fmt(s.net)}</div></div>
+                                <div><div class="${UI.tradeStatLabel}">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
+                                <div><div class="${UI.tradeStatLabel}">Closed</div><div class="font-semibold">${s.closed}</div></div>
+                                <div><div class="${UI.tradeStatLabel}">Success</div><div class="inline-flex items-center justify-center rounded-lg px-1.5 py-0.5 font-semibold bg-success/15 text-success">${s.successful}</div></div>
+                                <div><div class="${UI.tradeStatLabel}">Net</div>${renderAmount(s.net, { size: 'sm', compact: true, align: 'center' })}</div>
                             </div>
                         </div>
                     `;
@@ -3602,10 +3671,9 @@
                 document.getElementById('txHistSuccessful').textContent = stats.successful;
 
                 const netEl = document.getElementById('txHistNet');
-                netEl.textContent = fmt(stats.net);
-                netEl.className = 'font-medium ' + (stats.net >= 0 ? 'text-success' : 'text-error');
-                document.getElementById('txHistGross').textContent = fmt(stats.gross);
-                document.getElementById('txHistCharges').textContent = fmt(stats.charges);
+                if (netEl) paintAmount(netEl, stats.net, { size: 'sm', compact: true, align: 'center' });
+                paintAmount(document.getElementById('txHistGross'), stats.gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintAmount(document.getElementById('txHistCharges'), stats.charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
 
                 document.getElementById('txHistBrokerBreakdown').innerHTML = renderBrokerBreakdown(stats.byBroker);
 
@@ -3744,10 +3812,10 @@
                 const sttLabel = isIntraday ? '0.025% sell only' : `${(chargeCfg.sttSellPct * 100).toFixed(4)}% buy &amp; sell`;
                 const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
                 const typeBadge = isIntraday
-                    ? '<span class="badge rounded-full badge-warning ml-1">Intraday</span>'
-                    : '<span class="badge badge-ghost ml-1">MTF</span>';
+                    ? appTag('Intraday', 'warning')
+                    : appTag('MTF');
                 return `
-                    <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-info-circle mr-2"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
+                    <h6 class="font-semibold text-base-content/80 mb-2 flex flex-wrap items-center gap-1.5"><i class="fas fa-info-circle mr-1"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
                     <table class="table table-sm w-full w-full">
                         <tbody>
                             <tr><td class="text-base-content/60">Interest</td><td class="text-end text-sm">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
@@ -3813,14 +3881,12 @@
                 if (!badge || !banner) return;
                 const sameDay = isSameDayTrade(inp.buyDate, inp.sellDate);
                 if (sameDay && calcInputsValid(inp)) {
-                    badge.textContent = 'Intraday';
-                    badge.className = 'badge rounded-full badge-warning';
+                    setAppTagElement(badge, 'Intraday', 'warning');
                     badge.classList.remove('hidden');
                     banner.className = 'alert alert-info py-2 text-sm mb-3';
                     banner.innerHTML = '<i class="fas fa-bolt mr-1"></i><strong>Same-day trade</strong> — charges use <strong>intraday rates</strong> for all brokers (STT 0.025% on sell only, stamp 0.003% on buy; no MTF interest, pledge, unpledge or DP).';
                 } else if (inp.buyDate && inp.sellDate && calcInputsValid(inp)) {
-                    badge.textContent = 'MTF / Delivery';
-                    badge.className = 'badge badge-ghost';
+                    setAppTagElement(badge, 'MTF / Delivery', 'default');
                     badge.classList.remove('hidden');
                     banner.className = 'hidden';
                     banner.innerHTML = '';
@@ -3865,10 +3931,10 @@
                     <div class="section-title"><i class="far fa-clock mr-2"></i>Holding</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="text-sm font-semibold text-right">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
                     <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&amp;L</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span><span class="text-sm font-semibold text-right text-success">${fmtDec(result.grossProfit)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right text-warning">- ${fmtDec(result.interest)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span><span class="text-sm font-semibold text-right">- ${fmtDec(result.totalCharges)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span><span class="text-sm font-semibold text-right ${netClass}">${fmtDec(result.netProfit)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
                     <div class="section-title mt-3"><i class="fas fa-percent mr-2"></i>Interest Detail</div>
                     <div class="bg-base-200 rounded-xl p-2 my-2 text-sm text-center">
                         ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
@@ -3904,16 +3970,15 @@
                 const brokers = ['Zerodha', 'Dhan', 'Groww'];
                 const rows = brokers.map(b => {
                     const r = calculateTrade({ ...inp, broker: b });
-                    const nc = r.netProfit >= 0 ? 'text-success' : 'text-error';
                     const typeBadge = r.tradeType === 'intraday'
-                        ? '<span class="badge rounded-full badge-warning ml-1 text-[0.65rem]">Intraday</span>'
+                        ? appTag('Intraday', 'warning')
                         : '';
                     return `
                         <tr>
-                            <td class="font-semibold">${b}${typeBadge}</td>
+                            <td class="font-semibold"><span class="inline-flex flex-wrap items-center gap-1.5">${b}${typeBadge}</span></td>
                             <td class="text-end">${fmtDec(r.interest)}</td>
                             <td class="text-end">${fmtDec(r.totalCharges)}</td>
-                            <td class="text-end font-semibold ${nc}">${fmtDec(r.netProfit)}</td>
+                            <td class="text-end font-semibold">${renderAmount(r.netProfit, { size: 'xs', decimals: true, align: 'right' })}</td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
                                     <i class="fas fa-circle-info text-primary"></i>
@@ -3994,9 +4059,7 @@
 
                 const bd = tx.breakdown || {};
                 const isOpen = (tx.status || 'closed') === 'open';
-                const statusLabel = isOpen ?
-                    '<span class="badge badge-warning">Open</span>' :
-                    '<span class="badge badge-neutral">Closed</span>';
+                const statusLabel = isOpen ? appTag('Open', 'warning') : appTag('Closed');
                 const lev = tx.leverage || 1;
                 const levDisplay = lev > 1 ? `${lev}x` : '1x';
                 const mtfAmt = tx.mtfAmount || 0;
@@ -4008,13 +4071,15 @@
                     <div class="flex justify-between items-start gap-3 mb-3">
                         <div>
                             <h5 class="font-semibold text-base-content/80 mb-2">${tx.company}</h5>
-                            <span class="badge badge-ghost">${tx.broker}</span>
-                            ${statusLabel}
-                            <span class="badge rounded-full badge-primary">${levDisplay}</span>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${appTag(tx.broker)}
+                                ${statusLabel}
+                                ${appTag(levDisplay, 'accent')}
+                            </div>
                         </div>
                         <div class="text-end">
                             <div class="text-sm text-base-content/60">Net Profit</div>
-                            <div class="font-semibold text-2xl ${tx.netProfit >= 0 ? 'text-success' : 'text-error'}">${fmt(tx.netProfit)}</div>
+                            ${renderAmount(tx.netProfit, { size: 'xl', compact: true, align: 'right' })}
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-2 mb-3">
@@ -4048,7 +4113,7 @@
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right">- ${fmtDec(tx.interest || 0)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span><span class="text-sm font-semibold text-right">- ${fmtDec(tx.charges || 0)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Cost</span><span class="text-sm font-semibold text-right">${fmtDec(totalCost)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span><span class="text-sm font-semibold text-right ${tx.netProfit >= 0 ? 'text-success' : 'text-error'}">${fmtDec(tx.netProfit || 0)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(tx.netProfit || 0, { size: 'sm', decimals: true, align: 'right' })}</div>
                     ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt mr-2"></i>Notes</div><p class="text-sm text-base-content/60 mb-0">${tx.notes}</p>` : ''}
                     <div class="text-sm text-base-content/60 mt-3 text-center">ID: ${tx.id}</div>
                 `;
@@ -4155,12 +4220,7 @@
                     : '';
 
                 const chargesHtml = `
-                    <div class="text-center mb-3">
-                        <span class="badge badge-ghost">${tx.broker}</span>
-                        <span class="badge rounded-full badge-primary">${(tx.leverage || 1) > 1 ? (tx.leverage + 'x') : '1x'}</span>
-                        <span class="badge badge-ghost"><i class="far fa-clock mr-1"></i>${tx.holdingDays || 0}d hold</span>
-                        ${tradeType === 'intraday' ? '<span class="badge rounded-full badge-warning">Intraday</span>' : ''}
-                    </div>
+                    ${buildTradeMetaTags(tx, tradeType === 'intraday' ? [appTag('Intraday', 'warning')] : [])}
                     ${intraNote}
                     ${chargesTable(buy, sell)}
                     <div class="grid grid-cols-3 gap-2 text-center mt-3">
@@ -4204,11 +4264,7 @@
                 const noLeverage = d.mtf <= 0;
 
                 Sheet.open(`<i class=\"fas fa-percent mr-2\"></i>${tx.company} Interest`, `
-                    <div class="text-center mb-3">
-                        <span class="badge badge-ghost">${tx.broker}</span>
-                        <span class="badge rounded-full badge-primary">${levDisplay}</span>
-                        <span class="badge badge-ghost"><i class="far fa-clock mr-1"></i>${d.days}d hold</span>
-                    </div>
+                    ${buildTradeMetaTags(tx)}
                     <div class="grid grid-cols-3 gap-2 text-center mb-3">
                         <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Leverage Amt</div><div class="font-medium text-base-content/80">${fmt(d.mtf)}</div></div></div>
                         <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Days</div><div class="font-semibold text-primary">${d.days}d</div></div></div>
@@ -4259,15 +4315,21 @@
                 return el;
             }
 
-            function confirmAction({ title, titleClass = '', message, confirmLabel, confirmClass = 'btn-primary', onConfirm }) {
+            function confirmAction({ title, titleClass = '', message, confirmLabel, confirmClass = 'action', onConfirm }) {
                 getConfirmModal();
                 confirmPending = onConfirm;
                 confirmRun = false;
                 AppDialog.titleEl().innerHTML = title;
                 AppDialog.titleEl().className = 'font-semibold text-base-content/80 text-lg ' + titleClass;
                 AppDialog.bodyEl().textContent = message;
-                AppDialog.footerEl().innerHTML = `<button type="button" class="btn btn-ghost" onclick="closeDialog()">Cancel</button>
-                    <button type="button" class="btn ${confirmClass}" id="confirmModalConfirmBtn">${confirmLabel}</button>`;
+                const variant = resolveAppButtonVariant(confirmClass);
+                AppDialog.footerEl().innerHTML = renderAppButtonRow('Cancel', 'Confirm', {
+                    cancelOnClick: 'closeDialog()',
+                    actionId: 'confirmModalConfirmBtn',
+                    actionVariant: variant,
+                    actionLabelHtml: confirmLabel,
+                    cancelInForm: false
+                });
                 document.getElementById('confirmModalConfirmBtn').addEventListener('click', () => {
                     confirmRun = true;
                     AppDialog.close();
@@ -4341,13 +4403,18 @@
                 });
             }
 
+            function setTxSaveBtnLabel(isEdit) {
+                renderTxModalFooter(isEdit);
+            }
+
             function initModals() {
+                initAppButtons();
+
                 const txEl = document.getElementById('txModal');
                 txEl.addEventListener('close', () => {
                     document.getElementById('txEditId').value = '';
                     document.getElementById('txForm').reset();
-                    document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Add Trade';
-                    document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save mr-1"></i> Save';
+                    setTxSaveBtnLabel(false);
                     document.getElementById('statusClosed').checked = true;
                     document.getElementById('txLeverage').value = 1;
                     setTxBroker('');
@@ -4360,8 +4427,7 @@
 
             function openAddModal() {
                 document.getElementById('txEditId').value = '';
-                document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Add Trade';
-                document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save mr-1"></i> Save';
+                setTxSaveBtnLabel(false);
                 document.getElementById('txForm').reset();
                 document.getElementById('statusClosed').checked = true;
                 document.getElementById('txLeverage').value = 1;
@@ -4380,8 +4446,7 @@
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
                 document.getElementById('txEditId').value = id;
-                document.getElementById('txModalTitle').innerHTML = '<i class="fas fa-edit mr-2"></i>Edit Trade';
-                document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save mr-1"></i> Update';
+                setTxSaveBtnLabel(true);
 
                 document.getElementById('txCompany').value = tx.company || '';
                 resetCompanyAutocomplete();
@@ -4439,10 +4504,10 @@
 
             function clearPreview() {
                 document.getElementById('previewDays').textContent = '0';
-                document.getElementById('previewGross').textContent = '₹0';
-                document.getElementById('previewInterest').textContent = '₹0';
-                document.getElementById('previewCharges').textContent = '₹0';
-                document.getElementById('previewNet').textContent = '₹0';
+                paintAmount(document.getElementById('previewGross'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
+                paintAmount(document.getElementById('previewInterest'), 0, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
+                paintAmount(document.getElementById('previewCharges'), 0, { size: 'sm', decimals: true, tone: 'neutral', align: 'right' });
+                paintAmount(document.getElementById('previewNet'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
                 document.getElementById('previewTotalInv').textContent = '₹0';
                 document.getElementById('previewOwnMargin').textContent = '₹0';
                 document.getElementById('previewMtfAmt').textContent = '₹0';
@@ -4465,12 +4530,10 @@
 
                 const result = calculateTrade({ company, broker, quantity: qty, buyPrice: bp, sellPrice: sp, buyDate, sellDate, leverage });
                 document.getElementById('previewDays').textContent = result.holdingDays;
-                document.getElementById('previewGross').textContent = fmtDec(result.grossProfit);
-                document.getElementById('previewInterest').textContent = fmtDec(result.interest);
-                document.getElementById('previewCharges').textContent = fmtDec(result.totalCharges);
-                const netEl = document.getElementById('previewNet');
-                netEl.textContent = fmtDec(result.netProfit);
-                netEl.className = 'font-medium ' + (result.netProfit >= 0 ? 'text-success' : 'text-error');
+                paintAmount(document.getElementById('previewGross'), result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
+                paintAmount(document.getElementById('previewInterest'), result.interest, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
+                paintAmount(document.getElementById('previewCharges'), result.totalCharges, { size: 'sm', decimals: true, tone: 'neutral', align: 'right' });
+                paintAmount(document.getElementById('previewNet'), result.netProfit, { size: 'sm', decimals: true, align: 'right' });
                 updateLeverageBreakdown();
             }
 
@@ -4555,8 +4618,7 @@
                 if (!statusEl) return;
 
                 if (!isFirebaseConfigured()) {
-                    statusEl.className = 'badge badge-neutral';
-                    statusEl.textContent = 'Not configured';
+                    setAppTagElement(statusEl, 'Not configured', 'default');
                     if (hintEl) hintEl.textContent = 'Paste your Firebase config in the code (FIREBASE_CONFIG) to enable cloud sync. The app works offline until then.';
                     if (connectBtn) connectBtn.disabled = true;
                     if (disconnectBtn) disconnectBtn.classList.add('hidden');
@@ -4565,14 +4627,13 @@
                 if (connectBtn) connectBtn.disabled = false;
 
                 const map = {
-                    connected: ['badge badge-success', 'Connected'],
-                    connecting: ['badge badge-warning', 'Connecting...'],
-                    error: ['badge badge-error', 'Error'],
-                    off: ['badge badge-neutral', 'Off']
+                    connected: ['success', 'Connected'],
+                    connecting: ['warning', 'Connecting...'],
+                    error: ['error', 'Error'],
+                    off: ['default', 'Off']
                 };
-                const [cls, label] = map[syncStatus] || map.off;
-                statusEl.className = cls;
-                statusEl.textContent = label;
+                const [variant, label] = map[syncStatus] || map.off;
+                setAppTagElement(statusEl, label, variant);
 
                 if (syncCode) {
                     if (input && document.activeElement !== input) input.value = syncCode;
@@ -4597,7 +4658,7 @@
                 const data = getStorageData();
                 document.getElementById('backupTextArea').value = JSON.stringify(data, null, 2);
                 Sheet.mountPanel('<i class="fas fa-clipboard mr-2"></i>Backup as Text', 'panelBackup',
-                    '<button type="button" class="btn btn-outline btn-error flex-1" onclick="restoreFromText()"><i class="fas fa-file-import mr-1"></i> Restore</button><button type="button" class="btn btn-primary flex-1" onclick="copyBackupText()"><i class="fas fa-copy mr-1"></i> Copy</button>');
+                    `<div class="app-btn-row">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
             }
 
             async function copyBackupText() {
@@ -4657,7 +4718,13 @@
                     `<p class="mb-2 font-semibold text-base-content/80">This will permanently delete ALL your transactions.</p>
                     <p class="text-sm text-base-content/60 mb-2">This action <span class="text-error font-semibold">cannot be undone</span>.</p>${syncNote}
                     <p class="text-sm text-base-content/60 mb-0">Tip: use <span class="font-medium text-base-content/80">Backup as Text</span> first.</p>`,
-                    '<button type="button" class="btn btn-ghost" onclick="closeDialog()">Cancel</button><button type="button" class="btn btn-error" onclick="performReset()"><i class="fas fa-trash-alt mr-1"></i> Delete Everything</button>'
+                    renderAppButtonRow('Cancel', 'Delete Everything', {
+                        cancelOnClick: 'closeDialog()',
+                        actionOnClick: 'performReset()',
+                        actionVariant: 'danger',
+                        actionLabelHtml: '<i class="fas fa-trash-alt mr-1"></i> Delete Everything',
+                        cancelInForm: false
+                    })
                 );
             }
 
@@ -4695,6 +4762,7 @@
                 document.getElementById('pastTo').value = pastTo;
 
                 if (!restoreNavState()) {
+                    setBottomNavActive('trades');
                     renderCurrentView();
                     renderPastTrades();
                 }
@@ -4723,13 +4791,13 @@
                         return;
                     }
                     restoreNavStateIfNeeded();
-                    if (document.getElementById('page-trades').classList.contains('hidden') == false && el.offsetParent !== null) {
+                    if (!document.getElementById('page-trades').classList.contains('hidden')) {
                         renderCurrentView();
                     }
-                    if (document.getElementById('page-past').classList.contains('hidden') == false && el.offsetParent !== null) {
+                    if (!document.getElementById('page-past').classList.contains('hidden')) {
                         renderPastTrades();
                     }
-                    if (document.getElementById('page-money').classList.contains('hidden') == false && el.offsetParent !== null) {
+                    if (!document.getElementById('page-money').classList.contains('hidden')) {
                         renderMoney();
                     }
                     refreshActiveMoreView();
