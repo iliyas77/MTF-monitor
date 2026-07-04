@@ -1,0 +1,10 @@
+{
+  "name": "money-monitor",
+  "private": true,
+  "scripts": {
+    "build": "node build-production.js"
+  },
+  "devDependencies": {
+    "html-minifier-terser": "^7.2.0"
+  }
+}
