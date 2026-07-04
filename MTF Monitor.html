@@ -884,12 +884,37 @@
             // All user changes go through saveStorage(), which also pushes to Firestore when Cloud Sync is connected.
             function saveStorageLocal(data) { localStorage.setItem('mtf_tracker_data', JSON.stringify(ensureMoneyData(data))); }
             // Persist locally (cache) AND sync to Firestore — moneyAccounts + moneyEntries included in the same data blob as trades.
-            function saveStorage(data) { saveStorageLocal(data); cloudPush(data); }
+            function saveStorage(data) {
+                const payload = ensureMoneyData(data);
+                saveStorageLocal(payload);
+                localDataVersion++;
+                try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
+                return cloudPush(payload, localDataVersion);
+            }
+
+            function applyRemoteStorage(remoteData, remoteVersion) {
+                if (remoteVersion > localDataVersion) {
+                    localDataVersion = remoteVersion;
+                    try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
+                }
+                saveStorageLocal(ensureMoneyData({ transactions: [], ...remoteData }));
+            }
             function getTransactions() { return getStorage().transactions || []; }
-            function setTransactions(txs) { const data = getStorage(); data.transactions = txs; saveStorage(data); }
-            function addTransaction(tx) { const txs = getTransactions(); tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6); txs.push(tx); setTransactions(txs); return tx; }
-            function updateTransaction(id, updated) { const txs = getTransactions(); const idx = txs.findIndex(t => t.id === id); if (idx === -1) return null; txs[idx] = { ...txs[idx], ...updated }; setTransactions(txs); return txs[idx]; }
-            function deleteTransaction(id) { let txs = getTransactions(); txs = txs.filter(t => t.id !== id); setTransactions(txs); }
+            function setTransactions(txs) { const data = getStorage(); data.transactions = txs; return saveStorage(data); }
+            function addTransaction(tx) {
+                const txs = getTransactions();
+                tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+                txs.push(tx);
+                return setTransactions(txs).then(() => tx);
+            }
+            function updateTransaction(id, updated) {
+                const txs = getTransactions();
+                const idx = txs.findIndex(t => t.id === id);
+                if (idx === -1) return Promise.resolve(null);
+                txs[idx] = { ...txs[idx], ...updated };
+                return setTransactions(txs).then(() => txs[idx]);
+            }
+            function deleteTransaction(id) { let txs = getTransactions(); txs = txs.filter(t => t.id !== id); return setTransactions(txs); }
             function getTransaction(id) { return getTransactions().find(t => t.id === id) || null; }
 
             function getMoneyAccounts() { return getStorage().moneyAccounts || []; }
@@ -901,34 +926,31 @@
                     id: 'acc_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6)
                 });
                 data.moneyAccounts.push(newAcc);
-                saveStorage(data);
-                return newAcc;
+                return saveStorage(data).then(() => newAcc);
             }
             function updateMoneyAccount(id, updates) {
                 const data = getStorage();
                 const idx = data.moneyAccounts.findIndex(a => a.id === id);
-                if (idx === -1) return null;
+                if (idx === -1) return Promise.resolve(null);
                 data.moneyAccounts[idx] = normalizeMoneyAccount({ ...data.moneyAccounts[idx], ...updates });
-                saveStorage(data);
-                return data.moneyAccounts[idx];
+                return saveStorage(data).then(() => data.moneyAccounts[idx]);
             }
             function deleteMoneyAccount(id) {
                 const data = getStorage();
                 data.moneyAccounts = data.moneyAccounts.filter(a => a.id !== id);
                 data.moneyEntries = data.moneyEntries.filter(e => e.accountId !== id);
-                saveStorage(data);
+                return saveStorage(data);
             }
             function addMoneyEntry(entry) {
                 const data = getStorage();
                 entry.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
                 data.moneyEntries.push(entry);
-                saveStorage(data);
-                return entry;
+                return saveStorage(data).then(() => entry);
             }
             function deleteMoneyEntry(id) {
                 const data = getStorage();
                 data.moneyEntries = data.moneyEntries.filter(e => e.id !== id);
-                saveStorage(data);
+                return saveStorage(data);
             }
             function getMoneyEntry(id) { return getMoneyEntries().find(e => e.id === id) || null; }
 
@@ -1371,6 +1393,8 @@
             let syncCode = null;          // current sync code (also the Firestore doc id)
             let syncUnsub = null;         // realtime listener unsubscribe fn
             let syncStatus = 'off';       // 'off' | 'connecting' | 'connected' | 'error'
+            let syncPushPending = 0;      // blocks stale listener snapshots during outbound push
+            let localDataVersion = parseInt(localStorage.getItem('mtf_data_version') || '0', 10);
 
             function isFirebaseConfigured() {
                 return FIREBASE_CONFIG &&
@@ -1400,17 +1424,21 @@
                 return (code || '').trim().toLowerCase().replace(/\s+/g, '-');
             }
 
-            // Push the whole dataset to the cloud (no-op unless connected).
-            function cloudPush(data) {
-                if (!fbDb || !syncCode) return;
-                try {
-                    fbDb.collection('syncs').doc(syncCode).set({
-                        data: data || getStorage(),
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                    }, { merge: true }).catch(err => {
-                        console.warn('Cloud push failed', err);
-                    });
-                } catch (e) { console.warn('Cloud push error', e); }
+            // Push the whole dataset to the cloud (no-op unless connected). Returns a promise.
+            function cloudPush(data, version) {
+                if (!fbDb || !syncCode) return Promise.resolve(false);
+                syncPushPending++;
+                const payload = ensureMoneyData(data || getStorage());
+                const ver = version || localDataVersion;
+                return fbDb.collection('syncs').doc(syncCode).set({
+                    data: payload,
+                    dataVersion: ver,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true }).then(() => true).catch(err => {
+                    console.warn('Cloud push failed', err);
+                    showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
+                    return false;
+                }).finally(() => { syncPushPending--; });
             }
 
             function refreshAllViews() {
@@ -1480,15 +1508,29 @@
                 const docRef = fbDb.collection('syncs').doc(code);
                 docRef.get().then(snap => {
                     const local = getStorage();
-                    if (snap.exists && snap.data() && snap.data().data && Array.isArray(snap.data().data.transactions)) {
-                        const remote = snap.data().data;
+                    if (snap.exists && snap.data() && snap.data().data) {
+                        const remote = ensureMoneyData({ transactions: [], ...snap.data().data });
+                        const remoteVersion = snap.data().dataVersion || 0;
                         const merged = mergeStorageData(local, remote);
+                        localDataVersion = Math.max(localDataVersion, remoteVersion) + 1;
+                        try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
                         saveStorageLocal(merged);
-                        // push merged back so both sides converge
-                        docRef.set({ data: merged, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                        syncPushPending++;
+                        docRef.set({
+                            data: merged,
+                            dataVersion: localDataVersion,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true }).finally(() => { syncPushPending--; });
                     } else {
-                        // First device on this code: seed the cloud with local data
-                        docRef.set({ data: local, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+                        localDataVersion++;
+                        try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
+                        saveStorageLocal(local);
+                        syncPushPending++;
+                        docRef.set({
+                            data: local,
+                            dataVersion: localDataVersion,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        }, { merge: true }).finally(() => { syncPushPending--; });
                     }
                     startSyncListener();
                     if (!opts.silent) showToast('Cloud sync connected!', 'success');
@@ -1506,15 +1548,22 @@
                 if (syncUnsub) { try { syncUnsub(); } catch (_) {} }
                 syncUnsub = fbDb.collection('syncs').doc(syncCode).onSnapshot(snap => {
                     syncStatus = 'connected';
-                    if (snap.exists && snap.data() && snap.data().data) {
-                        const remote = ensureMoneyData({
-                            transactions: [],
-                            ...snap.data().data
-                        });
-                        const merged = mergeStorageData(getStorage(), remote);
-                        saveStorageLocal(merged);
-                        refreshAllViews();
+                    if (!snap.exists || !snap.data() || !snap.data().data) {
+                        renderSettings();
+                        return;
                     }
+                    // Ignore stale snapshots while our delete/update push is in flight.
+                    if (syncPushPending > 0) {
+                        renderSettings();
+                        return;
+                    }
+                    const remoteVersion = snap.data().dataVersion || 0;
+                    if (remoteVersion < localDataVersion) {
+                        renderSettings();
+                        return;
+                    }
+                    applyRemoteStorage(snap.data().data, remoteVersion);
+                    refreshAllViews();
                     renderSettings();
                 }, err => {
                     console.warn('sync listener error', err);
@@ -2272,7 +2321,7 @@
                 moneyEntryModalInstance.show();
             }
 
-            function saveMoneyEntry() {
+            async function saveMoneyEntry() {
                 const accountId = document.getElementById('moneyEntryAccount').value;
                 const type = document.getElementById('moneyEntryType').value;
                 const amount = parseFloat(document.getElementById('moneyEntryAmount').value);
@@ -2283,10 +2332,11 @@
                 if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
                 if (!date) { showToast('Please select a date.', 'warning'); return; }
 
-                addMoneyEntry({ accountId, type, amount, date, note });
+                await addMoneyEntry({ accountId, type, amount, date, note });
                 if (moneyEntryModalInstance) moneyEntryModalInstance.hide();
                 renderMoney();
-                showToast(type === 'withdraw' ? 'Withdrawal recorded!' : 'Deposit added!', 'success');
+                const synced = syncCode && fbDb ? ' and synced' : '';
+                showToast(type === 'withdraw' ? `Withdrawal recorded${synced}!` : `Deposit added${synced}!`, 'success');
             }
 
             function setMoneyAccountModalMode(isEdit) {
@@ -2342,13 +2392,13 @@
                         ? '<i class="fas fa-save me-1"></i> Save'
                         : '<i class="fas fa-plus me-1"></i> Add',
                     confirmClass: 'btn-primary',
-                    onConfirm: () => {
+                    onConfirm: async () => {
                         if (isEdit) {
-                            updateMoneyAccount(id, { name, holderName, broker: existing?.broker || 'None' });
-                            showToast('Account updated!', 'success');
+                            await updateMoneyAccount(id, { name, holderName, broker: existing?.broker || 'None' });
+                            showToast(syncCode && fbDb ? 'Account updated and synced!' : 'Account updated!', 'success');
                         } else {
-                            addMoneyAccount({ name, holderName, broker: 'None' });
-                            showToast('Account added!', 'success');
+                            await addMoneyAccount({ name, holderName, broker: 'None' });
+                            showToast(syncCode && fbDb ? 'Account added and synced!' : 'Account added!', 'success');
                         }
                         if (moneyAccountModalInstance) moneyAccountModalInstance.hide();
                         renderMoney();
@@ -2369,12 +2419,12 @@
                     message: `Delete "${name}"?${extra} This cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-danger',
-                    onConfirm: () => {
-                        deleteMoneyAccount(id);
+                    onConfirm: async () => {
+                        await deleteMoneyAccount(id);
                         if (moneyAccountFilter === id) moneyAccountFilter = 'all';
                         if (moneyAccountModalInstance) moneyAccountModalInstance.hide();
                         renderMoney();
-                        showToast('Account deleted.', 'danger');
+                        showToast(syncCode && fbDb ? 'Account deleted and synced.' : 'Account deleted.', 'danger');
                     }
                 });
             }
@@ -2388,10 +2438,10 @@
                     message: `Delete withdrawal of ${amt}? This cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-danger',
-                    onConfirm: () => {
-                        deleteMoneyEntry(id);
+                    onConfirm: async () => {
+                        await deleteMoneyEntry(id);
                         renderMoney();
-                        showToast('Entry deleted.', 'danger');
+                        showToast(syncCode && fbDb ? 'Entry deleted and synced.' : 'Entry deleted.', 'danger');
                     }
                 });
             }
@@ -3173,7 +3223,9 @@
                         const run = confirmRun;
                         confirmPending = null;
                         confirmRun = false;
-                        if (run && typeof cb === 'function') cb();
+                        if (run && typeof cb === 'function') {
+                            Promise.resolve(cb()).catch(err => console.warn('confirm action failed', err));
+                        }
                     });
                 }
                 return confirmModalInstance;
@@ -3202,13 +3254,13 @@
                     message: `Delete "${name}"? This action cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-danger',
-                    onConfirm: () => {
-                        deleteTransaction(id);
+                    onConfirm: async () => {
+                        await deleteTransaction(id);
                         renderCurrentView();
                         renderPastTrades();
                         renderMoney();
                         refreshActiveMoreView();
-                        showToast('Trade deleted.', 'danger');
+                        showToast(syncCode && fbDb ? 'Trade deleted and synced.' : 'Trade deleted.', 'danger');
                     }
                 });
             }
@@ -3374,8 +3426,7 @@
                 updateLeverageBreakdown();
             }
 
-            // ---------- SAVE TRANSACTION ----------
-            function saveTransaction() {
+            async function saveTransaction() {
                 const editId = document.getElementById('txEditId').value;
                 const company = document.getElementById('txCompany').value.trim();
                 const broker = document.getElementById('txBroker').value;
@@ -3399,14 +3450,14 @@
                 const calc = calculateTrade(txData);
                 const finalTx = { ...txData, grossProfit: calc.grossProfit, interest: calc.interest, charges: calc.totalCharges, netProfit: calc.netProfit, holdingDays: calc.holdingDays, mtfAmount: calc.mtfAmount, ownMargin: calc.ownMargin, totalInvestment: calc.totalInvestment, breakdown: calc.breakdown };
 
-                let saved;
+                const synced = syncCode && fbDb ? ' and synced' : '';
                 if (editId) {
-                    saved = updateTransaction(editId, finalTx);
-                    if (saved) showToast('Trade updated!', 'success');
+                    const saved = await updateTransaction(editId, finalTx);
+                    if (saved) showToast(`Trade updated${synced}!`, 'success');
                     else showToast('Error updating trade.', 'danger');
                 } else {
-                    saved = addTransaction(finalTx);
-                    showToast('Trade saved!', 'success');
+                    await addTransaction(finalTx);
+                    showToast(`Trade saved${synced}!`, 'success');
                 }
                 txModalInstance.hide();
                 renderCurrentView();
