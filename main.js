@@ -9,6 +9,7 @@
     const APP_TAG_CLASSES = {
         default: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80',
         accent: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-semibold app-tag--accent',
+        secondary: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-semibold app-tag--secondary',
         success: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--success',
         error: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--error',
         warning: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--warning'
@@ -47,6 +48,117 @@
         const sign = n < 0 ? '-' : '';
         const abs = Math.abs(n);
         return sign + '₹' + abs.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function parseDateInput(d) {
+        if (!d) return null;
+        const s = String(d).trim();
+        if (!s) return null;
+        const dt = new Date(/^\d{4}-\d{2}-\d{2}$/.test(s) ? `${s}T12:00:00` : s);
+        return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    /** Display date — e.g. "4 July 2026" */
+    function fmtDateDisplay(d) {
+        const dt = parseDateInput(d);
+        if (!dt) return '—';
+        return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+
+    function renderDateChip(text, opts = {}) {
+        const {
+            onclick = '',
+            id = '',
+            className = '',
+            clickable = false,
+            size = ''
+        } = opts;
+        const tag = (clickable || onclick) ? 'button' : 'span';
+        const typeAttr = tag === 'button' ? ' type="button"' : '';
+        const onclickAttr = onclick ? ` onclick="${onclick}"` : '';
+        const idAttr = id ? ` id="${id}"` : '';
+        const clickClass = (clickable || onclick) ? ' app-date-chip--clickable' : '';
+        const sizeClass = size === 'sm' ? ' app-date-chip--sm' : '';
+        return `<${tag}${typeAttr} class="app-date-chip${clickClass}${sizeClass}${className ? ` ${className}` : ''}"${idAttr}${onclickAttr}>` +
+            `<i class="far fa-calendar app-date-chip__icon" aria-hidden="true"></i>` +
+            `<span class="app-date-chip__text">${text}</span>` +
+            `</${tag}>`;
+    }
+
+    function renderDateRangeChip(from, to, opts = {}) {
+        const fromText = fmtDateDisplay(from);
+        const toText = fmtDateDisplay(to);
+        const text = from && to && from !== to ? `${fromText} – ${toText}` : fromText;
+        return renderDateChip(text, opts);
+    }
+
+    function paintDateChip(el, text, opts = {}) {
+        if (!el) return null;
+        const html = renderDateChip(text, { ...opts, id: el.id || opts.id });
+        el.outerHTML = html;
+        return el.id ? document.getElementById(el.id) : null;
+    }
+
+    function syncDateFieldDisplay(input) {
+        if (!input) return;
+        const wrap = input.closest('.app-date-field');
+        if (!wrap) return;
+        const textEl = wrap.querySelector('.app-date-field__text');
+        if (!textEl) return;
+        const val = input.value;
+        textEl.textContent = val ? fmtDateDisplay(val) : 'Select date';
+        wrap.classList.toggle('app-date-field--empty', !val);
+    }
+
+    function wireDateField(input) {
+        if (!input || input.type !== 'date' || input.dataset.dateFieldWired === '1') return input;
+        input.dataset.dateFieldWired = '1';
+
+        const isSm = input.classList.contains('input-sm');
+        const wrap = document.createElement('div');
+        wrap.className = 'app-date-field' + (isSm ? ' app-date-field--sm' : '');
+
+        const trigger = document.createElement('button');
+        trigger.type = 'button';
+        trigger.className = 'app-date-field__trigger app-date-chip app-date-chip--clickable';
+        trigger.setAttribute('aria-label', input.getAttribute('aria-label') || 'Select date');
+        trigger.innerHTML =
+            '<i class="far fa-calendar app-date-chip__icon" aria-hidden="true"></i>' +
+            '<span class="app-date-chip__text app-date-field__text">Select date</span>';
+
+        const parent = input.parentNode;
+        parent.insertBefore(wrap, input);
+        wrap.appendChild(trigger);
+        wrap.appendChild(input);
+
+        input.className = 'app-date-field__input';
+
+        const openPicker = () => {
+            try {
+                input.focus({ preventScroll: true });
+                if (typeof input.showPicker === 'function') input.showPicker();
+                else input.click();
+            } catch (_) {
+                input.click();
+            }
+        };
+
+        trigger.addEventListener('click', openPicker);
+        input.addEventListener('input', () => syncDateFieldDisplay(input));
+        input.addEventListener('change', () => syncDateFieldDisplay(input));
+        syncDateFieldDisplay(input);
+        return input;
+    }
+
+    function setDateInputValue(input, value) {
+        if (!input) return;
+        input.value = value || '';
+        syncDateFieldDisplay(input);
+    }
+
+    function initDateFields(root) {
+        const scope = root || document;
+        scope.querySelectorAll('input[type="date"]:not([data-date-field-wired="1"])').forEach(wireDateField);
     }
 
     function amountInWords(num) {
@@ -90,6 +202,8 @@
         positive: 'amount-tone--positive',
         negative: 'amount-tone--negative',
         neutral: 'amount-tone--neutral',
+        secondary: 'amount-tone--secondary',
+        quantity: 'amount-tone--quantity',
         warning: 'amount-tone--warning'
     };
 
@@ -97,13 +211,18 @@
         positive: 'amount-tone-text--positive',
         negative: 'amount-tone-text--negative',
         neutral: 'amount-tone-text--neutral',
+        secondary: 'amount-tone-text--secondary',
+        quantity: 'amount-tone-text--quantity',
         warning: 'amount-tone-text--warning'
     };
 
     function resolveAmountTone(amount, tone = 'auto') {
-        if (tone === 'positive' || tone === 'deposit') return 'positive';
+        if (tone === 'positive') return 'positive';
+        if (tone === 'deposit') return 'secondary';
         if (tone === 'negative' || tone === 'withdraw') return 'negative';
         if (tone === 'neutral') return 'neutral';
+        if (tone === 'secondary' || tone === 'buy') return 'secondary';
+        if (tone === 'quantity' || tone === 'qty') return 'quantity';
         if (tone === 'warning') return 'warning';
         return (Number(amount) || 0) >= 0 ? 'positive' : 'negative';
     }
@@ -174,6 +293,32 @@
         return el.id ? document.getElementById(el.id) : null;
     }
 
+    /** Quantity display — plain number in an orange pill (no currency). */
+    function renderQuantity(value, opts = {}) {
+        const {
+            size = 'sm',
+            align = 'inherit',
+            pill = true,
+            id = '',
+            className = ''
+        } = opts;
+        const cfg = AMOUNT_SIZES[size] || AMOUNT_SIZES.md;
+        const shellTone = pill ? AMOUNT_TONE_SHELL.quantity : AMOUNT_TONE_TEXT.quantity;
+        const alignMap = {
+            left: 'text-left items-start',
+            center: 'text-center items-center',
+            right: 'text-right items-end',
+            inherit: ''
+        };
+        const formatted = String(value ?? '0');
+        const valueHtml = `<span class="amount-display__value ${cfg.value} whitespace-nowrap">${formatted}</span>`;
+        const pillHtml = pill
+            ? `<span class="amount-display__pill inline-flex flex-col ${shellTone} ${cfg.shell}">${valueHtml}</span>`
+            : valueHtml;
+        const idAttr = id ? ` id="${id}"` : '';
+        return `<span class="amount-display amount-display--quantity tabular-nums ${alignMap[align] || ''} ${className}"${idAttr}>${pillHtml}</span>`;
+    }
+
     function renderTotalAmountCard(amount, opts = {}) {
         const {
             label = 'Total Amount',
@@ -181,23 +326,52 @@
             size = 'md',
             decimals = false,
             tone = 'positive',
+            plain = false,
             id = '',
             className = ''
         } = opts;
         const n = Number(amount) || 0;
         const resolvedTone = resolveAmountTone(amount, tone);
-        const formatted = formatAmountNumber(amount, { decimals });
+        const formatted = plain
+            ? String(Math.round(n))
+            : formatAmountNumber(amount, { decimals });
         const sizeClass = size === 'hero' ? ' gr-total-card--hero' : (size === 'sm' ? ' gr-total-card--sm' : '');
-        const toneClass = resolvedTone === 'negative' ? ' gr-total-card--danger' : '';
+        const toneClass = resolvedTone === 'negative'
+            ? ' gr-total-card--danger'
+            : (resolvedTone === 'secondary' ? ' gr-total-card--secondary' : '');
         const amountClass = resolvedTone === 'negative'
             ? 'gr-total-card__amount gr-total-card__amount--down'
             : (resolvedTone === 'neutral'
                 ? 'gr-total-card__amount gr-total-card__amount--neutral'
-                : 'gr-total-card__amount');
-        const labelHtml = label ? `<span class="gr-total-card__label">${label}</span>` : '';
+                : (resolvedTone === 'secondary'
+                    ? 'gr-total-card__amount gr-total-card__amount--secondary'
+                    : 'gr-total-card__amount'));
+        const labelClass = tone === 'deposit' || resolvedTone === 'secondary'
+            ? 'gr-total-card__label deposit-label'
+            : 'gr-total-card__label';
+        const labelOut = opts.labelHtml
+            ? opts.labelHtml
+            : (label ? `<span class="${labelClass}">${label}</span>` : '');
         const noteHtml = note ? `<span class="gr-total-card__note">${note}</span>` : '';
         const idAttr = id ? ` id="${id}"` : '';
-        return `<div class="gr-total-card tabular-nums${sizeClass}${toneClass} ${className}"${idAttr}>${labelHtml}<span class="${amountClass}">${formatted}</span>${noteHtml}</div>`;
+        return `<div class="gr-total-card tabular-nums${sizeClass}${toneClass} ${className}"${idAttr}>${labelOut}<span class="${amountClass}">${formatted}</span>${noteHtml}</div>`;
+    }
+
+    function renderTradesCountCard(count, opts = {}) {
+        return renderTotalAmountCard(count, {
+            labelHtml: '<span class="gr-total-card__label"><i class="fas fa-exchange-alt mr-1"></i>Trades</span>',
+            size: 'sm',
+            tone: 'neutral',
+            plain: true,
+            ...opts
+        });
+    }
+
+    function paintTradesCountCard(el, count, opts = {}) {
+        if (!el) return null;
+        const html = renderTradesCountCard(count, { ...opts, id: el.id || opts.id });
+        el.outerHTML = html;
+        return el.id ? document.getElementById(el.id) : null;
     }
 
     function paintTotalAmountCard(el, amount, opts = {}) {
@@ -205,6 +379,57 @@
         const html = renderTotalAmountCard(amount, { ...opts, id: el.id || opts.id });
         el.outerHTML = html;
         return el.id ? document.getElementById(el.id) : null;
+    }
+
+    /** Amount in words — rendered below money amount pills/cards, not inside them. */
+    function renderMoneyAmountWords(amount, align = 'center', opts = {}) {
+        const { collapsible = false } = opts;
+        const alignMap = { left: 'text-left', center: 'text-center', right: 'text-right' };
+        const collapseClass = collapsible ? ' money-value-block__expandable money-value-block__expandable--collapsed' : '';
+        return `<div class="money-amount-words ${alignMap[align] || 'text-center'}${collapseClass}">${amountInWords(amount)}</div>`;
+    }
+
+    function paintMoneyAmountWords(el, amount, align = 'center') {
+        if (!el) return null;
+        const alignMap = { left: 'text-left', center: 'text-center', right: 'text-right' };
+        el.classList.add('money-amount-words', alignMap[align] || 'text-center');
+        el.textContent = amountInWords(amount);
+        return el;
+    }
+
+    function syncMoneyExpandBtn(btn, expanded) {
+        if (!btn) return;
+        btn.setAttribute('aria-expanded', String(expanded));
+        const labelEl = btn.querySelector('.money-account-expand-toggle__label');
+        if (labelEl) labelEl.textContent = expanded ? 'Collapse details' : 'Expand details';
+    }
+
+    function toggleMoneyAccountExpand(btn) {
+        const card = btn.closest('.money-account-card');
+        if (!card) return;
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const next = !expanded;
+        syncMoneyExpandBtn(btn, next);
+        const details = card.querySelector('.trade-card-details');
+        if (details) details.classList.toggle('trade-card-details--hidden', !next);
+    }
+
+    function syncTradeDateGroupExpand(btn, expanded) {
+        if (!btn) return;
+        btn.setAttribute('aria-expanded', String(expanded));
+        const icon = btn.querySelector('.trade-date-group__expand-icon');
+        if (icon) icon.classList.toggle('trade-date-group__expand-icon--expanded', expanded);
+    }
+
+    function toggleTradeDateGroupExpand(btn) {
+        const group = btn.closest('.trade-date-group');
+        if (!group) return;
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const next = !expanded;
+        syncTradeDateGroupExpand(btn, next);
+        group.classList.toggle('trade-date-group--expanded', next);
+        const list = group.querySelector('.trade-date-group__list');
+        if (list) list.classList.toggle('trade-date-group__list--hidden', !next);
     }
 
     function fmtMoneyRich(n, opts = {}) {
@@ -251,8 +476,8 @@
         } = opts;
         const resolved = resolveAppButtonVariant(variant);
         const btnType = submit ? 'submit' : type;
-        const iconHtml = icon ? `<i class="fas ${icon} mr-1"></i>` : '';
-        const inner = labelHtml || `${iconHtml}${label}`;
+        const iconHtml = icon ? `<i class="fas ${icon} app-btn__icon" aria-hidden="true"></i>` : '';
+        const inner = labelHtml || `<span class="app-btn__content">${iconHtml}<span class="app-btn__label">${label}</span></span>`;
         const idAttr = id ? ` id="${id}"` : '';
         const onclickAttr = onclick ? ` onclick="${onclick}"` : '';
         const disabledAttr = disabled ? ' disabled' : '';
@@ -306,11 +531,26 @@
         fmt,
         fmtINR,
         fmtDec,
+        fmtDateDisplay,
+        renderDateChip,
+        renderDateRangeChip,
+        paintDateChip,
+        syncDateFieldDisplay,
+        wireDateField,
+        setDateInputValue,
+        initDateFields,
         amountInWords,
         renderAmount,
         paintAmount,
+        renderQuantity,
         renderTotalAmountCard,
         paintTotalAmountCard,
+        renderTradesCountCard,
+        paintTradesCountCard,
+        renderMoneyAmountWords,
+        paintMoneyAmountWords,
+        toggleMoneyAccountExpand,
+        toggleTradeDateGroupExpand,
         fmtMoneyRich,
         pnlToneClass,
         renderAppButton,

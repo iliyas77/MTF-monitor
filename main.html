@@ -21,7 +21,7 @@
     <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[2000] w-[min(92vw,420px)]" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header id="appHeader" class="sticky top-0 z-40 app-header border-b shadow-sm px-3 py-3 max-w-[480px] mx-auto w-full">
+    <header id="appHeader" class="sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
         <div id="appHeaderDefault" class="flex items-center justify-between gap-2">
             <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
             <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
@@ -34,6 +34,12 @@
             </button>
             <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-cog mr-2"></i>Settings</h5>
         </div>
+        <div id="appHeaderSubpage" class="hidden flex items-center gap-3 min-w-0">
+            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="backToMoreHub()" aria-label="Back">
+                <i class="fas fa-arrow-left text-base-content/55"></i>
+            </button>
+            <h5 class="font-medium text-base-content/80 mb-0 text-xl truncate" id="appHeaderSubpageTitle"></h5>
+        </div>
     </header>
 
     <!-- ============ PAGES ============ -->
@@ -44,24 +50,28 @@
             <!-- Company search -->
             <div class="relative mb-3">
                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                <input type="text" class="input input-bordered w-full rounded-full shadow-sm pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
+                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
                 <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
-            <!-- Summary Card (Net Profit, Gross, Trades, Total Charges) -->
+            <!-- Summary Card — Net hero + Gross, Trades, Charges row -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body flex flex-col items-center gap-3 py-4">
-                    <div id="summaryNet"></div>
-                    <div class="grid grid-cols-3 gap-2 w-full">
-                        <div class="flex justify-center">
+                    <div class="money-value-block money-value-block--center w-full">
+                        <div id="summaryNet"></div>
+                        <div id="summaryNetWords"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 w-full trade-summary-row">
+                        <div class="money-value-block money-value-block--center">
                             <div id="summaryGross"></div>
+                            <div id="summaryGrossWords"></div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
-                            <div class="font-medium text-base-content/80" id="summaryTrades">0</div>
+                        <div class="money-value-block money-value-block--center">
+                            <div id="summaryTrades"></div>
                         </div>
-                        <div class="flex justify-center">
+                        <div class="money-value-block money-value-block--center">
                             <div id="summaryCharges"></div>
+                            <div id="summaryChargesWords"></div>
                         </div>
                     </div>
                 </div>
@@ -79,31 +89,31 @@
             <div class="flex items-center gap-2 mb-3">
                 <div class="relative flex-1 min-w-0">
                     <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                    <input type="text" class="input input-bordered w-full rounded-full shadow-sm pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
+                    <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
                     <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
                 </div>
-                <button class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h text-base-content/55"></i></button>
+                <button class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h text-base-content/55"></i></button>
             </div>
             <!-- Selected date range indicator -->
-            <div class="text-center mb-3">
-                <button type="button" class="btn btn-sm btn-ghost border border-base-200 rounded-full px-4 shadow-sm" onclick="openFilterSheet()">
-                    <i class="far fa-calendar-alt mr-1 text-primary"></i><span id="pastRangeLabel">—</span>
-                </button>
-            </div>
-            <!-- Summary Card -->
+            <div class="text-center mb-3" id="pastRangeChipHost"></div>
+            <!-- Summary Card — Net hero + Gross, Trades, Charges row -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
                 <div class="card-body flex flex-col items-center gap-3 py-4">
-                    <div id="pastSummaryNet"></div>
-                    <div class="grid grid-cols-3 gap-2 w-full">
-                        <div class="flex justify-center">
+                    <div class="money-value-block money-value-block--center w-full">
+                        <div id="pastSummaryNet"></div>
+                        <div id="pastSummaryNetWords"></div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 w-full trade-summary-row">
+                        <div class="money-value-block money-value-block--center">
                             <div id="pastSummaryGross"></div>
+                            <div id="pastSummaryGrossWords"></div>
                         </div>
-                        <div class="text-center">
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
-                            <div class="font-medium text-base-content/80" id="pastSummaryTrades">0</div>
+                        <div class="money-value-block money-value-block--center">
+                            <div id="pastSummaryTrades"></div>
                         </div>
-                        <div class="flex justify-center">
+                        <div class="money-value-block money-value-block--center">
                             <div id="pastSummaryCharges"></div>
+                            <div id="pastSummaryChargesWords"></div>
                         </div>
                     </div>
                 </div>
@@ -117,36 +127,47 @@
     <section id="page-money" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div id="moneyPageDefaultView">
-                <div class="card money-summary-card rounded-2xl mb-3" id="moneySummaryCard">
-                    <div class="card-body flex flex-col items-center gap-3 py-4">
-                        <div id="moneyTotalValueHero"></div>
-                        <div class="grid grid-cols-2 gap-3 w-full">
-                            <div class="flex justify-center">
-                                <div id="moneyTotalDeposited"></div>
+                <div class="money-summary-block mb-3">
+                    <div class="card money-summary-card rounded-2xl" id="moneySummaryCard">
+                        <div class="card-body flex flex-col items-center gap-3 py-4">
+                            <div class="money-value-block money-value-block--center w-full">
+                                <div id="moneyTotalValueHero"></div>
+                                <div id="moneyTotalValueWords"></div>
                             </div>
-                            <div class="flex justify-center">
-                                <div id="moneyTotalWithdrawn"></div>
+                            <div class="grid grid-cols-2 gap-3 w-full">
+                                <div class="money-value-block money-value-block--center">
+                                    <div id="moneyTotalDeposited"></div>
+                                    <div id="moneyTotalDepositedWords"></div>
+                                </div>
+                                <div class="money-value-block money-value-block--center">
+                                    <div id="moneyTotalWithdrawn"></div>
+                                    <div id="moneyTotalWithdrawnWords"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center justify-between gap-2 mb-3">
-                    <h6 class="font-semibold text-base-content/80 mb-0 text-base shrink-0"><i class="fas fa-university mr-2 text-primary"></i>Accounts</h6>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <div class="dropdown dropdown-end">
-                            <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none" id="moneyAccountFilterTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter accounts">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
-                                <span class="truncate max-w-[5.5rem]" id="moneyAccountFilterLabel">All</span>
-                                <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                            </button>
-                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
+                <div class="card bg-base-100 rounded-2xl" id="moneyAccountsCard">
+                    <div class="card-body p-3">
+                        <div class="flex items-center justify-between gap-2 mb-3">
+                            <h6 class="font-semibold text-base-content/80 mb-0 text-base shrink-0"><i class="fas fa-university mr-2 text-primary"></i>Accounts</h6>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <div class="dropdown dropdown-end">
+                                    <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none" id="moneyAccountFilterTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter accounts">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
+                                        <span class="truncate max-w-[5.5rem]" id="moneyAccountFilterLabel">All</span>
+                                        <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
+                                    </button>
+                                    <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
+                                </div>
+                                <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
+                                    <i class="fas fa-filter text-base-content/55"></i>
+                                </button>
+                            </div>
                         </div>
-                        <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
-                            <i class="fas fa-filter text-base-content/55"></i>
-                        </button>
+                        <div id="moneyAccountList"></div>
                     </div>
                 </div>
-                <div id="moneyAccountList"></div>
             </div>
 
             <div id="moneyPageFilterView" class="hidden">
@@ -155,6 +176,7 @@
                     <div class="flex-1 min-w-0">
                         <h6 class="font-semibold text-base-content/80 text-base mb-0" id="moneyPageFilterViewTitle">Filtered</h6>
                         <div class="text-sm text-base-content/60" id="moneyPageFilterViewMeta"></div>
+                        <div class="mt-2" id="moneyPageFilterDateChipHost"></div>
                     </div>
                     <div class="dropdown dropdown-end">
                         <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] shrink-0" id="moneyPageFilterTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
@@ -162,16 +184,18 @@
                             <span class="truncate max-w-[5.5rem]" id="moneyPageFilterTypeLabel">All</span>
                             <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                         </button>
-                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
+                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
                     </div>
-                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
+                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
                         <i class="fas fa-filter text-base-content/55"></i>
                     </button>
                 </div>
-                <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="moneyPageFilterSummaryCard">
-                    <div class="card-body text-center py-3" id="moneyPageFilterSummary"></div>
+                <div class="money-filter-summary-block mb-3">
+                    <div class="card bg-base-100 rounded-2xl" id="moneyPageFilterSummaryCard">
+                        <div class="card-body text-center py-3" id="moneyPageFilterSummary"></div>
+                    </div>
                 </div>
-                <div class="card bg-base-100 shadow-sm rounded-2xl">
+                <div class="card bg-base-100 rounded-2xl">
                     <div class="card-body py-2" id="moneyPageFilterList"></div>
                 </div>
             </div>
@@ -181,7 +205,7 @@
     <!-- PAGE: SETTINGS -->
     <section id="page-settings" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body">
                     <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-cloud mr-2"></i>Cloud Sync</h6>
                     <div class="flex items-center mb-2">
@@ -197,7 +221,7 @@
                     <div id="cloudSyncHint" class="text-sm text-base-content/60 mt-2"></div>
                 </div>
             </div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body p-0">
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
                         <div>
@@ -210,7 +234,7 @@
                     <div class="px-3 py-3" id="settingsMoneyAccountList"></div>
                 </div>
             </div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl">
+            <div class="card bg-base-100 rounded-2xl">
                 <div class="card-body p-0">
                     <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
                         <div>
@@ -242,7 +266,7 @@
     <section id="page-more" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <p class="text-base-content/60 text-xs uppercase tracking-wide font-medium mb-2">Tools and reports</p>
-            <div class="card bg-base-100 shadow-sm rounded-xl">
+            <div class="card bg-base-100 rounded-xl">
                 <div class="card-body p-1.5 flex flex-col gap-0.5">
                     <button type="button" class="more-hub-option" onclick="openMoreFeature('transactions')">
                         <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-database"></i></span>
@@ -262,11 +286,7 @@
     <!-- PAGE: TOTAL TRANSACTIONS -->
     <section id="page-transactions" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="flex items-center gap-3 mb-4">
-                <button type="button" class="btn btn-ghost btn-circle border border-base-200 w-9 h-9 min-h-0" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
-                <h6 class="font-semibold text-base-content/80 mb-0">Total Transactions</h6>
-            </div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body text-center py-4">
                     <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-coins mr-1"></i>Total Trades</div>
                     <div class="font-semibold text-2xl text-base-content/85 mb-3" id="txHistTotal">0</div>
@@ -301,13 +321,13 @@
                     </div>
                 </div>
             </div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body">
                     <h6 class="font-semibold text-base-content/80 mb-3"><i class="fas fa-building mr-2"></i>By Broker</h6>
                     <div id="txHistBrokerBreakdown"></div>
                 </div>
             </div>
-            <h6 class="font-semibold text-base-content/80 mb-2"><i class="far fa-calendar-alt mr-2"></i>History</h6>
+            <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-list mr-2"></i>History</h6>
             <div id="txHistList"></div>
         </div>
     </section>
@@ -315,11 +335,7 @@
     <!-- PAGE: MTF CALCULATOR -->
     <section id="page-mtf-calc" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="flex items-center gap-3 mb-4">
-                <button type="button" class="btn btn-ghost btn-circle border border-base-200 w-9 h-9 min-h-0" onclick="backToMoreHub()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
-                <h6 class="font-semibold text-base-content/80 mb-0">MTF Calculator</h6>
-            </div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body">
                     <div class="grid grid-cols-2 gap-2 mb-2">
                         <div class="">
@@ -337,11 +353,11 @@
                     </div>
                     <div class="grid grid-cols-3 gap-2 mb-2">
                         <div>
-                            <label class="label-text font-normal text-base-content/65">Qty</label>
+                            <label class="label-text font-normal quantity-label">Qty</label>
                             <input type="number" class="input input-bordered w-full" id="calcQty" min="1" step="1" placeholder="0" oninput="updateMtfCalculator()" />
                         </div>
                         <div>
-                            <label class="label-text font-normal text-base-content/65">Buy Price</label>
+                            <label class="label-text font-normal buy-price-label">Buy Price</label>
                             <input type="number" class="input input-bordered w-full" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcBuyPriceInput()" />
                         </div>
                         <div>
@@ -365,7 +381,7 @@
                 </div>
             </div>
             <div class="flex justify-center mb-3" id="calcTotalAmountHost"></div>
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
+            <div class="card bg-base-100 rounded-2xl mb-3">
                 <div class="card-body">
                     <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
                         <h6 class="font-semibold text-base-content/80 mb-0"><i class="fas fa-balance-scale mr-2"></i>Compare All Brokers</h6>
@@ -386,7 +402,7 @@
             <button type="button" class="app-fab pointer-events-auto" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
                 <i class="fas fa-plus text-lg text-white"></i>
             </button>
-            <div class="app-bottom-nav btm-nav btm-nav-md bg-base-100 border-t border-base-200 shadow-lg pointer-events-auto w-full" id="bottomNav">
+            <div class="app-bottom-nav btm-nav btm-nav-md bg-base-100 border-t border-base-200 pointer-events-auto w-full" id="bottomNav">
                 <button type="button" class="border-t-2 border-transparent" data-page="trades" onclick="navigateTo('trades')">
                     <i class="fas fa-list-ul text-lg nav-icon text-base-content/55"></i>
                     <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Trades</span>
@@ -410,16 +426,16 @@
 
     <!-- GENERIC BOTTOM SHEET -->
     <dialog id="appSheet" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
-        <div class="modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-xl">
-            <div class="p-4 border-b border-base-200 relative">
+        <div class="modal-box app-sheet w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200">
+            <div class="app-sheet__header p-4 border-b border-base-200 relative">
                 <div class="text-center mb-2"><span class="inline-block w-[42px] h-1 rounded-full bg-base-300"></span></div>
                 <div class="flex justify-between items-center pr-8">
                     <h3 class="font-semibold text-base-content/80 text-lg" id="appSheetTitle"></h3>
                 </div>
                 <form method="dialog" class="absolute right-3 top-4"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
             </div>
-            <div id="appSheetBody" class="overflow-y-auto max-h-[calc(90vh-8rem)] p-4"></div>
-            <div id="appSheetFooter" class="p-4 border-t border-base-200 flex gap-2 hidden"></div>
+            <div id="appSheetBody" class="app-sheet__body p-4"></div>
+            <div id="appSheetFooter" class="app-sheet__footer p-4 border-t border-base-200 hidden"></div>
         </div>
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
     </dialog>
@@ -445,7 +461,7 @@
                                 <span class="truncate max-w-[5.5rem]" id="moneyPageTypeFilterLabel">All</span>
                                 <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                             </button>
-                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
+                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -502,35 +518,33 @@
                         <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="pastTo" />
                     </div></div>
-        <div id="panelMoneyHistory"><div class="p-4 border-b border-base-200 relative">
-                    <div class="text-center mb-2"><span class="inline-block w-[42px] h-1 rounded-full bg-base-300"></span></div>
-                    <div class="flex items-center justify-between gap-2">
-                        <div class="min-w-0 flex-1">
-                            <div class="font-semibold text-base-content/80" id="moneyHistoryModalTitle">History</div>
-                            <div class="text-sm text-base-content/60" id="moneyHistoryMeta">All time</div>
-                        </div>
-                        <div class="flex items-center gap-2 shrink-0">
-                            <div class="dropdown dropdown-end">
-                                <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none" id="moneyHistoryTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyHistoryTypeIcon"><i class="fas fa-layer-group"></i></span>
-                                    <span class="truncate max-w-[5.5rem]" id="moneyHistoryTypeLabel">All</span>
-                                    <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                                </button>
-                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
-                            </div>
-                            <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none p-0" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
-                                <i class="fas fa-filter text-base-content/55"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
+        <div id="panelMoneyHistory">
+            <div class="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-base-200">
+                <div class="min-w-0 flex-1">
+                    <div class="text-sm text-base-content/60" id="moneyHistoryMeta">All time</div>
+                    <div class="mt-2" id="moneyHistoryDateChipHost"></div>
                 </div>
-                <div class="p-4">
-                    <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
-                        <div class="card-body py-3" id="moneyHistorySheetSummary"></div>
+                <div class="flex items-center gap-2 shrink-0">
+                    <div class="dropdown dropdown-end">
+                        <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none" id="moneyHistoryTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyHistoryTypeIcon"><i class="fas fa-layer-group"></i></span>
+                            <span class="truncate max-w-[5.5rem]" id="moneyHistoryTypeLabel">All</span>
+                            <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
+                        </button>
+                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
                     </div>
-                    <div id="moneyHistorySheetList"></div>
-                </div></div>
+                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none p-0" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
+                        <i class="fas fa-filter text-base-content/55"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="money-history-summary-block mb-3">
+                <div class="card bg-base-100 rounded-2xl">
+                    <div class="card-body py-3" id="moneyHistorySheetSummary"></div>
+                </div>
+            </div>
+            <div id="moneyHistorySheetList" class="money-history-list"></div>
+        </div>
         <div id="panelMoneyAccount"><input type="hidden" id="moneyAccountEditId" value="" />
                     <div class="mb-3">
                         <label class="label-text font-normal text-base-content/65">Account Name <span class="text-error">*</span></label>
@@ -553,7 +567,7 @@
 
     <!-- MODAL: ADD/EDIT -->
     <dialog id="txModal" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
-        <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[92vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-xl flex flex-col overflow-hidden">
+        <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[92vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 flex flex-col overflow-hidden">
                 <div class="shrink-0 flex justify-end px-3 pt-3 pb-1">
                     <form method="dialog"><button type="submit" class="btn btn-sm btn-circle btn-ghost" aria-label="Close">✕</button></form>
                 </div>
@@ -564,7 +578,7 @@
                             <label class="label-text font-normal text-base-content/65">Company Name <span class="text-error">*</span></label>
                             <div class="relative">
                                 <input type="text" class="input input-bordered w-full" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
-                                <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl shadow-lg hidden" id="txCompanyAcList" role="listbox" aria-label="Stock suggestions"></div>
+                                <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl hidden" id="txCompanyAcList" role="listbox" aria-label="Stock suggestions"></div>
                             </div>
                             <div id="txCompanyMeta" class="text-xs text-base-content/60 mt-1 hidden"></div>
                             <div id="txCompanyCatalogStatus" class="text-xs text-base-content/60 mt-1"></div>
@@ -578,7 +592,7 @@
                                     <span class="truncate max-w-[5.5rem]" id="txBrokerLabel">Select Broker</span>
                                     <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
                                 </button>
-                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 w-full" id="txBrokerMenu"></ul>
+                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 w-full" id="txBrokerMenu"></ul>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -606,11 +620,11 @@
                         </div>
                         <div class="grid grid-cols-3 gap-2 mb-3">
                             <div>
-                                <label class="label-text font-normal text-base-content/65">Qty <span class="text-error">*</span></label>
+                                <label class="label-text font-normal quantity-label">Qty <span class="text-error">*</span></label>
                                 <input type="number" class="input input-bordered w-full" id="txQty" placeholder="0" required min="1" step="1" />
                             </div>
                             <div class="">
-                                <label class="label-text font-normal text-base-content/65">Buy Price <span class="text-error">*</span></label>
+                                <label class="label-text font-normal buy-price-label">Buy Price <span class="text-error">*</span></label>
                                 <input type="number" class="input input-bordered w-full" id="txBuyPrice" placeholder="0.00" required min="0.01" step="0.01" />
                             </div>
                             <div class="">
@@ -650,7 +664,7 @@
     <!-- MONEY ENTRY MODAL -->
     <dialog id="moneyEntryModal" class="modal">
         <div class="modal-box p-0 overflow-hidden">
-            <div class="p-4 bg-success/15 text-success border-b border-success/20 relative" id="moneyEntryHeader">
+            <div class="p-4 deposit-entry-header relative" id="moneyEntryHeader">
                 <div class="flex items-start justify-between gap-3 pr-8">
                     <h5 class="font-semibold text-base-content/80 text-lg flex-1 min-w-0" id="moneyEntryAccountTitle">Account</h5>
                     <label class="label cursor-pointer gap-1 shrink-0 p-0" aria-label="Toggle deposit or withdraw">
@@ -661,7 +675,7 @@
                 </div>
                 <div class="flex items-start gap-2 mt-2">
                     <div class="flex-1 min-w-0">
-                        <div id="moneyEntryDateTimeRow"><span class="text-sm opacity-90" id="moneyEntryDateTimeDisplay">—</span></div>
+                        <div id="moneyEntryDateTimeRow" class="app-datetime-row"><span class="text-sm opacity-90" id="moneyEntryDateTimeDisplay">—</span></div>
                         <div class="hidden flex gap-2 mt-1" id="moneyEntryDateTimeFields">
                             <input type="date" class="input input-bordered input-sm flex-1" id="moneyEntryDate" onchange="onMoneyEntryDateTimeChange()" />
                             <input type="time" class="input input-bordered input-sm flex-1" id="moneyEntryTime" onchange="onMoneyEntryDateTimeChange()" />
@@ -711,11 +725,25 @@
                 fmt,
                 fmtINR,
                 fmtDec,
+                fmtDateDisplay,
+                renderDateChip,
+                renderDateRangeChip,
+                paintDateChip,
+                syncDateFieldDisplay,
+                wireDateField,
+                setDateInputValue,
+                initDateFields,
                 amountInWords,
                 renderAmount,
                 paintAmount,
                 renderTotalAmountCard,
                 paintTotalAmountCard,
+                renderTradesCountCard,
+                paintTradesCountCard,
+                renderMoneyAmountWords,
+                paintMoneyAmountWords,
+                toggleMoneyAccountExpand,
+                toggleTradeDateGroupExpand,
                 fmtMoneyRich,
                 pnlToneClass,
                 renderAppButton,
@@ -726,14 +754,14 @@
 
             // ---------- UI HELPERS ----------
             const UI = {
-                card: 'card bg-base-100 shadow-sm rounded-2xl border-0',
+                card: 'card bg-base-100 rounded-2xl',
                 statLabel: 'text-xs uppercase text-base-content/50 font-medium tracking-wide',
                 sheetLabel: 'block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5',
                 heroValue: 'font-bold text-6xl leading-none mb-3',
                 iconBtn: 'btn btn-ghost btn-circle border border-base-200 shrink-0 focus:outline-none text-base-content/55',
                 toolbarRow: 'flex items-center gap-2 mb-3',
-                toolbarInput: 'input input-bordered border-base-200 w-full rounded-full shadow-sm pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary/50 text-base-content/80 placeholder:text-base-content/40',
-                toolbarIconBtn: 'btn btn-ghost border border-base-200 h-10 w-10 min-h-0 shadow-sm bg-base-100 rounded-xl focus:outline-none text-base-content/55 p-0',
+                toolbarInput: 'input input-bordered border-base-200 w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary/50 text-base-content/80 placeholder:text-base-content/40',
+                toolbarIconBtn: 'btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none text-base-content/55 p-0',
                 actionBtn: 'btn btn-sm min-h-0 h-9 w-9 rounded-xl p-0 flex items-center justify-center',
                 actionBtnSm: 'btn btn-sm min-h-0 h-8 w-8 rounded-lg p-0 flex items-center justify-center',
                 tradeStatBox: 'flex-1 bg-base-200/25 border border-base-200/60 rounded-xl p-2.5 text-center min-w-0',
@@ -743,16 +771,16 @@
                 tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15 gr-danger-soft-text',
                 moneyTonePositive: 'bg-success/15 text-success',
                 moneyToneNegative: 'bg-error/15 text-error',
-                moneyActionDeposit: 'bg-success/15 text-success border-0 hover:bg-success/25',
+                moneyActionDeposit: 'deposit-action-btn',
                 moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
                 fab: 'app-fab pointer-events-auto',
-                selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 shadow-sm focus:outline-none text-base-content/75',
+                selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none text-base-content/75',
                 selectLabel: 'truncate max-w-[5.5rem]',
                 selectChevron: 'text-[0.6rem] opacity-50 ml-auto',
                 dropdownItemActive: 'app-dropdown-item--active',
-                dropdownMenu: 'dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]',
+                dropdownMenu: 'dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]',
                 menuIconStyles: {
-                    deposit: 'bg-success/15 text-success', withdraw: 'bg-error/15 text-error',
+                    deposit: 'deposit-menu-icon', withdraw: 'bg-error/15 text-error',
                     history: 'bg-base-200 text-base-content/60', view: 'bg-base-200 text-base-content/60',
                     edit: 'bg-base-200 text-base-content/55', copy: 'bg-base-200 text-base-content/55',
                     muted: 'bg-base-200 text-base-content/55', charges: 'bg-base-200 text-base-content/55',
@@ -775,7 +803,7 @@
                 searchBar(inputId, clearId, placeholder, onInput, onClear, extraClass = '') {
                     return `<div class="relative mb-3 ${extraClass}">
                         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                        <input type="text" class="input input-bordered w-full rounded-full shadow-sm pl-10 pr-10" id="${inputId}" placeholder="${placeholder}" oninput="${onInput}(this.value)" autocomplete="off" />
+                        <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10" id="${inputId}" placeholder="${placeholder}" oninput="${onInput}(this.value)" autocomplete="off" />
                         <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="${clearId}" onclick="${onClear}()" title="Clear"><i class="fas fa-times"></i></button>
                     </div>`;
                 },
@@ -791,7 +819,7 @@
                     return `<div class="text-center text-base-content/50 py-5"><i class="fas ${icon} text-4xl opacity-25 block mb-2"></i><p class="mb-0">${msg}</p></div>`;
                 },
                 sheetDialog: 'modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0',
-                sheetBox: 'modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200 shadow-lg',
+                sheetBox: 'modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200',
                 actionDropdown(items) {
                     return `<ul class="${UI.dropdownMenu}">${items}</ul>`;
                 },
@@ -2017,9 +2045,7 @@
                 return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
             }
             function fmtDateFull(d) {
-                if (!d) return '-';
-                const dt = new Date(d);
-                return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+                return fmtDateDisplay(d);
             }
             function getNowTime() {
                 const d = new Date();
@@ -2054,7 +2080,7 @@
                 const container = document.getElementById('toastContainer');
                 const colors = { success: 'alert-success', danger: 'alert-error', warning: 'alert-warning', info: 'alert-info' };
                 const div = document.createElement('div');
-                div.className = `alert ${colors[type] || colors.info} shadow-lg mb-2 text-center rounded-2xl`;
+                div.className = `alert ${colors[type] || colors.info} mb-2 text-center rounded-2xl`;
                 div.innerHTML = msg;
                 container.appendChild(div);
                 setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
@@ -2183,13 +2209,28 @@
                 updateAppHeader(pageId);
             }
 
+            const moreFeatureTitles = {
+                transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
+                'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
+            };
+
             function updateAppHeader(pageId) {
                 const def = document.getElementById('appHeaderDefault');
                 const settings = document.getElementById('appHeaderSettings');
+                const subpage = document.getElementById('appHeaderSubpage');
+                const subpageTitle = document.getElementById('appHeaderSubpageTitle');
                 if (!def || !settings) return;
+
                 const onSettings = pageId === 'page-settings';
-                def.classList.toggle('hidden', onSettings);
+                const moreFeature = Object.entries(moreFeatureMap).find(([, id]) => id === pageId)?.[0];
+                const onSubpage = !!moreFeature;
+
+                def.classList.toggle('hidden', onSettings || onSubpage);
                 settings.classList.toggle('hidden', !onSettings);
+                if (subpage) subpage.classList.toggle('hidden', !onSubpage);
+                if (subpageTitle && moreFeature) {
+                    subpageTitle.innerHTML = moreFeatureTitles[moreFeature] || '';
+                }
             }
 
             function setBottomNavActive(page) {
@@ -2432,8 +2473,8 @@
                     pastFrom = range.from;
                     pastTo = range.to;
                 }
-                document.getElementById('pastFrom').value = pastFrom;
-                document.getElementById('pastTo').value = pastTo;
+                setDateInputValue(document.getElementById('pastFrom'), pastFrom);
+                setDateInputValue(document.getElementById('pastTo'), pastTo);
                 setRangeButtonsActive('#pastRangeButtons', daysOrKey);
                 renderPastTrades();
                 closeFilterSheet();
@@ -2466,53 +2507,132 @@
                 return daysHeld;
             }
 
-            function renderTradeListItem(t) {
+            function renderTradeDetailRow(opts) {
+                const {
+                    label,
+                    amount,
+                    tone = 'neutral',
+                    decimals = false,
+                    compact = false,
+                    plain = false,
+                    quantity = false,
+                    tag = false,
+                    labelClass = ''
+                } = opts;
+                let valueHtml;
+                if (tag) {
+                    valueHtml = appTag(amount, tag === true ? 'default' : tag);
+                } else if (plain) {
+                    valueHtml = `<span class="trade-detail-row__plain tabular-nums">${amount}</span>`;
+                } else if (quantity) {
+                    valueHtml = renderQuantity(amount, { size: 'sm', align: 'right', pill: true });
+                } else {
+                    valueHtml = renderAmount(amount, { size: 'sm', tone, decimals, compact, align: 'right', pill: true });
+                }
+                return `<div class="trade-detail-row">
+                    <span class="trade-detail-row__label ${labelClass}">${label}</span>
+                    <div class="trade-detail-row__value">${valueHtml}</div>
+                </div>`;
+            }
+
+            function renderTradeDetailsList(t) {
+                const bd = t.breakdown || {};
+                const totalInv = t.totalInvestment || (t.quantity * t.buyPrice) || 0;
+                const ownMargin = t.ownMargin || totalInv;
+                const mtfAmt = t.mtfAmount || 0;
+                const gross = t.grossProfit || 0;
                 const lev = t.leverage || 1;
                 const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
                 const daysHeld = getDaysHeld(t);
+                const rows = [
+                    { label: 'Buy', amount: t.buyPrice, tone: 'secondary', decimals: true, labelClass: 'buy-price-label' },
+                    { label: 'Sell', amount: t.sellPrice, tone: 'positive', decimals: true },
+                    { label: 'Qty', amount: t.quantity, quantity: true, labelClass: 'quantity-label' },
+                    { label: 'Broker', amount: t.broker || '—', tag: 'default' },
+                    { label: 'Leverage', amount: levDisplay, tag: 'accent' },
+                    { label: 'Hold', amount: `<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d`, tag: 'default' },
+                    { label: 'Total Investment', amount: totalInv, tone: 'neutral', compact: true },
+                    { label: 'Your Margin', amount: ownMargin, tone: 'neutral', compact: true },
+                    { label: 'MTF Funded', amount: mtfAmt, tone: mtfAmt > 0 ? 'secondary' : 'neutral', compact: true },
+                    { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
+                    { label: 'MTF Interest', amount: t.interest || 0, tone: 'warning', decimals: true },
+                    { label: 'Total Charges', amount: t.charges || 0, tone: 'negative', decimals: true }
+                ];
+                const chargeItems = [
+                    { key: 'brokerage', label: 'Brokerage' },
+                    { key: 'stt', label: 'STT' },
+                    { key: 'exchange', label: 'Exchange' },
+                    { key: 'sebi', label: 'SEBI' },
+                    { key: 'stamp', label: 'Stamp Duty' },
+                    { key: 'gst', label: 'GST' },
+                    { key: 'pledge', label: 'Pledge' },
+                    { key: 'unpledge', label: 'Unpledge' },
+                    { key: 'dp', label: 'DP Charges' }
+                ].filter(i => (bd[i.key] || 0) > 0);
+                chargeItems.forEach(i => {
+                    rows.push({ label: i.label, amount: bd[i.key], tone: 'negative', decimals: true });
+                });
+                return `<div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>`;
+            }
+
+            function renderTradeViewPnLSummary(t) {
+                const gross = t.grossProfit || 0;
+                const interest = t.interest || 0;
+                const charges = t.charges || 0;
+                const totalCost = charges + interest;
+                const net = t.netProfit || 0;
+                const rows = [
+                    { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
+                    { label: 'MTF Interest', amount: interest, tone: 'warning', decimals: true },
+                    { label: 'Total Charges', amount: charges, tone: 'negative', decimals: true },
+                    { label: 'Total Cost', amount: totalCost, tone: 'negative', decimals: true },
+                    { label: 'Net Profit', amount: net, tone: net >= 0 ? 'positive' : 'negative', compact: true }
+                ];
                 return `
-                    <div class="card bg-base-100 shadow-sm rounded-2xl mb-2">
-                        <div class="card-body p-0">
-                            <div class="px-4 pt-4 pb-3">
-                                <div class="flex justify-between items-start gap-2">
-                                    <div class="font-medium text-base-content/80 flex-1 min-w-0 pr-2 truncate">${t.company}</div>
-                                    <div class="flex items-center gap-2 shrink-0">
-                                        ${renderAmount(t.netProfit, { size: 'lg', compact: true, showSign: true, align: 'right' })}
-                                        <div class="dropdown dropdown-end">
-                                            <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
-                                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 shadow-lg rounded-box">
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="${UI.menuIcon('view')}"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="${UI.menuIcon('copy')}"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmEdit('${t.id}')"><span class="${UI.menuIcon('edit')}"><i class="fas fa-edit"></i></span><span class="flex-1 text-left">Edit</span></button></li>
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openInterestModal('${t.id}')"><span class="${UI.menuIcon('interest')}"><i class="fas fa-percent"></i></span><span class="flex-1 text-left">Interest</span></button></li>
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openChargesModal('${t.id}')"><span class="${UI.menuIcon('charges')}"><i class="fas fa-receipt"></i></span><span class="flex-1 text-left">Charges</span></button></li>
-                                                <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
-                                                <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200 text-error" onclick="confirmDelete('${t.id}')"><span class="${UI.menuIcon('delete')}"><i class="fas fa-trash-alt"></i></span><span class="flex-1 text-left">Delete</span></button></li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="flex flex-wrap gap-1.5 mt-2">
-                                    ${appTag(t.broker)}
-                                    ${appTag(levDisplay, 'accent')}
-                                    ${appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d hold`)}
-                                </div>
-                            </div>
-                            <div class="flex gap-2 px-3 pb-3 border-t border-base-200 pt-3">
-                                <div class="${UI.tradeStatBox}">
-                                    <div class="${UI.tradeStatLabel}">Buy</div>
-                                    ${renderAmount(t.buyPrice, { size: 'sm', decimals: true, tone: 'neutral', align: 'center' })}
-                                </div>
-                                <div class="${UI.tradeStatBox}">
-                                    <div class="${UI.tradeStatLabel}">Sell</div>
-                                    ${renderAmount(t.sellPrice, { size: 'sm', decimals: true, tone: 'positive', align: 'center' })}
-                                </div>
-                                <div class="${UI.tradeStatBox}">
-                                    <div class="${UI.tradeStatLabel}">Qty</div>
-                                    <div class="${UI.tradeStatValue}">${t.quantity}</div>
-                                </div>
-                            </div>
+                    <div class="trade-view-sheet__summary mt-4">
+                        <div class="trade-view-sheet__summary-title"><i class="fas fa-calculator mr-2"></i>P&amp;L Summary</div>
+                        <div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>
+                    </div>
+                `;
+            }
+
+            function renderTradeListTableHeader() {
+                return `
+                    <div class="trade-list-row trade-list-row--head">
+                        <div class="trade-list-row__no">No</div>
+                        <div class="trade-list-row__company">Company</div>
+                        <div class="trade-list-row__pnl">Net Profit</div>
+                        <div class="trade-list-row__more">More</div>
+                    </div>
+                `;
+            }
+
+            function renderTradeRowMenu(t) {
+                return `
+                    <div class="dropdown dropdown-end trade-row-dropdown">
+                        <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
+                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 rounded-box">
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="${UI.menuIcon('view')}"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="${UI.menuIcon('copy')}"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmEdit('${t.id}')"><span class="${UI.menuIcon('edit')}"><i class="fas fa-edit"></i></span><span class="flex-1 text-left">Edit</span></button></li>
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openInterestModal('${t.id}')"><span class="${UI.menuIcon('interest')}"><i class="fas fa-percent"></i></span><span class="flex-1 text-left">Interest</span></button></li>
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openChargesModal('${t.id}')"><span class="${UI.menuIcon('charges')}"><i class="fas fa-receipt"></i></span><span class="flex-1 text-left">Charges</span></button></li>
+                            <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
+                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200 text-error" onclick="confirmDelete('${t.id}')"><span class="${UI.menuIcon('delete')}"><i class="fas fa-trash-alt"></i></span><span class="flex-1 text-left">Delete</span></button></li>
+                        </ul>
+                    </div>
+                `;
+            }
+
+            function renderTradeListItem(t, serialNo) {
+                return `
+                    <div class="trade-list-row trade-list-row--data">
+                        <div class="trade-list-row__no">${serialNo ?? ''}</div>
+                        <div class="trade-list-row__company">${t.company}</div>
+                        <div class="trade-list-row__pnl">
+                            ${renderAmount(t.netProfit, { size: 'sm', compact: true, showSign: true, align: 'left', className: 'trade-list-row__pnl-pill' })}
                         </div>
+                        <div class="trade-list-row__more">${renderTradeRowMenu(t)}</div>
                     </div>
                 `;
             }
@@ -2533,24 +2653,79 @@
                 return Array.from(groups.entries()).sort((a, b) => b[0].localeCompare(a[0]));
             }
 
-            function renderDateGroupHeader(dateKey, count) {
-                const label = dateKey === 'unknown' ? 'No date' : fmtDate(dateKey);
+            function renderDateGroupHeader(dateKey, items, opts = {}) {
+                const { expanded = false } = opts;
+                const count = items.length;
+                const net = items.reduce((sum, t) => sum + (Number(t.netProfit) || 0), 0);
+                const label = dateKey === 'unknown' ? 'No date' : fmtDateDisplay(dateKey);
                 const tradeLabel = count === 1 ? '1 trade' : `${count} trades`;
+                const dateLabel = dateKey === 'unknown'
+                    ? `<span class="font-semibold text-base text-base-content/80">${label}</span>`
+                    : renderDateChip(label, { size: 'sm' });
                 return `
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="font-semibold text-base"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
-                        ${appTag(tradeLabel)}
-                    </div>
+                    <button type="button" class="trade-date-group__header trade-date-group__header--toggle" onclick="toggleTradeDateGroupExpand(this)" aria-expanded="${expanded}" aria-label="${expanded ? 'Collapse' : 'Expand'} trades for ${label}">
+                        <div class="flex justify-between items-center gap-2">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i class="fas fa-chevron-down trade-date-group__expand-icon${expanded ? ' trade-date-group__expand-icon--expanded' : ''}" aria-hidden="true"></i>
+                                ${dateLabel}
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                ${renderAmount(net, { size: 'sm', compact: true, showSign: true, align: 'right' })}
+                                ${appTag(tradeLabel)}
+                            </div>
+                        </div>
+                    </button>
                 `;
             }
 
-            function renderGroupedTrades(trades, renderItem, dateField = 'buyDate') {
-                return groupTradesByDate(trades, dateField).map(([dateKey, items], idx) => `
-                    <section class="${idx ? 'mt-4' : ''}">
-                        ${renderDateGroupHeader(dateKey, items.length)}
-                        ${items.map(renderItem).join('')}
-                    </section>
-                `).join('');
+            function renderGroupedTrades(trades, renderItem, dateField = 'buyDate', opts = {}) {
+                const { wrapInCard = false, defaultExpanded = false } = opts;
+                return groupTradesByDate(trades, dateField).map(([dateKey, items], idx) => {
+                    const expanded = defaultExpanded;
+                    const header = renderDateGroupHeader(dateKey, items, { expanded });
+                    const itemsHtml = `<div class="trade-list-table">${renderTradeListTableHeader()}${items.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
+                    if (wrapInCard) {
+                        return `
+                            <section class="trade-date-group${expanded ? ' trade-date-group--expanded' : ''}">
+                                <div class="card bg-base-100 rounded-2xl">
+                                    <div class="card-body p-3">
+                                        ${header}
+                                        <div class="trade-date-group__list${expanded ? '' : ' trade-date-group__list--hidden'}">${itemsHtml}</div>
+                                    </div>
+                                </div>
+                            </section>
+                        `;
+                    }
+                    return `
+                        <section class="${idx ? 'mt-4' : ''}">
+                            ${header}
+                            ${itemsHtml}
+                        </section>
+                    `;
+                }).join('');
+            }
+
+            function paintTradeSummaryStats(prefix, stats) {
+                const { net, gross, trades, charges } = stats;
+                paintTotalAmountCard(document.getElementById(`${prefix}Net`), net, {
+                    label: 'Net Profit',
+                    size: 'hero',
+                    tone: net >= 0 ? 'positive' : 'negative'
+                });
+                paintMoneyAmountWords(document.getElementById(`${prefix}NetWords`), net, 'center');
+                paintTotalAmountCard(document.getElementById(`${prefix}Gross`), gross, {
+                    label: 'Gross',
+                    size: 'sm',
+                    tone: gross >= 0 ? 'positive' : 'negative'
+                });
+                paintMoneyAmountWords(document.getElementById(`${prefix}GrossWords`), gross, 'center');
+                paintTradesCountCard(document.getElementById(`${prefix}Trades`), trades);
+                paintTotalAmountCard(document.getElementById(`${prefix}Charges`), charges, {
+                    label: 'Charges',
+                    size: 'sm',
+                    tone: 'negative'
+                });
+                paintMoneyAmountWords(document.getElementById(`${prefix}ChargesWords`), charges, 'center');
             }
 
             // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
@@ -2565,43 +2740,27 @@
 
                 filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
 
-                let net = 0, charges = 0, gross = 0;
+                let net = 0, gross = 0, charges = 0;
                 filtered.forEach(t => {
                     net += t.netProfit || 0;
-                    charges += t.charges || 0;
                     gross += t.grossProfit || 0;
+                    charges += t.charges || 0;
                 });
 
-                paintTotalAmountCard(document.getElementById('summaryNet'), net, {
-                    label: 'Net Profit',
-                    note: amountInWords(net),
-                    size: 'hero',
-                    tone: net >= 0 ? 'positive' : 'negative'
-                });
-                paintTotalAmountCard(document.getElementById('summaryGross'), gross, {
-                    label: 'Gross',
-                    size: 'sm',
-                    tone: 'neutral'
-                });
-                document.getElementById('summaryTrades').textContent = filtered.length;
-                paintTotalAmountCard(document.getElementById('summaryCharges'), charges, {
-                    label: 'Charges',
-                    size: 'sm',
-                    tone: 'negative'
-                });
+                paintTradeSummaryStats('summary', { net, gross, trades: filtered.length, charges });
 
                 const container = document.getElementById('transactionList');
 
                 if (filtered.length === 0) {
                     if (tradeQuery) {
-                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
+                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
                         return;
                     }
-                    container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
+                    container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
                     return;
                 }
 
-                container.innerHTML = renderGroupedTrades(filtered, renderTradeListItem);
+                container.innerHTML = renderGroupedTrades(filtered, renderTradeListItem, 'buyDate', { wrapInCard: true });
             }
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
@@ -2611,8 +2770,8 @@
                     const range = getDateRange(30);
                     pastFrom = range.from;
                     pastTo = range.to;
-                    document.getElementById('pastFrom').value = pastFrom;
-                    document.getElementById('pastTo').value = pastTo;
+                    setDateInputValue(document.getElementById('pastFrom'), pastFrom);
+                    setDateInputValue(document.getElementById('pastTo'), pastTo);
                 }
                 const fromDate = new Date(pastFrom);
                 const toDate = new Date(pastTo);
@@ -2635,39 +2794,28 @@
                 const pastQuery = pastSearchQuery.trim().toLowerCase();
                 const listContainer = document.getElementById('pastTradesList');
 
-                const rangeLabel = document.getElementById('pastRangeLabel');
-                if (rangeLabel) rangeLabel.innerHTML = `${fmtDate(pastFrom)} &ndash; ${fmtDate(pastTo)}`;
+                const rangeHost = document.getElementById('pastRangeChipHost');
+                if (rangeHost) {
+                    rangeHost.innerHTML = renderDateRangeChip(pastFrom, pastTo, {
+                        onclick: 'openFilterSheet()',
+                        clickable: true
+                    });
+                }
 
-                let net = 0, charges = 0, gross = 0;
-                filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; gross += t.grossProfit || 0; });
-                paintTotalAmountCard(document.getElementById('pastSummaryNet'), net, {
-                    label: 'Net Profit',
-                    note: amountInWords(net),
-                    size: 'hero',
-                    tone: net >= 0 ? 'positive' : 'negative'
-                });
-                paintTotalAmountCard(document.getElementById('pastSummaryGross'), gross, {
-                    label: 'Gross',
-                    size: 'sm',
-                    tone: 'neutral'
-                });
-                document.getElementById('pastSummaryTrades').textContent = filtered.length;
-                paintTotalAmountCard(document.getElementById('pastSummaryCharges'), charges, {
-                    label: 'Charges',
-                    size: 'sm',
-                    tone: 'negative'
-                });
+                let net = 0, gross = 0, charges = 0;
+                filtered.forEach(t => { net += t.netProfit || 0; gross += t.grossProfit || 0; charges += t.charges || 0; });
+                paintTradeSummaryStats('pastSummary', { net, gross, trades: filtered.length, charges });
 
                 const emptyHtml = pastQuery
-                    ? `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
-                    : `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
+                    ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
+                    : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
 
                 if (filtered.length === 0) {
                     listContainer.innerHTML = emptyHtml;
                     return;
                 }
 
-                listContainer.innerHTML = renderGroupedTrades(filtered, renderTradeListItem);
+                listContainer.innerHTML = renderGroupedTrades(filtered, renderTradeListItem, 'buyDate', { wrapInCard: true });
             }
 
             // ---------- MONEY TRACKER ----------
@@ -2781,7 +2929,7 @@
             function renderMoneyFilterListItem(e, showAccount, hideTypeBadge) {
                 const isDeposit = e.type === 'deposit';
                 const typeBadge = hideTypeBadge ? '' : (isDeposit
-                    ? appTag('Invest', 'success')
+                    ? appTag('Invest', 'secondary')
                     : appTag('Withdraw', 'error'));
                 const accounts = getMoneyAccounts();
                 const acc = accounts.find(a => a.id === e.accountId);
@@ -2792,12 +2940,15 @@
                     ? `<div class="flex flex-wrap gap-1.5 mb-1">${accountChip}${typeBadge}</div>`
                     : '';
                 return `
-                    <div class="flex justify-between items-center gap-3 py-3 border-b border-base-200 last:border-0">
+                    <div class="flex justify-between items-start gap-3 py-3 border-b border-base-200 last:border-0">
                         <div class="min-w-0 flex-1">
                             ${topRow}
-                            <div class="text-sm text-base-content/60"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
+                            <div class="text-sm text-base-content/60 app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(e.time)}</span></div>
                         </div>
-                        <div class="money-stat-amount money-stat-amount--right shrink-0">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
+                        <div class="money-value-block money-value-block--right shrink-0 max-w-[58%]">
+                            <div class="money-stat-amount money-stat-amount--right">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
+                            ${renderMoneyAmountWords(e.amount, 'right')}
+                        </div>
                     </div>
                 `;
             }
@@ -2815,7 +2966,23 @@
                 const isDepositOnly = moneyPageTypeFilter === 'deposit';
 
                 titleEl.textContent = getMoneyPageFilterViewTitle();
-                if (metaEl) metaEl.textContent = getMoneyPageFilterViewMeta();
+                if (metaEl) {
+                    const parts = [];
+                    if (moneyAccountFilter !== 'all') {
+                        const acc = getMoneyAccounts().find(a => a.id === moneyAccountFilter);
+                        if (acc) parts.push(acc.name);
+                    }
+                    const quickLabels = { yesterday: 'Yesterday', 7: 'Last 1 week', 30: 'Last 1 month', 90: 'Last 3 months' };
+                    const prefix = quickLabels[moneyPageRangeKey] || '';
+                    if (prefix) parts.push(prefix);
+                    metaEl.textContent = parts.join(' · ') || 'All accounts · All time';
+                }
+                const dateChipHost = document.getElementById('moneyPageFilterDateChipHost');
+                if (dateChipHost) {
+                    dateChipHost.innerHTML = moneyPageDateFilterActive()
+                        ? renderDateRangeChip(moneyPageFrom, moneyPageTo, { size: 'sm', onclick: 'openMoneyPageFilterSheet()', clickable: true })
+                        : '';
+                }
 
                 const typeSelect = document.getElementById('moneyPageFilterTypeLabel');
                 if (typeSelect) syncMoneyTypeDropdowns();
@@ -2823,35 +2990,43 @@
                 if (isWithdrawOnly) {
                     summaryEl.innerHTML = `
                         <div class="${UI.statLabel}">Total Withdrawn</div>
-                        <div class="money-stat-amount money-stat-amount--center mx-auto">
-                            ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', tone: 'withdraw', align: 'center' })}
+                        <div class="money-value-block money-value-block--center mx-auto">
+                            <div class="money-stat-amount money-stat-amount--center">
+                                ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', tone: 'withdraw', align: 'center' })}
+                            </div>
+                            ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
                         </div>
-                        <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
+                        <div class="text-xs text-base-content/60 mt-2">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                     `;
                 } else if (isDepositOnly) {
                     summaryEl.innerHTML = `
-                        <div class="${UI.statLabel}">Total Deposited</div>
-                        <div class="money-stat-amount money-stat-amount--center mx-auto">
-                            ${renderAmount(displayPortfolio.deposited, { size: 'lg', tone: 'deposit', align: 'center' })}
+                        <div class="${UI.statLabel} deposit-label">Total Deposited</div>
+                        <div class="money-value-block money-value-block--center mx-auto">
+                            <div class="money-stat-amount money-stat-amount--center">
+                                ${renderAmount(displayPortfolio.deposited, { size: 'lg', tone: 'deposit', align: 'center' })}
+                            </div>
+                            ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
                         </div>
-                        <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
+                        <div class="text-xs text-base-content/60 mt-2">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                     `;
                 } else {
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="flex flex-col items-center">
-                                <div class="${UI.statLabel}">Deposited</div>
+                            <div class="money-value-block money-value-block--center">
+                                <div class="${UI.statLabel} deposit-label">Deposited</div>
                                 <div class="money-stat-amount money-stat-amount--center">
                                     ${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}
                                 </div>
-                                <div class="text-xs text-base-content/60">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
+                                ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
+                                <div class="text-xs text-base-content/60 mt-1">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
                             </div>
-                            <div class="flex flex-col items-center">
+                            <div class="money-value-block money-value-block--center">
                                 <div class="${UI.statLabel}">Withdrawn</div>
                                 <div class="money-stat-amount money-stat-amount--center">
                                     ${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
                                 </div>
-                                <div class="text-xs text-base-content/60">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
+                                ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
+                                <div class="text-xs text-base-content/60 mt-1">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
                             </div>
                         </div>
                     `;
@@ -2869,8 +3044,8 @@
                 syncMoneyTypeDropdowns();
                 const fromEl = document.getElementById('moneyPageFrom');
                 const toEl = document.getElementById('moneyPageTo');
-                if (fromEl) fromEl.value = moneyPageFrom || '';
-                if (toEl) toEl.value = moneyPageTo || '';
+                if (fromEl) setDateInputValue(fromEl, moneyPageFrom || '');
+                if (toEl) setDateInputValue(toEl, moneyPageTo || '');
                 setRangeButtonsActive('#moneyPageRangeButtons', moneyPageRangeKey);
                 const filterBtn = document.getElementById('moneyPageFilterBtn');
                 setFilterBtnHighlight(filterBtn, moneyPageFiltersActive());
@@ -2966,11 +3141,18 @@
                 renderMoney();
             }
 
+            function getMoneyHistorySheetTitle() {
+                const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
+                if (!acc) return 'Account History';
+                const holder = acc.holderName ? ` · ${acc.holderName}` : '';
+                return `${acc.name}${holder}`;
+            }
+
             function openAccountHistorySheet(accountId) {
                 moneyHistorySheetAccountId = accountId;
                 resetMoneyHistoryFilters();
                 renderAccountHistorySheet();
-                Sheet.mountPanel('', 'panelMoneyHistory', '');
+                Sheet.mountPanel(getMoneyHistorySheetTitle(), 'panelMoneyHistory', '');
             }
 
             function resetMoneyHistoryFilters() {
@@ -3015,8 +3197,8 @@
             function syncMoneyHistoryRangeSheetUI() {
                 const fromEl = document.getElementById('moneyHistoryFrom');
                 const toEl = document.getElementById('moneyHistoryTo');
-                if (fromEl) fromEl.value = moneyHistoryFrom || '';
-                if (toEl) toEl.value = moneyHistoryTo || '';
+                if (fromEl) setDateInputValue(fromEl, moneyHistoryFrom || '');
+                if (toEl) setDateInputValue(toEl, moneyHistoryTo || '');
                 setRangeButtonsActive('#moneyHistoryRangeButtons', moneyHistoryRangeKey);
             }
 
@@ -3029,10 +3211,15 @@
             function openMoneyHistoryRangeSheet() {
                 syncMoneyHistoryRangeSheetUI();
                 Sheet.mountPanel('<i class="fas fa-calendar-alt mr-2"></i>Date Range', 'panelMoneyHistoryRange',
-                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyMoneyHistoryDateRange()', actionIcon: 'fa-check' }));
+                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeMoneyHistoryRangeSheet()', actionOnClick: 'applyMoneyHistoryDateRange()', actionIcon: 'fa-check' }));
             }
 
             function closeMoneyHistoryRangeSheet() {
+                if (moneyHistorySheetAccountId) {
+                    renderAccountHistorySheet();
+                    Sheet.mountPanel(getMoneyHistorySheetTitle(), 'panelMoneyHistory', '');
+                    return;
+                }
                 Sheet.close();
             }
 
@@ -3057,8 +3244,8 @@
                     moneyHistoryFrom = range.from;
                     moneyHistoryTo = range.to;
                 }
+                syncMoneyHistoryRangeSheetUI();
                 closeMoneyHistoryRangeSheet();
-                renderAccountHistorySheet();
             }
 
             function applyMoneyHistoryDateRange() {
@@ -3069,7 +3256,6 @@
                     moneyHistoryTo = null;
                     moneyHistoryRangeKey = 'all';
                     closeMoneyHistoryRangeSheet();
-                    renderAccountHistorySheet();
                     return;
                 }
                 if (!from || !to) { showToast('Please select both From and To dates.', 'warning'); return; }
@@ -3078,7 +3264,6 @@
                 moneyHistoryTo = to;
                 moneyHistoryRangeKey = 'custom';
                 closeMoneyHistoryRangeSheet();
-                renderAccountHistorySheet();
                 showToast('Date range applied.', 'success');
             }
 
@@ -3106,16 +3291,16 @@
 
             function renderAccountHistorySheet() {
                 const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
-                const titleEl = document.getElementById('moneyHistoryModalTitle');
                 const metaEl = document.getElementById('moneyHistoryMeta');
                 const summaryEl = document.getElementById('moneyHistorySheetSummary');
                 const listEl = document.getElementById('moneyHistorySheetList');
-                if (!acc || !titleEl || !listEl) return;
+                if (!acc || !listEl) return;
+
+                if (Sheet._activePanel?.id === 'panelMoneyHistory' && Sheet.titleEl()) {
+                    Sheet.titleEl().textContent = getMoneyHistorySheetTitle();
+                }
 
                 syncMoneyHistoryFilterUI();
-
-                const holder = acc.holderName ? ` · ${acc.holderName}` : '';
-                titleEl.textContent = `${acc.name}${holder}`;
 
                 const allEntries = sortMoneyEntries(getMoneyEntries().filter(e => e.accountId === acc.id));
                 const entries = filterMoneyHistoryEntries(allEntries);
@@ -3132,21 +3317,29 @@
                     metaEl.textContent = meta;
                     metaEl.classList.toggle('is-filtered', moneyHistoryFiltersActive());
                 }
+                const historyDateChipHost = document.getElementById('moneyHistoryDateChipHost');
+                if (historyDateChipHost) {
+                    historyDateChipHost.innerHTML = moneyHistoryDateFilterActive()
+                        ? renderDateRangeChip(moneyHistoryFrom, moneyHistoryTo, { size: 'sm', onclick: 'openMoneyHistoryRangeSheet()', clickable: true })
+                        : '';
+                }
 
                 if (summaryEl) {
                     summaryEl.innerHTML = `
                         <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="flex flex-col items-center">
-                                <div class="${UI.statLabel}">Deposited</div>
+                            <div class="money-value-block money-value-block--center">
+                                <div class="${UI.statLabel} deposit-label">Deposited</div>
                                 <div class="money-stat-amount money-stat-amount--center">
                                     ${renderAmount(deposited, { size: 'md', tone: 'deposit', align: 'center' })}
                                 </div>
+                                ${renderMoneyAmountWords(deposited, 'center')}
                             </div>
-                            <div class="flex flex-col items-center">
+                            <div class="money-value-block money-value-block--center">
                                 <div class="${UI.statLabel}">Withdrawn</div>
                                 <div class="money-stat-amount money-stat-amount--center">
                                     ${renderAmount(withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
                                 </div>
+                                ${renderMoneyAmountWords(withdrawn, 'center')}
                             </div>
                         </div>
                     `;
@@ -3165,21 +3358,24 @@
                 listEl.innerHTML = entries.map(e => {
                     const isDeposit = e.type === 'deposit';
                     const typeBadge = isDeposit
-                        ? appTag('Deposit', 'success')
+                        ? appTag('Deposit', 'secondary')
                         : appTag('Withdraw', 'error');
-                    const note = e.note ? `<div class="text-sm text-base-content/60 mt-1">${e.note}</div>` : '';
+                    const note = e.note ? `<div class="text-sm text-base-content/60 mt-1.5">${e.note}</div>` : '';
                     return `
-                        <div class="money-history-sheet-item flex justify-between items-start gap-2">
-                            <div class="min-w-0">
-                                <div class="mb-1 flex flex-wrap gap-1.5">${typeBadge}</div>
-                                ${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'left' })}
-                                <div class="text-sm text-base-content/60 mt-1"><i class="far fa-clock mr-1"></i>${fmtDateTime(e.date, e.time)}</div>
-                                ${note}
+                        <div class="money-history-item">
+                            <div class="money-history-item__top">
+                                <div class="money-history-item__badge">${typeBadge}</div>
+                                <div class="money-history-item__actions">
+                                    <div class="money-value-block money-value-block--right shrink-0 max-w-[58%]">
+                                        <div class="money-stat-amount money-stat-amount--right">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
+                                        ${renderMoneyAmountWords(e.amount, 'right')}
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit" aria-label="Edit entry"><i class="fas fa-pen text-base-content/55"></i></button>
+                                    <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8 text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry"><i class="fas fa-trash-alt"></i></button>
+                                </div>
                             </div>
-                            <div class="flex gap-1 shrink-0">
-                                <button type="button" class="btn btn-sm btn-ghost" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit"><i class="fas fa-pen"></i></button>
-                                <button type="button" class="btn btn-sm btn-ghost text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
-                            </div>
+                            <div class="app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                            ${note}
                         </div>
                     `;
                 }).join('');
@@ -3200,52 +3396,76 @@
 
             function renderMoneyAccountCard(stats) {
                 const acc = stats.account;
-                const holderLine = acc.holderName
-                    ? `<div class="text-sm text-primary font-semibold mt-1"><i class="fas fa-user mr-1"></i>${acc.holderName}</div>`
-                    : '';
+                const holderLine = acc.holderName ? appTag(acc.holderName) : '';
                 const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
                 const row = (label, amount, extra = '', tone = 'positive') =>
-                    `<div class="flex justify-between items-center gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/60 shrink-0">${label}</span><div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right' })}</div></div>`;
+                    `<div class="py-2 border-b border-base-200 ${extra}">
+                        <div class="flex justify-between items-start gap-4">
+                            <span class="text-sm shrink-0 pt-1 ${tone === 'deposit' ? 'deposit-label' : 'text-base-content/60'}">${label}</span>
+                            <div class="money-value-block money-value-block--right min-w-0 max-w-[62%]">
+                                <div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right' })}</div>
+                                ${renderMoneyAmountWords(amount, 'right')}
+                            </div>
+                        </div>
+                    </div>`;
                 return `
-                    <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
-                        <div class="card-body p-4">
-                            <div class="flex justify-between items-start gap-2 mb-1">
-                                <div class="min-w-0">
-                                    <div class="font-medium text-base-content/80 text-base">${acc.name}</div>
-                                    ${holderLine}
-                                </div>
-                                <div class="flex items-center gap-1 shrink-0">
-                                    <button type="button" class="${UI.actionBtn} ${UI.moneyActionDeposit}" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" title="Deposit" aria-label="Deposit">
-                                        <i class="fas fa-plus"></i>
-                                    </button>
-                                    <button type="button" class="${UI.actionBtn} ${UI.moneyActionWithdraw}" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" title="Withdraw" aria-label="Withdraw">
-                                        <i class="fas fa-minus"></i>
-                                    </button>
-                                    <div class="dropdown dropdown-end">
-                                        <button type="button" class="${UI.actionBtn} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box shadow-lg z-50 p-2 min-w-[11.5rem]">
-                                            <li>
-                                                <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
-                                                    <span class="${UI.menuIcon('history')}"><i class="fas fa-history"></i></span>
-                                                    <span class="flex-1 text-left">History</span>
-                                                    ${historyCount ? appTag(String(historyCount), 'accent') : ''}
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyAccountModal('${acc.id}')">
-                                                    <span class="${UI.menuIcon('edit')}"><i class="fas fa-pen"></i></span>
-                                                    <span class="flex-1 text-left">Edit account</span>
-                                                </button>
-                                            </li>
-                                        </ul>
+                    <div class="card bg-base-100 rounded-2xl money-account-card">
+                        <div class="card-body p-0">
+                            <div class="px-4 pt-4 pb-3">
+                                <div class="trade-card-header items-start">
+                                    <div class="money-account-card__title-row min-w-0">
+                                        <div class="trade-card-header__title">${acc.name}</div>
+                                        ${holderLine}
+                                    </div>
+                                    <div class="trade-card-header__actions">
+                                        ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', className: 'trade-card-header__pnl' })}
+                                        <div class="dropdown dropdown-end trade-row-dropdown">
+                                            <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
+                                                <i class="fas fa-ellipsis-v text-sm"></i>
+                                            </button>
+                                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]">
+                                                <li>
+                                                    <button type="button" class="flex items-center w-full px-2 py-2 rounded-lg hover:bg-base-200 money-account-expand-toggle" onclick="toggleMoneyAccountExpand(this)" aria-expanded="false">
+                                                        <span class="flex-1 text-left money-account-expand-toggle__label">Expand details</span>
+                                                    </button>
+                                                </li>
+                                                <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
+                                                <li>
+                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
+                                                        <span class="${UI.menuIcon('deposit')}"><i class="fas fa-plus"></i></span>
+                                                        <span class="flex-1 text-left">Deposit</span>
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
+                                                        <span class="${UI.menuIcon('withdraw')}"><i class="fas fa-minus"></i></span>
+                                                        <span class="flex-1 text-left">Withdraw</span>
+                                                    </button>
+                                                </li>
+                                                <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
+                                                <li>
+                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
+                                                        <span class="${UI.menuIcon('history')}"><i class="fas fa-history"></i></span>
+                                                        <span class="flex-1 text-left">History</span>
+                                                        ${historyCount ? appTag(String(historyCount), 'accent') : ''}
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyAccountModal('${acc.id}')">
+                                                        <span class="${UI.menuIcon('edit')}"><i class="fas fa-pen"></i></span>
+                                                        <span class="flex-1 text-left">Edit account</span>
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            ${row('Deposited', stats.deposited, '', 'deposit')}
-                            ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
-                            ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 pt-2 mt-1', 'positive')}
+                            <div class="trade-card-details trade-card-details--hidden px-4 pb-4">
+                                ${row('Deposited', stats.deposited, '', 'deposit')}
+                                ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
+                                ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 pt-2 mt-1', 'positive')}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -3300,20 +3520,22 @@
                 const heroEl = document.getElementById('moneyTotalValueHero');
                 if (heroEl) paintTotalAmountCard(heroEl, displayPortfolio.totalValue, {
                     label: 'Total Value',
-                    note: amountInWords(displayPortfolio.totalValue),
                     size: 'hero',
                     tone: 'positive'
                 });
+                paintMoneyAmountWords(document.getElementById('moneyTotalValueWords'), displayPortfolio.totalValue, 'center');
                 paintTotalAmountCard(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, {
                     label: 'Deposited',
                     size: 'sm',
                     tone: 'deposit'
                 });
+                paintMoneyAmountWords(document.getElementById('moneyTotalDepositedWords'), displayPortfolio.deposited, 'center');
                 paintTotalAmountCard(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, {
                     label: 'Withdrawn',
                     size: 'sm',
                     tone: 'withdraw'
                 });
+                paintMoneyAmountWords(document.getElementById('moneyTotalWithdrawnWords'), displayPortfolio.withdrawn, 'center');
 
                 const filterEl = document.getElementById('moneyAccountFilterMenu');
                 if (filterEl) {
@@ -3326,7 +3548,7 @@
                 const accountList = document.getElementById('moneyAccountList');
                 if (accountList) {
                     if (visibleAccounts.length === 0) {
-                        accountList.innerHTML = '<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-university mb-3"></i><h6>No accounts yet</h6><p class="text-sm text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
+                        accountList.innerHTML = '<div class="text-center text-base-content/60 py-6"><i class="fas fa-university mb-3 text-2xl opacity-40"></i><h6>No accounts yet</h6><p class="text-sm text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
                     } else {
                         accountList.innerHTML = visibleAccounts.map(renderMoneyAccountCard).join('');
                     }
@@ -3356,7 +3578,11 @@
                 const time = document.getElementById('moneyEntryTime')?.value || '';
                 const el = document.getElementById('moneyEntryDateTimeDisplay');
                 if (!el) return;
-                el.textContent = date ? `${fmtDate(date)} · ${formatMoneyEntryTimeDisplay(time)}` : '—';
+                if (!date) {
+                    el.textContent = '—';
+                    return;
+                }
+                el.innerHTML = `${renderDateChip(fmtDateDisplay(date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(time)}</span>`;
             }
 
             function setMoneyEntryDateTimeEditing(editing) {
@@ -3395,11 +3621,13 @@
                 if (typeEl) typeEl.value = entryType;
                 const header = document.getElementById('moneyEntryHeader');
                 if (header) {
-                    header.classList.remove('bg-success', 'text-success-content', 'bg-error', 'text-error-content', 'bg-success/15', 'bg-error/15', 'text-success', 'text-error', 'border-success/20', 'border-error/20');
+                    header.classList.remove(
+                        'bg-success', 'text-success-content', 'bg-error', 'text-error-content',
+                        'bg-success/15', 'bg-error/15', 'text-success', 'text-error',
+                        'border-success/20', 'border-error/20', 'deposit-entry-header'
+                    );
                     header.classList.add(
-                        isWithdraw ? 'bg-error/15' : 'bg-success/15',
-                        isWithdraw ? 'text-error' : 'text-success',
-                        isWithdraw ? 'border-error/20' : 'border-success/20',
+                        isWithdraw ? 'bg-error/15 text-error border-error/20' : 'deposit-entry-header',
                         'border-b'
                     );
                 }
@@ -3443,11 +3671,11 @@
                     previewEl.classList.add('hidden');
                     return;
                 }
-                previewEl.innerHTML = renderAmount(amount, {
+                previewEl.innerHTML = `<div class="money-value-block money-value-block--left">${renderAmount(amount, {
                     size: 'md',
                     tone: document.getElementById('moneyEntryType')?.value === 'withdraw' ? 'withdraw' : 'deposit',
                     align: 'left'
-                });
+                })}${renderMoneyAmountWords(amount, 'left')}</div>`;
                 previewEl.classList.remove('hidden');
             }
 
@@ -3460,7 +3688,7 @@
                 const resolvedAccountId = accountId || accounts[0]?.id;
                 document.getElementById('moneyEntryEditId').value = '';
                 document.getElementById('moneyEntryAmount').value = '';
-                document.getElementById('moneyEntryDate').value = new Date().toISOString().split('T')[0];
+                setDateInputValue(document.getElementById('moneyEntryDate'), new Date().toISOString().split('T')[0]);
                 document.getElementById('moneyEntryTime').value = getNowTime();
                 applyMoneyEntryForm(resolvedAccountId, type || 'deposit', false);
                 updateMoneyEntryAmountPreview();
@@ -3472,7 +3700,7 @@
                 if (!entry) { showToast('Entry not found.', 'danger'); return; }
                 document.getElementById('moneyEntryEditId').value = entry.id;
                 document.getElementById('moneyEntryAmount').value = entry.amount || '';
-                document.getElementById('moneyEntryDate').value = entry.date || '';
+                setDateInputValue(document.getElementById('moneyEntryDate'), entry.date || '');
                 document.getElementById('moneyEntryTime').value = entry.time || getNowTime();
                 applyMoneyEntryForm(entry.accountId, entry.type || 'deposit', true);
                 updateMoneyEntryAmountPreview();
@@ -3527,8 +3755,8 @@
 
             function setMoneyAccountModalMode(isEdit) {
                 const title = isEdit ? '<i class="fas fa-pen mr-2"></i>Edit Account' : '<i class="fas fa-plus mr-2"></i>Add Account';
-                const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
-                    ${isEdit ? renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true, className: 'mt-2' }) : ''}`;
+                const footer = `<div class="app-sheet__footer-actions w-full">${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
+                    ${isEdit ? renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true }) : ''}</div>`;
                 Sheet.mountPanel(title, 'panelMoneyAccount', footer);
             }
 
@@ -3695,7 +3923,7 @@
             }
 
             function renderTransactionsDateGroupHeader(dateKey, items) {
-                const label = dateKey === 'unknown' ? 'No date' : fmtDate(dateKey);
+                const label = dateKey === 'unknown' ? 'No date' : fmtDateDisplay(dateKey);
                 const tradeLabel = items.length === 1 ? '1 trade' : `${items.length} trades`;
                 const counts = {};
                 items.forEach(t => {
@@ -3706,7 +3934,7 @@
                 return `
                     <div class="mb-2">
                         <div class="flex justify-between items-center">
-                            <div class="font-semibold text-base-content"><i class="far fa-calendar-alt mr-2 text-primary"></i>${label}</div>
+                            ${dateKey === 'unknown' ? `<span class="font-semibold text-base-content">${label}</span>` : renderDateChip(label, { size: 'sm' })}
                             ${appTag(tradeLabel)}
                         </div>
                         ${chips ? `<div class="flex flex-wrap gap-1.5 mt-1">${chips}</div>` : ''}
@@ -3764,7 +3992,7 @@
 
                 const listEl = document.getElementById('txHistList');
                 if (txs.length === 0) {
-                    listEl.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
+                    listEl.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
                     return;
                 }
                 listEl.innerHTML = renderGroupedTradesWithChips(txs, renderTradeListItem);
@@ -3924,16 +4152,9 @@
                 if (buyEl && !buyEl.value) {
                     const today = new Date().toISOString().split('T')[0];
                     const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                    buyEl.value = yesterday;
-                    sellEl.value = today;
+                    setDateInputValue(buyEl, yesterday);
+                    setDateInputValue(sellEl, today);
                 }
-                document.querySelectorAll('#page-mtf-calc input.calc-date').forEach(el => {
-                    if (el.dataset.pickerWired) return;
-                    el.dataset.pickerWired = '1';
-                    const openPicker = () => { try { if (el.showPicker) el.showPicker(); } catch (_) {} };
-                    el.addEventListener('click', openPicker);
-                    el.addEventListener('focus', openPicker);
-                });
                 renderCalcSellPctChips();
             }
 
@@ -3945,8 +4166,8 @@
                 const buyEl = document.getElementById('calcBuyDate');
                 const sellEl = document.getElementById('calcSellDate');
                 const day = buyEl.value || new Date().toISOString().split('T')[0];
-                buyEl.value = day;
-                sellEl.value = day;
+                setDateInputValue(buyEl, day);
+                setDateInputValue(sellEl, day);
                 updateMtfCalculator();
             }
 
@@ -3955,8 +4176,8 @@
                 const sellEl = document.getElementById('calcSellDate');
                 const today = new Date();
                 const tomorrow = new Date(today.getTime() + 86400000);
-                buyEl.value = today.toISOString().split('T')[0];
-                sellEl.value = tomorrow.toISOString().split('T')[0];
+                setDateInputValue(buyEl, today.toISOString().split('T')[0]);
+                setDateInputValue(sellEl, tomorrow.toISOString().split('T')[0]);
                 updateMtfCalculator();
             }
 
@@ -4156,68 +4377,34 @@
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
 
-                const bd = tx.breakdown || {};
                 const isOpen = (tx.status || 'closed') === 'open';
                 const statusLabel = isOpen ? appTag('Open', 'warning') : appTag('Closed');
-                const lev = tx.leverage || 1;
-                const levDisplay = lev > 1 ? `${lev}x` : '1x';
-                const mtfAmt = tx.mtfAmount || 0;
-                const ownMargin = tx.ownMargin || tx.totalInvestment || 0;
-                const totalInv = tx.totalInvestment || (tx.quantity * tx.buyPrice) || 0;
-                const totalCost = (tx.charges || 0) + (tx.interest || 0);
+                const notesBlock = tx.notes
+                    ? `<div class="trade-view-sheet__notes mt-4 pt-4 border-t border-base-200">
+                        <div class="text-sm font-medium text-base-content/70 mb-1">Notes</div>
+                        <p class="text-sm text-base-content/60 mb-0">${tx.notes}</p>
+                       </div>`
+                    : '';
 
-                let html = `
-                    <div class="flex justify-between items-start gap-3 mb-3">
-                        <div>
-                            <h5 class="font-semibold text-base-content/80 mb-2">${tx.company}</h5>
-                            <div class="flex flex-wrap gap-1.5">
-                                ${appTag(tx.broker)}
-                                ${statusLabel}
-                                ${appTag(levDisplay, 'accent')}
+                const html = `
+                    <div class="trade-view-sheet">
+                        <div class="trade-card-header mb-3">
+                            <div class="min-w-0">
+                                <div class="trade-card-header__title">${tx.company}</div>
+                                ${isOpen ? `<div class="mt-1.5">${statusLabel}</div>` : ''}
+                            </div>
+                            <div class="trade-card-header__actions">
+                                ${renderAmount(tx.netProfit, { size: 'md', compact: true, showSign: true, align: 'right', className: 'trade-card-header__pnl' })}
                             </div>
                         </div>
-                        <div class="text-end">
-                            <div class="text-sm text-base-content/60">Net Profit</div>
-                            ${renderAmount(tx.netProfit, { size: 'xl', compact: true, align: 'right' })}
-                        </div>
+                        ${renderTradeDetailsList(tx)}
+                        ${renderTradeViewPnLSummary(tx)}
+                        ${notesBlock}
+                        <div class="text-xs text-base-content/45 mt-3 text-center">ID: ${tx.id}</div>
                     </div>
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-base-content/60">Gross</div><div class="font-medium text-base-content/80">${fmt(tx.grossProfit)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-base-content/55">Holding</div><div class="font-medium text-base-content/80">${tx.holdingDays || 0}d</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2 text-center"><div class="text-sm text-base-content/55">Qty</div><div class="font-medium text-base-content/80">${tx.quantity}</div></div></div>
-                    </div>
-                    <div class="section-title"><i class="fas fa-hand-holding-usd mr-2"></i>Funding</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Investment</span><span class="text-sm font-semibold text-right">${fmtDec(totalInv)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Your Margin</span><span class="text-sm font-semibold text-right">${fmtDec(ownMargin)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Broker Funded</span><span class="text-sm font-semibold text-right">${fmtDec(mtfAmt)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Leverage</span><span class="text-sm font-semibold text-right">${levDisplay}</span></div>
-                    <div class="section-title"><i class="fas fa-calendar-alt mr-2"></i>Dates & Prices</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Buy Date</span><span class="text-sm font-semibold text-right">${fmtDateFull(tx.buyDate)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Sell Date</span><span class="text-sm font-semibold text-right">${fmtDateFull(tx.sellDate)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Buy Price</span><span class="text-sm font-semibold text-right">${fmtDec(tx.buyPrice)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Sell Price</span><span class="text-sm font-semibold text-right">${fmtDec(tx.sellPrice)}</span></div>
-                    <div class="section-title"><i class="fas fa-receipt mr-2"></i>Charges</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Brokerage</span><span class="text-sm font-semibold text-right">${fmtDec(bd.brokerage || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">STT</span><span class="text-sm font-semibold text-right">${fmtDec(bd.stt || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Exchange</span><span class="text-sm font-semibold text-right">${fmtDec(bd.exchange || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">SEBI</span><span class="text-sm font-semibold text-right">${fmtDec(bd.sebi || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Stamp Duty</span><span class="text-sm font-semibold text-right">${fmtDec(bd.stamp || 0)}</span></div>
-                    ${bd.pledge ? `<div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Pledge</span><span class="text-sm font-semibold text-right">${fmtDec(bd.pledge)}</span></div>` : ''}
-                    ${bd.unpledge ? `<div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Unpledge</span><span class="text-sm font-semibold text-right">${fmtDec(bd.unpledge)}</span></div>` : ''}
-                    ${bd.dp ? `<div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">DP Charges</span><span class="text-sm font-semibold text-right">${fmtDec(bd.dp)}</span></div>` : ''}
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">GST</span><span class="text-sm font-semibold text-right">${fmtDec(bd.gst || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(tx.charges || 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right' })}</div>
-                    <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&amp;L Summary</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span><span class="text-sm font-semibold text-right">${fmtDec(tx.grossProfit || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right">- ${fmtDec(tx.interest || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(tx.charges || 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Cost</span><span class="text-sm font-semibold text-right">${fmtDec(totalCost)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(tx.netProfit || 0, { size: 'sm', decimals: true, align: 'right' })}</div>
-                    ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt mr-2"></i>Notes</div><p class="text-sm text-base-content/60 mb-0">${tx.notes}</p>` : ''}
-                    <div class="text-sm text-base-content/60 mt-3 text-center">ID: ${tx.id}</div>
                 `;
 
-                Sheet.open(`${tx.company} Details`, html, '');
+                Sheet.open(`<i class="fas fa-eye mr-2"></i>${tx.company}`, html, '');
             }
 
             // ---------- CHARGES BREAKDOWN ----------
@@ -4273,7 +4460,7 @@
                 const body = rows.map(([l, b, s]) => `
                     <tr>
                         <td class="text-base-content/60">${l}</td>
-                        <td class="text-end">${fmtDec(b)}</td>
+                        <td class="text-end buy-price-col">${fmtDec(b)}</td>
                         <td class="text-end">${fmtDec(s)}</td>
                         <td class="text-end font-semibold">${fmtDec(b + s)}</td>
                     </tr>`).join('');
@@ -4283,7 +4470,7 @@
                             <thead class="bg-base-200">
                                 <tr>
                                     <th>Charge</th>
-                                    <th class="text-end"><i class="fas fa-arrow-down text-success mr-1"></i>Buy</th>
+                                    <th class="text-end buy-price-col"><i class="fas fa-arrow-down mr-1"></i>Buy</th>
                                     <th class="text-end"><i class="fas fa-arrow-up text-error mr-1"></i>Sell</th>
                                     <th class="text-end">Total</th>
                                 </tr>
@@ -4291,14 +4478,14 @@
                             <tbody>
                                 <tr class="text-sm">
                                     <td class="text-base-content/60">Order Value</td>
-                                    <td class="text-end">${fmtDec(buy.orderValue)}</td>
+                                    <td class="text-end buy-price-col">${fmtDec(buy.orderValue)}</td>
                                     <td class="text-end">${fmtDec(sell.orderValue)}</td>
                                     <td class="text-end font-semibold">${fmtDec(buy.orderValue + sell.orderValue)}</td>
                                 </tr>
                                 ${body}
                                 <tr class="font-medium text-base-content/80 border-t border-base-200">
                                     <td>Total Charges</td>
-                                    <td class="text-end">${fmtDec(buy.total)}</td>
+                                    <td class="text-end buy-price-col">${fmtDec(buy.total)}</td>
                                     <td class="text-end">${fmtDec(sell.total)}</td>
                                     <td class="text-end text-base-content/55">${fmtDec(buy.total + sell.total)}</td>
                                 </tr>
@@ -4323,7 +4510,7 @@
                     ${intraNote}
                     ${chargesTable(buy, sell)}
                     <div class="grid grid-cols-3 gap-2 text-center mt-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Buy Side</div><div class="font-medium text-base-content/80">${fmtDec(buy.total)}</div></div></div>
+                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm buy-price-label">Buy Side</div><div class="buy-side-value">${fmtDec(buy.total)}</div></div></div>
                         <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Sell Side</div><div class="font-medium text-base-content/80">${fmtDec(sell.total)}</div></div></div>
                         <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/55">Total</div><div class="font-medium text-base-content/75">${fmtDec(grand)}</div></div></div>
                     </div>
@@ -4533,8 +4720,8 @@
                 setTxBroker('');
                 const today = new Date().toISOString().split('T')[0];
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                document.getElementById('txBuyDate').value = yesterday;
-                document.getElementById('txSellDate').value = today;
+                setDateInputValue(document.getElementById('txBuyDate'), yesterday);
+                setDateInputValue(document.getElementById('txSellDate'), today);
                 clearPreview();
                 document.getElementById("txModal").showModal();
                 attachCalcListeners();
@@ -4552,8 +4739,8 @@
                 document.getElementById('txCompany').value = editMatch ? editMatch.n : (tx.company || '');
                 if (editMatch) setTxCompanyMeta(editMatch);
                 setTxBroker(tx.broker || '');
-                document.getElementById('txBuyDate').value = tx.buyDate || '';
-                document.getElementById('txSellDate').value = tx.sellDate || '';
+                setDateInputValue(document.getElementById('txBuyDate'), tx.buyDate || '');
+                setDateInputValue(document.getElementById('txSellDate'), tx.sellDate || '');
                 document.getElementById('txQty').value = tx.quantity || '';
                 document.getElementById('txBuyPrice').value = tx.buyPrice || '';
                 document.getElementById('txSellPrice').value = tx.sellPrice || '';
@@ -4867,12 +5054,13 @@
                 initDropdowns();
                 initCompanyAutocomplete();
                 migrateChargeLogic();
+                initDateFields();
 
                 const range = getDateRange(30);
                 pastFrom = range.from;
                 pastTo = range.to;
-                document.getElementById('pastFrom').value = pastFrom;
-                document.getElementById('pastTo').value = pastTo;
+                setDateInputValue(document.getElementById('pastFrom'), pastFrom);
+                setDateInputValue(document.getElementById('pastTo'), pastTo);
 
                 if (!restoreNavState()) {
                     setBottomNavActive('trades');
@@ -4884,13 +5072,6 @@
                 syncMoneyTypeDropdowns();
                 syncMoneyHistoryTypeDropdown();
                 syncMoneyAccountFilterDropdown(getMoneyAccounts());
-
-                // Open the native date picker when tapping anywhere on a date field
-                document.querySelectorAll('input[type="date"]').forEach(el => {
-                    const openPicker = () => { try { if (el.showPicker) el.showPicker(); } catch (_) {} };
-                    el.addEventListener('click', openPicker);
-                    el.addEventListener('focus', openPicker);
-                });
 
                 initSyncOnLoad();
 
@@ -4967,6 +5148,8 @@
             window.connectSyncFromInput = connectSyncFromInput;
             window.disconnectSync = disconnectSync;
             window.renderMoney = renderMoney;
+            window.toggleMoneyAccountExpand = toggleMoneyAccountExpand;
+            window.toggleTradeDateGroupExpand = toggleTradeDateGroupExpand;
             window.setMoneyAccountFilter = setMoneyAccountFilter;
             window.openAccountHistorySheet = openAccountHistorySheet;
             window.setMoneyHistoryTypeFilter = setMoneyHistoryTypeFilter;
