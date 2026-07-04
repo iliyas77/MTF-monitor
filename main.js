@@ -8,10 +8,10 @@
     // ---------- TAGS ----------
     const APP_TAG_CLASSES = {
         default: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80',
-        accent: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-semibold bg-primary/10 border border-primary/30 text-primary',
-        success: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-success/15 border border-success/25 text-success',
-        error: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-error/15 border border-error/25 text-error',
-        warning: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-warning/10 border border-warning/30 text-warning'
+        accent: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-semibold app-tag--accent',
+        success: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--success',
+        error: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--error',
+        warning: 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium app-tag--warning'
     };
 
     function appTag(content, variant = 'default') {
@@ -87,17 +87,17 @@
     };
 
     const AMOUNT_TONE_SHELL = {
-        positive: 'bg-success/15 text-success',
-        negative: 'bg-error/15 text-error',
-        neutral: 'bg-base-200/50 text-base-content/85',
-        warning: 'bg-warning/15 text-warning'
+        positive: 'amount-tone--positive',
+        negative: 'amount-tone--negative',
+        neutral: 'amount-tone--neutral',
+        warning: 'amount-tone--warning'
     };
 
     const AMOUNT_TONE_TEXT = {
-        positive: 'text-success',
-        negative: 'text-error',
-        neutral: 'text-base-content/80',
-        warning: 'text-warning'
+        positive: 'amount-tone-text--positive',
+        negative: 'amount-tone-text--negative',
+        neutral: 'amount-tone-text--neutral',
+        warning: 'amount-tone-text--warning'
     };
 
     function resolveAmountTone(amount, tone = 'auto') {
@@ -170,6 +170,39 @@
     function paintAmount(el, amount, opts = {}) {
         if (!el) return null;
         const html = renderAmount(amount, { ...opts, id: el.id || opts.id });
+        el.outerHTML = html;
+        return el.id ? document.getElementById(el.id) : null;
+    }
+
+    function renderTotalAmountCard(amount, opts = {}) {
+        const {
+            label = 'Total Amount',
+            note = '',
+            size = 'md',
+            decimals = false,
+            tone = 'positive',
+            id = '',
+            className = ''
+        } = opts;
+        const n = Number(amount) || 0;
+        const resolvedTone = resolveAmountTone(amount, tone);
+        const formatted = formatAmountNumber(amount, { decimals });
+        const sizeClass = size === 'hero' ? ' gr-total-card--hero' : (size === 'sm' ? ' gr-total-card--sm' : '');
+        const toneClass = resolvedTone === 'negative' ? ' gr-total-card--danger' : '';
+        const amountClass = resolvedTone === 'negative'
+            ? 'gr-total-card__amount gr-total-card__amount--down'
+            : (resolvedTone === 'neutral'
+                ? 'gr-total-card__amount gr-total-card__amount--neutral'
+                : 'gr-total-card__amount');
+        const labelHtml = label ? `<span class="gr-total-card__label">${label}</span>` : '';
+        const noteHtml = note ? `<span class="gr-total-card__note">${note}</span>` : '';
+        const idAttr = id ? ` id="${id}"` : '';
+        return `<div class="gr-total-card tabular-nums${sizeClass}${toneClass} ${className}"${idAttr}>${labelHtml}<span class="${amountClass}">${formatted}</span>${noteHtml}</div>`;
+    }
+
+    function paintTotalAmountCard(el, amount, opts = {}) {
+        if (!el) return null;
+        const html = renderTotalAmountCard(amount, { ...opts, id: el.id || opts.id });
         el.outerHTML = html;
         return el.id ? document.getElementById(el.id) : null;
     }
@@ -276,6 +309,8 @@
         amountInWords,
         renderAmount,
         paintAmount,
+        renderTotalAmountCard,
+        paintTotalAmountCard,
         fmtMoneyRich,
         pnlToneClass,
         renderAppButton,

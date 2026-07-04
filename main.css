@@ -1,3 +1,334 @@
+/* ========== THEME — Groww-inspired palette ========== */
+:root {
+    --whole-bg: #f8f9fa;
+    --gr-bg: #fff;
+    --gr-bg-soft: #f4f5f7;
+    --gr-page-intro: #4b5563;
+    --gr-bg-elevated: #fff;
+    --gr-bg-header: #fff;
+    --gr-bg-ticker: #f8f9fb;
+    --gr-text: #6b7280;
+    --gr-text1: #1f2937;
+    --gr-text-muted: #4b5563;
+    --gr-text-soft: #111827;
+    --gr-border: #e3e6ec;
+    --gr-border-strong: #cfd4dc;
+    --gr-accent: #159b5a;
+    --gr-accent-hover: #08653a;
+    --gr-accent-soft: #e6f5ec;
+    --gr-danger: #ef4444;
+    --gr-danger-soft: #fce8e6;
+    --gr-warning-bg: #fff8d6;
+    --gr-active-bg: #0a7d44;
+    --gr-active-text: #fff;
+    --gr-table-border: #e5e7eb;
+    --gr-table-head-bg: #1f2937;
+    --gr-table-head-text: #d1d5db;
+    --gr-table-row-odd: #f3f4f6;
+    --gr-table-row-even: #f9fafb;
+    --gr-table-row-alt: #fafbfd;
+    --gr-input-bg: #f9fafb;
+    --gr-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --gr-shadow-lg: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --gr-ad-bg: #eef0f4;
+    --gr-card-tint: #e9f6ee;
+    --gr-pill-up-bg: #fff;
+    --gr-pill-up-text: #159b5a;
+    --gr-pill-down-bg: #fce8e6;
+    --gr-pill-down-text: #ef4444;
+    --gr-totals-tint: #f0fdf4;
+    --gr-history-head-bg: #f4f5f7;
+    --gr-inline-ad-bg: #e5e7eb;
+    --gr-row-hover: #ededee;
+    --gr-box-shadow: 0 4px 8px 0 #00000026;
+    --gr-calculator-text: #4b5563;
+    --gr-calculator-text-hover: #000;
+    --gr-calculator-bg: #fff;
+    --gr-calculator-border: #16a34a99;
+    --gr-calculator-iconbg: #e1f4ee;
+    --gr-calculator-iconbg-hover: #b8e6d4;
+    --gr-calc-border: #bbf7d0;
+    --gr-text-color: #111827;
+    --gr-text-color1: #1f2937;
+    --gr-calc-tools-bg: #fff;
+    --gr-calc-tools-border: #f3f4f6;
+    --gr-calc-tools-color: #374151;
+    --gr-heading-color: #111827;
+    --gr-suffix-color: #9ca3af;
+    --gr-calc-border-color: #BBF7D099;
+    --gr-price-color: #159b5a;
+    --primary-color: #4b5563;
+    --gr-icon-border: #afaeae;
+    --gr-calc-separator: #f3f4f6;
+    --gr-calc-labelhead: #374151;
+    --gr-icon-bg: #fff;
+    --primary-bg: #fff;
+}
+
+[data-theme="corporate"] {
+    color-scheme: light;
+    --color-base-100: var(--gr-bg);
+    --color-base-200: var(--gr-bg-soft);
+    --color-base-300: var(--gr-border);
+    --color-base-content: var(--gr-text-muted);
+    --color-primary: var(--gr-accent);
+    --color-primary-content: var(--gr-active-text);
+    --color-secondary: var(--gr-bg-soft);
+    --color-secondary-content: var(--gr-text-muted);
+    --color-accent: var(--gr-accent);
+    --color-accent-content: var(--gr-active-text);
+    --color-neutral: var(--gr-text-muted);
+    --color-neutral-content: var(--gr-bg);
+    --color-info: var(--gr-accent);
+    --color-info-content: var(--gr-active-text);
+    --color-success: var(--gr-accent);
+    --color-success-content: var(--gr-active-text);
+    --color-warning: #ca8a04;
+    --color-warning-content: var(--gr-text-muted);
+    --color-error: var(--gr-danger);
+    --color-error-content: var(--gr-active-text);
+}
+
+.app-body {
+    background-color: var(--whole-bg);
+    color: var(--gr-text-muted);
+}
+
+.app-header {
+    background: var(--gr-bg-header);
+    border-color: var(--gr-border);
+}
+
+.card {
+    box-shadow: var(--gr-shadow);
+}
+
+.input,
+.select,
+.textarea {
+    background-color: var(--gr-input-bg);
+    border-color: var(--gr-border);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+    border-color: var(--gr-accent);
+    outline: none;
+}
+
+.bg-success\/15 { background-color: var(--gr-accent-soft) !important; }
+.bg-error\/15 { background-color: var(--gr-danger-soft) !important; }
+.bg-primary\/10 { background-color: var(--gr-accent-soft) !important; }
+.border-success\/20 { border-color: var(--gr-calc-border) !important; }
+.border-error\/20 { border-color: var(--gr-danger-soft) !important; }
+.border-primary\/30 { border-color: var(--gr-calc-border) !important; }
+.text-success { color: var(--gr-accent) !important; }
+.text-error { color: var(--gr-danger) !important; }
+
+/* Amount / value contexts — red text gets soft danger bg (not form labels) */
+.text-error.bg-error\/15,
+.text-error.gr-danger-soft-text,
+.amount-tone--negative,
+.amount-display__pill.amount-tone--negative,
+.gr-total-card--danger .gr-total-card__amount--down {
+    background: var(--gr-danger-soft);
+}
+
+.bg-error\/20 { background-color: var(--gr-danger-soft) !important; }
+.bg-error\/25 { background-color: color-mix(in srgb, var(--gr-danger-soft) 85%, var(--gr-danger) 15%) !important; }
+.text-primary { color: var(--gr-accent) !important; }
+.border-primary { border-color: var(--gr-accent) !important; }
+
+#moneySummaryCard,
+#pastSummaryCard,
+#summaryCard,
+.summary-outer-card {
+    background: var(--gr-bg);
+    border: 1px solid var(--gr-border);
+    box-shadow: var(--gr-shadow);
+}
+
+#moneySummaryCard .card-body,
+#pastSummaryCard .card-body,
+#summaryCard .card-body {
+    padding: 1rem 1.25rem;
+}
+
+/* Total amount card — Groww-style summary */
+.gr-total-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    width: fit-content;
+    max-width: 100%;
+    padding: 1rem 1.25rem;
+    border-radius: 0.75rem;
+    background: var(--gr-accent-soft);
+    border: 1px solid var(--gr-calc-border);
+    box-shadow: none;
+    text-align: center;
+}
+
+.gr-total-card--hero {
+    padding: 1.125rem 1.5rem;
+}
+
+.gr-total-card--sm {
+    padding: 0.625rem 0.875rem;
+}
+
+.gr-total-card__label {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--gr-text-muted);
+    line-height: 1.3;
+    margin-bottom: 0.375rem;
+}
+
+.gr-total-card--sm .gr-total-card__label {
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+}
+
+.gr-total-card__amount {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--gr-price-color);
+    line-height: 1.15;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.gr-total-card--hero .gr-total-card__amount {
+    font-size: 2rem;
+}
+
+.gr-total-card--sm .gr-total-card__amount {
+    font-size: 1.125rem;
+    font-weight: 700;
+}
+
+.gr-total-card--danger {
+    background: var(--gr-danger-soft);
+    border-color: var(--gr-danger-soft);
+}
+
+.gr-total-card__amount--down {
+    color: var(--gr-pill-down-text);
+}
+
+.gr-total-card__amount--neutral {
+    color: var(--gr-text-muted);
+}
+
+.gr-total-card__note {
+    font-size: 0.8125rem;
+    font-weight: 400;
+    color: var(--gr-text-muted);
+    line-height: 1.35;
+    margin-top: 0.375rem;
+}
+
+.gr-total-card--sm .gr-total-card__note {
+    font-size: 0.6875rem;
+    margin-top: 0.25rem;
+}
+
+/* Amount tone shells */
+.amount-tone--positive {
+    background: var(--gr-accent-soft);
+    color: var(--gr-price-color);
+    border: 1px solid var(--gr-calc-border);
+}
+
+.amount-tone--negative {
+    background: var(--gr-danger-soft);
+    color: var(--gr-pill-down-text);
+    border: 1px solid var(--gr-danger-soft);
+}
+
+.amount-tone--neutral {
+    background: var(--gr-bg-soft);
+    color: var(--gr-text-muted);
+    border: 1px solid var(--gr-border);
+}
+
+.amount-tone--warning {
+    background: var(--gr-warning-bg);
+    color: var(--gr-text-muted);
+    border: 1px solid var(--gr-border);
+}
+
+.amount-tone-text--positive { color: var(--gr-pill-up-text); }
+.amount-tone-text--negative {
+    color: var(--gr-danger);
+    background: var(--gr-danger-soft);
+    border: 1px solid var(--gr-danger-soft);
+    border-radius: 0.75rem;
+    padding: 0.25rem 0.625rem;
+}
+.amount-tone-text--neutral { color: var(--gr-text-muted); }
+.amount-tone-text--warning { color: var(--gr-text-muted); }
+
+/* Red monetary text — always on soft danger background */
+.gr-danger-soft-text {
+    color: var(--gr-danger) !important;
+    background: var(--gr-danger-soft);
+    border: 1px solid var(--gr-danger-soft);
+    border-radius: 0.5rem;
+    padding: 0.125rem 0.5rem;
+}
+
+/* App tags */
+.app-tag--accent {
+    background: var(--gr-accent-soft);
+    border: 1px solid var(--gr-calc-border);
+    color: var(--gr-accent);
+}
+
+.app-tag--success {
+    background: var(--gr-accent-soft);
+    border: 1px solid var(--gr-calc-border);
+    color: var(--gr-accent);
+}
+
+.app-tag--error {
+    background: var(--gr-danger-soft);
+    border: 1px solid var(--gr-danger-soft);
+    color: var(--gr-danger);
+}
+
+.app-tag--warning {
+    background: var(--gr-warning-bg);
+    border: 1px solid var(--gr-border);
+    color: var(--gr-text-muted);
+}
+
+/* Soft-background panels — body text uses muted, not black */
+.gr-total-card,
+.gr-total-card--danger,
+.amount-tone--positive,
+.amount-tone--negative,
+.amount-tone--neutral,
+.amount-tone--warning,
+.bg-success\/15,
+.bg-error\/15,
+.bg-primary\/10,
+.app-tag--accent,
+.app-tag--success,
+.app-tag--error,
+.app-tag--warning {
+    --gr-panel-text: var(--gr-text-muted);
+}
+
+.gr-total-card .gr-total-card__label,
+.gr-total-card .gr-total-card__note,
+.gr-total-card__amount--neutral,
+.amount-display__words {
+    color: var(--gr-text-muted);
+}
+
 /* Reusable UI components — buttons & amounts */
 
 .app-btn {
@@ -12,7 +343,7 @@
     line-height: 1.25rem;
     font-weight: 500;
     border: 1px solid;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.04);
+    box-shadow: var(--gr-shadow);
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
     cursor: pointer;
 }
@@ -23,41 +354,41 @@
 }
 
 .app-btn--cancel {
-    background: #f8fafc;
-    border-color: #e2e8f0;
-    color: #64748b;
+    background: var(--gr-bg-soft);
+    border-color: var(--gr-border);
+    color: var(--gr-text-muted);
 }
 
 .app-btn--cancel:hover:not(:disabled) {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
-    color: #475569;
+    background: var(--gr-row-hover);
+    border-color: var(--gr-border-strong);
+    color: var(--gr-text-muted);
 }
 
 .app-btn--action {
-    background: #1e40af;
-    border-color: #1e3a8a;
-    color: #ffffff;
+    background: var(--gr-active-bg);
+    border-color: var(--gr-accent-hover);
+    color: var(--gr-active-text);
     font-weight: 600;
 }
 
 .app-btn--action:hover:not(:disabled) {
-    background: #1d4ed8;
-    border-color: #1e40af;
-    color: #ffffff;
+    background: var(--gr-accent-hover);
+    border-color: var(--gr-accent-hover);
+    color: var(--gr-active-text);
 }
 
 .app-btn--danger {
-    background: #b91c1c;
-    border-color: #991b1b;
-    color: #ffffff;
+    background: var(--gr-danger);
+    border-color: #dc2626;
+    color: var(--gr-active-text);
     font-weight: 600;
 }
 
 .app-btn--danger:hover:not(:disabled) {
     background: #dc2626;
-    border-color: #b91c1c;
-    color: #ffffff;
+    border-color: var(--gr-danger);
+    color: var(--gr-active-text);
 }
 
 .app-btn-row {
@@ -101,6 +432,7 @@
 
 .amount-display__words {
     line-height: 1.35;
+    color: var(--gr-text-muted);
 }
 
 /* Money page — amount pills fit text width only */
@@ -149,6 +481,8 @@
 
 .app-bottom-nav {
     position: relative;
+    background: var(--gr-bg) !important;
+    border-color: var(--gr-border) !important;
 }
 
 .app-fab {
@@ -161,9 +495,9 @@
     min-height: 0;
     border-radius: 9999px;
     border: 0;
-    background: #60a5fa;
-    color: #fff;
-    box-shadow: 0 10px 15px -3px rgb(96 165 250 / 0.25);
+    background: var(--gr-accent);
+    color: var(--gr-active-text);
+    box-shadow: var(--gr-box-shadow);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -172,7 +506,7 @@
 }
 
 .app-fab:hover {
-    background: rgb(96 165 250 / 0.9);
+    background: var(--gr-accent-hover);
 }
 
 .app-fab:active {
@@ -183,31 +517,32 @@
     padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
 }
 
-/* App dropdowns — neutral selection, no pale-blue wash */
+/* App dropdowns */
 .app-dropdown-menu {
-    background: oklch(100% 0 0);
-    border-color: oklch(92% 0.006 260);
+    background: var(--gr-bg-elevated);
+    border-color: var(--gr-border);
+    box-shadow: var(--gr-shadow-lg);
 }
 
 .app-dropdown-menu .menu li > button {
     border-radius: 0.625rem;
-    color: oklch(35% 0.02 260);
+    color: var(--gr-text-muted);
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .app-dropdown-menu .menu li > button:hover {
-    background: oklch(98.5% 0.003 260);
+    background: var(--gr-row-hover);
 }
 
 .app-dropdown-item--active {
-    background: oklch(96% 0.006 260) !important;
-    color: oklch(28% 0.02 260) !important;
+    background: var(--gr-accent-soft) !important;
+    color: var(--gr-accent) !important;
     font-weight: 600;
 }
 
 .app-menu-icon--broker {
-    background: rgb(20 83 45 / 0.1);
-    color: #14532d;
+    background: var(--gr-accent-soft);
+    color: var(--gr-accent);
 }
 
 /* More hub — compact option rows */
@@ -221,7 +556,7 @@
     border: 0;
     border-radius: 0.625rem;
     background: transparent;
-    color: oklch(35% 0.02 260);
+    color: var(--gr-text-muted);
     font-size: 0.875rem;
     font-weight: 600;
     text-align: left;
@@ -230,12 +565,12 @@
 }
 
 .more-hub-option:hover {
-    background: oklch(97% 0.004 260);
+    background: var(--gr-row-hover);
 }
 
 .more-hub-option:active,
 .more-hub-option:focus-visible {
-    background: oklch(94% 0.012 260);
+    background: var(--gr-bg-soft);
     outline: none;
 }
 
@@ -251,13 +586,13 @@
 }
 
 .more-hub-option__icon--primary {
-    background: rgb(30 64 175 / 0.1);
-    color: #1e40af;
+    background: var(--gr-calculator-iconbg);
+    color: var(--gr-accent);
 }
 
 .more-hub-option__icon--success {
-    background: rgb(20 83 45 / 0.1);
-    color: #14532d;
+    background: var(--gr-calculator-iconbg);
+    color: var(--gr-accent);
 }
 
 .more-hub-option__label {
@@ -270,6 +605,6 @@
 
 .more-hub-option__chevron {
     font-size: 0.625rem;
-    color: oklch(65% 0.01 260);
+    color: var(--gr-text-muted);
     flex-shrink: 0;
 }

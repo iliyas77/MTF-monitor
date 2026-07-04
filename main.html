@@ -12,28 +12,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="main.css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { fontFamily: { sans: ['Roboto', 'sans-serif'] }, colors: { primary: '#60a5fa', success: '#14532d' } } } };</script>
-    <style>
-        [data-theme="corporate"] {
-            --color-base-100: oklch(100% 0 0);
-            --color-base-200: oklch(98.5% 0.003 260);
-            --color-base-300: oklch(96% 0.006 260);
-            --color-success: #14532d;
-            --color-success-content: #ffffff;
-        }
-        body {
-            background-color: oklch(98.5% 0.003 260);
-        }
-    </style>
+    <script>tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { fontFamily: { sans: ['Roboto', 'sans-serif'] }, colors: { primary: '#159b5a', success: '#159b5a', error: '#ef4444' } } } };</script>
 </head>
 
-<body class="min-h-screen bg-base-200 font-sans text-base-content/80 overflow-x-hidden">
+<body class="min-h-screen font-sans overflow-x-hidden app-body">
 
     <!-- ============ TOAST ============ -->
     <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[2000] w-[min(92vw,420px)]" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header id="appHeader" class="sticky top-0 z-40 bg-base-100 border-b border-base-200 shadow-sm px-3 py-3 max-w-[480px] mx-auto w-full">
+    <header id="appHeader" class="sticky top-0 z-40 app-header border-b shadow-sm px-3 py-3 max-w-[480px] mx-auto w-full">
         <div id="appHeaderDefault" class="flex items-center justify-between gap-2">
             <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
             <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
@@ -61,21 +49,18 @@
             </div>
 
             <!-- Summary Card (Net Profit, Gross, Trades, Total Charges) -->
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="summaryCard">
-                <div class="card-body text-center py-4">
-                    <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
+            <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
+                <div class="card-body flex flex-col items-center gap-3 py-4">
                     <div id="summaryNet"></div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
+                    <div class="grid grid-cols-3 gap-2 w-full">
+                        <div class="flex justify-center">
                             <div id="summaryGross"></div>
                         </div>
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
+                        <div class="text-center">
+                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
                             <div class="font-medium text-base-content/80" id="summaryTrades">0</div>
                         </div>
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-receipt mr-1"></i>Charges</div>
+                        <div class="flex justify-center">
                             <div id="summaryCharges"></div>
                         </div>
                     </div>
@@ -106,21 +91,18 @@
                 </button>
             </div>
             <!-- Summary Card -->
-            <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="pastSummaryCard">
-                <div class="card-body text-center py-4">
-                    <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-wallet mr-1"></i>Net Profit</div>
+            <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
+                <div class="card-body flex flex-col items-center gap-3 py-4">
                     <div id="pastSummaryNet"></div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-sack-dollar mr-1"></i>Gross</div>
+                    <div class="grid grid-cols-3 gap-2 w-full">
+                        <div class="flex justify-center">
                             <div id="pastSummaryGross"></div>
                         </div>
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
+                        <div class="text-center">
+                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1"><i class="fas fa-exchange-alt mr-1"></i>Trades</div>
                             <div class="font-medium text-base-content/80" id="pastSummaryTrades">0</div>
                         </div>
-                        <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-receipt mr-1"></i>Charges</div>
+                        <div class="flex justify-center">
                             <div id="pastSummaryCharges"></div>
                         </div>
                     </div>
@@ -135,24 +117,15 @@
     <section id="page-money" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div id="moneyPageDefaultView">
-                <div class="card bg-base-100 shadow-sm rounded-2xl mb-3" id="moneySummaryCard">
-                    <div class="card-body text-center py-4">
-                        <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-coins mr-1"></i>Total Value</div>
-                        <div class="money-stat-amount money-stat-amount--center mx-auto mb-1">
-                            <div id="moneyTotalValueHero"></div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="flex flex-col items-center">
-                                <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Deposited</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    <div id="moneyTotalDeposited"></div>
-                                </div>
+                <div class="card money-summary-card rounded-2xl mb-3" id="moneySummaryCard">
+                    <div class="card-body flex flex-col items-center gap-3 py-4">
+                        <div id="moneyTotalValueHero"></div>
+                        <div class="grid grid-cols-2 gap-3 w-full">
+                            <div class="flex justify-center">
+                                <div id="moneyTotalDeposited"></div>
                             </div>
-                            <div class="flex flex-col items-center">
-                                <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Withdrawn</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    <div id="moneyTotalWithdrawn"></div>
-                                </div>
+                            <div class="flex justify-center">
+                                <div id="moneyTotalWithdrawn"></div>
                             </div>
                         </div>
                     </div>
@@ -391,6 +364,7 @@
                     </div>
                 </div>
             </div>
+            <div class="flex justify-center mb-3" id="calcTotalAmountHost"></div>
             <div class="card bg-base-100 shadow-sm rounded-2xl mb-3">
                 <div class="card-body">
                     <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
@@ -740,6 +714,8 @@
                 amountInWords,
                 renderAmount,
                 paintAmount,
+                renderTotalAmountCard,
+                paintTotalAmountCard,
                 fmtMoneyRich,
                 pnlToneClass,
                 renderAppButton,
@@ -764,7 +740,7 @@
                 tradeStatLabel: 'text-[0.65rem] uppercase text-base-content/45 font-medium leading-tight',
                 tradeStatValue: 'text-base font-semibold text-base-content/90 whitespace-nowrap tabular-nums tracking-tight mt-0.5',
                 tradeStatValueSuccess: 'text-base font-semibold text-success whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-success/15',
-                tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15',
+                tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15 gr-danger-soft-text',
                 moneyTonePositive: 'bg-success/15 text-success',
                 moneyToneNegative: 'bg-error/15 text-error',
                 moneyActionDeposit: 'bg-success/15 text-success border-0 hover:bg-success/25',
@@ -2067,7 +2043,11 @@
                 const sign = n >= 0 ? '+' : '';
                 return sign + n.toFixed(2) + '%';
             }
-            function pnlClass(n) { return (n || 0) >= 0 ? 'text-success' : 'text-error'; }
+            function pnlClass(n) {
+                return (n || 0) >= 0
+                    ? 'text-success bg-success/15 rounded-lg px-1.5 py-0.5'
+                    : 'text-error bg-error/15 gr-danger-soft-text rounded-lg px-1.5 py-0.5';
+            }
 
             // ---------- TOAST ----------
             function showToast(msg, type = 'success') {
@@ -2592,10 +2572,23 @@
                     gross += t.grossProfit || 0;
                 });
 
-                paintAmount(document.getElementById('summaryNet'), net, { size: 'hero', compact: true, align: 'center' });
-                paintAmount(document.getElementById('summaryGross'), gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintTotalAmountCard(document.getElementById('summaryNet'), net, {
+                    label: 'Net Profit',
+                    note: amountInWords(net),
+                    size: 'hero',
+                    tone: net >= 0 ? 'positive' : 'negative'
+                });
+                paintTotalAmountCard(document.getElementById('summaryGross'), gross, {
+                    label: 'Gross',
+                    size: 'sm',
+                    tone: 'neutral'
+                });
                 document.getElementById('summaryTrades').textContent = filtered.length;
-                paintAmount(document.getElementById('summaryCharges'), charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintTotalAmountCard(document.getElementById('summaryCharges'), charges, {
+                    label: 'Charges',
+                    size: 'sm',
+                    tone: 'negative'
+                });
 
                 const container = document.getElementById('transactionList');
 
@@ -2647,10 +2640,23 @@
 
                 let net = 0, charges = 0, gross = 0;
                 filtered.forEach(t => { net += t.netProfit || 0; charges += t.charges || 0; gross += t.grossProfit || 0; });
-                paintAmount(document.getElementById('pastSummaryNet'), net, { size: 'hero', compact: true, align: 'center' });
-                paintAmount(document.getElementById('pastSummaryGross'), gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintTotalAmountCard(document.getElementById('pastSummaryNet'), net, {
+                    label: 'Net Profit',
+                    note: amountInWords(net),
+                    size: 'hero',
+                    tone: net >= 0 ? 'positive' : 'negative'
+                });
+                paintTotalAmountCard(document.getElementById('pastSummaryGross'), gross, {
+                    label: 'Gross',
+                    size: 'sm',
+                    tone: 'neutral'
+                });
                 document.getElementById('pastSummaryTrades').textContent = filtered.length;
-                paintAmount(document.getElementById('pastSummaryCharges'), charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintTotalAmountCard(document.getElementById('pastSummaryCharges'), charges, {
+                    label: 'Charges',
+                    size: 'sm',
+                    tone: 'negative'
+                });
 
                 const emptyHtml = pastQuery
                     ? `<div class="text-center text-base-content/60 card bg-base-100 shadow-sm rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
@@ -3239,7 +3245,7 @@
                             </div>
                             ${row('Deposited', stats.deposited, '', 'deposit')}
                             ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
-                            ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 border-t border-base-200 pt-2 mt-1 font-medium text-base-content/80', 'positive')}
+                            ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 pt-2 mt-1', 'positive')}
                         </div>
                     </div>
                 `;
@@ -3292,9 +3298,22 @@
                 if (filterView) filterView.classList.add('hidden');
 
                 const heroEl = document.getElementById('moneyTotalValueHero');
-                if (heroEl) paintAmount(heroEl, displayPortfolio.totalValue, { size: 'hero', tone: 'positive', align: 'center', icon: 'fa-coins', iconSize: 'md' });
-                paintAmount(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' });
-                paintAmount(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' });
+                if (heroEl) paintTotalAmountCard(heroEl, displayPortfolio.totalValue, {
+                    label: 'Total Value',
+                    note: amountInWords(displayPortfolio.totalValue),
+                    size: 'hero',
+                    tone: 'positive'
+                });
+                paintTotalAmountCard(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, {
+                    label: 'Deposited',
+                    size: 'sm',
+                    tone: 'deposit'
+                });
+                paintTotalAmountCard(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, {
+                    label: 'Withdrawn',
+                    size: 'sm',
+                    tone: 'withdraw'
+                });
 
                 const filterEl = document.getElementById('moneyAccountFilterMenu');
                 if (filterEl) {
@@ -3739,7 +3758,7 @@
                 const netEl = document.getElementById('txHistNet');
                 if (netEl) paintAmount(netEl, stats.net, { size: 'sm', compact: true, align: 'center' });
                 paintAmount(document.getElementById('txHistGross'), stats.gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
-                paintAmount(document.getElementById('txHistCharges'), stats.charges, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
+                paintAmount(document.getElementById('txHistCharges'), stats.charges, { size: 'sm', compact: true, tone: 'negative', align: 'center' });
 
                 document.getElementById('txHistBrokerBreakdown').innerHTML = renderBrokerBreakdown(stats.byBroker);
 
@@ -3999,7 +4018,7 @@
                     <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&amp;L</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right text-warning">- ${fmtDec(result.interest)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span><span class="text-sm font-semibold text-right">- ${fmtDec(result.totalCharges)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
                     <div class="section-title mt-3"><i class="fas fa-percent mr-2"></i>Interest Detail</div>
                     <div class="bg-base-200 rounded-xl p-2 my-2 text-sm text-center">
@@ -4025,11 +4044,25 @@
             function updateMtfCalculator() {
                 const inp = getCalcInputs();
                 const comparePanel = document.getElementById('calcComparePanel');
+                const totalHost = document.getElementById('calcTotalAmountHost');
                 renderCalcChargeMode(inp);
 
                 if (!calcInputsValid(inp)) {
+                    if (totalHost) totalHost.innerHTML = '';
                     comparePanel.innerHTML = '<p class="text-base-content/60 text-sm mb-0">Fill in all fields to compare brokers.</p>';
                     return;
+                }
+
+                const preview = calculateTrade({ ...inp, broker: 'Zerodha' });
+                const totalAmount = preview.totalInvestment + preview.totalCharges + preview.interest;
+                if (totalHost) {
+                    totalHost.innerHTML = renderTotalAmountCard(totalAmount, {
+                        label: 'Total Amount',
+                        note: amountInWords(totalAmount),
+                        size: 'hero',
+                        decimals: true,
+                        tone: 'positive'
+                    });
                 }
 
                 const sameDay = isSameDayTrade(inp.buyDate, inp.sellDate);
@@ -4043,7 +4076,7 @@
                         <tr>
                             <td class="font-semibold"><span class="inline-flex flex-wrap items-center gap-1.5">${b}${typeBadge}</span></td>
                             <td class="text-end">${fmtDec(r.interest)}</td>
-                            <td class="text-end">${fmtDec(r.totalCharges)}</td>
+                            <td class="text-end">${renderAmount(r.totalCharges, { size: 'xs', decimals: true, tone: 'negative', align: 'right' })}</td>
                             <td class="text-end font-semibold">${renderAmount(r.netProfit, { size: 'xs', decimals: true, align: 'right' })}</td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
@@ -4173,11 +4206,11 @@
                     ${bd.unpledge ? `<div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Unpledge</span><span class="text-sm font-semibold text-right">${fmtDec(bd.unpledge)}</span></div>` : ''}
                     ${bd.dp ? `<div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">DP Charges</span><span class="text-sm font-semibold text-right">${fmtDec(bd.dp)}</span></div>` : ''}
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">GST</span><span class="text-sm font-semibold text-right">${fmtDec(bd.gst || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Total Charges</span><span class="text-sm font-semibold text-right">${fmtDec(tx.charges || 0)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(tx.charges || 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right' })}</div>
                     <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&amp;L Summary</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span><span class="text-sm font-semibold text-right">${fmtDec(tx.grossProfit || 0)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right">- ${fmtDec(tx.interest || 0)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span><span class="text-sm font-semibold text-right">- ${fmtDec(tx.charges || 0)}</span></div>
+                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(tx.charges || 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Cost</span><span class="text-sm font-semibold text-right">${fmtDec(totalCost)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(tx.netProfit || 0, { size: 'sm', decimals: true, align: 'right' })}</div>
                     ${tx.notes ? `<div class="section-title"><i class="fas fa-pencil-alt mr-2"></i>Notes</div><p class="text-sm text-base-content/60 mb-0">${tx.notes}</p>` : ''}
@@ -4572,7 +4605,7 @@
                 document.getElementById('previewDays').textContent = '0';
                 paintAmount(document.getElementById('previewGross'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
                 paintAmount(document.getElementById('previewInterest'), 0, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-                paintAmount(document.getElementById('previewCharges'), 0, { size: 'sm', decimals: true, tone: 'neutral', align: 'right' });
+                paintAmount(document.getElementById('previewCharges'), 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
                 paintAmount(document.getElementById('previewNet'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
                 document.getElementById('previewTotalInv').textContent = '₹0';
                 document.getElementById('previewOwnMargin').textContent = '₹0';
@@ -4598,7 +4631,7 @@
                 document.getElementById('previewDays').textContent = result.holdingDays;
                 paintAmount(document.getElementById('previewGross'), result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
                 paintAmount(document.getElementById('previewInterest'), result.interest, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-                paintAmount(document.getElementById('previewCharges'), result.totalCharges, { size: 'sm', decimals: true, tone: 'neutral', align: 'right' });
+                paintAmount(document.getElementById('previewCharges'), result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
                 paintAmount(document.getElementById('previewNet'), result.netProfit, { size: 'sm', decimals: true, align: 'right' });
                 updateLeverageBreakdown();
             }
