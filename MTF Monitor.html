@@ -228,6 +228,55 @@
             border-color: var(--app-primary);
             color: #fff;
         }
+        .company-ac-wrap { position: relative; }
+        .company-ac-list {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: calc(100% + 4px);
+            z-index: 1060;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: .75rem;
+            box-shadow: 0 .5rem 1.25rem rgba(0,0,0,.12);
+            display: none;
+        }
+        .company-ac-list.show { display: block; }
+        .company-ac-item {
+            padding: .55rem .75rem;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f2f5;
+        }
+        .company-ac-item:last-child { border-bottom: 0; }
+        .company-ac-item:hover,
+        .company-ac-item.active {
+            background: #eef4ff;
+        }
+        .company-ac-symbol {
+            font-weight: 700;
+            font-size: .88rem;
+            letter-spacing: .02em;
+        }
+        .company-ac-name {
+            font-size: .75rem;
+            color: var(--app-muted);
+            line-height: 1.25;
+        }
+        .company-ac-meta {
+            font-size: .68rem;
+            color: #9aa5b1;
+        }
+        .company-ac-empty {
+            padding: .65rem .75rem;
+            font-size: .78rem;
+            color: var(--app-muted);
+        }
+        .company-ac-status {
+            font-size: .72rem;
+            color: var(--app-muted);
+        }
 
         @media (min-width: 576px) {
             .scroll-content { border-inline: 1px solid #e1e7ef; }
@@ -512,7 +561,12 @@
                         <input type="hidden" id="txEditId" value="" />
                         <div class="mb-3">
                             <label class="form-label">Company Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="txCompany" placeholder="e.g. MARICO, RELIANCE" required />
+                            <div class="company-ac-wrap">
+                                <input type="text" class="form-control" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
+                                <div class="company-ac-list" id="txCompanyAcList" role="listbox" aria-label="Stock suggestions"></div>
+                            </div>
+                            <div id="txCompanyMeta" class="company-ac-status mt-1 d-none"></div>
+                            <div id="txCompanyCatalogStatus" class="company-ac-status mt-1"></div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Broker <span class="text-danger">*</span></label>
@@ -760,6 +814,438 @@
             function updateTransaction(id, updated) { const txs = getTransactions(); const idx = txs.findIndex(t => t.id === id); if (idx === -1) return null; txs[idx] = { ...txs[idx], ...updated }; setTransactions(txs); return txs[idx]; }
             function deleteTransaction(id) { let txs = getTransactions(); txs = txs.filter(t => t.id !== id); setTransactions(txs); }
             function getTransaction(id) { return getTransactions().find(t => t.id === id) || null; }
+
+            // ---------- STOCK SEARCH (live from NSE + Yahoo) ----------
+            const STOCK_CACHE_KEY = 'mtf_nse_symbols_live_v2';
+            const NSE_EQUITY_CSV_URL = 'https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv';
+            const JINA_PROXY = 'https://r.jina.ai/';
+            const YAHOO_SEARCH_BASE = 'https://query2.finance.yahoo.com/v1/finance/search';
+            let stockSymbols = [];
+            let stockCatalogLoading = false;
+            let stockCatalogLoaded = false;
+            let stockAcResults = [];
+            let stockAcActiveIdx = -1;
+            let stockAcBlurTimer = null;
+            let stockSearchTimer = null;
+            let stockSearchSeq = 0;
+            let selectedStockMeta = null;
+
+            function extractJinaBody(text) {
+                const marker = 'Markdown Content:';
+                const idx = text.indexOf(marker);
+                return (idx >= 0 ? text.slice(idx + marker.length) : text).trim();
+            }
+
+            function parseJinaJson(text) {
+                const body = extractJinaBody(text);
+                const start = body.indexOf('{');
+                const end = body.lastIndexOf('}');
+                if (start < 0 || end <= start) throw new Error('No JSON in response');
+                return JSON.parse(body.slice(start, end + 1));
+            }
+
+            function parseCSVLine(line) {
+                const result = [];
+                let cur = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const ch = line[i];
+                    if (ch === '"') { inQuotes = !inQuotes; continue; }
+                    if (ch === ',' && !inQuotes) { result.push(cur.trim()); cur = ''; continue; }
+                    cur += ch;
+                }
+                result.push(cur.trim());
+                return result;
+            }
+
+            function parseNseEquityCsv(text) {
+                const lines = text.trim().split(/\r?\n/);
+                const out = [];
+                const seen = new Set();
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line || line.startsWith('SYMBOL,') || line.startsWith('Title:') || line.startsWith('URL Source:')) continue;
+                    const row = parseCSVLine(line);
+                    if (row.length < 7) continue;
+                    const sym = row[0].trim();
+                    const name = row[1].trim();
+                    const series = row[2].trim();
+                    const isin = (row[6] || '').trim();
+                    if (!sym || !name) continue;
+                    if (!['EQ', 'BE', 'BZ', 'SM', 'ST'].includes(series)) continue;
+                    const key = sym.toUpperCase();
+                    if (seen.has(key)) continue;
+                    seen.add(key);
+                    out.push({ s: sym, n: name, i: isin, e: 'NSE' });
+                }
+                out.sort((a, b) => a.s.localeCompare(b.s));
+                return out;
+            }
+
+            function saveStockCatalogCache(symbols, source) {
+                try {
+                    localStorage.setItem(STOCK_CACHE_KEY, JSON.stringify({
+                        updated: new Date().toISOString().slice(0, 10),
+                        source: source || 'NSE',
+                        count: symbols.length,
+                        symbols
+                    }));
+                } catch (_) {}
+            }
+
+            function loadStockCatalogCache() {
+                try {
+                    const raw = localStorage.getItem(STOCK_CACHE_KEY);
+                    if (!raw) return null;
+                    const data = JSON.parse(raw);
+                    if (Array.isArray(data.symbols) && data.symbols.length > 100) return data.symbols;
+                } catch (_) {}
+                return null;
+            }
+
+            function setStockCatalogStatus(msg) {
+                const el = document.getElementById('txCompanyCatalogStatus');
+                if (el) el.textContent = msg || '';
+            }
+
+            function applyStockCatalog(symbols, source) {
+                if (!Array.isArray(symbols) || symbols.length < 100) return false;
+                stockSymbols = symbols;
+                stockCatalogLoaded = true;
+                saveStockCatalogCache(symbols, source);
+                setStockCatalogStatus(`${symbols.length.toLocaleString()} NSE stocks loaded live — type to search`);
+                return true;
+            }
+
+            async function fetchViaJina(targetUrl) {
+                const res = await fetch(JINA_PROXY + targetUrl, {
+                    headers: { Accept: 'text/plain' }
+                });
+                if (!res.ok) throw new Error('Proxy fetch failed');
+                return res.text();
+            }
+
+            async function fetchNseEquityCsvText() {
+                try {
+                    const res = await fetch(NSE_EQUITY_CSV_URL, {
+                        headers: { Accept: 'text/csv,*/*' },
+                        mode: 'cors'
+                    });
+                    if (res.ok) {
+                        const text = await res.text();
+                        if (text.includes('SYMBOL,NAME OF COMPANY')) return { text, source: 'NSE direct' };
+                    }
+                } catch (_) {}
+                const proxied = await fetchViaJina(NSE_EQUITY_CSV_URL);
+                return { text: proxied, source: 'NSE via internet' };
+            }
+
+            async function loadStockCatalogFromInternet() {
+                if (stockCatalogLoading || stockCatalogLoaded) return stockCatalogLoaded;
+                stockCatalogLoading = true;
+                setStockCatalogStatus('Fetching NSE stock list from internet…');
+                try {
+                    const { text, source } = await fetchNseEquityCsvText();
+                    const parsed = parseNseEquityCsv(text);
+                    if (parsed.length > 500) {
+                        applyStockCatalog(parsed, source);
+                        return true;
+                    }
+                } catch (e) {
+                    console.warn('NSE catalog fetch failed', e);
+                } finally {
+                    stockCatalogLoading = false;
+                }
+                if (!stockCatalogLoaded) {
+                    setStockCatalogStatus('Type 2+ letters — live search from market data');
+                }
+                return stockCatalogLoaded;
+            }
+
+            function mapYahooQuote(q) {
+                const raw = q.symbol || '';
+                const isNse = q.exchange === 'NSI' || raw.endsWith('.NS');
+                const isBse = q.exchange === 'BSE' || raw.endsWith('.BO');
+                if (!isNse && !isBse) return null;
+                const s = raw.replace(/\.(NS|BO)$/i, '');
+                return {
+                    s,
+                    n: q.longname || q.shortname || s,
+                    i: '',
+                    e: isBse ? 'BSE' : 'NSE',
+                    sector: q.sector || q.sectorDisp || '',
+                    industry: q.industry || q.industryDisp || ''
+                };
+            }
+
+            async function fetchYahooStockSearch(query) {
+                const url = `${YAHOO_SEARCH_BASE}?q=${encodeURIComponent(query)}&quotesCount=25&newsCount=0&listsCount=0&enableFuzzyQuery=true`;
+                try {
+                    const res = await fetch(url, { headers: { Accept: 'application/json' } });
+                    if (res.ok) {
+                        const data = await res.json();
+                        return extractYahooQuotes(data);
+                    }
+                } catch (_) {}
+                const proxied = await fetchViaJina(url);
+                const data = parseJinaJson(proxied);
+                return extractYahooQuotes(data);
+            }
+
+            function extractYahooQuotes(data) {
+                const seen = new Set();
+                const out = [];
+                (data.quotes || []).forEach(q => {
+                    if (q.quoteType !== 'EQUITY') return;
+                    const item = mapYahooQuote(q);
+                    if (!item) return;
+                    const key = item.s.toUpperCase();
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    out.push(item);
+                });
+                return out;
+            }
+
+            function searchStockSymbolsLocal(query, limit) {
+                const max = limit || 12;
+                const q = (query || '').trim().toUpperCase();
+                if (q.length < 1 || !stockSymbols.length) return [];
+                const scored = [];
+                for (let i = 0; i < stockSymbols.length; i++) {
+                    const item = stockSymbols[i];
+                    const sym = item.s.toUpperCase();
+                    const nameUp = item.n.toUpperCase();
+                    let score = 0;
+                    if (sym === q) score = 200;
+                    else if (sym.startsWith(q)) score = 150 - (sym.length - q.length);
+                    else if (nameUp.startsWith(q)) score = 120;
+                    else if (sym.includes(q)) score = 90;
+                    else if (nameUp.includes(q)) score = 70;
+                    else {
+                        const words = nameUp.split(/\s+/);
+                        for (let w = 0; w < words.length; w++) {
+                            if (words[w].startsWith(q)) { score = 100; break; }
+                        }
+                    }
+                    if (!score) continue;
+                    scored.push({ item, score });
+                }
+                scored.sort((a, b) => b.score - a.score || a.item.s.localeCompare(b.item.s));
+                return scored.slice(0, max).map(x => x.item);
+            }
+
+            function mergeStockResults(local, remote) {
+                const seen = new Set();
+                const out = [];
+                [...local, ...remote].forEach(item => {
+                    const key = item.s.toUpperCase();
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    out.push(item);
+                });
+                return out.slice(0, 12);
+            }
+
+            function showCompanyAcLoading(msg) {
+                const list = document.getElementById('txCompanyAcList');
+                if (!list) return;
+                list.innerHTML = `<div class="company-ac-empty"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
+                list.classList.add('show');
+            }
+
+            async function runStockSearch(query) {
+                const q = (query || '').trim();
+                const seq = ++stockSearchSeq;
+                if (q.length < 1) {
+                    hideCompanyAcList();
+                    return;
+                }
+
+                showCompanyAcLoading(stockCatalogLoaded ? 'Searching…' : 'Fetching live market data…');
+                loadStockCatalogFromInternet();
+
+                let results = stockCatalogLoaded ? searchStockSymbolsLocal(q, 12) : [];
+
+                if (results.length) {
+                    if (seq === stockSearchSeq) renderCompanyAcList(results);
+                }
+
+                if (q.length >= 2) {
+                    try {
+                        const remote = await fetchYahooStockSearch(q);
+                        if (seq !== stockSearchSeq) return;
+                        if (stockCatalogLoaded) {
+                            results = mergeStockResults(searchStockSymbolsLocal(q, 12), remote);
+                        } else {
+                            results = remote.length ? remote : results;
+                        }
+                        renderCompanyAcList(results);
+                    } catch (_) {
+                        if (seq !== stockSearchSeq) return;
+                        if (stockCatalogLoaded) {
+                            results = searchStockSymbolsLocal(q, 12);
+                            renderCompanyAcList(results);
+                        } else if (!results.length) {
+                            const list = document.getElementById('txCompanyAcList');
+                            if (list) {
+                                list.innerHTML = `<div class="company-ac-empty">Could not reach market data. Check internet and try again, or type the name manually.</div>`;
+                                list.classList.add('show');
+                            }
+                        }
+                    }
+                } else if (stockCatalogLoaded) {
+                    results = searchStockSymbolsLocal(q, 12);
+                    if (seq === stockSearchSeq) renderCompanyAcList(results);
+                } else {
+                    await loadStockCatalogFromInternet();
+                    if (seq !== stockSearchSeq) return;
+                    results = searchStockSymbolsLocal(q, 12);
+                    renderCompanyAcList(results);
+                }
+            }
+
+            function hideCompanyAcList() {
+                const list = document.getElementById('txCompanyAcList');
+                if (list) {
+                    list.classList.remove('show');
+                    list.innerHTML = '';
+                }
+                stockAcResults = [];
+                stockAcActiveIdx = -1;
+            }
+
+            function renderCompanyAcList(items) {
+                const list = document.getElementById('txCompanyAcList');
+                const input = document.getElementById('txCompany');
+                if (!list || !input) return;
+                stockAcResults = items || [];
+                stockAcActiveIdx = stockAcResults.length ? 0 : -1;
+
+                if (!stockAcResults.length) {
+                    const q = (input.value || '').trim();
+                    list.innerHTML = q.length
+                        ? `<div class="company-ac-empty">No match for “${escapeHtml(q)}”. You can still type any name.</div>`
+                        : '';
+                    list.classList.toggle('show', q.length >= 1);
+                    return;
+                }
+
+                list.innerHTML = stockAcResults.map((it, idx) => {
+                    const meta = it.sector
+                        ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
+                        : (it.i ? `${escapeHtml(it.i)} · ${escapeHtml(it.e || 'NSE')}` : escapeHtml(it.e || 'NSE'));
+                    return `
+                    <div class="company-ac-item${idx === stockAcActiveIdx ? ' active' : ''}" role="option" data-idx="${idx}" onmousedown="selectStockSymbol(${idx})">
+                        <div class="company-ac-symbol">${escapeHtml(it.s)}</div>
+                        <div class="company-ac-name">${escapeHtml(it.n)}</div>
+                        <div class="company-ac-meta">${meta}</div>
+                    </div>`;
+                }).join('');
+                list.classList.add('show');
+            }
+
+            function escapeHtml(str) {
+                return String(str || '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+
+            function setTxCompanyMeta(meta) {
+                selectedStockMeta = meta;
+                const el = document.getElementById('txCompanyMeta');
+                if (!el) return;
+                if (!meta) {
+                    el.classList.add('d-none');
+                    el.textContent = '';
+                    return;
+                }
+                el.classList.remove('d-none');
+                const extra = meta.sector ? ` · ${meta.sector}` : (meta.i ? ` · ${meta.i}` : '');
+                el.textContent = `${meta.n}${extra}`;
+            }
+
+            function selectStockSymbol(idx) {
+                const item = stockAcResults[idx];
+                if (!item) return;
+                if (stockAcBlurTimer) clearTimeout(stockAcBlurTimer);
+                document.getElementById('txCompany').value = item.s;
+                setTxCompanyMeta(item);
+                hideCompanyAcList();
+            }
+
+            function onTxCompanyInput() {
+                setTxCompanyMeta(null);
+                const q = (document.getElementById('txCompany').value || '').trim();
+                if (q.length < 1) {
+                    hideCompanyAcList();
+                    return;
+                }
+                clearTimeout(stockSearchTimer);
+                stockSearchTimer = setTimeout(() => runStockSearch(q), 300);
+            }
+
+            function onTxCompanyFocus() {
+                const q = (document.getElementById('txCompany').value || '').trim();
+                loadStockCatalogFromInternet();
+                if (q.length >= 1) {
+                    clearTimeout(stockSearchTimer);
+                    stockSearchTimer = setTimeout(() => runStockSearch(q), 120);
+                }
+            }
+
+            function onTxCompanyBlur() {
+                stockAcBlurTimer = setTimeout(hideCompanyAcList, 150);
+            }
+
+            function onTxCompanyKeydown(e) {
+                const list = document.getElementById('txCompanyAcList');
+                if (!list || !list.classList.contains('show') || !stockAcResults.length) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    stockAcActiveIdx = Math.min(stockAcActiveIdx + 1, stockAcResults.length - 1);
+                    highlightCompanyAcItem();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    stockAcActiveIdx = Math.max(stockAcActiveIdx - 1, 0);
+                    highlightCompanyAcItem();
+                } else if (e.key === 'Enter' && stockAcActiveIdx >= 0) {
+                    e.preventDefault();
+                    selectStockSymbol(stockAcActiveIdx);
+                } else if (e.key === 'Escape') {
+                    hideCompanyAcList();
+                }
+            }
+
+            function highlightCompanyAcItem() {
+                const list = document.getElementById('txCompanyAcList');
+                if (!list) return;
+                list.querySelectorAll('.company-ac-item').forEach((el, i) => {
+                    el.classList.toggle('active', i === stockAcActiveIdx);
+                    if (i === stockAcActiveIdx) el.scrollIntoView({ block: 'nearest' });
+                });
+            }
+
+            function initCompanyAutocomplete() {
+                const cached = loadStockCatalogCache();
+                if (cached) applyStockCatalog(cached, 'cached');
+                else setStockCatalogStatus('Live search — type 1–2 letters (loads NSE list from internet)');
+                loadStockCatalogFromInternet();
+            }
+
+            function resetCompanyAutocomplete() {
+                hideCompanyAcList();
+                setTxCompanyMeta(null);
+                clearTimeout(stockSearchTimer);
+            }
+
+            function findStockMetaForSymbol(symbol) {
+                const key = (symbol || '').trim().toUpperCase();
+                if (!key) return null;
+                return stockSymbols.find(s => s.s.toUpperCase() === key) || null;
+            }
 
             // ---------- CLOUD SYNC (Firebase Firestore, sync-code based) ----------
             // Default sync code pre-filled in the field so you don't have to remember it.
@@ -2312,6 +2798,7 @@
                     document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Save';
                     document.getElementById('statusClosed').checked = true;
                     document.getElementById('txLeverage').value = 1;
+                    resetCompanyAutocomplete();
                     clearPreview();
                 });
 
@@ -2343,6 +2830,9 @@
                 document.getElementById('txSaveBtn').innerHTML = '<i class="fas fa-save me-1"></i> Update';
 
                 document.getElementById('txCompany').value = tx.company || '';
+                resetCompanyAutocomplete();
+                const editMatch = findStockMetaForSymbol(tx.company || '');
+                if (editMatch) setTxCompanyMeta(editMatch);
                 document.getElementById('txBroker').value = tx.broker || '';
                 document.getElementById('txBuyDate').value = tx.buyDate || '';
                 document.getElementById('txSellDate').value = tx.sellDate || '';
@@ -2611,6 +3101,7 @@
             // ---------- INIT ----------
             document.addEventListener('DOMContentLoaded', function() {
                 initModals();
+                initCompanyAutocomplete();
                 migrateChargeLogic();
 
                 const range = getDateRange(30);
@@ -2648,6 +3139,11 @@
             window.openMoreFeature = openMoreFeature;
             window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
+            window.onTxCompanyInput = onTxCompanyInput;
+            window.onTxCompanyKeydown = onTxCompanyKeydown;
+            window.onTxCompanyFocus = onTxCompanyFocus;
+            window.onTxCompanyBlur = onTxCompanyBlur;
+            window.selectStockSymbol = selectStockSymbol;
             window.openEditModal = openEditModal;
             window.openViewModal = openViewModal;
             window.copyTransaction = copyTransaction;
