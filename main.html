@@ -396,32 +396,8 @@
         </div>
     </section>
 
-    <!-- BOTTOM CHROME (nav + FAB) -->
-    <div class="fixed bottom-0 inset-x-0 z-30 flex justify-center pointer-events-none" id="bottomChrome">
-        <div class="app-bottom-chrome relative w-full max-w-[480px] pointer-events-none">
-            <button type="button" class="app-fab pointer-events-auto" id="fabBtn" onclick="openAddModal()" aria-label="Add trade">
-                <i class="fas fa-plus text-lg text-white"></i>
-            </button>
-            <div class="app-bottom-nav btm-nav btm-nav-md bg-base-100 border-t border-base-200 pointer-events-auto w-full" id="bottomNav">
-                <button type="button" class="border-t-2 border-transparent" data-page="trades" onclick="navigateTo('trades')">
-                    <i class="fas fa-list-ul text-lg nav-icon text-base-content/55"></i>
-                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Trades</span>
-                </button>
-                <button type="button" class="border-t-2 border-transparent" data-page="past" onclick="navigateTo('past')">
-                    <i class="fas fa-history text-lg nav-icon text-base-content/55"></i>
-                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Past Trades</span>
-                </button>
-                <button type="button" class="border-t-2 border-transparent" data-page="money" onclick="navigateTo('money')">
-                    <i class="fas fa-coins text-lg nav-icon text-base-content/55"></i>
-                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">Money</span>
-                </button>
-                <button type="button" class="border-t-2 border-transparent" data-page="more" onclick="navigateTo('more')">
-                    <i class="fas fa-ellipsis-h text-lg nav-icon text-base-content/55"></i>
-                    <span class="btm-nav-label nav-label text-xs font-medium text-base-content/55">More</span>
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- BOTTOM BAR (mounted by BottomBar component in main.js) -->
+    <div id="bottomBarMount"></div>
 
 
     <!-- GENERIC BOTTOM SHEET -->
@@ -749,7 +725,8 @@
                 renderAppButton,
                 renderAppButtonRow,
                 paintAppButton,
-                resolveAppButtonVariant
+                resolveAppButtonVariant,
+                BottomBar
             } = window.MTFComponents;
 
             // ---------- UI HELPERS ----------
@@ -773,7 +750,6 @@
                 moneyToneNegative: 'bg-error/15 text-error',
                 moneyActionDeposit: 'deposit-action-btn',
                 moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
-                fab: 'app-fab pointer-events-auto',
                 selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none text-base-content/75',
                 selectLabel: 'truncate max-w-[5.5rem]',
                 selectChevron: 'text-[0.6rem] opacity-50 ml-auto',
@@ -2155,8 +2131,8 @@
                     settingsReturnMoreFeature = saved.settingsReturnMoreFeature || null;
                     renderSettings();
                     showPage('page-settings');
-                    setBottomNavActive(null);
-                    updateFabVisibility('settings');
+                    BottomBar.setActive(null);
+                    BottomBar.setFabVisible(false);
                     return true;
                 }
                 if (saved.moreFeature) {
@@ -2234,23 +2210,11 @@
             }
 
             function setBottomNavActive(page) {
-                document.querySelectorAll('#bottomNav button[data-page]').forEach(el => {
-                    const on = !!page && el.dataset.page === page;
-                    el.classList.toggle('active', on);
-                    el.classList.toggle('border-primary', on);
-                    el.classList.toggle('border-transparent', !on);
-                    el.classList.toggle('text-primary', on);
-                    const icon = el.querySelector('.nav-icon');
-                    const label = el.querySelector('.nav-label');
-                    if (icon) {
-                        icon.classList.toggle('text-primary', on);
-                        icon.classList.toggle('text-base-content/55', !on);
-                    }
-                    if (label) {
-                        label.classList.toggle('text-primary', on);
-                        label.classList.toggle('text-base-content/55', !on);
-                    }
-                });
+                BottomBar.setActive(page);
+            }
+
+            function updateFabVisibility(page) {
+                BottomBar.setFabVisible(page === 'trades' || page === 'past');
             }
 
             function navigateTo(page) {
@@ -2438,11 +2402,6 @@
                 const hiddenType = document.getElementById('moneyPageTypeFilter');
                 if (hiddenType) hiddenType.value = moneyPageTypeFilter;
                 syncMoneyTypeDropdowns();
-            }
-
-            function updateFabVisibility(page) {
-                const tradeFab = document.getElementById('fabBtn');
-                if (tradeFab) tradeFab.style.display = (page === 'trades' || page === 'past') ? '' : 'none';
             }
 
             // ---------- RANGE HELPERS ----------
@@ -5050,6 +5009,11 @@
 
             // ---------- INIT ----------
             document.addEventListener('DOMContentLoaded', function() {
+                BottomBar.mount(document.getElementById('bottomBarMount'), {
+                    onNavigate: navigateTo,
+                    onFabClick: openAddModal
+                });
+
                 initModals();
                 initDropdowns();
                 initCompanyAutocomplete();
