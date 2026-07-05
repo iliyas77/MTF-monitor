@@ -554,11 +554,17 @@
     }
 
     const BottomBar = {
+        _syncInset: null,
+
         mount(container, opts = {}) {
             if (!container) return;
             container.innerHTML = renderBottomBar();
             this._onNavigate = opts.onNavigate || null;
             this._onFabClick = opts.onFabClick || null;
+
+            const bar = document.getElementById('bottomBar');
+            if (bar) document.body.appendChild(bar);
+            container.remove();
 
             document.getElementById('bottomBarNav')?.addEventListener('click', (e) => {
                 const btn = e.target.closest('[data-page]');
@@ -569,6 +575,24 @@
             document.getElementById('bottomBarFab')?.addEventListener('click', () => {
                 this._onFabClick?.();
             });
+
+            this._syncInset = () => {
+                const el = document.getElementById('bottomBar');
+                if (!el) return;
+                const vv = window.visualViewport;
+                if (!vv) {
+                    el.style.bottom = '0px';
+                    return;
+                }
+                const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+                el.style.bottom = `${inset}px`;
+            };
+
+            this._syncInset();
+            window.visualViewport?.addEventListener('resize', this._syncInset);
+            window.visualViewport?.addEventListener('scroll', this._syncInset);
+            window.addEventListener('resize', this._syncInset);
+            window.addEventListener('orientationchange', this._syncInset);
         },
 
         setActive(page) {
