@@ -525,6 +525,66 @@
         return el.id ? document.getElementById(el.id) : null;
     }
 
+    // ---------- BOTTOM BAR (custom nav + FAB) ----------
+    const BOTTOM_BAR_ITEMS = [
+        { id: 'trades', label: 'Trades', icon: 'fa-list-ul' },
+        { id: 'past', label: 'Past Trades', icon: 'fa-history' },
+        { id: 'money', label: 'Money', icon: 'fa-coins' },
+        { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
+    ];
+
+    function renderBottomBarItem(item) {
+        return `<button type="button" class="bottom-bar__item" data-page="${item.id}" aria-label="${item.label}">
+            <i class="fas ${item.icon} bottom-bar__icon" aria-hidden="true"></i>
+            <span class="bottom-bar__label">${item.label}</span>
+        </button>`;
+    }
+
+    function renderBottomBar() {
+        return `<div class="bottom-bar" id="bottomBar">
+            <div class="bottom-bar__frame">
+                <button type="button" class="bottom-bar__fab" id="bottomBarFab" aria-label="Add trade">
+                    <i class="fas fa-plus bottom-bar__fab-icon" aria-hidden="true"></i>
+                </button>
+                <nav class="bottom-bar__nav" id="bottomBarNav" aria-label="Main navigation">
+                    ${BOTTOM_BAR_ITEMS.map(renderBottomBarItem).join('')}
+                </nav>
+            </div>
+        </div>`;
+    }
+
+    const BottomBar = {
+        mount(container, opts = {}) {
+            if (!container) return;
+            container.innerHTML = renderBottomBar();
+            this._onNavigate = opts.onNavigate || null;
+            this._onFabClick = opts.onFabClick || null;
+
+            document.getElementById('bottomBarNav')?.addEventListener('click', (e) => {
+                const btn = e.target.closest('[data-page]');
+                if (!btn || !this._onNavigate) return;
+                this._onNavigate(btn.dataset.page);
+            });
+
+            document.getElementById('bottomBarFab')?.addEventListener('click', () => {
+                this._onFabClick?.();
+            });
+        },
+
+        setActive(page) {
+            document.querySelectorAll('#bottomBarNav [data-page]').forEach(el => {
+                el.classList.toggle('bottom-bar__item--active', !!page && el.dataset.page === page);
+            });
+        },
+
+        setFabVisible(visible) {
+            const fab = document.getElementById('bottomBarFab');
+            if (!fab) return;
+            if (visible) fab.removeAttribute('hidden');
+            else fab.setAttribute('hidden', '');
+        }
+    };
+
     const MTFComponents = {
         appTag,
         setAppTagElement,
@@ -556,7 +616,8 @@
         renderAppButton,
         renderAppButtonRow,
         paintAppButton,
-        resolveAppButtonVariant
+        resolveAppButtonVariant,
+        BottomBar
     };
 
     global.MTFComponents = MTFComponents;
