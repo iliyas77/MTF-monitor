@@ -195,6 +195,66 @@ html {
     min-width: 0;
 }
 
+#summaryCard .gr-total-card,
+#pastSummaryCard .gr-total-card {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#summaryCard .gr-total-card--danger,
+#pastSummaryCard .gr-total-card--danger,
+#summaryCard .gr-total-card--secondary,
+#pastSummaryCard .gr-total-card--secondary {
+    background: transparent;
+}
+
+#summaryCard .gr-total-card--danger .gr-total-card__amount--down,
+#pastSummaryCard .gr-total-card--danger .gr-total-card__amount--down {
+    background: transparent;
+}
+
+/* Money page — plain values (no coloured pills, normal weight) */
+#moneySummaryCard .gr-total-card,
+#moneySummaryCard .gr-total-card--danger,
+#moneySummaryCard .gr-total-card--secondary {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+}
+
+#moneySummaryCard .gr-total-card--danger .gr-total-card__amount--down,
+#moneySummaryCard .gr-total-card__amount {
+    background: transparent;
+}
+
+#moneySummaryCard .amount-display__pill,
+#moneyAccountsCard .amount-display__pill,
+#moneyPageFilterView .amount-display__pill,
+.money-stat-amount .amount-display__pill {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+#moneySummaryCard .amount-tone-text--negative,
+#moneyAccountsCard .amount-tone-text--negative,
+#moneyPageFilterView .amount-tone-text--negative,
+.money-stat-amount .amount-tone-text--negative {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+#moneySummaryCard .gr-total-card__amount,
+#moneySummaryCard .amount-display__value,
+#moneyAccountsCard .amount-display__value,
+#moneyPageFilterView .amount-display__value,
+.money-stat-amount .amount-display__value {
+    font-weight: 400;
+}
+
 .trade-summary-row .gr-total-card {
     width: 100%;
     max-width: 100%;
@@ -213,7 +273,7 @@ html {
 
 .trade-summary-row .gr-total-card--sm .gr-total-card__amount {
     font-size: 0.9375rem;
-    font-weight: 700;
+    font-weight: 400;
     line-height: 1.15;
     word-break: break-word;
 }
@@ -250,7 +310,7 @@ html {
 
 .gr-total-card__label {
     font-size: 0.875rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--gr-text-muted);
     line-height: 1.3;
     margin-bottom: 0.375rem;
@@ -263,7 +323,7 @@ html {
 
 .gr-total-card__amount {
     font-size: 1.75rem;
-    font-weight: 800;
+    font-weight: 400;
     color: var(--gr-price-color);
     line-height: 1.15;
     white-space: nowrap;
@@ -276,7 +336,7 @@ html {
 
 .gr-total-card--sm .gr-total-card__amount {
     font-size: 1.125rem;
-    font-weight: 700;
+    font-weight: 400;
 }
 
 .gr-total-card--danger {
@@ -376,6 +436,16 @@ html {
 
 .buy-side-value {
     color: var(--content-accent-secondary);
+    font-weight: 600;
+}
+
+.sell-side-value {
+    color: var(--gr-danger);
+    font-weight: 600;
+}
+
+.leverage-value {
+    color: var(--gr-accent);
     font-weight: 600;
 }
 
@@ -565,6 +635,47 @@ html {
     background: #dc2626;
     border-color: var(--gr-danger);
     color: var(--gr-active-text);
+}
+
+.app-btn--tonal {
+    background: color-mix(in srgb, var(--gr-text1) 6%, var(--gr-bg));
+    border-color: transparent;
+    color: var(--gr-text1);
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.app-btn--tonal:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--gr-text1) 10%, var(--gr-bg));
+    border-color: transparent;
+}
+
+.app-btn--primary-tonal {
+    background: var(--gr-accent-soft);
+    border-color: transparent;
+    color: var(--gr-accent-hover);
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.app-btn--primary-tonal:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--gr-accent) 14%, var(--gr-accent-soft));
+    border-color: transparent;
+    color: var(--gr-accent-hover);
+}
+
+.app-btn--tonal-danger {
+    background: var(--gr-danger-soft);
+    border-color: transparent;
+    color: var(--gr-danger);
+    font-weight: 500;
+    box-shadow: none;
+}
+
+.app-btn--tonal-danger:hover:not(:disabled) {
+    background: color-mix(in srgb, var(--gr-danger) 12%, var(--gr-danger-soft));
+    border-color: transparent;
+    color: var(--gr-danger);
 }
 
 .app-btn-row {
@@ -1007,6 +1118,14 @@ html {
     font: inherit;
 }
 
+.app-date-field__trigger.input {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    cursor: pointer;
+    background: var(--gr-bg);
+}
+
 .app-date-field--sm .app-date-field__trigger {
     min-height: 2.25rem;
 }
@@ -1145,6 +1264,11 @@ html {
     max-width: 100%;
 }
 
+.money-amount-words--hidden {
+    display: none;
+    margin: 0;
+}
+
 /* Words sit outside coloured amount pills — only the pill keeps its background */
 .money-value-block > .money-stat-amount,
 .money-value-block > .gr-total-card,
@@ -1278,9 +1402,27 @@ html {
     display: none;
 }
 
-.trade-date-group__header .amount-display {
+.trade-date-group__header .amount-display,
+.trade-date-group__header .trade-date-group__day-pnl {
     display: inline-flex;
     align-items: center;
+}
+
+.trade-date-group__header .amount-display__pill {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0;
+}
+
+.trade-date-group__header .amount-display__value {
+    font-weight: 400;
+}
+
+.trade-date-group__header .amount-tone-text--negative {
+    background: transparent !important;
+    border: none !important;
+    padding: 0;
 }
 
 .trade-date-group__list .card:last-child {
@@ -1293,33 +1435,443 @@ html {
     overflow: visible;
 }
 
-.trade-list-table {
+.trade-date-group__list .trade-list {
+    margin-top: 0.5rem;
+}
+
+.trade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.trade-list-item {
+    --trade-item-gap: 0.625rem;
+    display: flex;
+    flex-direction: column;
+    gap: var(--trade-item-gap);
+    padding: 0.75rem 0.875rem;
     border: 1px solid var(--gray150);
     border-radius: 0.75rem;
-    overflow: visible;
     background: var(--gr-bg);
+    overflow: visible;
 }
 
-.trade-list-row--head .trade-list-row__no {
-    border-top-left-radius: calc(0.75rem - 1px);
+
+.trade-list-item__row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
 }
 
-.trade-list-row--head .trade-list-row__more {
-    border-top-right-radius: calc(0.75rem - 1px);
+.trade-list-item__row--buy {
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
 }
 
-.trade-list-row--data:last-of-type .trade-list-row__no {
-    border-bottom-left-radius: calc(0.75rem - 1px);
+.trade-list-item__buy {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.375rem;
+    min-width: 0;
+    font-size: 0.75rem;
+    line-height: 1.2;
 }
 
-.trade-list-row--data:last-of-type .trade-list-row__more {
-    border-bottom-right-radius: calc(0.75rem - 1px);
+.trade-list-item__meta-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
 }
 
-.trade-list-row:has(.trade-row-dropdown.dropdown-open),
-.trade-list-row:has(.trade-row-dropdown:focus-within) {
-    position: relative;
-    z-index: 40;
+.trade-list-item__qty-group {
+    padding-right: 0.5rem;
+    border-right: 1px solid var(--gray150);
+}
+
+.trade-list-item__meta-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--gr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.trade-list-item__meta-value {
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.trade-list-item__meta-value--lev {
+    color: var(--gr-accent);
+}
+
+.trade-list-item__meta-value--hold {
+    color: var(--gr-text-muted);
+}
+
+.trade-list-item__hold-meta {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.15s ease;
+}
+
+.trade-list-item__hold-meta:hover {
+    opacity: 0.75;
+}
+
+.trade-list-item__hold-meta:hover .trade-list-item__meta-value--hold {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.trade-list-item__meta-pipe {
+    color: var(--gr-text-muted);
+    font-weight: 400;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    opacity: 0.55;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.trade-list-item__row--title {
+    align-items: center;
+    width: 100%;
+    padding-top: var(--trade-item-gap);
+    border-top: 1px solid var(--gray150);
+}
+
+.trade-list-item__details {
+    width: 100%;
+    min-width: 0;
+}
+
+.trade-list-item__details-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border: 1px solid var(--gray150);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    background: transparent;
+}
+
+.trade-list-item__detail-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: 3.125rem;
+    padding: 0.5rem 0.625rem;
+    border-right: 1px solid var(--gray150);
+    border-bottom: 1px solid var(--gray150);
+    text-align: left;
+}
+
+.trade-list-item__detail-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--gr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.trade-list-item__detail-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.2;
+    color: var(--gr-text1);
+    font-variant-numeric: tabular-nums;
+    word-break: break-word;
+}
+
+.trade-list-item__detail-cell:nth-child(2n) {
+    border-right: none;
+}
+
+.trade-list-item__detail-cell:nth-child(n+5) {
+    border-bottom: none;
+}
+
+.trade-list-item__detail-cell--clickable {
+    border: none;
+    border-right: 1px solid var(--gray150);
+    border-bottom: 1px solid var(--gray150);
+    background: transparent;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
+}
+
+.trade-list-item__detail-cell--clickable:nth-child(2n) {
+    border-right: none;
+}
+
+.trade-list-item__detail-cell--clickable:hover {
+    background: color-mix(in srgb, var(--gr-text1) 4%, var(--gr-bg-soft));
+}
+
+.trade-list-item__detail-cell--clickable:hover .trade-list-item__detail-value {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.trade-list-item__detail-value--interest,
+.trade-list-item__detail-value--charges {
+    color: var(--content-accent-quantity);
+}
+
+.trade-list-item__detail-value--buy {
+    color: var(--content-accent-secondary);
+}
+
+.trade-list-item__detail-value--sell {
+    color: var(--gr-danger);
+}
+
+.trade-list-item__detail-value--hold {
+    color: var(--gr-text-muted);
+}
+
+.trade-list-item__detail-value--hold i {
+    font-size: 0.75rem;
+    opacity: 0.75;
+}
+
+.trade-list-item__detail-value--date {
+    font-weight: 400;
+    color: var(--gr-text1);
+}
+
+/* Narrow screens (e.g. Samsung Fold cover) — compact 3×2 grid */
+@media (max-width: 400px) {
+    .trade-list-item__details-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .trade-list-item__detail-cell:nth-child(2n) {
+        border-right: 1px solid var(--gray150);
+    }
+
+    .trade-list-item__detail-cell:nth-child(3n) {
+        border-right: none;
+    }
+
+    .trade-list-item__detail-cell:nth-child(n+4) {
+        border-bottom: none;
+    }
+
+    .trade-list-item__detail-cell--clickable:nth-child(2n) {
+        border-right: 1px solid var(--gray150);
+    }
+
+    .trade-list-item__detail-cell--clickable:nth-child(3n) {
+        border-right: none;
+    }
+
+    .trade-list-item__detail-cell {
+        padding: 0.375rem 0.3125rem;
+        min-height: 2.625rem;
+        gap: 0.125rem;
+    }
+
+    .trade-list-item__detail-label {
+        font-size: 0.5625rem;
+        letter-spacing: 0.02em;
+    }
+
+    .trade-list-item__detail-value {
+        font-size: 0.6875rem;
+        font-weight: 400;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+    }
+}
+
+.trade-list-item__row--actions {
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: var(--trade-item-gap);
+    border-top: 1px solid var(--gray150);
+}
+
+.trade-list-item__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    min-width: 0;
+}
+
+.trade-list-item__actions-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.trade-list-item__action-btn--delete {
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.trade-list-item__actions .app-btn {
+    border: none;
+    border-radius: 1rem;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+}
+
+.trade-list-item__actions .app-btn--sm {
+    height: 2.25rem;
+    min-height: 2.25rem;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.trade-list-item__actions .app-btn__content {
+    gap: 0.3125rem;
+}
+
+.trade-list-item__actions .app-btn__icon {
+    font-size: 0.75rem;
+    width: 0.875rem;
+}
+
+.trade-list-item__action-btn {
+    flex-shrink: 0;
+}
+
+.trade-list-item__title {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.375rem;
+}
+
+.trade-list-item__title-pipe {
+    color: var(--gr-text-muted);
+    font-weight: 400;
+    font-size: 0.75rem;
+    opacity: 0.55;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.trade-list-item__company-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-width: 0;
+    flex: 0 1 auto;
+    max-width: 100%;
+}
+
+.trade-list-item__company-icon {
+    flex-shrink: 0;
+    font-size: 0.8125rem;
+    line-height: 1;
+    color: var(--gr-accent);
+    opacity: 0.9;
+}
+
+.trade-list-item__company-name {
+    min-width: 0;
+    font-weight: 400;
+    font-size: 0.9375rem;
+    line-height: 1.2;
+    color: var(--gr-text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trade-list-item__title .app-tag--accent,
+.trade-list-item__title .badge {
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    padding: 0.125rem 0.4375rem;
+    min-height: 0;
+    height: auto;
+}
+
+.trade-list-item__pnl-wrap {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.trade-list-item__pnl-group {
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.trade-card-header__pnl-group {
+    align-items: flex-end;
+    text-align: right;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.trade-list-item__pnl-wrap .trade-list-item__pnl.amount-display {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+    line-height: 1.2;
+}
+
+.trade-list-item__pnl-wrap .trade-list-item__pnl .amount-display__pill {
+    flex-direction: row;
+    align-items: center;
+}
+
+.trade-list-item__pnl-wrap .trade-list-item__pnl .amount-display__value {
+    font-size: 0.875rem;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.trade-card-header__pnl-group .trade-list-item__pnl .amount-display__value {
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.2;
+}
+
+.trade-list-item__pnl-wrap .amount-display__pill,
+.trade-list-item__pnl-wrap .amount-tone-text--negative,
+.trade-list-item__pnl-wrap .amount-tone-text--positive {
+    background: transparent !important;
+    border: none !important;
+    padding: 0;
+    box-shadow: none;
 }
 
 .trade-row-dropdown {
@@ -1334,104 +1886,8 @@ html {
     top: 100%;
 }
 
-.trade-list-row {
-    display: grid;
-    grid-template-columns: 3rem minmax(0, 1fr) 7.25rem 3.25rem;
-    align-items: stretch;
-}
-
-.trade-list-row > [class*="trade-list-row__"] {
-    display: flex;
-    align-items: center;
-    min-width: 0;
-    border-right: 1px solid var(--gray150);
-}
-
-.trade-list-row__more {
-    border-right: none;
-    justify-content: flex-start;
-    overflow: visible;
-}
-
-.trade-list-row__more .dropdown {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
-/* Header — same white bg, bold labels */
-.trade-list-row--head {
-    background: var(--gr-bg);
-    border-bottom: 1px solid var(--gray150);
-    min-height: 2.75rem;
-}
-
-.trade-list-row--head > [class*="trade-list-row__"] {
-    padding: 0.75rem 0.875rem;
-    font-size: 0.875rem;
-    font-weight: 700;
-    line-height: 1.3;
-    color: var(--gr-text1);
-    justify-content: flex-start;
-    text-align: left;
-}
-
-/* Data rows — plain white, no zebra */
-.trade-list-row--data {
-    min-height: 3.25rem;
-    background: var(--gr-bg);
-    overflow: visible;
-}
-
-.trade-list-row--data > [class*="trade-list-row__"] {
-    padding: 0.875rem;
-    background: var(--gr-bg);
-}
-
-.trade-list-row--data + .trade-list-row--data {
-    border-top: 1px solid var(--gray150);
-}
-
-.trade-list-row--head + .trade-list-row--data {
-    border-top: none;
-}
-
-.trade-list-row__no {
-    justify-content: flex-start;
-    text-align: left;
-    font-variant-numeric: tabular-nums;
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--gr-text1);
-}
-
-.trade-list-row__company {
-    justify-content: flex-start;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    line-height: 1.3;
-    color: var(--gr-text1);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.trade-list-row__pnl {
-    justify-content: flex-start;
-    width: 100%;
-}
-
-.trade-list-row__pnl .trade-list-row__pnl-pill.amount-display,
-.trade-list-row__pnl .amount-display {
-    display: inline-flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: auto;
-}
-
-.trade-list-row__pnl .amount-display__pill {
-    min-height: 1.75rem;
-    padding: 0.125rem 0.5rem;
+.trade-list-item__buy .trade-list-item__meta-value.qty-value {
+    color: var(--content-accent-quantity);
 }
 
 .trade-card-details {
