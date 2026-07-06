@@ -54,25 +54,12 @@
                 <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
-            <!-- Summary Card — Net hero + Gross, Trades, Charges row -->
+            <!-- Summary Card — Net Profit -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body flex flex-col items-center gap-3 py-4">
                     <div class="money-value-block money-value-block--center w-full">
                         <div id="summaryNet"></div>
                         <div id="summaryNetWords"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 w-full trade-summary-row">
-                        <div class="money-value-block money-value-block--center">
-                            <div id="summaryGross"></div>
-                            <div id="summaryGrossWords"></div>
-                        </div>
-                        <div class="money-value-block money-value-block--center">
-                            <div id="summaryTrades"></div>
-                        </div>
-                        <div class="money-value-block money-value-block--center">
-                            <div id="summaryCharges"></div>
-                            <div id="summaryChargesWords"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -96,25 +83,12 @@
             </div>
             <!-- Selected date range indicator -->
             <div class="text-center mb-3" id="pastRangeChipHost"></div>
-            <!-- Summary Card — Net hero + Gross, Trades, Charges row -->
+            <!-- Summary Card — Net Profit -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
                 <div class="card-body flex flex-col items-center gap-3 py-4">
                     <div class="money-value-block money-value-block--center w-full">
                         <div id="pastSummaryNet"></div>
                         <div id="pastSummaryNetWords"></div>
-                    </div>
-                    <div class="grid grid-cols-3 gap-2 w-full trade-summary-row">
-                        <div class="money-value-block money-value-block--center">
-                            <div id="pastSummaryGross"></div>
-                            <div id="pastSummaryGrossWords"></div>
-                        </div>
-                        <div class="money-value-block money-value-block--center">
-                            <div id="pastSummaryTrades"></div>
-                        </div>
-                        <div class="money-value-block money-value-block--center">
-                            <div id="pastSummaryCharges"></div>
-                            <div id="pastSummaryChargesWords"></div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -575,11 +549,11 @@
                             <label class="label-text font-normal text-base-content/65">Trade Status</label>
                             <div class="flex gap-4">
                                 <div class="flex items-center">
-                                    <input class="radio radio-primary" type="radio" name="status" id="statusOpen" value="open">
+                                    <input class="radio radio-primary" type="radio" name="status" id="statusOpen" value="open" onchange="onTxStatusChange()">
                                     <label class="label-text ml-2" for="statusOpen">Open</label>
                                 </div>
                                 <div class="flex items-center">
-                                    <input class="radio radio-primary" type="radio" name="status" id="statusClosed" value="closed" checked>
+                                    <input class="radio radio-primary" type="radio" name="status" id="statusClosed" value="closed" checked onchange="onTxStatusChange()">
                                     <label class="label-text ml-2" for="statusClosed">Closed</label>
                                 </div>
                             </div>
@@ -604,8 +578,9 @@
                                 <input type="number" class="input input-bordered w-full" id="txBuyPrice" placeholder="0.00" required min="0.01" step="0.01" />
                             </div>
                             <div class="">
-                                <label class="label-text font-normal text-base-content/65">Sell Price <span class="text-error">*</span></label>
-                                <input type="number" class="input input-bordered w-full" id="txSellPrice" placeholder="0.00" required min="0.01" step="0.01" />
+                                <label class="label-text font-normal text-base-content/65">Sell Price <span class="text-error" id="txSellPriceRequired">*</span></label>
+                                <input type="number" class="input input-bordered w-full" id="txSellPrice" placeholder="0.00" min="0.01" step="0.01" />
+                                <p class="label-text-alt mt-1 hidden" id="txSellPriceHint">Optional for open trades — defaults to buy price. Set a target later.</p>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -702,6 +677,7 @@
                 fmtINR,
                 fmtDec,
                 fmtDateDisplay,
+                fmtDateShort,
                 renderDateChip,
                 renderDateRangeChip,
                 paintDateChip,
@@ -710,6 +686,7 @@
                 setDateInputValue,
                 initDateFields,
                 amountInWords,
+                shouldShowAmountInWords,
                 renderAmount,
                 paintAmount,
                 renderTotalAmountCard,
@@ -841,7 +818,7 @@
                     }
                     footer.innerHTML = footerHtml || '';
                     footer.classList.toggle('hidden', !footerHtml);
-                    
+                    initDateFields(body);
                     Sheet.el().showModal();
                 },
                 mountPanel(title, panelId, footerHtml) {
@@ -868,6 +845,7 @@
                     AppDialog.titleEl().innerHTML = title;
                     AppDialog.bodyEl().innerHTML = bodyHtml;
                     AppDialog.footerEl().innerHTML = footerHtml || '';
+                    initDateFields(AppDialog.bodyEl());
                     AppDialog.el().showModal();
                 },
                 close() { AppDialog.el()?.close(); },
@@ -1813,8 +1791,11 @@
                 const txs = getTransactions();
                 let changed = false;
                 const updated = txs.map(tx => {
-                    if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice || !tx.sellPrice) return tx;
-                    const calc = calculateTrade(tx);
+                    if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice) return tx;
+                    const isOpen = (tx.status || 'closed') === 'open';
+                    const effectiveSellPrice = tx.sellPrice || (isOpen ? tx.buyPrice : 0);
+                    if (!effectiveSellPrice) return tx;
+                    const calc = calculateTrade({ ...tx, sellPrice: effectiveSellPrice });
                     const newTx = {
                         ...tx,
                         grossProfit: calc.grossProfit,
@@ -2545,55 +2526,152 @@
                     { label: 'MTF Interest', amount: interest, tone: 'warning', decimals: true },
                     { label: 'Total Charges', amount: charges, tone: 'negative', decimals: true },
                     { label: 'Total Cost', amount: totalCost, tone: 'negative', decimals: true },
-                    { label: 'Net Profit', amount: net, tone: net >= 0 ? 'positive' : 'negative', compact: true }
+                    { label: 'P&L', amount: net, tone: net >= 0 ? 'positive' : 'negative', compact: true }
                 ];
                 return `
                     <div class="trade-view-sheet__summary mt-4">
-                        <div class="trade-view-sheet__summary-title"><i class="fas fa-calculator mr-2"></i>P&amp;L Summary</div>
+                        <div class="trade-view-sheet__summary-title"><i class="fas fa-calculator mr-2"></i>P&L Summary</div>
                         <div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>
                     </div>
                 `;
             }
 
-            function renderTradeListTableHeader() {
+            function renderTradeCardPnl(amount, opts = {}) {
+                const {
+                    size = 'sm',
+                    compact = false,
+                    className = 'trade-list-item__pnl',
+                    groupClass = 'trade-list-item__pnl-group'
+                } = opts;
                 return `
-                    <div class="trade-list-row trade-list-row--head">
-                        <div class="trade-list-row__no">No</div>
-                        <div class="trade-list-row__company">Company</div>
-                        <div class="trade-list-row__pnl">Net Profit</div>
-                        <div class="trade-list-row__more">More</div>
-                    </div>
+                    <span class="trade-list-item__meta-group ${groupClass}">
+                        <span class="trade-list-item__meta-label">P&L</span>
+                        ${renderAmount(amount, { size, compact, showSign: true, align: 'right', pill: false, className })}
+                    </span>
                 `;
             }
 
-            function renderTradeRowMenu(t) {
+            function renderTradeListItemHoldMeta(t) {
+                const daysHeld = getDaysHeld(t);
+                const holdText = daysHeld === 1 ? '1 day' : `${daysHeld} days`;
                 return `
-                    <div class="dropdown dropdown-end trade-row-dropdown">
-                        <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More"><i class="fas fa-ellipsis-v text-sm"></i></button>
-                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 z-50 min-w-[11.5rem] p-2 rounded-box">
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openViewModal('${t.id}')"><span class="${UI.menuIcon('view')}"><i class="fas fa-eye"></i></span><span class="flex-1 text-left">View</span></button></li>
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmCopy('${t.id}')"><span class="${UI.menuIcon('copy')}"><i class="fas fa-copy"></i></span><span class="flex-1 text-left">Copy</span></button></li>
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="confirmEdit('${t.id}')"><span class="${UI.menuIcon('edit')}"><i class="fas fa-edit"></i></span><span class="flex-1 text-left">Edit</span></button></li>
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openInterestModal('${t.id}')"><span class="${UI.menuIcon('interest')}"><i class="fas fa-percent"></i></span><span class="flex-1 text-left">Interest</span></button></li>
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openChargesModal('${t.id}')"><span class="${UI.menuIcon('charges')}"><i class="fas fa-receipt"></i></span><span class="flex-1 text-left">Charges</span></button></li>
-                            <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
-                            <li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200 text-error" onclick="confirmDelete('${t.id}')"><span class="${UI.menuIcon('delete')}"><i class="fas fa-trash-alt"></i></span><span class="flex-1 text-left">Delete</span></button></li>
-                        </ul>
-                    </div>
+                    <button type="button" class="trade-list-item__meta-group trade-list-item__hold-meta" onclick="openHoldModal('${t.id}')" aria-label="Edit holding period">
+                        <span class="trade-list-item__meta-label">Hold</span>
+                        <span class="trade-list-item__meta-value trade-list-item__meta-value--hold">${holdText}</span>
+                    </button>
                 `;
             }
 
-            function renderTradeListItem(t, serialNo) {
+            function renderTradeListItemDetails(t) {
+                const isOpen = (t.status || 'closed') === 'open';
+                const buy = fmtDec(t.buyPrice || 0);
+                const sell = fmtDec(t.sellPrice || 0);
+                const interest = fmtDec(t.interest || 0);
+                const charges = fmtDec(t.charges || 0);
+                const buyDate = t.buyDate ? fmtDateShort(t.buyDate) : '—';
+                const sellDate = t.sellDate ? fmtDateShort(t.sellDate) : '—';
+                const sellOnclick = isOpen ? `openTargetModal('${t.id}')` : '';
+                const detailCell = (label, value, valueClass = '', onclick = '') => {
+                    const Tag = onclick ? 'button' : 'div';
+                    const attrs = onclick
+                        ? ` type="button" class="trade-list-item__detail-cell trade-list-item__detail-cell--clickable" onclick="${onclick}"`
+                        : ` class="trade-list-item__detail-cell"`;
+                    return `
+                        <${Tag}${attrs}>
+                            <span class="trade-list-item__detail-label">${label}</span>
+                            <span class="trade-list-item__detail-value ${valueClass}">${value}</span>
+                        </${Tag}>
+                    `;
+                };
                 return `
-                    <div class="trade-list-row trade-list-row--data">
-                        <div class="trade-list-row__no">${serialNo ?? ''}</div>
-                        <div class="trade-list-row__company">${t.company}</div>
-                        <div class="trade-list-row__pnl">
-                            ${renderAmount(t.netProfit, { size: 'sm', compact: true, showSign: true, align: 'left', className: 'trade-list-row__pnl-pill' })}
+                    <div class="trade-list-item__details">
+                        <div class="trade-list-item__details-grid">
+                            ${detailCell('Buy', buy, 'trade-list-item__detail-value--buy')}
+                            ${detailCell('Sell', sell, 'trade-list-item__detail-value--sell', sellOnclick)}
+                            ${detailCell('Interest', interest, 'trade-list-item__detail-value--interest', `openInterestModal('${t.id}')`)}
+                            ${detailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`)}
+                            ${detailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
+                            ${detailCell('Sold', sellDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
                         </div>
-                        <div class="trade-list-row__more">${renderTradeRowMenu(t)}</div>
                     </div>
                 `;
+            }
+
+            function renderTradeListItemActions(t, variant = 'open') {
+                const isPast = variant === 'past';
+                const btn = (label, onclick, btnVariant = 'tonal', icon = '', className = 'trade-list-item__action-btn') =>
+                    renderAppButton(label, { variant: btnVariant, size: 'sm', onclick, icon, className });
+                const viewBtn = isPast ? btn('View', `openViewModal('${t.id}')`, 'tonal', 'fa-eye') : '';
+                const copyBtn = isPast ? btn('Copy', `confirmCopy('${t.id}')`, 'tonal', 'fa-copy') : '';
+                return `
+                    <div class="trade-list-item__actions">
+                        <div class="trade-list-item__actions-main">
+                            ${viewBtn}
+                            ${copyBtn}
+                            ${btn('Edit', `openEditModal('${t.id}')`, 'tonal', 'fa-edit')}
+                        </div>
+                        ${btn('Delete', `confirmDelete('${t.id}')`, 'tonal-danger', 'fa-trash-alt', 'trade-list-item__action-btn trade-list-item__action-btn--delete')}
+                    </div>
+                `;
+            }
+
+            function renderTradeListItem(t, serialNo, variant = 'open') {
+                const qty = Number(t.quantity) || 0;
+                const leverage = formatTradeLeverageLabel(t);
+                const company = t.company || 'trade';
+                return `
+                    <article class="trade-list-item">
+                        <div class="trade-list-item__row trade-list-item__row--buy">
+                            <div class="trade-list-item__buy">
+                                <span class="trade-list-item__meta-group trade-list-item__qty-group">
+                                    <span class="trade-list-item__meta-label quantity-label">Qty</span>
+                                    <span class="trade-list-item__meta-value qty-value">${qty}</span>
+                                </span>
+                                <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
+                                <span class="trade-list-item__meta-group">
+                                    <span class="trade-list-item__meta-label">Lev</span>
+                                    <span class="trade-list-item__meta-value trade-list-item__meta-value--lev">${leverage}</span>
+                                </span>
+                                <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
+                                ${renderTradeListItemHoldMeta(t)}
+                            </div>
+                            <div class="trade-list-item__pnl-wrap">${renderTradeCardPnl(t.netProfit)}</div>
+                        </div>
+                        <div class="trade-list-item__row trade-list-item__row--title">
+                            <div class="trade-list-item__title">
+                                <span class="trade-list-item__company-group">
+                                    <i class="fas fa-chart-line trade-list-item__company-icon" aria-hidden="true"></i>
+                                    <span class="trade-list-item__company-name">${company}</span>
+                                </span>
+                            </div>
+                        </div>
+                        ${renderTradeListItemDetails(t)}
+                        <div class="trade-list-item__row trade-list-item__row--actions">
+                            ${renderTradeListItemActions(t, variant)}
+                        </div>
+                    </article>
+                `;
+            }
+
+            function renderOpenTradeListItem(t, serialNo) {
+                return renderTradeListItem(t, serialNo, 'open');
+            }
+
+            function renderPastTradeListItem(t, serialNo) {
+                return renderTradeListItem(t, serialNo, 'past');
+            }
+
+            function formatTradeLeverageLabel(t) {
+                const lev = Number(t.leverage) || 1;
+                return lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
+            }
+
+            function renderTradesList(trades, renderItem) {
+                return `<div class="trade-list">${trades.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
+            }
+
+            function renderFlatTradesList(trades, renderItem, opts = {}) {
+                return renderTradesList(trades, renderItem);
             }
 
             function tradeDateKey(t, field = 'buyDate') {
@@ -2629,7 +2707,7 @@
                                 ${dateLabel}
                             </div>
                             <div class="flex items-center gap-2 shrink-0">
-                                ${renderAmount(net, { size: 'sm', compact: true, showSign: true, align: 'right' })}
+                                ${renderAmount(net, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false, className: 'trade-date-group__day-pnl' })}
                                 ${appTag(tradeLabel)}
                             </div>
                         </div>
@@ -2642,7 +2720,7 @@
                 return groupTradesByDate(trades, dateField).map(([dateKey, items], idx) => {
                     const expanded = defaultExpanded;
                     const header = renderDateGroupHeader(dateKey, items, { expanded });
-                    const itemsHtml = `<div class="trade-list-table">${renderTradeListTableHeader()}${items.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
+                    const itemsHtml = renderTradesList(items, renderItem);
                     if (wrapInCard) {
                         return `
                             <section class="trade-date-group${expanded ? ' trade-date-group--expanded' : ''}">
@@ -2664,27 +2742,13 @@
                 }).join('');
             }
 
-            function paintTradeSummaryStats(prefix, stats) {
-                const { net, gross, trades, charges } = stats;
+            function paintTradeSummaryStats(prefix, net) {
                 paintTotalAmountCard(document.getElementById(`${prefix}Net`), net, {
-                    label: 'Net Profit',
+                    label: 'P&L',
                     size: 'hero',
                     tone: net >= 0 ? 'positive' : 'negative'
                 });
                 paintMoneyAmountWords(document.getElementById(`${prefix}NetWords`), net, 'center');
-                paintTotalAmountCard(document.getElementById(`${prefix}Gross`), gross, {
-                    label: 'Gross',
-                    size: 'sm',
-                    tone: gross >= 0 ? 'positive' : 'negative'
-                });
-                paintMoneyAmountWords(document.getElementById(`${prefix}GrossWords`), gross, 'center');
-                paintTradesCountCard(document.getElementById(`${prefix}Trades`), trades);
-                paintTotalAmountCard(document.getElementById(`${prefix}Charges`), charges, {
-                    label: 'Charges',
-                    size: 'sm',
-                    tone: 'negative'
-                });
-                paintMoneyAmountWords(document.getElementById(`${prefix}ChargesWords`), charges, 'center');
             }
 
             // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
@@ -2699,14 +2763,10 @@
 
                 filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
 
-                let net = 0, gross = 0, charges = 0;
-                filtered.forEach(t => {
-                    net += t.netProfit || 0;
-                    gross += t.grossProfit || 0;
-                    charges += t.charges || 0;
-                });
+                let net = 0;
+                filtered.forEach(t => { net += t.netProfit || 0; });
 
-                paintTradeSummaryStats('summary', { net, gross, trades: filtered.length, charges });
+                paintTradeSummaryStats('summary', net);
 
                 const container = document.getElementById('transactionList');
 
@@ -2719,7 +2779,7 @@
                     return;
                 }
 
-                container.innerHTML = renderGroupedTrades(filtered, renderTradeListItem, 'buyDate', { wrapInCard: true });
+                container.innerHTML = renderFlatTradesList(filtered, renderOpenTradeListItem);
             }
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
@@ -2761,9 +2821,9 @@
                     });
                 }
 
-                let net = 0, gross = 0, charges = 0;
-                filtered.forEach(t => { net += t.netProfit || 0; gross += t.grossProfit || 0; charges += t.charges || 0; });
-                paintTradeSummaryStats('pastSummary', { net, gross, trades: filtered.length, charges });
+                let net = 0;
+                filtered.forEach(t => { net += t.netProfit || 0; });
+                paintTradeSummaryStats('pastSummary', net);
 
                 const emptyHtml = pastQuery
                     ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
@@ -2774,7 +2834,7 @@
                     return;
                 }
 
-                listContainer.innerHTML = renderGroupedTrades(filtered, renderTradeListItem, 'buyDate', { wrapInCard: true });
+                listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem);
             }
 
             // ---------- MONEY TRACKER ----------
@@ -3362,7 +3422,7 @@
                         <div class="flex justify-between items-start gap-4">
                             <span class="text-sm shrink-0 pt-1 ${tone === 'deposit' ? 'deposit-label' : 'text-base-content/60'}">${label}</span>
                             <div class="money-value-block money-value-block--right min-w-0 max-w-[62%]">
-                                <div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right' })}</div>
+                                <div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right', pill: false })}</div>
                                 ${renderMoneyAmountWords(amount, 'right')}
                             </div>
                         </div>
@@ -3377,7 +3437,7 @@
                                         ${holderLine}
                                     </div>
                                     <div class="trade-card-header__actions">
-                                        ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', className: 'trade-card-header__pnl' })}
+                                        ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', pill: false, className: 'trade-card-header__pnl' })}
                                         <div class="dropdown dropdown-end trade-row-dropdown">
                                             <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
                                                 <i class="fas fa-ellipsis-v text-sm"></i>
@@ -3905,7 +3965,7 @@
                 return groupTradesByDate(trades).map(([dateKey, items], idx) => `
                     <section class="${idx ? 'mt-4' : ''}">
                         ${renderTransactionsDateGroupHeader(dateKey, items)}
-                        ${items.map(renderItem).join('')}
+                        ${renderTradesList(items, renderItem)}
                     </section>
                 `).join('');
             }
@@ -3954,7 +4014,7 @@
                     listEl.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
                     return;
                 }
-                listEl.innerHTML = renderGroupedTradesWithChips(txs, renderTradeListItem);
+                listEl.innerHTML = renderGroupedTradesWithChips(txs, (t, i) => renderTradeListItem(t, i, (t.status || 'closed') === 'open' ? 'open' : 'past'));
             }
 
             // ---------- MTF CALCULATOR (MORE) ----------
@@ -4195,7 +4255,7 @@
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Leverage</span><span class="text-sm font-semibold text-right">${levDisplay}</span></div>
                     <div class="section-title"><i class="far fa-clock mr-2"></i>Holding</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="text-sm font-semibold text-right">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
-                    <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&amp;L</div>
+                    <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&L</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right text-warning">- ${fmtDec(result.interest)}</span></div>
                     <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
@@ -4238,7 +4298,7 @@
                 if (totalHost) {
                     totalHost.innerHTML = renderTotalAmountCard(totalAmount, {
                         label: 'Total Amount',
-                        note: amountInWords(totalAmount),
+                        note: shouldShowAmountInWords(totalAmount) ? amountInWords(totalAmount) : '',
                         size: 'hero',
                         decimals: true,
                         tone: 'positive'
@@ -4353,7 +4413,7 @@
                                 ${isOpen ? `<div class="mt-1.5">${statusLabel}</div>` : ''}
                             </div>
                             <div class="trade-card-header__actions">
-                                ${renderAmount(tx.netProfit, { size: 'md', compact: true, showSign: true, align: 'right', className: 'trade-card-header__pnl' })}
+                                ${renderTradeCardPnl(tx.netProfit, { size: 'md', compact: true, className: 'trade-card-header__pnl', groupClass: 'trade-card-header__pnl-group' })}
                             </div>
                         </div>
                         ${renderTradeDetailsList(tx)}
@@ -4455,6 +4515,269 @@
             }
 
             
+            let targetModalTradeId = null;
+            let targetActiveSellPct = null;
+
+            function renderTargetSellPctChips() {
+                const wrap = document.getElementById('targetSellPctChips');
+                if (!wrap) return;
+                const presets = getCalcSellPctPresets();
+                wrap.innerHTML = presets.map(p => {
+                    const active = targetActiveSellPct != null && Math.abs(targetActiveSellPct - p) < 0.0001;
+                    return `<button type="button" class="btn btn-sm ${active ? 'btn-outline btn-primary' : 'btn-outline btn-neutral'} rounded-full min-h-0 h-8 px-3" onclick="setTargetSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
+                }).join('');
+            }
+
+            function setTargetSellPct(pct) {
+                targetActiveSellPct = pct;
+                const tx = getTransaction(targetModalTradeId);
+                const buy = Number(tx?.buyPrice) || 0;
+                if (buy <= 0) {
+                    showToast('Buy price missing on this trade.', 'warning');
+                    return;
+                }
+                const el = document.getElementById('targetSellPrice');
+                if (el) el.value = (buy * (1 + pct / 100)).toFixed(2);
+                renderTargetSellPctChips();
+            }
+
+            function applyTargetSellPctCustom() {
+                const el = document.getElementById('targetSellPctCustom');
+                const pct = parseFloat(el?.value);
+                if (!pct || pct <= 0) {
+                    showToast('Enter a valid percentage.', 'warning');
+                    return;
+                }
+                const presets = getCalcSellPctPresets();
+                if (!presets.some(p => Math.abs(p - pct) < 0.0001)) {
+                    presets.push(pct);
+                    presets.sort((a, b) => a - b);
+                    saveCalcSellPctPresets(presets);
+                }
+                if (el) el.value = '';
+                setTargetSellPct(pct);
+            }
+
+            function onTargetSellPriceInput() {
+                targetActiveSellPct = null;
+                renderTargetSellPctChips();
+            }
+
+            function openTargetModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                targetModalTradeId = id;
+                targetActiveSellPct = null;
+                const buy = Number(tx.buyPrice) || 0;
+                Sheet.open(`<i class="fas fa-bullseye mr-2"></i>${tx.company} Target`, `
+                    <p class="text-sm text-base-content/60 mb-3">Buy price: <span class="buy-side-value font-semibold">${fmtDec(buy)}</span></p>
+                    <label class="label-text font-medium text-sm text-base-content/60 mb-1">Sell target (% on buy price)</label>
+                    <div class="flex flex-wrap gap-1 items-center mb-2" id="targetSellPctChips"></div>
+                    <div class="flex gap-1 mb-3">
+                        <input type="number" class="input input-bordered input-sm w-full" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
+                        <button type="button" class="btn btn-sm btn-outline btn-primary min-h-0 h-10 px-3" onclick="applyTargetSellPctCustom()">Apply</button>
+                    </div>
+                    <label class="label-text font-normal text-base-content/65 mb-1">Custom sell price</label>
+                    <input type="number" class="input input-bordered w-full" id="targetSellPrice" min="0.01" step="0.01" value="${tx.sellPrice || ''}" oninput="onTargetSellPriceInput()" />
+                    <p class="text-sm text-base-content/60 mb-0 mt-2">Tap a % to set target sell price, or enter a custom price manually.</p>
+                `, renderAppButtonRow('Cancel', 'Update Sell', {
+                    cancelOnClick: 'closeSheet()',
+                    actionOnClick: 'saveTargetSellPrice()',
+                    actionIcon: 'fa-check'
+                }));
+                renderTargetSellPctChips();
+            }
+
+            async function saveTargetSellPrice() {
+                const id = targetModalTradeId;
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const sellPrice = parseFloat(document.getElementById('targetSellPrice')?.value);
+                if (!sellPrice || sellPrice <= 0) {
+                    showToast('Enter a valid sell price.', 'warning');
+                    return;
+                }
+                const calc = calculateTrade({ ...tx, sellPrice });
+                const saved = await updateTransaction(id, {
+                    sellPrice,
+                    grossProfit: calc.grossProfit,
+                    interest: calc.interest,
+                    charges: calc.totalCharges,
+                    netProfit: calc.netProfit,
+                    holdingDays: calc.holdingDays,
+                    mtfAmount: calc.mtfAmount,
+                    ownMargin: calc.ownMargin,
+                    totalInvestment: calc.totalInvestment,
+                    breakdown: calc.breakdown
+                });
+                if (saved) {
+                    showToast('Sell price updated.', 'success');
+                    targetModalTradeId = null;
+                    targetActiveSellPct = null;
+                    Sheet.close();
+                    renderCurrentView();
+                    renderPastTrades();
+                    refreshActiveMoreView();
+                } else {
+                    showToast('Error updating sell price.', 'danger');
+                }
+            }
+
+            function addDaysToDateKey(dateKey, days) {
+                const key = parseDateKey(dateKey);
+                if (!key) return '';
+                const d = new Date(key + 'T12:00:00');
+                d.setDate(d.getDate() + Math.round(days));
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
+
+            let holdModalTradeId = null;
+            let holdModalSyncing = false;
+
+            function syncHoldModalDaysFromDates() {
+                if (holdModalSyncing) return;
+                const buyEl = document.getElementById('holdBuyDate');
+                const sellEl = document.getElementById('holdSellDate');
+                const daysEl = document.getElementById('holdDays');
+                if (!buyEl || !sellEl || !daysEl) return;
+                const buy = buyEl.value;
+                const sell = sellEl.value;
+                if (!buy || !sell) {
+                    daysEl.value = '';
+                    return;
+                }
+                holdModalSyncing = true;
+                daysEl.value = String(calcHoldingDays(buy, sell));
+                holdModalSyncing = false;
+            }
+
+            function onHoldModalDaysInput() {
+                if (holdModalSyncing) return;
+                const buyEl = document.getElementById('holdBuyDate');
+                const sellEl = document.getElementById('holdSellDate');
+                const daysEl = document.getElementById('holdDays');
+                if (!buyEl || !sellEl || !daysEl) return;
+                const buy = buyEl.value;
+                const days = parseInt(daysEl.value, 10);
+                if (!buy || Number.isNaN(days) || days < 0) return;
+                holdModalSyncing = true;
+                setDateInputValue(sellEl, addDaysToDateKey(buy, days));
+                holdModalSyncing = false;
+            }
+
+            function onHoldModalDateInput() {
+                syncHoldModalDaysFromDates();
+            }
+
+            function setHoldModalSameDay() {
+                const buyEl = document.getElementById('holdBuyDate');
+                const sellEl = document.getElementById('holdSellDate');
+                if (!buyEl?.value) return;
+                holdModalSyncing = true;
+                setDateInputValue(sellEl, buyEl.value);
+                const daysEl = document.getElementById('holdDays');
+                if (daysEl) daysEl.value = '0';
+                holdModalSyncing = false;
+            }
+
+            function setHoldModalTodayPair() {
+                const buyEl = document.getElementById('holdBuyDate');
+                const sellEl = document.getElementById('holdSellDate');
+                if (!buyEl || !sellEl) return;
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                holdModalSyncing = true;
+                setDateInputValue(buyEl, today.toISOString().split('T')[0]);
+                setDateInputValue(sellEl, tomorrow.toISOString().split('T')[0]);
+                const daysEl = document.getElementById('holdDays');
+                if (daysEl) daysEl.value = '1';
+                holdModalSyncing = false;
+            }
+
+            function openHoldModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                holdModalTradeId = id;
+                const isOpen = (tx.status || 'closed') === 'open';
+                const buyDate = parseDateKey(tx.buyDate) || '';
+                const sellDate = parseDateKey(tx.sellDate) || '';
+                const holdDays = buyDate && sellDate ? calcHoldingDays(buyDate, sellDate) : getDaysHeld(tx);
+                const openNote = isOpen
+                    ? '<p class="text-sm text-base-content/60 mb-3">Open trade — dates below drive interest and charge estimates.</p>'
+                    : '';
+
+                Sheet.open(`<i class="far fa-clock mr-2"></i>${tx.company} Holding`, `
+                    ${openNote}
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="label-text font-normal buy-price-label mb-1">Buy Date</label>
+                            <input type="date" class="input input-bordered w-full" id="holdBuyDate" value="${buyDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
+                        </div>
+                        <div>
+                            <label class="label-text font-normal text-base-content/65 mb-1">Sell Date</label>
+                            <input type="date" class="input input-bordered w-full" id="holdSellDate" value="${sellDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="label-text font-normal text-base-content/65 mb-1">Hold (days)</label>
+                        <input type="number" class="input input-bordered w-full" id="holdDays" min="0" step="1" value="${holdDays}" oninput="onHoldModalDaysInput()" />
+                        <p class="label-text-alt mt-1 mb-0">Change days to shift sell date, or edit dates directly.</p>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setHoldModalSameDay()">Same day</button>
+                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setHoldModalTodayPair()">Today → Tomorrow</button>
+                    </div>
+                `, renderAppButtonRow('Cancel', 'Update Dates', {
+                    cancelOnClick: 'closeSheet()',
+                    actionOnClick: 'saveHoldDates()',
+                    actionIcon: 'fa-check'
+                }));
+            }
+
+            async function saveHoldDates() {
+                const id = holdModalTradeId;
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const buyDate = document.getElementById('holdBuyDate')?.value;
+                const sellDate = document.getElementById('holdSellDate')?.value;
+                if (!buyDate || !sellDate) {
+                    showToast('Please select both buy and sell dates.', 'warning');
+                    return;
+                }
+                if (new Date(sellDate + 'T12:00:00') < new Date(buyDate + 'T12:00:00')) {
+                    showToast('Sell date cannot be before buy date.', 'warning');
+                    return;
+                }
+                const calc = calculateTrade({ ...tx, buyDate, sellDate });
+                const saved = await updateTransaction(id, {
+                    buyDate,
+                    sellDate,
+                    grossProfit: calc.grossProfit,
+                    interest: calc.interest,
+                    charges: calc.totalCharges,
+                    netProfit: calc.netProfit,
+                    holdingDays: calc.holdingDays,
+                    mtfAmount: calc.mtfAmount,
+                    ownMargin: calc.ownMargin,
+                    totalInvestment: calc.totalInvestment,
+                    breakdown: calc.breakdown
+                });
+                if (saved) {
+                    showToast('Dates updated.', 'success');
+                    holdModalTradeId = null;
+                    Sheet.close();
+                    renderCurrentView();
+                    renderPastTrades();
+                    refreshActiveMoreView();
+                } else {
+                    showToast('Error updating dates.', 'danger');
+                }
+            }
+
             function openChargesModal(id) {
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
@@ -4615,19 +4938,6 @@
                 });
             }
 
-            function confirmEdit(id) {
-                const tx = getTransaction(id);
-                const name = tx ? tx.company : 'this trade';
-                confirmAction({
-                    title: '<i class="fas fa-edit mr-2"></i>Edit Trade?',
-                    titleClass: 'text-primary',
-                    message: `Open "${name}" for editing?`,
-                    confirmLabel: '<i class="fas fa-edit mr-1"></i> Edit',
-                    confirmClass: 'btn-primary',
-                    onConfirm: () => openEditModal(id)
-                });
-            }
-
             // ---------- MODAL HELPERS ----------
             function initDropdowns() {
                 document.addEventListener('click', (e) => {
@@ -4670,6 +4980,28 @@
                 // Delete modal already set up in confirmDelete
             }
 
+            function getTxFormStatus() {
+                return document.querySelector('input[name="status"]:checked')?.value || 'closed';
+            }
+
+            function syncTxSellPriceField() {
+                const isOpen = getTxFormStatus() === 'open';
+                const sellEl = document.getElementById('txSellPrice');
+                const reqMark = document.getElementById('txSellPriceRequired');
+                const hint = document.getElementById('txSellPriceHint');
+                if (sellEl) {
+                    sellEl.required = !isOpen;
+                    sellEl.placeholder = isOpen ? 'Same as buy' : '0.00';
+                }
+                if (reqMark) reqMark.classList.toggle('hidden', isOpen);
+                if (hint) hint.classList.toggle('hidden', !isOpen);
+            }
+
+            function onTxStatusChange() {
+                syncTxSellPriceField();
+                updatePreview();
+            }
+
             function openAddModal() {
                 document.getElementById('txEditId').value = '';
                 setTxSaveBtnLabel(false);
@@ -4682,6 +5014,8 @@
                 setDateInputValue(document.getElementById('txBuyDate'), yesterday);
                 setDateInputValue(document.getElementById('txSellDate'), today);
                 clearPreview();
+                syncTxSellPriceField();
+                initDateFields(document.getElementById('txModal'));
                 document.getElementById("txModal").showModal();
                 attachCalcListeners();
                 updateLeverageBreakdown();
@@ -4709,9 +5043,11 @@
                 const status = tx.status || 'closed';
                 document.querySelector(`input[name="status"][value="${status}"]`).checked = true;
 
+                syncTxSellPriceField();
                 updatePreview();
                 updateLeverageBreakdown();
                 attachCalcListeners();
+                initDateFields(document.getElementById('txModal'));
                 document.getElementById("txModal").showModal();
             }
 
@@ -4763,10 +5099,13 @@
                 const broker = document.getElementById('txBroker').value || 'Zerodha';
                 const qty = parseFloat(document.getElementById('txQty').value) || 0;
                 const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
-                const sp = parseFloat(document.getElementById('txSellPrice').value) || 0;
+                let sp = parseFloat(document.getElementById('txSellPrice').value) || 0;
                 const buyDate = document.getElementById('txBuyDate').value;
                 const sellDate = document.getElementById('txSellDate').value;
                 const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
+                const status = getTxFormStatus();
+
+                if (status === 'open' && sp <= 0 && bp > 0) sp = bp;
 
                 if (!buyDate || !sellDate || qty <= 0 || bp <= 0 || sp <= 0) {
                     clearPreview();
@@ -4790,17 +5129,22 @@
                 const sellDate = document.getElementById('txSellDate').value;
                 const quantity = parseFloat(document.getElementById('txQty').value);
                 const buyPrice = parseFloat(document.getElementById('txBuyPrice').value);
-                const sellPrice = parseFloat(document.getElementById('txSellPrice').value);
+                let sellPrice = parseFloat(document.getElementById('txSellPrice').value);
                 const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
                 const notes = document.getElementById('txNotes').value.trim();
-                const status = document.querySelector('input[name="status"]:checked')?.value || 'closed';
+                const status = getTxFormStatus();
 
                 if (!company) { showToast('Please enter company name.', 'warning'); return; }
                 if (!broker) { showToast('Please select a broker.', 'warning'); return; }
                 if (!buyDate || !sellDate) { showToast('Please select both dates.', 'warning'); return; }
                 if (!quantity || quantity <= 0) { showToast('Please enter a valid quantity.', 'warning'); return; }
                 if (!buyPrice || buyPrice <= 0) { showToast('Please enter a valid buy price.', 'warning'); return; }
-                if (!sellPrice || sellPrice <= 0) { showToast('Please enter a valid sell price.', 'warning'); return; }
+                if (status === 'open') {
+                    if (!sellPrice || sellPrice <= 0) sellPrice = buyPrice;
+                } else if (!sellPrice || sellPrice <= 0) {
+                    showToast('Please enter a valid sell price.', 'warning');
+                    return;
+                }
 
                 const txData = { company, broker, buyDate, sellDate, quantity, buyPrice, sellPrice, leverage, notes, status };
                 const calc = calculateTrade(txData);
@@ -5067,6 +5411,7 @@
             window.openMoreFeature = openMoreFeature;
             window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
+            window.onTxStatusChange = onTxStatusChange;
             window.onTxCompanyInput = onTxCompanyInput;
             window.onTxCompanyKeydown = onTxCompanyKeydown;
             window.onTxCompanyFocus = onTxCompanyFocus;
@@ -5076,7 +5421,6 @@
             window.openViewModal = openViewModal;
             window.copyTransaction = copyTransaction;
             window.confirmCopy = confirmCopy;
-            window.confirmEdit = confirmEdit;
             window.confirmDelete = confirmDelete;
             window.saveTransaction = saveTransaction;
             window.openBackupTextModal = openBackupTextModal;
@@ -5086,6 +5430,17 @@
             window.restoreFromText = restoreFromText;
             window.resetData = resetData;
             window.performReset = performReset;
+            window.openTargetModal = openTargetModal;
+            window.setTargetSellPct = setTargetSellPct;
+            window.applyTargetSellPctCustom = applyTargetSellPctCustom;
+            window.onTargetSellPriceInput = onTargetSellPriceInput;
+            window.saveTargetSellPrice = saveTargetSellPrice;
+            window.openHoldModal = openHoldModal;
+            window.onHoldModalDateInput = onHoldModalDateInput;
+            window.onHoldModalDaysInput = onHoldModalDaysInput;
+            window.setHoldModalSameDay = setHoldModalSameDay;
+            window.setHoldModalTodayPair = setHoldModalTodayPair;
+            window.saveHoldDates = saveHoldDates;
             window.openChargesModal = openChargesModal;
             window.openInterestModal = openInterestModal;
             window.renderCurrentView = renderCurrentView;

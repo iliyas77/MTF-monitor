@@ -65,6 +65,13 @@
         return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
     }
 
+    /** Short date for tight grids — e.g. "5 Jul 26" */
+    function fmtDateShort(d) {
+        const dt = parseDateInput(d);
+        if (!dt) return '—';
+        return dt.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: '2-digit' });
+    }
+
     function renderDateChip(text, opts = {}) {
         const {
             onclick = '',
@@ -115,13 +122,22 @@
         input.dataset.dateFieldWired = '1';
 
         const isSm = input.classList.contains('input-sm');
+        const useInputStyle = input.classList.contains('input');
         const wrap = document.createElement('div');
         wrap.className = 'app-date-field' + (isSm ? ' app-date-field--sm' : '');
 
         const trigger = document.createElement('button');
         trigger.type = 'button';
         trigger.className = 'app-date-field__trigger app-date-chip app-date-chip--clickable';
-        trigger.setAttribute('aria-label', input.getAttribute('aria-label') || 'Select date');
+        if (useInputStyle) {
+            trigger.classList.add('input', 'input-bordered', 'w-full');
+            if (isSm) trigger.classList.add('input-sm');
+            if (input.classList.contains('rounded-xl')) trigger.classList.add('rounded-xl');
+        }
+        const labelText = input.getAttribute('aria-label')
+            || input.closest('div')?.querySelector('label')?.textContent?.replace(/\*/g, '').trim()
+            || 'Select date';
+        trigger.setAttribute('aria-label', labelText);
         trigger.innerHTML =
             '<i class="far fa-calendar app-date-chip__icon" aria-hidden="true"></i>' +
             '<span class="app-date-chip__text app-date-field__text">Select date</span>';
@@ -132,6 +148,7 @@
         wrap.appendChild(input);
 
         input.className = 'app-date-field__input';
+        input.setAttribute('tabindex', '-1');
 
         const openPicker = () => {
             try {
@@ -143,7 +160,11 @@
             }
         };
 
-        trigger.addEventListener('click', openPicker);
+        trigger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openPicker();
+        });
+        wrap.addEventListener('click', () => openPicker());
         input.addEventListener('input', () => syncDateFieldDisplay(input));
         input.addEventListener('change', () => syncDateFieldDisplay(input));
         syncDateFieldDisplay(input);
@@ -159,6 +180,12 @@
     function initDateFields(root) {
         const scope = root || document;
         scope.querySelectorAll('input[type="date"]:not([data-date-field-wired="1"])').forEach(wireDateField);
+    }
+
+    const AMOUNT_WORDS_THRESHOLD = 1000000; // 10,00,000 — show words only above this
+
+    function shouldShowAmountInWords(amount) {
+        return Math.abs(Number(amount) || 0) > AMOUNT_WORDS_THRESHOLD;
     }
 
     function amountInWords(num) {
@@ -277,7 +304,7 @@
         const pillHtml = pill
             ? `<span class="amount-display__pill inline-flex flex-col ${shellTone} ${cfg.shell}">${iconHtml}${valueHtml}</span>`
             : `<span class="amount-display__pill inline-flex flex-col ${shellTone}">${iconHtml}${valueHtml}</span>`;
-        const wordsHtml = words
+        const wordsHtml = words && shouldShowAmountInWords(amount)
             ? `<span class="amount-display__words block ${cfg.words} text-base-content/55 font-normal">${amountInWords(amount)}</span>`
             : '';
         const idAttr = id ? ` id="${id}"` : '';
@@ -383,6 +410,7 @@
 
     /** Amount in words — rendered below money amount pills/cards, not inside them. */
     function renderMoneyAmountWords(amount, align = 'center', opts = {}) {
+        if (!shouldShowAmountInWords(amount)) return '';
         const { collapsible = false } = opts;
         const alignMap = { left: 'text-left', center: 'text-center', right: 'text-right' };
         const collapseClass = collapsible ? ' money-value-block__expandable money-value-block__expandable--collapsed' : '';
@@ -392,7 +420,12 @@
     function paintMoneyAmountWords(el, amount, align = 'center') {
         if (!el) return null;
         const alignMap = { left: 'text-left', center: 'text-center', right: 'text-right' };
-        el.classList.add('money-amount-words', alignMap[align] || 'text-center');
+        if (!shouldShowAmountInWords(amount)) {
+            el.textContent = '';
+            el.className = 'money-amount-words money-amount-words--hidden';
+            return el;
+        }
+        el.className = `money-amount-words ${alignMap[align] || 'text-center'}`;
         el.textContent = amountInWords(amount);
         return el;
     }
@@ -446,11 +479,17 @@
     const APP_BUTTON_VARIANTS = {
         cancel: 'app-btn--cancel',
         action: 'app-btn--action',
-        danger: 'app-btn--danger'
+        danger: 'app-btn--danger',
+        tonal: 'app-btn--tonal',
+        'primary-tonal': 'app-btn--primary-tonal',
+        'tonal-danger': 'app-btn--tonal-danger'
     };
 
     function resolveAppButtonVariant(variantOrLegacy = 'action') {
         const v = String(variantOrLegacy || 'action').toLowerCase();
+        if (v === 'tonal-danger') return 'tonal-danger';
+        if (v === 'tonal') return 'tonal';
+        if (v === 'primary-tonal' || v === 'primary_tonal') return 'primary-tonal';
         if (v.includes('error') || v.includes('danger')) return 'danger';
         if (v.includes('cancel') || v.includes('ghost')) return 'cancel';
         return 'action';
@@ -616,6 +655,7 @@
         fmtINR,
         fmtDec,
         fmtDateDisplay,
+        fmtDateShort,
         renderDateChip,
         renderDateRangeChip,
         paintDateChip,
@@ -624,6 +664,7 @@
         setDateInputValue,
         initDateFields,
         amountInWords,
+        shouldShowAmountInWords,
         renderAmount,
         paintAmount,
         renderQuantity,
