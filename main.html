@@ -450,24 +450,34 @@
                         <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
                         <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryTo" />
                     </div></div>
-        <div id="panelPastFilter"><div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
-                        <div class="range-quick flex flex-wrap gap-2" id="pastRangeButtons">
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setPastRange('yesterday')">Yesterday</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="7" onclick="setPastRange(7)">1W</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="10" onclick="setPastRange(10)">10D</button>
-                            <button type="button" class="btn btn-outline btn-primary btn-sm flex-1" data-range="30" onclick="setPastRange(30)">1M</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="90" onclick="setPastRange(90)">3M</button>
-                        </div>
+        <div id="panelPastFilter" class="past-filter-panel">
+            <section class="past-filter-section">
+                <h4 class="past-filter-section__label">Quick range</h4>
+                <div class="md-chip-group md-chip-group--filter" id="pastRangeButtons" role="group" aria-label="Quick date range">
+                    <button type="button" class="md-filter-chip" data-range="today" onclick="setPastRange('today')" aria-pressed="false">Today</button>
+                    <button type="button" class="md-filter-chip" data-range="yesterday" onclick="setPastRange('yesterday')" aria-pressed="false">Yesterday</button>
+                    <button type="button" class="md-filter-chip" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="false">This Week</button>
+                    <button type="button" class="md-filter-chip" data-range="7" onclick="setPastRange(7)" aria-pressed="false">1W</button>
+                    <button type="button" class="md-filter-chip" data-range="10" onclick="setPastRange(10)" aria-pressed="false">10D</button>
+                    <button type="button" class="md-filter-chip md-filter-chip--selected" data-range="30" onclick="setPastRange(30)" aria-pressed="true">1M</button>
+                    <button type="button" class="md-filter-chip" data-range="90" onclick="setPastRange(90)" aria-pressed="false">3M</button>
+                </div>
+            </section>
+            <section class="past-filter-section">
+                <h4 class="past-filter-section__label">Custom range</h4>
+                <div class="past-filter-dates">
+                    <div class="past-filter-date-field">
+                        <span class="past-filter-date-field__label">From</span>
+                        <input type="date" class="input input-bordered w-full rounded-2xl past-filter-date-input" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="pastFrom" />
+                    <div class="past-filter-dates__sep" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                    <div class="past-filter-date-field">
+                        <span class="past-filter-date-field__label">To</span>
+                        <input type="date" class="input input-bordered w-full rounded-2xl past-filter-date-input" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="pastTo" />
-                    </div></div>
+                </div>
+            </section>
+        </div>
         <div id="panelMoneyHistory">
             <div class="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-base-200">
                 <div class="min-w-0 flex-1">
@@ -2045,8 +2055,13 @@
 
             // ---------- FILTER SHEET ----------
             function openFilterSheet() {
-                Sheet.mountPanel('<i class="fas fa-sliders-h mr-2"></i>Filter Past Trades', 'panelPastFilter',
+                Sheet.mountPanel('<i class="fas fa-tune mr-2 text-[var(--gr-accent)]"></i>Filter Past Trades', 'panelPastFilter',
                     renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyPastRangeFilter()', actionIcon: 'fa-check' }));
+                setDateInputValue(document.getElementById('pastFrom'), pastFrom);
+                setDateInputValue(document.getElementById('pastTo'), pastTo);
+                if (pastRangeDays != null && pastRangeDays !== '') {
+                    setRangeButtonsActive('#pastRangeButtons', pastRangeDays);
+                }
             }
             function closeFilterSheet() { Sheet.close(); }
 
@@ -2305,13 +2320,22 @@
             }
 
             function setRangeButtonsActive(containerSelector, activeRange) {
-                document.querySelectorAll(`${containerSelector} .btn`).forEach(b => {
-                    const on = b.dataset.range === String(activeRange);
+                document.querySelectorAll(`${containerSelector} [data-range]`).forEach(b => {
+                    const on = activeRange != null && activeRange !== '' && b.dataset.range === String(activeRange);
+                    if (b.classList.contains('md-filter-chip')) {
+                        b.classList.toggle('md-filter-chip--selected', on);
+                        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                        return;
+                    }
                     b.classList.remove('btn-primary');
                     b.classList.add('btn-outline', 'btn-sm');
                     b.classList.toggle('btn-primary', on);
                     b.classList.toggle('btn-neutral', !on);
                 });
+            }
+
+            function clearRangeButtonsActive(containerSelector) {
+                setRangeButtonsActive(containerSelector, '');
             }
 
             function syncMoneyTypeDropdowns() {
@@ -2400,14 +2424,34 @@
                 return { from: localDateStr(from), to: localDateStr(to) };
             }
 
+            /** Monday–Friday of the calendar week containing today (local time). */
+            function getThisWeekMonFriRange() {
+                const now = new Date();
+                const day = now.getDay(); // 0 Sun … 6 Sat
+                const daysFromMonday = day === 0 ? 6 : day - 1;
+                const monday = new Date(now);
+                monday.setDate(now.getDate() - daysFromMonday);
+                const friday = new Date(monday);
+                friday.setDate(monday.getDate() + 4);
+                return { from: localDateStr(monday), to: localDateStr(friday) };
+            }
+
             function setPastRange(daysOrKey) {
                 pastRangeDays = daysOrKey;
-                if (daysOrKey === 'yesterday') {
-                    const y = new Date();
-                    y.setDate(y.getDate() - 1);
-                    const date = y.toISOString().split('T')[0];
+                if (daysOrKey === 'today') {
+                    const date = localDateStr(new Date());
                     pastFrom = date;
                     pastTo = date;
+                } else if (daysOrKey === 'yesterday') {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const date = localDateStr(y);
+                    pastFrom = date;
+                    pastTo = date;
+                } else if (daysOrKey === 'this-week') {
+                    const range = getThisWeekMonFriRange();
+                    pastFrom = range.from;
+                    pastTo = range.to;
                 } else {
                     const range = getDateRange(daysOrKey);
                     pastFrom = range.from;
@@ -2420,6 +2464,11 @@
                 closeFilterSheet();
             }
 
+            function onPastFilterDateChange() {
+                pastRangeDays = null;
+                clearRangeButtonsActive('#pastRangeButtons');
+            }
+
             function applyPastRangeFilter() {
                 const from = document.getElementById('pastFrom').value;
                 const to = document.getElementById('pastTo').value;
@@ -2427,10 +2476,8 @@
                 if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
                 pastFrom = from;
                 pastTo = to;
-                document.querySelectorAll('#pastRangeButtons .btn').forEach(b => {
-                    b.classList.remove('btn-primary');
-                    b.classList.add('btn-outline', 'btn-neutral', 'btn-sm');
-                });
+                pastRangeDays = null;
+                clearRangeButtonsActive('#pastRangeButtons');
                 renderPastTrades();
                 closeFilterSheet();
                 showToast('Range applied.', 'success');
@@ -2798,7 +2845,12 @@
 
                 let filtered = txs
                     .filter(t => (t.status || 'closed') === 'closed')
-                    .filter(t => { const d = new Date(t.buyDate); return d >= fromDate && d <= toDate; });
+                    .filter(t => {
+                        const key = parseDateKey(t.sellDate) || parseDateKey(t.buyDate);
+                        if (!key) return false;
+                        const d = new Date(key + 'T12:00:00');
+                        return d >= fromDate && d <= toDate;
+                    });
 
                 const pastQuery = pastSearchQuery.trim().toLowerCase();
                 if (pastQuery) {
@@ -5462,6 +5514,7 @@
             window.clearPastSearch = clearPastSearch;
             window.applyPastRangeFilter = applyPastRangeFilter;
             window.setPastRange = setPastRange;
+            window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;
             window.updatePreview = updatePreview;
             window.connectSyncFromInput = connectSyncFromInput;
