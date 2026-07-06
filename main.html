@@ -54,11 +54,11 @@
                 <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
-            <!-- Summary Card — Net Profit -->
+            <!-- Summary Card — P&L + open trade count -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
-                <div class="card-body flex flex-col items-center gap-3 py-4">
+                <div class="card-body flex flex-col items-center gap-2 py-4">
                     <div class="money-value-block money-value-block--center w-full">
-                        <div id="summaryNet"></div>
+                        <div id="summaryOpenStats"></div>
                         <div id="summaryNetWords"></div>
                     </div>
                 </div>
@@ -83,11 +83,11 @@
             </div>
             <!-- Selected date range indicator -->
             <div class="text-center mb-3" id="pastRangeChipHost"></div>
-            <!-- Summary Card — Net Profit -->
+            <!-- Summary Card — P&L + trade count in range -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
-                <div class="card-body flex flex-col items-center gap-3 py-4">
+                <div class="card-body flex flex-col items-center gap-2 py-4">
                     <div class="money-value-block money-value-block--center w-full">
-                        <div id="pastSummaryNet"></div>
+                        <div id="pastSummaryStats"></div>
                         <div id="pastSummaryNetWords"></div>
                     </div>
                 </div>
@@ -456,10 +456,10 @@
                 <div class="md-chip-group md-chip-group--filter" id="pastRangeButtons" role="group" aria-label="Quick date range">
                     <button type="button" class="md-filter-chip" data-range="today" onclick="setPastRange('today')" aria-pressed="false">Today</button>
                     <button type="button" class="md-filter-chip" data-range="yesterday" onclick="setPastRange('yesterday')" aria-pressed="false">Yesterday</button>
-                    <button type="button" class="md-filter-chip" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="false">This Week</button>
+                    <button type="button" class="md-filter-chip md-filter-chip--selected" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="true">This Week</button>
                     <button type="button" class="md-filter-chip" data-range="7" onclick="setPastRange(7)" aria-pressed="false">1W</button>
                     <button type="button" class="md-filter-chip" data-range="10" onclick="setPastRange(10)" aria-pressed="false">10D</button>
-                    <button type="button" class="md-filter-chip md-filter-chip--selected" data-range="30" onclick="setPastRange(30)" aria-pressed="true">1M</button>
+                    <button type="button" class="md-filter-chip" data-range="30" onclick="setPastRange(30)" aria-pressed="false">1M</button>
                     <button type="button" class="md-filter-chip" data-range="90" onclick="setPastRange(90)" aria-pressed="false">3M</button>
                 </div>
             </section>
@@ -1925,6 +1925,41 @@
                 };
             }
 
+            function getEffectiveSellPrice(tx) {
+                const sp = Number(tx.sellPrice) || 0;
+                const bp = Number(tx.buyPrice) || 0;
+                if (sp > 0) return sp;
+                if ((tx.status || 'closed') === 'open' && bp > 0) return bp;
+                return 0;
+            }
+
+            /** Live P&L metrics from current trade fields (dates, leverage, prices). */
+            function resolveTradeMetrics(tx) {
+                const sellPrice = getEffectiveSellPrice(tx);
+                const fallback = {
+                    sellPrice,
+                    interest: Number(tx.interest) || 0,
+                    charges: Number(tx.charges) || 0,
+                    netProfit: Number(tx.netProfit) || 0,
+                    grossProfit: Number(tx.grossProfit) || 0,
+                    holdingDays: tx.holdingDays || 0,
+                    mtfAmount: Number(tx.mtfAmount) || 0,
+                };
+                if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice || !sellPrice) {
+                    return fallback;
+                }
+                const calc = calculateTrade({ ...tx, sellPrice });
+                return {
+                    sellPrice,
+                    interest: calc.interest,
+                    charges: calc.totalCharges,
+                    netProfit: calc.netProfit,
+                    grossProfit: calc.grossProfit,
+                    holdingDays: calc.holdingDays,
+                    mtfAmount: calc.mtfAmount,
+                };
+            }
+
             // ---------- APP BUTTON WIRING ----------
             function renderTxModalFooter(isEdit = false) {
                 const footer = document.getElementById('txModalFooter');
@@ -2246,7 +2281,7 @@
             }
 
             // ---------- STATE ----------
-            let pastRangeDays = 30;
+            let pastRangeDays = 'this-week';
             let pastFrom = null;
             let pastTo = null;
             let tradeSearchQuery = '';
@@ -2485,13 +2520,17 @@
 
             // ---------- SHARED TRADE CARD ----------
             function getDaysHeld(t) {
-                const isOpen = (t.status || 'closed') === 'open';
-                let daysHeld = t.holdingDays || 0;
-                if (isOpen && t.buyDate) {
-                    const buyDt = new Date(t.buyDate);
-                    daysHeld = Math.max(0, Math.ceil((new Date() - buyDt) / (1000 * 60 * 60 * 24)));
+                if (t.buyDate && t.sellDate) {
+                    return calcHoldingDays(t.buyDate, t.sellDate);
                 }
-                return daysHeld;
+                const isOpen = (t.status || 'closed') === 'open';
+                if (isOpen && t.buyDate) {
+                    const buyKey = parseDateKey(t.buyDate);
+                    if (!buyKey) return t.holdingDays || 0;
+                    const buyDt = new Date(buyKey + 'T12:00:00');
+                    return Math.max(0, Math.ceil((new Date() - buyDt) / (1000 * 60 * 60 * 24)));
+                }
+                return t.holdingDays || 0;
             }
 
             function renderTradeDetailRow(opts) {
@@ -2609,12 +2648,23 @@
                 `;
             }
 
+            function renderTradeListItemLeverageMeta(t) {
+                const leverage = formatTradeLeverageLabel(t);
+                return `
+                    <button type="button" class="trade-list-item__meta-group trade-list-item__lev-meta" onclick="openLeverageModal('${t.id}')" aria-label="Edit leverage">
+                        <span class="trade-list-item__meta-label">Lev</span>
+                        <span class="trade-list-item__meta-value trade-list-item__meta-value--lev">${leverage}</span>
+                    </button>
+                `;
+            }
+
             function renderTradeListItemDetails(t) {
                 const isOpen = (t.status || 'closed') === 'open';
+                const metrics = resolveTradeMetrics(t);
                 const buy = fmtDec(t.buyPrice || 0);
-                const sell = fmtDec(t.sellPrice || 0);
-                const interest = fmtDec(t.interest || 0);
-                const charges = fmtDec(t.charges || 0);
+                const sell = fmtDec(metrics.sellPrice);
+                const interest = fmtDec(metrics.interest);
+                const charges = fmtDec(metrics.charges);
                 const buyDate = t.buyDate ? fmtDateShort(t.buyDate) : '—';
                 const sellDate = t.sellDate ? fmtDateShort(t.sellDate) : '—';
                 const sellOnclick = isOpen ? `openTargetModal('${t.id}')` : '';
@@ -2650,11 +2700,13 @@
                     renderAppButton(label, { variant: btnVariant, size: 'sm', onclick, icon, className });
                 const viewBtn = isPast ? btn('View', `openViewModal('${t.id}')`, 'tonal', 'fa-eye') : '';
                 const copyBtn = isPast ? btn('Copy', `confirmCopy('${t.id}')`, 'tonal', 'fa-copy') : '';
+                const doneBtn = !isPast ? btn('Done', `confirmCloseTrade('${t.id}')`, 'tonal', 'fa-check') : '';
                 return `
                     <div class="trade-list-item__actions">
                         <div class="trade-list-item__actions-main">
                             ${viewBtn}
                             ${copyBtn}
+                            ${doneBtn}
                             ${btn('Edit', `openEditModal('${t.id}')`, 'tonal', 'fa-edit')}
                         </div>
                         ${btn('Delete', `confirmDelete('${t.id}')`, 'tonal-danger', 'fa-trash-alt', 'trade-list-item__action-btn trade-list-item__action-btn--delete')}
@@ -2664,8 +2716,8 @@
 
             function renderTradeListItem(t, serialNo, variant = 'open') {
                 const qty = Number(t.quantity) || 0;
-                const leverage = formatTradeLeverageLabel(t);
                 const company = t.company || 'trade';
+                const metrics = resolveTradeMetrics(t);
                 return `
                     <article class="trade-list-item">
                         <div class="trade-list-item__row trade-list-item__row--buy">
@@ -2675,14 +2727,11 @@
                                     <span class="trade-list-item__meta-value qty-value">${qty}</span>
                                 </span>
                                 <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
-                                <span class="trade-list-item__meta-group">
-                                    <span class="trade-list-item__meta-label">Lev</span>
-                                    <span class="trade-list-item__meta-value trade-list-item__meta-value--lev">${leverage}</span>
-                                </span>
+                                ${renderTradeListItemLeverageMeta(t)}
                                 <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
                                 ${renderTradeListItemHoldMeta(t)}
                             </div>
-                            <div class="trade-list-item__pnl-wrap">${renderTradeCardPnl(t.netProfit)}</div>
+                            <div class="trade-list-item__pnl-wrap">${renderTradeCardPnl(metrics.netProfit)}</div>
                         </div>
                         <div class="trade-list-item__row trade-list-item__row--title">
                             <div class="trade-list-item__title">
@@ -2789,13 +2838,48 @@
                 }).join('');
             }
 
-            function paintTradeSummaryStats(prefix, net) {
-                paintTotalAmountCard(document.getElementById(`${prefix}Net`), net, {
-                    label: 'P&L',
-                    size: 'hero',
-                    tone: net >= 0 ? 'positive' : 'negative'
+            function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel }) {
+                const el = document.getElementById(containerId);
+                if (!el) return;
+                const toneClass = net >= 0
+                    ? 'trade-summary-card__meta-value--positive'
+                    : 'trade-summary-card__meta-value--negative';
+                const n = Number(net) || 0;
+                const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
+                el.innerHTML = `
+                    <div class="trade-summary-card__row">
+                        <span class="trade-summary-card__meta-group">
+                            <span class="trade-summary-card__meta-label">P&L</span>
+                            <span class="trade-summary-card__meta-value trade-summary-card__meta-value--pnl ${toneClass}">${pnlFormatted}</span>
+                        </span>
+                        <span class="trade-summary-card__meta-pipe" aria-hidden="true">|</span>
+                        <span class="trade-summary-card__meta-group">
+                            <span class="trade-summary-card__meta-label">${countLabel}</span>
+                            <span class="trade-summary-card__meta-value trade-summary-card__meta-value--count">${count}</span>
+                        </span>
+                    </div>
+                `;
+                paintMoneyAmountWords(document.getElementById(wordsId), net, 'center');
+            }
+
+            function paintOpenTradeSummary(net, openCount) {
+                paintTradeRangeSummary({
+                    containerId: 'summaryOpenStats',
+                    wordsId: 'summaryNetWords',
+                    net,
+                    count: openCount,
+                    countLabel: 'Open'
                 });
-                paintMoneyAmountWords(document.getElementById(`${prefix}NetWords`), net, 'center');
+            }
+
+            function paintPastTradeSummary(net, tradeCount) {
+                paintTradeRangeSummary({
+                    containerId: 'pastSummaryStats',
+                    wordsId: 'pastSummaryNetWords',
+                    net,
+                    count: tradeCount,
+                    countLabel: 'Trades'
+                });
             }
 
             // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
@@ -2811,9 +2895,9 @@
                 filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
 
                 let net = 0;
-                filtered.forEach(t => { net += t.netProfit || 0; });
+                filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
 
-                paintTradeSummaryStats('summary', net);
+                paintOpenTradeSummary(net, filtered.length);
 
                 const container = document.getElementById('transactionList');
 
@@ -2833,9 +2917,10 @@
             function getPastFiltered() {
                 const txs = getTransactions();
                 if (!pastFrom || !pastTo) {
-                    const range = getDateRange(30);
+                    const range = getThisWeekMonFriRange();
                     pastFrom = range.from;
                     pastTo = range.to;
+                    pastRangeDays = 'this-week';
                     setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                     setDateInputValue(document.getElementById('pastTo'), pastTo);
                 }
@@ -2875,7 +2960,7 @@
 
                 let net = 0;
                 filtered.forEach(t => { net += t.netProfit || 0; });
-                paintTradeSummaryStats('pastSummary', net);
+                paintPastTradeSummary(net, filtered.length);
 
                 const emptyHtml = pastQuery
                     ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
@@ -4576,8 +4661,30 @@
                 const presets = getCalcSellPctPresets();
                 wrap.innerHTML = presets.map(p => {
                     const active = targetActiveSellPct != null && Math.abs(targetActiveSellPct - p) < 0.0001;
-                    return `<button type="button" class="btn btn-sm ${active ? 'btn-outline btn-primary' : 'btn-outline btn-neutral'} rounded-full min-h-0 h-8 px-3" onclick="setTargetSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
+                    return `<button type="button" class="md-filter-chip${active ? ' md-filter-chip--selected' : ''}" onclick="setTargetSellPct(${p})" aria-pressed="${active}">${fmtCalcPctLabel(p)}</button>`;
                 }).join('');
+            }
+
+            function updateTargetModalPreview() {
+                const tx = getTransaction(targetModalTradeId);
+                if (!tx) return;
+                const buy = Number(tx.buyPrice) || 0;
+                const sell = parseFloat(document.getElementById('targetSellPrice')?.value) || 0;
+                const previewEl = document.getElementById('targetSellPreview');
+                const gainEl = document.getElementById('targetGainPreview');
+                if (previewEl) previewEl.textContent = sell > 0 ? fmtDec(sell) : '—';
+                if (!gainEl) return;
+                if (buy > 0 && sell > 0) {
+                    const pct = ((sell - buy) / buy) * 100;
+                    const diff = sell - buy;
+                    const sign = pct >= 0 ? '+' : '';
+                    const tone = pct >= 0 ? 'target-sheet__gain--up' : 'target-sheet__gain--down';
+                    gainEl.className = `target-sheet__gain ${tone}`;
+                    gainEl.innerHTML = `<span>${sign}${pct.toFixed(2)}%</span><span class="target-sheet__gain-dot" aria-hidden="true">·</span><span>${sign}${fmtDec(Math.abs(diff))} per share</span>`;
+                } else {
+                    gainEl.className = 'target-sheet__gain target-sheet__gain--neutral';
+                    gainEl.textContent = 'Set a target sell price';
+                }
             }
 
             function setTargetSellPct(pct) {
@@ -4591,6 +4698,7 @@
                 const el = document.getElementById('targetSellPrice');
                 if (el) el.value = (buy * (1 + pct / 100)).toFixed(2);
                 renderTargetSellPctChips();
+                updateTargetModalPreview();
             }
 
             function applyTargetSellPctCustom() {
@@ -4613,6 +4721,7 @@
             function onTargetSellPriceInput() {
                 targetActiveSellPct = null;
                 renderTargetSellPctChips();
+                updateTargetModalPreview();
             }
 
             function openTargetModal(id) {
@@ -4621,23 +4730,47 @@
                 targetModalTradeId = id;
                 targetActiveSellPct = null;
                 const buy = Number(tx.buyPrice) || 0;
-                Sheet.open(`<i class="fas fa-bullseye mr-2"></i>${tx.company} Target`, `
-                    <p class="text-sm text-base-content/60 mb-3">Buy price: <span class="buy-side-value font-semibold">${fmtDec(buy)}</span></p>
-                    <label class="label-text font-medium text-sm text-base-content/60 mb-1">Sell target (% on buy price)</label>
-                    <div class="flex flex-wrap gap-1 items-center mb-2" id="targetSellPctChips"></div>
-                    <div class="flex gap-1 mb-3">
-                        <input type="number" class="input input-bordered input-sm w-full" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
-                        <button type="button" class="btn btn-sm btn-outline btn-primary min-h-0 h-10 px-3" onclick="applyTargetSellPctCustom()">Apply</button>
+                const sellVal = tx.sellPrice || getEffectiveSellPrice(tx) || '';
+                Sheet.open(`<i class="fas fa-bullseye mr-2 text-[var(--gr-accent)]"></i>${tx.company}`, `
+                    <div class="target-sheet">
+                        <div class="target-sheet__hero">
+                            <div class="target-sheet__price-col">
+                                <span class="target-sheet__price-label">Buy</span>
+                                <span class="target-sheet__price-value target-sheet__price-value--buy">${fmtDec(buy)}</span>
+                            </div>
+                            <div class="target-sheet__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                            <div class="target-sheet__price-col target-sheet__price-col--sell">
+                                <span class="target-sheet__price-label">Target sell</span>
+                                <span class="target-sheet__price-value target-sheet__price-value--sell" id="targetSellPreview">—</span>
+                            </div>
+                        </div>
+                        <div class="target-sheet__gain target-sheet__gain--neutral" id="targetGainPreview">Set a target sell price</div>
+
+                        <section class="target-sheet__section">
+                            <h4 class="target-sheet__section-label">Quick target %</h4>
+                            <div class="md-chip-group md-chip-group--filter target-sheet__chips" id="targetSellPctChips"></div>
+                            <div class="target-sheet__custom-pct">
+                                <input type="number" class="target-sheet__custom-pct-input" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
+                                <button type="button" class="md-filter-chip target-sheet__custom-pct-btn" onclick="applyTargetSellPctCustom()">Add</button>
+                            </div>
+                        </section>
+
+                        <section class="target-sheet__section">
+                            <h4 class="target-sheet__section-label">Sell price</h4>
+                            <div class="target-sheet__sell-input-wrap">
+                                <span class="target-sheet__sell-currency" aria-hidden="true">₹</span>
+                                <input type="number" class="target-sheet__sell-input" id="targetSellPrice" min="0.01" step="0.01" value="${sellVal}" oninput="onTargetSellPriceInput()" inputmode="decimal" />
+                            </div>
+                            <p class="target-sheet__hint">Tap a % above or enter your target sell price manually.</p>
+                        </section>
                     </div>
-                    <label class="label-text font-normal text-base-content/65 mb-1">Custom sell price</label>
-                    <input type="number" class="input input-bordered w-full" id="targetSellPrice" min="0.01" step="0.01" value="${tx.sellPrice || ''}" oninput="onTargetSellPriceInput()" />
-                    <p class="text-sm text-base-content/60 mb-0 mt-2">Tap a % to set target sell price, or enter a custom price manually.</p>
                 `, renderAppButtonRow('Cancel', 'Update Sell', {
                     cancelOnClick: 'closeSheet()',
                     actionOnClick: 'saveTargetSellPrice()',
                     actionIcon: 'fa-check'
                 }));
                 renderTargetSellPctChips();
+                updateTargetModalPreview();
             }
 
             async function saveTargetSellPrice() {
@@ -4688,6 +4821,86 @@
 
             let holdModalTradeId = null;
             let holdModalSyncing = false;
+            let leverageModalTradeId = null;
+
+            function leverageModalBreakdownHtml(tx, leverage) {
+                const lev = Math.max(1, Number(leverage) || 1);
+                const qty = Number(tx.quantity) || 0;
+                const bp = Number(tx.buyPrice) || 0;
+                const totalInv = bp * qty;
+                const ownMargin = lev > 1 ? totalInv / lev : totalInv;
+                const mtfAmt = lev > 1 ? totalInv * (1 - 1 / lev) : 0;
+                return `
+                    <div>Total investment: ${fmtDec(totalInv)}</div>
+                    <div>Your margin: ${fmtDec(ownMargin)}</div>
+                    <div>Broker funded: ${fmtDec(mtfAmt)}</div>
+                `;
+            }
+
+            function onLeverageModalInput() {
+                const tx = getTransaction(leverageModalTradeId);
+                if (!tx) return;
+                const lev = parseFloat(document.getElementById('levModalInput')?.value) || 1;
+                const el = document.getElementById('levModalBreakdown');
+                if (el) el.innerHTML = leverageModalBreakdownHtml(tx, lev);
+            }
+
+            function openLeverageModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                leverageModalTradeId = id;
+                const lev = Number(tx.leverage) || 1;
+                Sheet.open(`<i class="fas fa-layer-group mr-2"></i>${tx.company} Leverage`, `
+                    <p class="text-sm text-base-content/60 mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
+                    <div class="mb-3">
+                        <label class="label-text font-normal text-base-content/65 mb-1">Leverage (X)</label>
+                        <input type="number" class="input input-bordered w-full" id="levModalInput" min="1" step="0.1" value="${lev}" oninput="onLeverageModalInput()" />
+                        <p class="label-text-alt mt-1 mb-0">Your margin = total investment ÷ leverage. Broker funds the rest.</p>
+                    </div>
+                    <div class="text-sm text-base-content/60 space-y-1" id="levModalBreakdown">
+                        ${leverageModalBreakdownHtml(tx, lev)}
+                    </div>
+                `, renderAppButtonRow('Cancel', 'Update Leverage', {
+                    cancelOnClick: 'closeSheet()',
+                    actionOnClick: 'saveLeverage()',
+                    actionIcon: 'fa-check'
+                }));
+            }
+
+            async function saveLeverage() {
+                const id = leverageModalTradeId;
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const leverage = parseFloat(document.getElementById('levModalInput')?.value);
+                if (!leverage || leverage < 1) {
+                    showToast('Enter leverage of 1 or higher.', 'warning');
+                    return;
+                }
+                const sellPrice = getEffectiveSellPrice(tx);
+                const calc = calculateTrade({ ...tx, leverage, sellPrice });
+                const saved = await updateTransaction(id, {
+                    leverage,
+                    grossProfit: calc.grossProfit,
+                    interest: calc.interest,
+                    charges: calc.totalCharges,
+                    netProfit: calc.netProfit,
+                    holdingDays: calc.holdingDays,
+                    mtfAmount: calc.mtfAmount,
+                    ownMargin: calc.ownMargin,
+                    totalInvestment: calc.totalInvestment,
+                    breakdown: calc.breakdown
+                });
+                if (saved) {
+                    showToast('Leverage updated.', 'success');
+                    leverageModalTradeId = null;
+                    Sheet.close();
+                    renderCurrentView();
+                    renderPastTrades();
+                    refreshActiveMoreView();
+                } else {
+                    showToast('Error updating leverage.', 'danger');
+                }
+            }
 
             function syncHoldModalDaysFromDates() {
                 if (holdModalSyncing) return;
@@ -4804,7 +5017,7 @@
                     showToast('Sell date cannot be before buy date.', 'warning');
                     return;
                 }
-                const calc = calculateTrade({ ...tx, buyDate, sellDate });
+                const calc = calculateTrade({ ...tx, buyDate, sellDate, sellPrice: getEffectiveSellPrice(tx) });
                 const saved = await updateTransaction(id, {
                     buyDate,
                     sellDate,
@@ -4855,11 +5068,11 @@
 
             // ---------- INTEREST BREAKDOWN ----------
             function interestDetails(t) {
+                const sellPrice = getEffectiveSellPrice(t);
+                const calc = calculateTrade({ ...t, sellPrice });
                 const cfg = BROKER_CONFIG[t.broker] || BROKER_CONFIG['Zerodha'];
-                const mtf = t.mtfAmount || 0;
-                const days = (t.buyDate && t.sellDate)
-                    ? calcInterestDays(t.buyDate, t.sellDate)
-                    : (t.holdingDays || 0);
+                const mtf = calc.mtfAmount;
+                const days = calcInterestDays(t.buyDate, t.sellDate);
                 let dailyRate;
                 if (t.broker === 'Dhan' && mtf > 0) {
                     dailyRate = getDhanInterestRate(mtf);
@@ -4868,10 +5081,14 @@
                 } else {
                     dailyRate = 0;
                 }
-                const interest = (mtf > 0 && days > 0 && dailyRate > 0)
-                    ? mtf * dailyRate * days
-                    : 0;
-                return { mtf, days, dailyRate, annualRate: dailyRate * 365, interest, sameDay: parseDateKey(t.buyDate) === parseDateKey(t.sellDate) && !!t.buyDate };
+                return {
+                    mtf,
+                    days,
+                    dailyRate,
+                    annualRate: dailyRate * 365,
+                    interest: calc.interest,
+                    sameDay: parseDateKey(t.buyDate) === parseDateKey(t.sellDate) && !!t.buyDate
+                };
             }
 
             
@@ -4987,6 +5204,45 @@
                     confirmLabel: '<i class="fas fa-copy mr-1"></i> Copy',
                     confirmClass: 'btn-success',
                     onConfirm: () => copyTransaction(id)
+                });
+            }
+
+            function confirmCloseTrade(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const name = tx.company || 'this trade';
+                confirmAction({
+                    title: '<i class="fas fa-check-circle mr-2"></i>Close Trade?',
+                    titleClass: 'text-success',
+                    message: `Move "${name}" to Past Trades? This will mark the trade as closed.`,
+                    confirmLabel: '<i class="fas fa-check mr-1"></i> Move to Past',
+                    confirmClass: 'btn-success',
+                    onConfirm: async () => {
+                        const sellPrice = getEffectiveSellPrice(tx);
+                        const calc = calculateTrade({ ...tx, sellPrice, status: 'closed' });
+                        const saved = await updateTransaction(id, {
+                            status: 'closed',
+                            sellPrice,
+                            grossProfit: calc.grossProfit,
+                            interest: calc.interest,
+                            charges: calc.totalCharges,
+                            netProfit: calc.netProfit,
+                            holdingDays: calc.holdingDays,
+                            mtfAmount: calc.mtfAmount,
+                            ownMargin: calc.ownMargin,
+                            totalInvestment: calc.totalInvestment,
+                            breakdown: calc.breakdown
+                        });
+                        if (saved) {
+                            showToast('Trade moved to Past Trades.', 'success');
+                            renderCurrentView();
+                            renderPastTrades();
+                            renderMoney();
+                            refreshActiveMoreView();
+                        } else {
+                            showToast('Error closing trade.', 'danger');
+                        }
+                    }
                 });
             }
 
@@ -5416,11 +5672,13 @@
                 migrateChargeLogic();
                 initDateFields();
 
-                const range = getDateRange(30);
+                const range = getThisWeekMonFriRange();
+                pastRangeDays = 'this-week';
                 pastFrom = range.from;
                 pastTo = range.to;
                 setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
+                setRangeButtonsActive('#pastRangeButtons', 'this-week');
 
                 if (!restoreNavState()) {
                     setBottomNavActive('trades');
@@ -5473,6 +5731,7 @@
             window.openViewModal = openViewModal;
             window.copyTransaction = copyTransaction;
             window.confirmCopy = confirmCopy;
+            window.confirmCloseTrade = confirmCloseTrade;
             window.confirmDelete = confirmDelete;
             window.saveTransaction = saveTransaction;
             window.openBackupTextModal = openBackupTextModal;
@@ -5488,6 +5747,9 @@
             window.onTargetSellPriceInput = onTargetSellPriceInput;
             window.saveTargetSellPrice = saveTargetSellPrice;
             window.openHoldModal = openHoldModal;
+            window.openLeverageModal = openLeverageModal;
+            window.onLeverageModalInput = onLeverageModalInput;
+            window.saveLeverage = saveLeverage;
             window.onHoldModalDateInput = onHoldModalDateInput;
             window.onHoldModalDaysInput = onHoldModalDaysInput;
             window.setHoldModalSameDay = setHoldModalSameDay;
