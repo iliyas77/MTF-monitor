@@ -795,13 +795,25 @@
             function buildTradeMetaTags(tx, extras = []) {
                 const lev = tx.leverage || 1;
                 const levDisplay = lev > 1 ? `${parseFloat(Number(lev).toFixed(2))}x` : '1x';
-                const daysHeld = typeof tx.holdingDays === 'number' ? tx.holdingDays : getDaysHeld(tx);
+                const daysHeld = (tx.buyDate && tx.sellDate)
+                    ? calcInterestDays(tx.buyDate, tx.sellDate)
+                    : getDaysHeld(tx);
+                const holdLabel = daysHeld === 1 ? '1d hold' : `${daysHeld}d hold`;
                 const tags = [
                     appTag(tx.broker || '—'),
                     appTag(levDisplay, 'accent'),
-                    appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d hold`)
+                    appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${holdLabel}`)
                 ].concat(extras);
                 return `<div class="flex flex-wrap gap-1.5 justify-center mb-3">${tags.join('')}</div>`;
+            }
+
+            function interestSheetRow(label, value, valueClass = '') {
+                return `
+                    <div class="interest-sheet__row">
+                        <span class="interest-sheet__row-label">${label}</span>
+                        <span class="interest-sheet__row-value ${valueClass}">${value}</span>
+                    </div>
+                `;
             }
 
             const Sheet = {
@@ -1730,12 +1742,16 @@
                 return Math.max(0, Math.round((sd - bd) / (1000 * 60 * 60 * 24)));
             }
 
-            /** MTF interest is not charged when buy and sell fall on the same calendar day. */
+            /**
+             * MTF interest days — inclusive of buy and sell calendar days (broker style).
+             * e.g. buy 2 Jul + sell 6 Jul → 5 financed days (2, 3, 4, 5, 6).
+             * Same calendar day → 0 (intraday, no MTF interest).
+             */
             function calcInterestDays(buyDate, sellDate) {
                 const buyKey = parseDateKey(buyDate);
                 const sellKey = parseDateKey(sellDate);
                 if (!buyKey || !sellKey || buyKey === sellKey) return 0;
-                return calcHoldingDays(buyDate, sellDate);
+                return calcHoldingDays(buyDate, sellDate) + 1;
             }
 
             function isSameDayTrade(buyDate, sellDate) {
@@ -1765,7 +1781,7 @@
                 Groww: { brokeragePct: 0.001, brokerageCap: 20 },
             };
 
-            const CHARGE_LOGIC_VERSION = 2;
+            const CHARGE_LOGIC_VERSION = 3;
 
             function getChargeConfig(broker, buyDate, sellDate) {
                 const base = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
@@ -1856,7 +1872,6 @@
                 }
 
                 const grossProfit = (sp - bp) * qty;
-                const days = calcHoldingDays(buyDate, sellDate);
                 const interestDays = calcInterestDays(buyDate, sellDate);
 
                 const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
@@ -1912,7 +1927,7 @@
 
                 return {
                     grossProfit: Math.round(grossProfit * 100) / 100,
-                    holdingDays: days,
+                    holdingDays: interestDays,
                     interest: Math.round(interest * 100) / 100,
                     totalCharges: Math.round(totalCharges * 100) / 100,
                     netProfit: Math.round(netProfit * 100) / 100,
@@ -2521,7 +2536,7 @@
             // ---------- SHARED TRADE CARD ----------
             function getDaysHeld(t) {
                 if (t.buyDate && t.sellDate) {
-                    return calcHoldingDays(t.buyDate, t.sellDate);
+                    return calcInterestDays(t.buyDate, t.sellDate);
                 }
                 const isOpen = (t.status || 'closed') === 'open';
                 if (isOpen && t.buyDate) {
@@ -2717,6 +2732,9 @@
             function renderTradeListItem(t, serialNo, variant = 'open') {
                 const qty = Number(t.quantity) || 0;
                 const company = t.company || 'trade';
+                const brokerLabel = variant === 'past' && t.broker
+                    ? `<span class="trade-list-item__broker-label">${t.broker}</span>`
+                    : '';
                 const metrics = resolveTradeMetrics(t);
                 return `
                     <article class="trade-list-item">
@@ -2738,6 +2756,7 @@
                                 <span class="trade-list-item__company-group">
                                     <i class="fas fa-chart-line trade-list-item__company-icon" aria-hidden="true"></i>
                                     <span class="trade-list-item__company-name">${company}</span>
+                                    ${brokerLabel}
                                 </span>
                             </div>
                         </div>
@@ -4915,7 +4934,7 @@
                     return;
                 }
                 holdModalSyncing = true;
-                daysEl.value = String(calcHoldingDays(buy, sell));
+                daysEl.value = String(calcInterestDays(buy, sell));
                 holdModalSyncing = false;
             }
 
@@ -4929,7 +4948,11 @@
                 const days = parseInt(daysEl.value, 10);
                 if (!buy || Number.isNaN(days) || days < 0) return;
                 holdModalSyncing = true;
-                setDateInputValue(sellEl, addDaysToDateKey(buy, days));
+                if (days === 0) {
+                    setDateInputValue(sellEl, buy);
+                } else {
+                    setDateInputValue(sellEl, addDaysToDateKey(buy, days - 1));
+                }
                 holdModalSyncing = false;
             }
 
@@ -4959,7 +4982,7 @@
                 setDateInputValue(buyEl, today.toISOString().split('T')[0]);
                 setDateInputValue(sellEl, tomorrow.toISOString().split('T')[0]);
                 const daysEl = document.getElementById('holdDays');
-                if (daysEl) daysEl.value = '1';
+                if (daysEl) daysEl.value = String(calcInterestDays(buyEl.value, sellEl.value));
                 holdModalSyncing = false;
             }
 
@@ -4970,7 +4993,7 @@
                 const isOpen = (tx.status || 'closed') === 'open';
                 const buyDate = parseDateKey(tx.buyDate) || '';
                 const sellDate = parseDateKey(tx.sellDate) || '';
-                const holdDays = buyDate && sellDate ? calcHoldingDays(buyDate, sellDate) : getDaysHeld(tx);
+                const holdDays = buyDate && sellDate ? calcInterestDays(buyDate, sellDate) : getDaysHeld(tx);
                 const openNote = isOpen
                     ? '<p class="text-sm text-base-content/60 mb-3">Open trade — dates below drive interest and charge estimates.</p>'
                     : '';
@@ -4988,9 +5011,9 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65 mb-1">Hold (days)</label>
+                        <label class="label-text font-normal text-base-content/65 mb-1">Financed days</label>
                         <input type="number" class="input input-bordered w-full" id="holdDays" min="0" step="1" value="${holdDays}" oninput="onHoldModalDaysInput()" />
-                        <p class="label-text-alt mt-1 mb-0">Change days to shift sell date, or edit dates directly.</p>
+                        <p class="label-text-alt mt-1 mb-0">Includes buy and sell days (matches broker interest). Change days to shift sell date, or edit dates directly.</p>
                     </div>
                     <div class="flex flex-wrap gap-1">
                         <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setHoldModalSameDay()">Same day</button>
@@ -5086,7 +5109,12 @@
                     days,
                     dailyRate,
                     annualRate: dailyRate * 365,
+                    perDayInterest: (mtf > 0 && dailyRate > 0)
+                        ? Math.round(mtf * dailyRate * 100) / 100
+                        : 0,
                     interest: calc.interest,
+                    totalInvestment: calc.totalInvestment,
+                    ownMargin: calc.ownMargin,
                     sameDay: parseDateKey(t.buyDate) === parseDateKey(t.sellDate) && !!t.buyDate
                 };
             }
@@ -5096,39 +5124,33 @@
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
                 const d = interestDetails(tx);
-                const lev = tx.leverage || 1;
-                const levDisplay = lev > 1 ? (lev + 'x') : '1x';
+                const lev = Number(tx.leverage) || 1;
+                const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
+                const broker = tx.broker || '—';
                 const noLeverage = d.mtf <= 0;
+                const sameDayNote = d.sameDay
+                    ? '<p class="interest-sheet__note">Same-day trade — no MTF interest. Broker charges use intraday rates.</p>'
+                    : '';
+                const noLevNote = noLeverage && !d.sameDay
+                    ? '<p class="interest-sheet__note">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
+                    : '';
 
-                Sheet.open(`<i class=\"fas fa-percent mr-2\"></i>${tx.company} Interest`, `
-                    ${buildTradeMetaTags(tx)}
-                    <div class="grid grid-cols-3 gap-2 text-center mb-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Leverage Amt</div><div class="font-medium text-base-content/80">${fmt(d.mtf)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Days</div><div class="font-semibold text-primary">${d.days}d</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Interest</div><div class="font-semibold text-warning">${fmtDec(d.interest)}</div></div></div>
+                Sheet.open(`<i class="fas fa-percent mr-2 text-[var(--content-accent-quantity)]"></i><span class="interest-sheet__title-name">${tx.company}</span><span class="interest-sheet__title-broker">${broker}</span>`, `
+                    <div class="interest-sheet">
+                        <div class="interest-sheet__card">
+                            ${interestSheetRow('Total interest', fmtDec(d.interest), 'interest-sheet__row-value--interest interest-sheet__row-value--total')}
+                            ${interestSheetRow('Total investment', fmtDec(d.totalInvestment))}
+                            ${interestSheetRow('Your margin', fmtDec(d.ownMargin))}
+                            ${interestSheetRow('Leverage', levDisplay, 'interest-sheet__row-value--lev')}
+                            ${interestSheetRow('Broker funded', fmtDec(d.mtf), 'interest-sheet__row-value--strong')}
+                            ${interestSheetRow('Days financed', d.sameDay ? '0 day(s)' : `${d.days} day(s)`, 'interest-sheet__row-value--days')}
+                            ${interestSheetRow('Interest per day', fmtDec(d.perDayInterest), 'interest-sheet__row-value--interest')}
+                            ${interestSheetRow('Rate per day', `${(d.dailyRate * 100).toFixed(4)}%`)}
+                            ${interestSheetRow('Rate per year', `${(d.annualRate * 100).toFixed(2)}%`)}
+                        </div>
+                        ${sameDayNote}
+                        ${noLevNote}
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="table table-sm w-full w-full">
-                            <tbody>
-                                <tr><td class="text-base-content/60">Total Investment</td><td class="text-end">${fmtDec(tx.totalInvestment || 0)}</td></tr>
-                                <tr><td class="text-base-content/60">Your Margin</td><td class="text-end">${fmtDec(tx.ownMargin || 0)}</td></tr>
-                                <tr><td class="text-base-content/60">Broker Funded (Leverage)</td><td class="text-end font-semibold">${fmtDec(d.mtf)}</td></tr>
-                                <tr><td class="text-base-content/60">Leverage</td><td class="text-end">${levDisplay}</td></tr>
-                                <tr><td class="text-base-content/60">Interest Rate / day</td><td class="text-end">${(d.dailyRate * 100).toFixed(4)}%</td></tr>
-                                <tr><td class="text-base-content/60">Interest Rate / year</td><td class="text-end">${(d.annualRate * 100).toFixed(2)}%</td></tr>
-                                <tr><td class="text-base-content/60">Days Financed</td><td class="text-end">${d.days} day(s)</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="bg-base-200 rounded-xl p-2 my-3 text-sm text-center">
-                        <span class="text-base-content/60">Leverage &times; Daily Rate &times; Days</span><br>
-                        ${d.sameDay ? 'No interest (same-day trade)' : `${fmtDec(d.mtf)} &times; ${(d.dailyRate * 100).toFixed(4)}% &times; ${d.days}`}
-                    </div>
-                    <div class="flex justify-between font-medium text-base-content/80 border-t border-base-200 pt-2">
-                        <span>Total Interest</span><span class="text-warning">${fmtDec(d.interest)}</span>
-                    </div>
-                    ${d.sameDay ? '<div class="text-sm text-base-content/60 text-center mt-3">Same-day trade — no MTF interest. Broker charges use intraday rates (tap Charges on the card).</div>' : ''}
-                    ${noLeverage && !d.sameDay ? '<div class="text-sm text-base-content/60 text-center mt-3">No leverage was used on this trade, so no MTF interest was charged.</div>' : ''}
                 `, '');
             }
 

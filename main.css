@@ -2096,6 +2096,172 @@ html {
     text-align: center;
 }
 
+/* Interest breakdown sheet */
+.interest-sheet__title-name {
+    font-weight: 600;
+}
+
+.interest-sheet__title-broker {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--gr-accent);
+    background: color-mix(in srgb, var(--gr-accent) 12%, transparent);
+    border-radius: 9999px;
+    vertical-align: middle;
+}
+
+.interest-sheet {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.interest-sheet__card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid color-mix(in srgb, var(--content-accent-quantity) 18%, var(--gray150));
+    border-radius: 1rem;
+    overflow: hidden;
+    background: var(--gr-bg);
+}
+
+.interest-sheet__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--gray150);
+}
+
+.interest-sheet__row:last-child {
+    border-bottom: none;
+}
+
+.interest-sheet__row:first-child {
+    background: linear-gradient(180deg, var(--orange500-soft) 0%, var(--gr-bg) 100%);
+}
+
+.interest-sheet__row-label {
+    font-size: 0.8125rem;
+    line-height: 1.3;
+    color: var(--gr-text-muted);
+    flex: 1;
+    min-width: 0;
+}
+
+.interest-sheet__row-value {
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--gr-text1);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    flex-shrink: 0;
+}
+
+.interest-sheet__row-value--total {
+    font-size: 1.125rem;
+    font-weight: 400;
+}
+
+.interest-sheet__row-value--strong {
+    font-weight: 600;
+}
+
+.interest-sheet__row-value--days {
+    color: var(--gr-accent);
+}
+
+.interest-sheet__row-value--lev {
+    color: var(--gr-accent);
+    font-weight: 600;
+}
+
+.interest-sheet__row-value--interest {
+    color: var(--content-accent-quantity);
+    font-weight: 500;
+}
+
+.interest-sheet__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+}
+
+.interest-sheet__section-label {
+    margin: 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--gr-text-muted);
+    line-height: 1.2;
+}
+
+.interest-sheet__formula {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    border-radius: 0.875rem;
+    border: 1px solid var(--gray150);
+    background: var(--gr-bg-soft);
+}
+
+.interest-sheet__formula-step {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    text-align: center;
+}
+
+.interest-sheet__formula-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--gr-text-muted);
+    line-height: 1.2;
+}
+
+.interest-sheet__formula-eq {
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--gr-text1);
+    font-variant-numeric: tabular-nums;
+}
+
+.interest-sheet__formula-eq strong {
+    color: var(--content-accent-quantity);
+    font-weight: 600;
+}
+
+.interest-sheet__formula-empty {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+    color: var(--gr-text-muted);
+    text-align: center;
+}
+
+.interest-sheet__note {
+    margin: 0;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.75rem;
+    background: var(--gr-bg-soft);
+    border: 1px solid var(--gray150);
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: var(--gr-text-muted);
+    text-align: center;
+}
+
 .trade-list-item__detail-value--hold {
     color: var(--gr-text-muted);
 }
@@ -2226,6 +2392,19 @@ html {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.trade-list-item__broker-label {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--gr-accent);
+    background: color-mix(in srgb, var(--gr-accent) 12%, transparent);
+    border-radius: 9999px;
 }
 
 .trade-list-item__title .app-tag--accent,
