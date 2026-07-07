@@ -44,16 +44,31 @@
 
     <!-- ============ PAGES ============ -->
 
+    <!-- PAGE: PLAN -->
+    <section id="page-plan" class="page-section hidden">
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+            <div class="card summary-outer-card rounded-2xl mb-3" id="planSummaryCard">
+                <div class="card-body flex flex-col items-center gap-2 py-4">
+                    <div class="money-value-block money-value-block--center w-full">
+                        <div id="planSummaryStats"></div>
+                        <div id="planSummaryNetWords"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative mb-3">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
+                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="planSearch" placeholder="Search by company name..." oninput="setPlanSearch(this.value)" autocomplete="off" />
+                <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="planSearchClear" onclick="clearPlanSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div id="planTradesList"></div>
+        </div>
+    </section>
+
     <!-- PAGE: TRADES -->
     <section id="page-trades" class="page-section">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <!-- Company search -->
-            <div class="relative mb-3">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
-                <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
-            </div>
-
             <!-- Summary Card — P&L + open trade count -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body flex flex-col items-center gap-2 py-4">
@@ -64,6 +79,13 @@
                 </div>
             </div>
 
+            <!-- Company search -->
+            <div class="relative mb-3">
+                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
+                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
+                <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            </div>
+
             <!-- Open trades list -->
             <div id="transactionList"></div>
         </div>
@@ -72,6 +94,16 @@
     <!-- PAGE: PAST TRADES -->
     <section id="page-past" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+            <!-- Summary Card — P&L + trade count in range -->
+            <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
+                <div class="card-body flex flex-col items-center gap-2 py-4">
+                    <div class="money-value-block money-value-block--center w-full">
+                        <div id="pastSummaryStats"></div>
+                        <div id="pastSummaryNetWords"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Company search + filter -->
             <div class="flex items-center gap-2 mb-3">
                 <div class="relative flex-1 min-w-0">
@@ -83,15 +115,6 @@
             </div>
             <!-- Selected date range indicator -->
             <div class="text-center mb-3" id="pastRangeChipHost"></div>
-            <!-- Summary Card — P&L + trade count in range -->
-            <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
-                <div class="card-body flex flex-col items-center gap-2 py-4">
-                    <div class="money-value-block money-value-block--center w-full">
-                        <div id="pastSummaryStats"></div>
-                        <div id="pastSummaryNetWords"></div>
-                    </div>
-                </div>
-            </div>
 
             <div id="pastTradesList"></div>
         </div>
@@ -242,6 +265,11 @@
             <p class="text-base-content/60 text-xs uppercase tracking-wide font-medium mb-2">Tools and reports</p>
             <div class="card bg-base-100 rounded-xl">
                 <div class="card-body p-1.5 flex flex-col gap-0.5">
+                    <button type="button" class="more-hub-option" onclick="openMoreFeature('money')">
+                        <span class="more-hub-option__icon more-hub-option__icon--money"><i class="fas fa-coins"></i></span>
+                        <span class="more-hub-option__label">Money</span>
+                        <i class="fas fa-chevron-right more-hub-option__chevron"></i>
+                    </button>
                     <button type="button" class="more-hub-option" onclick="openMoreFeature('transactions')">
                         <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-database"></i></span>
                         <span class="more-hub-option__label">Total Transactions</span>
@@ -528,8 +556,11 @@
     <!-- MODAL: ADD/EDIT -->
     <dialog id="txModal" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
         <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[92vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 flex flex-col overflow-hidden">
-                <div class="shrink-0 flex justify-end px-3 pt-3 pb-1">
-                    <form method="dialog"><button type="submit" class="btn btn-sm btn-circle btn-ghost" aria-label="Close">✕</button></form>
+                <div class="shrink-0 flex items-center px-3 pt-3 pb-1">
+                    <button type="button" class="btn btn-sm btn-circle btn-ghost hidden" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" title="View trade">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <form method="dialog" class="ml-auto"><button type="submit" class="btn btn-sm btn-circle btn-ghost" aria-label="Close">✕</button></form>
                 </div>
                 <div class="flex-1 min-h-0 overflow-y-auto px-4 pb-2">
                     <form id="txForm" novalidate>
@@ -555,7 +586,7 @@
                                 <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 w-full" id="txBrokerMenu"></ul>
                             </div>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" id="txStatusRow">
                             <label class="label-text font-normal text-base-content/65">Trade Status</label>
                             <div class="flex gap-4">
                                 <div class="flex items-center">
@@ -1031,6 +1062,15 @@
             }
             function deleteTransaction(id) { let txs = getTransactions(); txs = txs.filter(t => t.id !== id); return setTransactions(txs); }
             function getTransaction(id) { return getTransactions().find(t => t.id === id) || null; }
+
+            function applyVerifiedReset(tx, updates) {
+                const buyChanged = updates.buyPrice !== undefined && Number(updates.buyPrice) !== Number(tx.buyPrice);
+                const sellChanged = updates.sellPrice !== undefined && Number(updates.sellPrice) !== Number(tx.sellPrice);
+                if ((buyChanged || sellChanged) && tx.verified) {
+                    return { ...updates, verified: false };
+                }
+                return updates;
+            }
 
             function getMoneyAccounts() { return getStorage().moneyAccounts || []; }
             function getMoneyEntries() { return getStorage().moneyEntries || []; }
@@ -1582,11 +1622,17 @@
             }
 
             function refreshAllViews() {
+                try { renderPlanTrades(); } catch (_) {}
                 try { renderCurrentView(); } catch (_) {}
                 try { renderPastTrades(); } catch (_) {}
                 try { renderMoney(); } catch (_) {}
                 try { renderSettings(); } catch (_) {}
                 try { refreshActiveMoreView(); } catch (_) {}
+            }
+
+            function refreshTradeListViews() {
+                renderPlanTrades();
+                refreshTradeListViews();
             }
 
             function refreshActiveMoreView() {
@@ -1959,6 +2005,9 @@
                     grossProfit: Number(tx.grossProfit) || 0,
                     holdingDays: tx.holdingDays || 0,
                     mtfAmount: Number(tx.mtfAmount) || 0,
+                    breakdown: tx.breakdown || {},
+                    ownMargin: Number(tx.ownMargin) || 0,
+                    totalInvestment: Number(tx.totalInvestment) || 0,
                 };
                 if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice || !sellPrice) {
                     return fallback;
@@ -1972,17 +2021,46 @@
                     grossProfit: calc.grossProfit,
                     holdingDays: calc.holdingDays,
                     mtfAmount: calc.mtfAmount,
+                    breakdown: calc.breakdown,
+                    ownMargin: calc.ownMargin,
+                    totalInvestment: calc.totalInvestment,
                 };
+            }
+
+            function resolveTradeForDisplay(tx) {
+                const metrics = resolveTradeMetrics(tx);
+                return { ...tx, ...metrics };
             }
 
             // ---------- APP BUTTON WIRING ----------
             function renderTxModalFooter(isEdit = false) {
                 const footer = document.getElementById('txModalFooter');
                 if (!footer) return;
-                footer.innerHTML = renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
+                const deleteBtn = isEdit
+                    ? `<div class="mt-2">${renderAppButton('Delete Trade', { variant: 'danger', onclick: 'deleteTradeFromEditor()', icon: 'fa-trash-alt', fullWidth: true })}</div>`
+                    : '';
+                footer.innerHTML = `${renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
                     actionId: 'txSaveBtn',
                     actionOnClick: 'saveTransaction()'
-                });
+                })}${deleteBtn}`;
+            }
+
+            function setTxModalMode(isEdit = false) {
+                renderTxModalFooter(isEdit);
+                const viewBtn = document.getElementById('txViewBtn');
+                if (viewBtn) viewBtn.classList.toggle('hidden', !isEdit);
+            }
+
+            function openViewFromEditor() {
+                const id = document.getElementById('txEditId')?.value;
+                if (!id) return;
+                openViewModal(id);
+            }
+
+            function deleteTradeFromEditor() {
+                const id = document.getElementById('txEditId')?.value;
+                if (!id) return;
+                confirmDelete(id);
             }
 
             function renderMoneyEntryFooter(label, icon = 'fa-plus') {
@@ -2039,7 +2117,7 @@
             }
 
             function initAppButtons() {
-                renderTxModalFooter(false);
+                setTxModalMode(false);
                 renderMoneyEntryFooter('Add Deposit', 'fa-plus');
                 renderSyncConnectRow();
                 paintAddMoneyAccountBtn();
@@ -2086,6 +2164,38 @@
                 const sign = n >= 0 ? '+' : '';
                 return sign + n.toFixed(2) + '%';
             }
+            function formatSellGainPctLabel(buyPrice, sellPrice) {
+                const buy = Number(buyPrice) || 0;
+                const sell = Number(sellPrice) || 0;
+                if (buy <= 0 || sell <= 0) return null;
+                const pct = ((sell - buy) / buy) * 100;
+                const sign = pct >= 0 ? '+' : '-';
+                const num = Math.abs(pct).toFixed(2);
+                return `(${sign}${num}%)`;
+            }
+            function renderTradeSellDetailValue(buyPrice, sellPrice) {
+                const sell = fmtDec(sellPrice);
+                const pctLabel = formatSellGainPctLabel(buyPrice, sellPrice);
+                if (!pctLabel) {
+                    return `<span class="trade-list-item__detail-value--sell">${sell}</span>`;
+                }
+                return `
+                    <span class="trade-list-item__detail-value--sell">${sell}</span>
+                    <span class="trade-list-item__sell-pct-tag">${pctLabel}</span>
+                `;
+            }
+            function renderTradeInterestDetailValue(t, interestAmount) {
+                const interest = fmtDec(interestAmount);
+                const d = interestDetails(t);
+                if (d.perDayInterest <= 0 || d.days <= 0) {
+                    return `<span class="trade-list-item__detail-value--interest">${interest}</span>`;
+                }
+                const breakdown = `(${fmtDec(d.perDayInterest)} × ${d.days}d)`;
+                return `
+                    <span class="trade-list-item__detail-value--interest">${interest}</span>
+                    <span class="trade-list-item__detail-breakdown-tag">${breakdown}</span>
+                `;
+            }
             function pnlClass(n) {
                 return (n || 0) >= 0
                     ? 'text-success bg-success/15 rounded-lg px-1.5 py-0.5'
@@ -2122,9 +2232,10 @@
                 const active = document.querySelector('.page-section:not(.hidden)');
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
+                if (id === 'page-plan') return { page: 'plan', moreFeature: null };
                 if (id === 'page-trades') return { page: 'trades', moreFeature: null };
                 if (id === 'page-past') return { page: 'past', moreFeature: null };
-                if (id === 'page-money') return { page: 'money', moreFeature: null };
+                if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
                 if (id === 'page-more') return { page: 'more', moreFeature: null };
                 if (id === 'page-settings') return { page: 'settings', moreFeature: null };
                 if (id === 'page-transactions') return { page: 'more', moreFeature: 'transactions' };
@@ -2185,6 +2296,10 @@
                     openMoreFeature(saved.moreFeature);
                     return true;
                 }
+                if (saved.page === 'money') {
+                    openMoreFeature('money');
+                    return true;
+                }
                 if (pageMap[saved.page]) {
                     navigateTo(saved.page);
                     return true;
@@ -2220,8 +2335,8 @@
             }
 
             // ---------- NAVIGATION ----------
-            const pageMap = { trades: 'page-trades', past: 'page-past', money: 'page-money', more: 'page-more' };
-            const moreFeatureMap = { transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
+            const pageMap = { plan: 'page-plan', trades: 'page-trades', past: 'page-past', more: 'page-more' };
+            const moreFeatureMap = { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
             let activeMoreFeature = null;
 
             function showPage(pageId) {
@@ -2232,6 +2347,7 @@
             }
 
             const moreFeatureTitles = {
+                money: '<i class="fas fa-coins mr-2"></i>Money',
                 transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
                 'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
             };
@@ -2260,16 +2376,20 @@
             }
 
             function updateFabVisibility(page) {
-                BottomBar.setFabVisible(page === 'trades' || page === 'past');
+                BottomBar.setFabVisible(page === 'plan' || page === 'trades' || page === 'past');
             }
 
             function navigateTo(page) {
+                if (page === 'money') {
+                    openMoreFeature('money');
+                    return;
+                }
                 activeMoreFeature = null;
                 showPage(pageMap[page]);
                 setBottomNavActive(page);
+                if (page === 'plan') renderPlanTrades();
                 if (page === 'trades') renderCurrentView();
                 if (page === 'past') renderPastTrades();
-                if (page === 'money') renderMoney();
                 updateFabVisibility(page);
                 saveNavState();
             }
@@ -2279,6 +2399,7 @@
                 showPage(moreFeatureMap[feature]);
                 setBottomNavActive('more');
                 updateFabVisibility('more');
+                if (feature === 'money') renderMoney();
                 if (feature === 'transactions') renderTransactions();
                 if (feature === 'mtf-calc') {
                     renderMtfCalculator();
@@ -2301,6 +2422,8 @@
             let pastTo = null;
             let tradeSearchQuery = '';
             let pastSearchQuery = '';
+            let planSearchQuery = '';
+            let txModalContext = 'trades';
             let moneyAccountFilter = 'all';
             let moneyPageTypeFilter = 'all';
             let moneyPageFrom = null;
@@ -2548,6 +2671,14 @@
                 return t.holdingDays || 0;
             }
 
+            function sortTradesByHoldDays(trades) {
+                return [...trades].sort((a, b) => {
+                    const dayDiff = getDaysHeld(a) - getDaysHeld(b);
+                    if (dayDiff !== 0) return dayDiff;
+                    return a.id < b.id ? 1 : -1;
+                });
+            }
+
             function renderTradeDetailRow(opts) {
                 const {
                     label,
@@ -2577,27 +2708,28 @@
             }
 
             function renderTradeDetailsList(t) {
-                const bd = t.breakdown || {};
-                const totalInv = t.totalInvestment || (t.quantity * t.buyPrice) || 0;
-                const ownMargin = t.ownMargin || totalInv;
-                const mtfAmt = t.mtfAmount || 0;
-                const gross = t.grossProfit || 0;
-                const lev = t.leverage || 1;
+                const tx = resolveTradeForDisplay(t);
+                const bd = tx.breakdown || {};
+                const totalInv = tx.totalInvestment || (tx.quantity * tx.buyPrice) || 0;
+                const ownMargin = tx.ownMargin || totalInv;
+                const mtfAmt = tx.mtfAmount || 0;
+                const gross = tx.grossProfit || 0;
+                const lev = tx.leverage || 1;
                 const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
-                const daysHeld = getDaysHeld(t);
+                const daysHeld = getDaysHeld(tx);
                 const rows = [
-                    { label: 'Buy', amount: t.buyPrice, tone: 'secondary', decimals: true, labelClass: 'buy-price-label' },
-                    { label: 'Sell', amount: t.sellPrice, tone: 'positive', decimals: true },
-                    { label: 'Qty', amount: t.quantity, quantity: true, labelClass: 'quantity-label' },
-                    { label: 'Broker', amount: t.broker || '—', tag: 'default' },
+                    { label: 'Buy', amount: tx.buyPrice, tone: 'secondary', decimals: true, labelClass: 'buy-price-label' },
+                    { label: 'Sell', amount: tx.sellPrice, tone: 'positive', decimals: true },
+                    { label: 'Qty', amount: tx.quantity, quantity: true, labelClass: 'quantity-label' },
+                    { label: 'Broker', amount: tx.broker || '—', tag: 'default' },
                     { label: 'Leverage', amount: levDisplay, tag: 'accent' },
                     { label: 'Hold', amount: `<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d`, tag: 'default' },
                     { label: 'Total Investment', amount: totalInv, tone: 'neutral', compact: true },
                     { label: 'Your Margin', amount: ownMargin, tone: 'neutral', compact: true },
                     { label: 'MTF Funded', amount: mtfAmt, tone: mtfAmt > 0 ? 'secondary' : 'neutral', compact: true },
                     { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
-                    { label: 'MTF Interest', amount: t.interest || 0, tone: 'warning', decimals: true },
-                    { label: 'Total Charges', amount: t.charges || 0, tone: 'negative', decimals: true }
+                    { label: 'MTF Interest', amount: tx.interest || 0, tone: 'warning', decimals: true },
+                    { label: 'Total Charges', amount: tx.charges || 0, tone: 'negative', decimals: true }
                 ];
                 const chargeItems = [
                     { key: 'brokerage', label: 'Brokerage' },
@@ -2617,11 +2749,12 @@
             }
 
             function renderTradeViewPnLSummary(t) {
-                const gross = t.grossProfit || 0;
-                const interest = t.interest || 0;
-                const charges = t.charges || 0;
+                const tx = resolveTradeForDisplay(t);
+                const gross = tx.grossProfit || 0;
+                const interest = tx.interest || 0;
+                const charges = tx.charges || 0;
                 const totalCost = charges + interest;
-                const net = t.netProfit || 0;
+                const net = tx.netProfit || 0;
                 const rows = [
                     { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
                     { label: 'MTF Interest', amount: interest, tone: 'warning', decimals: true },
@@ -2677,12 +2810,14 @@
                 const isOpen = (t.status || 'closed') === 'open';
                 const metrics = resolveTradeMetrics(t);
                 const buy = fmtDec(t.buyPrice || 0);
-                const sell = fmtDec(metrics.sellPrice);
-                const interest = fmtDec(metrics.interest);
+                const sellHtml = renderTradeSellDetailValue(t.buyPrice, metrics.sellPrice);
+                const interestHtml = renderTradeInterestDetailValue(t, metrics.interest);
                 const charges = fmtDec(metrics.charges);
                 const buyDate = t.buyDate ? fmtDateShort(t.buyDate) : '—';
                 const sellDate = t.sellDate ? fmtDateShort(t.sellDate) : '—';
-                const sellOnclick = isOpen ? `openTargetModal('${t.id}')` : '';
+                const isPast = !isOpen;
+                const buyOnclick = isPast ? `openBuyPriceModal('${t.id}')` : '';
+                const sellOnclick = `openTargetModal('${t.id}')`;
                 const detailCell = (label, value, valueClass = '', onclick = '') => {
                     const Tag = onclick ? 'button' : 'div';
                     const attrs = onclick
@@ -2698,9 +2833,9 @@
                 return `
                     <div class="trade-list-item__details">
                         <div class="trade-list-item__details-grid">
-                            ${detailCell('Buy', buy, 'trade-list-item__detail-value--buy')}
-                            ${detailCell('Sell', sell, 'trade-list-item__detail-value--sell', sellOnclick)}
-                            ${detailCell('Interest', interest, 'trade-list-item__detail-value--interest', `openInterestModal('${t.id}')`)}
+                            ${detailCell('Buy', buy, 'trade-list-item__detail-value--buy', buyOnclick)}
+                            ${detailCell('Sell', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick)}
+                            ${detailCell('Interest', interestHtml, 'trade-list-item__detail-value--interest-wrap', `openInterestModal('${t.id}')`)}
                             ${detailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`)}
                             ${detailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
                             ${detailCell('Sold', sellDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
@@ -2713,18 +2848,25 @@
                 const isPast = variant === 'past';
                 const btn = (label, onclick, btnVariant = 'tonal', icon = '', className = 'trade-list-item__action-btn') =>
                     renderAppButton(label, { variant: btnVariant, size: 'sm', onclick, icon, className });
-                const viewBtn = isPast ? btn('View', `openViewModal('${t.id}')`, 'tonal', 'fa-eye') : '';
                 const copyBtn = isPast ? btn('Copy', `confirmCopy('${t.id}')`, 'tonal', 'fa-copy') : '';
-                const doneBtn = !isPast ? btn('Done', `confirmCloseTrade('${t.id}')`, 'tonal', 'fa-check') : '';
+                const verifyBtn = isPast && !t.verified
+                    ? btn('Verified', `confirmVerifyTrade('${t.id}')`, 'tonal', 'fa-check-circle')
+                    : '';
+                const executeBtn = variant === 'plan'
+                    ? btn('Executed', `confirmExecuteTrade('${t.id}')`, 'tonal', 'fa-play')
+                    : '';
+                const doneBtn = variant === 'open'
+                    ? btn('Done', `confirmCloseTrade('${t.id}')`, 'tonal', 'fa-check')
+                    : '';
                 return `
                     <div class="trade-list-item__actions">
                         <div class="trade-list-item__actions-main">
-                            ${viewBtn}
                             ${copyBtn}
+                            ${verifyBtn}
+                            ${executeBtn}
                             ${doneBtn}
                             ${btn('Edit', `openEditModal('${t.id}')`, 'tonal', 'fa-edit')}
                         </div>
-                        ${btn('Delete', `confirmDelete('${t.id}')`, 'tonal-danger', 'fa-trash-alt', 'trade-list-item__action-btn trade-list-item__action-btn--delete')}
                     </div>
                 `;
             }
@@ -2732,8 +2874,11 @@
             function renderTradeListItem(t, serialNo, variant = 'open') {
                 const qty = Number(t.quantity) || 0;
                 const company = t.company || 'trade';
-                const brokerLabel = variant === 'past' && t.broker
+                const brokerLabel = (variant === 'past' || variant === 'plan') && t.broker
                     ? `<span class="trade-list-item__broker-label">${t.broker}</span>`
+                    : '';
+                const verifiedLabel = variant === 'past' && t.verified
+                    ? `<span class="trade-list-item__verified-label">Verified</span>`
                     : '';
                 const metrics = resolveTradeMetrics(t);
                 return `
@@ -2757,6 +2902,7 @@
                                     <i class="fas fa-chart-line trade-list-item__company-icon" aria-hidden="true"></i>
                                     <span class="trade-list-item__company-name">${company}</span>
                                     ${brokerLabel}
+                                    ${verifiedLabel}
                                 </span>
                             </div>
                         </div>
@@ -2774,6 +2920,10 @@
 
             function renderPastTradeListItem(t, serialNo) {
                 return renderTradeListItem(t, serialNo, 'past');
+            }
+
+            function renderPlanTradeListItem(t, serialNo) {
+                return renderTradeListItem(t, serialNo, 'plan');
             }
 
             function formatTradeLeverageLabel(t) {
@@ -2901,17 +3051,76 @@
                 });
             }
 
+            function paintPlanTradeSummary(net, planCount) {
+                paintTradeRangeSummary({
+                    containerId: 'planSummaryStats',
+                    wordsId: 'planSummaryNetWords',
+                    net,
+                    count: planCount,
+                    countLabel: 'Planned'
+                });
+            }
+
+            function isPlannedTrade(t) {
+                return t.executed === false;
+            }
+
+            function isActiveOpenTrade(t) {
+                return (t.status || 'closed') === 'open' && t.executed !== false;
+            }
+
+            function getTomorrowDateKey() {
+                const d = new Date();
+                d.setDate(d.getDate() + 1);
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}-${m}-${day}`;
+            }
+
+            // ---------- RENDER PLAN TRADES ----------
+            function renderPlanTrades() {
+                const txs = getTransactions();
+                let filtered = txs.filter(isPlannedTrade);
+
+                const planQuery = planSearchQuery.trim().toLowerCase();
+                if (planQuery) {
+                    filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(planQuery));
+                }
+
+                filtered = sortTradesByHoldDays(filtered);
+
+                let net = 0;
+                filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
+
+                paintPlanTradeSummary(net, filtered.length);
+
+                const container = document.getElementById('planTradesList');
+                if (!container) return;
+
+                if (filtered.length === 0) {
+                    if (planQuery) {
+                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No planned trades match "${planSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
+                        return;
+                    }
+                    container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-clipboard-list mb-3"></i><h6>No trades planned yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add companies for tomorrow. Tap Executed after you buy.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = renderFlatTradesList(filtered, renderPlanTradeListItem);
+            }
+
             // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
             function renderCurrentView() {
                 const txs = getTransactions();
-                let filtered = txs.filter(t => (t.status || 'closed') === 'open');
+                let filtered = txs.filter(isActiveOpenTrade);
 
                 const tradeQuery = tradeSearchQuery.trim().toLowerCase();
                 if (tradeQuery) {
                     filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(tradeQuery));
                 }
 
-                filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
+                filtered = sortTradesByHoldDays(filtered);
 
                 let net = 0;
                 filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
@@ -2949,6 +3158,7 @@
 
                 let filtered = txs
                     .filter(t => (t.status || 'closed') === 'closed')
+                    .filter(t => t.executed !== false)
                     .filter(t => {
                         const key = parseDateKey(t.sellDate) || parseDateKey(t.buyDate);
                         if (!key) return false;
@@ -2960,7 +3170,7 @@
                 if (pastQuery) {
                     filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(pastQuery));
                 }
-                filtered.sort((a, b) => (a.id < b.id ? 1 : -1));
+                filtered = sortTradesByHoldDays(filtered);
                 return filtered;
             }
 
@@ -4170,7 +4380,10 @@
                     listEl.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
                     return;
                 }
-                listEl.innerHTML = renderGroupedTradesWithChips(txs, (t, i) => renderTradeListItem(t, i, (t.status || 'closed') === 'open' ? 'open' : 'past'));
+                listEl.innerHTML = renderGroupedTradesWithChips(txs, (t, i) => {
+                    if (isPlannedTrade(t)) return renderTradeListItem(t, i, 'plan');
+                    return renderTradeListItem(t, i, (t.status || 'closed') === 'open' ? 'open' : 'past');
+                });
             }
 
             // ---------- MTF CALCULATOR (MORE) ----------
@@ -4507,10 +4720,11 @@
                 if (!original) { showToast('Transaction not found.', 'danger'); return; }
                 const copyData = { ...original };
                 delete copyData.id;
+                delete copyData.verified;
+                copyData.executed = true;
                 const newTx = addTransaction(copyData);
                 showToast(`Copied trade: ${newTx.company}`, 'success');
-                renderCurrentView();
-                renderPastTrades();
+                refreshTradeListViews();
                 renderMoney();
                 refreshActiveMoreView();
             }
@@ -4544,13 +4758,26 @@
                 toggleClearBtn('pastSearchClear', false);
                 renderPastTrades();
             }
+            function setPlanSearch(value) {
+                planSearchQuery = value || '';
+                toggleClearBtn('planSearchClear', planSearchQuery.trim());
+                renderPlanTrades();
+            }
+            function clearPlanSearch() {
+                planSearchQuery = '';
+                const input = document.getElementById('planSearch');
+                if (input) { input.value = ''; input.focus(); }
+                toggleClearBtn('planSearchClear', false);
+                renderPlanTrades();
+            }
 
             // ---------- VIEW MODAL ----------
             
 
             function openViewModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const raw = getTransaction(id);
+                if (!raw) { showToast('Transaction not found.', 'danger'); return; }
+                const tx = resolveTradeForDisplay(raw);
 
                 const isOpen = (tx.status || 'closed') === 'open';
                 const statusLabel = isOpen ? appTag('Open', 'warning') : appTag('Closed');
@@ -4587,7 +4814,7 @@
                 const chargeCfg = getChargeConfig(t.broker, t.buyDate, t.sellDate);
                 const qty = t.quantity || 0;
                 const buyVal = (t.buyPrice || 0) * qty;
-                const sellVal = (t.sellPrice || 0) * qty;
+                const sellVal = getEffectiveSellPrice(t) * qty;
 
                 const buy = {
                     orderValue: buyVal,
@@ -4702,7 +4929,9 @@
                     gainEl.innerHTML = `<span>${sign}${pct.toFixed(2)}%</span><span class="target-sheet__gain-dot" aria-hidden="true">·</span><span>${sign}${fmtDec(Math.abs(diff))} per share</span>`;
                 } else {
                     gainEl.className = 'target-sheet__gain target-sheet__gain--neutral';
-                    gainEl.textContent = 'Set a target sell price';
+                    const tx = getTransaction(targetModalTradeId);
+                    const isOpen = (tx?.status || 'closed') === 'open';
+                    gainEl.textContent = isOpen ? 'Set a target sell price' : 'Set a sell price';
                 }
             }
 
@@ -4748,9 +4977,16 @@
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
                 targetModalTradeId = id;
                 targetActiveSellPct = null;
+                const isOpen = (tx.status || 'closed') === 'open';
                 const buy = Number(tx.buyPrice) || 0;
                 const sellVal = tx.sellPrice || getEffectiveSellPrice(tx) || '';
-                Sheet.open(`<i class="fas fa-bullseye mr-2 text-[var(--gr-accent)]"></i>${tx.company}`, `
+                const sellLabel = isOpen ? 'Target sell' : 'Sell';
+                const gainPlaceholder = isOpen ? 'Set a target sell price' : 'Set a sell price';
+                const sheetTitle = isOpen
+                    ? `<i class="fas fa-bullseye mr-2 text-[var(--gr-accent)]"></i>${tx.company}`
+                    : `<i class="fas fa-tag mr-2 text-[var(--gr-danger)]"></i>${tx.company} Sell`;
+                const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
+                Sheet.open(sheetTitle, `
                     <div class="target-sheet">
                         <div class="target-sheet__hero">
                             <div class="target-sheet__price-col">
@@ -4759,11 +4995,11 @@
                             </div>
                             <div class="target-sheet__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
                             <div class="target-sheet__price-col target-sheet__price-col--sell">
-                                <span class="target-sheet__price-label">Target sell</span>
+                                <span class="target-sheet__price-label">${sellLabel}</span>
                                 <span class="target-sheet__price-value target-sheet__price-value--sell" id="targetSellPreview">—</span>
                             </div>
                         </div>
-                        <div class="target-sheet__gain target-sheet__gain--neutral" id="targetGainPreview">Set a target sell price</div>
+                        <div class="target-sheet__gain target-sheet__gain--neutral" id="targetGainPreview">${gainPlaceholder}</div>
 
                         <section class="target-sheet__section">
                             <h4 class="target-sheet__section-label">Quick target %</h4>
@@ -4780,16 +5016,70 @@
                                 <span class="target-sheet__sell-currency" aria-hidden="true">₹</span>
                                 <input type="number" class="target-sheet__sell-input" id="targetSellPrice" min="0.01" step="0.01" value="${sellVal}" oninput="onTargetSellPriceInput()" inputmode="decimal" />
                             </div>
-                            <p class="target-sheet__hint">Tap a % above or enter your target sell price manually.</p>
+                            <p class="target-sheet__hint">${isOpen ? 'Tap a % above or enter your target sell price manually.' : 'Tap a % above or enter the sell price manually.'}</p>
                         </section>
                     </div>
-                `, renderAppButtonRow('Cancel', 'Update Sell', {
+                `, renderAppButtonRow('Cancel', actionLabel, {
                     cancelOnClick: 'closeSheet()',
                     actionOnClick: 'saveTargetSellPrice()',
                     actionIcon: 'fa-check'
                 }));
                 renderTargetSellPctChips();
                 updateTargetModalPreview();
+            }
+
+            let buyPriceModalTradeId = null;
+
+            function openBuyPriceModal(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                buyPriceModalTradeId = id;
+                const bp = Number(tx.buyPrice) || 0;
+                Sheet.open(`<i class="fas fa-tag mr-2 text-[var(--content-accent-secondary)]"></i>${tx.company} Buy`, `
+                    <p class="text-sm text-base-content/60 mb-3">Update buy price. Margin, charges, and P&L will recalculate.</p>
+                    <div class="mb-3">
+                        <label class="label-text font-normal buy-price-label mb-1">Buy Price</label>
+                        <input type="number" class="input input-bordered w-full" id="buyPriceModalInput" min="0.01" step="0.01" value="${bp}" inputmode="decimal" />
+                    </div>
+                `, renderAppButtonRow('Cancel', 'Update Buy Price', {
+                    cancelOnClick: 'closeSheet()',
+                    actionOnClick: 'saveBuyPrice()',
+                    actionIcon: 'fa-check'
+                }));
+            }
+
+            async function saveBuyPrice() {
+                const id = buyPriceModalTradeId;
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const buyPrice = parseFloat(document.getElementById('buyPriceModalInput')?.value);
+                if (!buyPrice || buyPrice <= 0) {
+                    showToast('Enter a valid buy price.', 'warning');
+                    return;
+                }
+                const sellPrice = getEffectiveSellPrice(tx);
+                const calc = calculateTrade({ ...tx, buyPrice, sellPrice });
+                const saved = await updateTransaction(id, applyVerifiedReset(tx, {
+                    buyPrice,
+                    grossProfit: calc.grossProfit,
+                    interest: calc.interest,
+                    charges: calc.totalCharges,
+                    netProfit: calc.netProfit,
+                    holdingDays: calc.holdingDays,
+                    mtfAmount: calc.mtfAmount,
+                    ownMargin: calc.ownMargin,
+                    totalInvestment: calc.totalInvestment,
+                    breakdown: calc.breakdown
+                }));
+                if (saved) {
+                    showToast('Buy price updated.', 'success');
+                    buyPriceModalTradeId = null;
+                    Sheet.close();
+                    refreshTradeListViews();
+                    refreshActiveMoreView();
+                } else {
+                    showToast('Error updating buy price.', 'danger');
+                }
             }
 
             async function saveTargetSellPrice() {
@@ -4802,7 +5092,7 @@
                     return;
                 }
                 const calc = calculateTrade({ ...tx, sellPrice });
-                const saved = await updateTransaction(id, {
+                const saved = await updateTransaction(id, applyVerifiedReset(tx, {
                     sellPrice,
                     grossProfit: calc.grossProfit,
                     interest: calc.interest,
@@ -4813,14 +5103,13 @@
                     ownMargin: calc.ownMargin,
                     totalInvestment: calc.totalInvestment,
                     breakdown: calc.breakdown
-                });
+                }));
                 if (saved) {
                     showToast('Sell price updated.', 'success');
                     targetModalTradeId = null;
                     targetActiveSellPct = null;
                     Sheet.close();
-                    renderCurrentView();
-                    renderPastTrades();
+                    refreshTradeListViews();
                     refreshActiveMoreView();
                 } else {
                     showToast('Error updating sell price.', 'danger');
@@ -4913,8 +5202,7 @@
                     showToast('Leverage updated.', 'success');
                     leverageModalTradeId = null;
                     Sheet.close();
-                    renderCurrentView();
-                    renderPastTrades();
+                    refreshTradeListViews();
                     refreshActiveMoreView();
                 } else {
                     showToast('Error updating leverage.', 'danger');
@@ -5058,8 +5346,7 @@
                     showToast('Dates updated.', 'success');
                     holdModalTradeId = null;
                     Sheet.close();
-                    renderCurrentView();
-                    renderPastTrades();
+                    refreshTradeListViews();
                     refreshActiveMoreView();
                 } else {
                     showToast('Error updating dates.', 'danger');
@@ -5207,8 +5494,9 @@
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
                         await deleteTransaction(id);
-                        renderCurrentView();
-                        renderPastTrades();
+                        const txModal = document.getElementById('txModal');
+                        if (txModal?.open) txModal.close();
+                        refreshTradeListViews();
                         renderMoney();
                         refreshActiveMoreView();
                         showToast(syncCode && fbDb ? 'Trade deleted and synced.' : 'Trade deleted.', 'danger');
@@ -5226,6 +5514,51 @@
                     confirmLabel: '<i class="fas fa-copy mr-1"></i> Copy',
                     confirmClass: 'btn-success',
                     onConfirm: () => copyTransaction(id)
+                });
+            }
+
+            function confirmVerifyTrade(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const name = tx.company || 'this trade';
+                const broker = tx.broker || 'broker';
+                confirmAction({
+                    title: '<i class="fas fa-check-circle mr-2"></i>Verify Trade?',
+                    titleClass: 'text-success',
+                    message: `Confirm that the P&L shown for "${name}" matches your ${broker} statement?`,
+                    confirmLabel: '<i class="fas fa-check-circle mr-1"></i> Verified',
+                    confirmClass: 'btn-success',
+                    onConfirm: async () => {
+                        const saved = await updateTransaction(id, { verified: true });
+                        if (saved) {
+                            showToast('Trade verified.', 'success');
+                            renderPastTrades();
+                        } else {
+                            showToast('Error verifying trade.', 'danger');
+                        }
+                    }
+                });
+            }
+
+            function confirmExecuteTrade(id) {
+                const tx = getTransaction(id);
+                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                const name = tx.company || 'this trade';
+                confirmAction({
+                    title: '<i class="fas fa-play mr-2"></i>Execute Trade?',
+                    titleClass: 'text-success',
+                    message: `Move "${name}" from Plan to active Trades? This marks it as executed.`,
+                    confirmLabel: '<i class="fas fa-play mr-1"></i> Executed',
+                    confirmClass: 'btn-success',
+                    onConfirm: async () => {
+                        const saved = await updateTransaction(id, { executed: true, status: 'open' });
+                        if (saved) {
+                            showToast('Trade moved to Trades.', 'success');
+                            refreshTradeListViews();
+                        } else {
+                            showToast('Error executing trade.', 'danger');
+                        }
+                    }
                 });
             }
 
@@ -5257,8 +5590,7 @@
                         });
                         if (saved) {
                             showToast('Trade moved to Past Trades.', 'success');
-                            renderCurrentView();
-                            renderPastTrades();
+                            refreshTradeListViews();
                             renderMoney();
                             refreshActiveMoreView();
                         } else {
@@ -5327,23 +5659,42 @@
                 if (hint) hint.classList.toggle('hidden', !isOpen);
             }
 
+            function syncTxModalStatusField() {
+                const row = document.getElementById('txStatusRow');
+                const editId = document.getElementById('txEditId')?.value;
+                const editingPlan = editId && isPlannedTrade(getTransaction(editId) || {});
+                const hideStatus = txModalContext === 'plan' || editingPlan;
+                if (row) row.classList.toggle('hidden', hideStatus);
+            }
+
             function onTxStatusChange() {
                 syncTxSellPriceField();
                 updatePreview();
             }
 
             function openAddModal() {
+                const currentPage = getCurrentAppPage().page;
+                txModalContext = currentPage === 'plan' ? 'plan' : (currentPage === 'past' ? 'past' : 'trades');
                 document.getElementById('txEditId').value = '';
                 setTxSaveBtnLabel(false);
+                setTxModalMode(false);
                 document.getElementById('txForm').reset();
-                document.getElementById('statusClosed').checked = true;
                 document.getElementById('txLeverage').value = 1;
                 setTxBroker('');
                 const today = new Date().toISOString().split('T')[0];
                 const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                setDateInputValue(document.getElementById('txBuyDate'), yesterday);
-                setDateInputValue(document.getElementById('txSellDate'), today);
+                const tomorrow = getTomorrowDateKey();
+                if (txModalContext === 'plan') {
+                    document.getElementById('statusOpen').checked = true;
+                    setDateInputValue(document.getElementById('txBuyDate'), tomorrow);
+                    setDateInputValue(document.getElementById('txSellDate'), tomorrow);
+                } else {
+                    document.getElementById('statusClosed').checked = true;
+                    setDateInputValue(document.getElementById('txBuyDate'), yesterday);
+                    setDateInputValue(document.getElementById('txSellDate'), today);
+                }
                 clearPreview();
+                syncTxModalStatusField();
                 syncTxSellPriceField();
                 initDateFields(document.getElementById('txModal'));
                 document.getElementById("txModal").showModal();
@@ -5354,8 +5705,10 @@
             function openEditModal(id) {
                 const tx = getTransaction(id);
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
+                txModalContext = isPlannedTrade(tx) ? 'plan' : ((tx.status || 'closed') === 'open' ? 'trades' : 'past');
                 document.getElementById('txEditId').value = id;
                 setTxSaveBtnLabel(true);
+                setTxModalMode(true);
 
                 resetCompanyAutocomplete();
                 const editMatch = findStockMetaForCompany(tx.company || '');
@@ -5373,6 +5726,7 @@
                 const status = tx.status || 'closed';
                 document.querySelector(`input[name="status"][value="${status}"]`).checked = true;
 
+                syncTxModalStatusField();
                 syncTxSellPriceField();
                 updatePreview();
                 updateLeverageBreakdown();
@@ -5478,20 +5832,29 @@
 
                 const txData = { company, broker, buyDate, sellDate, quantity, buyPrice, sellPrice, leverage, notes, status };
                 const calc = calculateTrade(txData);
-                const finalTx = { ...txData, grossProfit: calc.grossProfit, interest: calc.interest, charges: calc.totalCharges, netProfit: calc.netProfit, holdingDays: calc.holdingDays, mtfAmount: calc.mtfAmount, ownMargin: calc.ownMargin, totalInvestment: calc.totalInvestment, breakdown: calc.breakdown };
+                let finalTx = { ...txData, grossProfit: calc.grossProfit, interest: calc.interest, charges: calc.totalCharges, netProfit: calc.netProfit, holdingDays: calc.holdingDays, mtfAmount: calc.mtfAmount, ownMargin: calc.ownMargin, totalInvestment: calc.totalInvestment, breakdown: calc.breakdown };
 
                 const synced = syncCode && fbDb ? ' and synced' : '';
                 if (editId) {
-                    const saved = await updateTransaction(editId, finalTx);
+                    const existing = getTransaction(editId);
+                    let updates = existing ? applyVerifiedReset(existing, finalTx) : finalTx;
+                    if (existing && isPlannedTrade(existing)) {
+                        updates = { ...updates, executed: false, status: 'open' };
+                    }
+                    const saved = await updateTransaction(editId, updates);
                     if (saved) showToast(`Trade updated${synced}!`, 'success');
                     else showToast('Error updating trade.', 'danger');
                 } else {
+                    if (txModalContext === 'plan') {
+                        finalTx = { ...finalTx, executed: false, status: 'open' };
+                    } else {
+                        finalTx = { ...finalTx, executed: true };
+                    }
                     await addTransaction(finalTx);
                     showToast(`Trade saved${synced}!`, 'success');
                 }
                 document.getElementById("txModal").close();
-                renderCurrentView();
-                renderPastTrades();
+                refreshTradeListViews();
                 renderMoney();
                 refreshActiveMoreView();
             }
@@ -5637,8 +6000,7 @@
                 saveStorage(data);
                 showToast('Data restored successfully!', 'success');
                 Sheet.close();
-                renderCurrentView();
-                renderPastTrades();
+                refreshTradeListViews();
                 renderMoney();
                 renderSettings();
                 refreshActiveMoreView();
@@ -5674,8 +6036,7 @@
                 moneyPageTo = null;
                 moneyPageRangeKey = 'all';
                 showToast('All data permanently deleted.', 'danger');
-                renderCurrentView();
-                renderPastTrades();
+                refreshTradeListViews();
                 renderMoney();
                 renderSettings();
                 refreshActiveMoreView();
@@ -5704,8 +6065,7 @@
 
                 if (!restoreNavState()) {
                     setBottomNavActive('trades');
-                    renderCurrentView();
-                    renderPastTrades();
+                    refreshTradeListViews();
                 }
 
                 setTxBroker('');
@@ -5725,6 +6085,9 @@
                         return;
                     }
                     restoreNavStateIfNeeded();
+                    if (!document.getElementById('page-plan').classList.contains('hidden')) {
+                        renderPlanTrades();
+                    }
                     if (!document.getElementById('page-trades').classList.contains('hidden')) {
                         renderCurrentView();
                     }
@@ -5751,10 +6114,14 @@
             window.selectStockSymbol = selectStockSymbol;
             window.openEditModal = openEditModal;
             window.openViewModal = openViewModal;
+            window.openViewFromEditor = openViewFromEditor;
             window.copyTransaction = copyTransaction;
             window.confirmCopy = confirmCopy;
+            window.confirmVerifyTrade = confirmVerifyTrade;
+            window.confirmExecuteTrade = confirmExecuteTrade;
             window.confirmCloseTrade = confirmCloseTrade;
             window.confirmDelete = confirmDelete;
+            window.deleteTradeFromEditor = deleteTradeFromEditor;
             window.saveTransaction = saveTransaction;
             window.openBackupTextModal = openBackupTextModal;
             window.openSettingsPage = openSettingsPage;
@@ -5764,6 +6131,8 @@
             window.resetData = resetData;
             window.performReset = performReset;
             window.openTargetModal = openTargetModal;
+            window.openBuyPriceModal = openBuyPriceModal;
+            window.saveBuyPrice = saveBuyPrice;
             window.setTargetSellPct = setTargetSellPct;
             window.applyTargetSellPctCustom = applyTargetSellPctCustom;
             window.onTargetSellPriceInput = onTargetSellPriceInput;
@@ -5796,6 +6165,8 @@
             window.clearTradeSearch = clearTradeSearch;
             window.setPastSearch = setPastSearch;
             window.clearPastSearch = clearPastSearch;
+            window.setPlanSearch = setPlanSearch;
+            window.clearPlanSearch = clearPlanSearch;
             window.applyPastRangeFilter = applyPastRangeFilter;
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
