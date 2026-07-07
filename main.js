@@ -566,9 +566,9 @@
 
     // ---------- BOTTOM BAR (custom nav + FAB) ----------
     const BOTTOM_BAR_ITEMS = [
+        { id: 'plan', label: 'Plan', icon: 'fa-clipboard-list' },
         { id: 'trades', label: 'Trades', icon: 'fa-list-ul' },
         { id: 'past', label: 'Past Trades', icon: 'fa-history' },
-        { id: 'money', label: 'Money', icon: 'fa-coins' },
         { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
     ];
 
