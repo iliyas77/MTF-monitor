@@ -24,9 +24,7 @@
     <header id="appHeader" class="sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
         <div id="appHeaderDefault" class="flex items-center justify-between gap-2">
             <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
-            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0" onclick="openSettingsPage()" title="Settings" aria-label="Settings">
-                <i class="fas fa-cog text-base-content/55"></i>
-            </button>
+            <button type="button" id="appHeaderSearchBtn" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0 hidden" onclick="openSearchPage()" aria-label="Search"><i class="fas fa-search text-base-content/55"></i></button>
         </div>
         <div id="appHeaderSettings" class="hidden flex items-center gap-3">
             <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="backFromSettings()" aria-label="Back">
@@ -50,7 +48,7 @@
             <div class="card summary-outer-card rounded-2xl mb-3" id="planSummaryCard">
                 <div class="card-body flex flex-col items-center gap-2 py-4">
                     <div class="money-value-block money-value-block--center w-full">
-                        <div id="planSummaryStats"></div>
+                        <div id="planSummaryStats" class="w-full"></div>
                         <div id="planSummaryNetWords"></div>
                     </div>
                 </div>
@@ -73,17 +71,18 @@
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
                 <div class="card-body flex flex-col items-center gap-2 py-4">
                     <div class="money-value-block money-value-block--center w-full">
-                        <div id="summaryOpenStats"></div>
+                        <div id="summaryOpenStats" class="w-full"></div>
                         <div id="summaryNetWords"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Company search -->
-            <div class="relative mb-3">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="tradeSearch" placeholder="Search by company name..." oninput="setTradeSearch(this.value)" autocomplete="off" />
-                <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="tradeSearchClear" onclick="clearTradeSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            <!-- Plan / Trade view switch -->
+            <div class="mb-3">
+                <select id="tradesViewMode" class="select select-bordered w-full rounded-full h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" onchange="setTradesViewMode(this.value)" aria-label="Switch between Trade and Plan">
+                    <option value="trade">Trade</option>
+                    <option value="plan">Plan</option>
+                </select>
             </div>
 
             <!-- Open trades list -->
@@ -98,25 +97,43 @@
             <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
                 <div class="card-body flex flex-col items-center gap-2 py-4">
                     <div class="money-value-block money-value-block--center w-full">
-                        <div id="pastSummaryStats"></div>
+                        <div id="pastSummaryStats" class="w-full"></div>
                         <div id="pastSummaryNetWords"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Company search + filter -->
+            <!-- Selected range indicator + P&L filter (single row) -->
             <div class="flex items-center gap-2 mb-3">
-                <div class="relative flex-1 min-w-0">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                    <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="pastSearch" placeholder="Search by company name..." oninput="setPastSearch(this.value)" autocomplete="off" />
-                    <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="pastSearchClear" onclick="clearPastSearch()" title="Clear"><i class="fas fa-times"></i></button>
-                </div>
-                <button class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" type="button" id="pastFilterBtn" onclick="openFilterSheet()" title="Filter"><i class="fas fa-sliders-h text-base-content/55"></i></button>
+                <div class="flex-1 min-w-0" id="pastRangeChipHost"></div>
+                <select id="pastPnlFilter" class="select select-bordered h-10 min-h-10 rounded-xl bg-base-100 focus:outline-none focus:border-primary shrink-0" onchange="setPastPnlFilter(this.value)" aria-label="Filter by profit, loss, or verified">
+                    <option value="all">All</option>
+                    <option value="profit">Profit</option>
+                    <option value="loss">Loss</option>
+                    <option value="verified">Verified</option>
+                </select>
             </div>
-            <!-- Selected date range indicator -->
-            <div class="text-center mb-3" id="pastRangeChipHost"></div>
 
             <div id="pastTradesList"></div>
+        </div>
+    </section>
+
+    <!-- PAGE: SEARCH (full screen) -->
+    <section id="page-search" class="page-section hidden">
+        <div class="search-page__bar sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
+            <div class="flex items-center gap-2">
+                <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="closeSearchPage()" aria-label="Back">
+                    <i class="fas fa-arrow-left text-base-content/55"></i>
+                </button>
+                <div class="relative flex-1 min-w-0">
+                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
+                    <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                    <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="searchPageClear" onclick="clearSearchPage()" title="Clear"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        </div>
+        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+            <div id="searchPageList"></div>
         </div>
     </section>
 
@@ -280,6 +297,11 @@
                         <span class="more-hub-option__label">MTF Calculator</span>
                         <i class="fas fa-chevron-right more-hub-option__chevron"></i>
                     </button>
+                    <button type="button" class="more-hub-option" onclick="openSettingsPage()">
+                        <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-cog"></i></span>
+                        <span class="more-hub-option__label">Settings</span>
+                        <i class="fas fa-chevron-right more-hub-option__chevron"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -426,6 +448,14 @@
             <div id="appDialogFooter" class="modal-action app-btn-row"></div>
         </div>
         <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <!-- LOADING OVERLAY (blocking spinner during network sync) -->
+    <dialog id="appLoading" class="app-loading" aria-live="polite" aria-busy="true">
+        <div class="app-loading__card">
+            <i class="fas fa-circle-notch fa-spin app-loading__spinner" aria-hidden="true"></i>
+            <span class="app-loading__label">Syncing...</span>
+        </div>
     </dialog>
 
     <!-- HIDDEN SHEET PANELS (persistent form fields) -->
@@ -1608,6 +1638,7 @@
             function cloudPush(data, version) {
                 if (!fbDb || !syncCode) return Promise.resolve(false);
                 syncPushPending++;
+                showLoading();
                 const payload = ensureMoneyData(data || getStorage());
                 const ver = version || localDataVersion;
                 return fbDb.collection('syncs').doc(syncCode).set({
@@ -1618,7 +1649,7 @@
                     console.warn('Cloud push failed', err);
                     showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
                     return false;
-                }).finally(() => { syncPushPending--; });
+                }).finally(() => { syncPushPending--; hideLoading(); });
             }
 
             function refreshAllViews() {
@@ -1631,15 +1662,16 @@
             }
 
             function refreshTradeListViews() {
-                renderPlanTrades();
-                refreshTradeListViews();
+                try { renderPlanTrades(); } catch (_) {}
+                try { renderCurrentView(); } catch (_) {}
+                try { renderPastTrades(); } catch (_) {}
             }
 
             function refreshActiveMoreView() {
                 const txPage = document.getElementById('page-transactions');
                 const calcPage = document.getElementById('page-mtf-calc');
-                if (txPage && txPage.classList.contains('hidden') == false && el.offsetParent !== null) renderTransactions();
-                if (calcPage && calcPage.classList.contains('hidden') == false && el.offsetParent !== null) updateMtfCalculator();
+                if (txPage && !txPage.classList.contains('hidden') && txPage.offsetParent !== null) renderTransactions();
+                if (calcPage && !calcPage.classList.contains('hidden') && calcPage.offsetParent !== null) updateMtfCalculator();
             }
 
             // Merge two transaction lists by id (remote wins on conflicts).
@@ -1692,6 +1724,9 @@
                 renderSettings();
 
                 const docRef = fbDb.collection('syncs').doc(code);
+                if (!opts.silent) showLoading();
+                let connectLoadingActive = !opts.silent;
+                const endConnectLoading = () => { if (connectLoadingActive) { connectLoadingActive = false; hideLoading(); } };
                 docRef.get().then(snap => {
                     const local = getStorage();
                     if (snap.exists && snap.data() && snap.data().data) {
@@ -1721,11 +1756,13 @@
                     startSyncListener();
                     if (!opts.silent) showToast('Cloud sync connected!', 'success');
                     refreshAllViews();
+                    endConnectLoading();
                 }).catch(err => {
                     console.warn('connectSync failed', err);
                     syncStatus = 'error';
                     if (!opts.silent) showToast('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), 'danger');
                     renderSettings();
+                    endConnectLoading();
                 });
             }
 
@@ -2213,6 +2250,30 @@
                 setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
             }
 
+            // ---------- LOADING OVERLAY ----------
+            let loadingCount = 0;
+            let loadingCancelInit = false;
+            function showLoading() {
+                loadingCount++;
+                if (loadingCount === 1) {
+                    const el = document.getElementById('appLoading');
+                    if (el) {
+                        if (!loadingCancelInit) {
+                            loadingCancelInit = true;
+                            el.addEventListener('cancel', (e) => e.preventDefault());
+                        }
+                        if (!el.open) el.showModal();
+                    }
+                }
+            }
+            function hideLoading() {
+                loadingCount = Math.max(0, loadingCount - 1);
+                if (loadingCount === 0) {
+                    const el = document.getElementById('appLoading');
+                    if (el && el.open) el.close();
+                }
+            }
+
             // ---------- FILTER SHEET ----------
             function openFilterSheet() {
                 Sheet.mountPanel('<i class="fas fa-tune mr-2 text-[var(--gr-accent)]"></i>Filter Past Trades', 'panelPastFilter',
@@ -2232,6 +2293,7 @@
                 const active = document.querySelector('.page-section:not(.hidden)');
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
+                if (id === 'page-search') return { page: searchContext === 'past' ? 'past' : 'trades', moreFeature: null };
                 if (id === 'page-plan') return { page: 'plan', moreFeature: null };
                 if (id === 'page-trades') return { page: 'trades', moreFeature: null };
                 if (id === 'page-past') return { page: 'past', moreFeature: null };
@@ -2360,14 +2422,21 @@
                 if (!def || !settings) return;
 
                 const onSettings = pageId === 'page-settings';
+                const onSearch = pageId === 'page-search';
                 const moreFeature = Object.entries(moreFeatureMap).find(([, id]) => id === pageId)?.[0];
                 const onSubpage = !!moreFeature;
 
-                def.classList.toggle('hidden', onSettings || onSubpage);
-                settings.classList.toggle('hidden', !onSettings);
-                if (subpage) subpage.classList.toggle('hidden', !onSubpage);
+                def.classList.toggle('hidden', onSettings || onSubpage || onSearch);
+                settings.classList.toggle('hidden', !onSettings || onSearch);
+                if (subpage) subpage.classList.toggle('hidden', !onSubpage || onSearch);
                 if (subpageTitle && moreFeature) {
                     subpageTitle.innerHTML = moreFeatureTitles[moreFeature] || '';
+                }
+
+                const searchBtn = document.getElementById('appHeaderSearchBtn');
+                if (searchBtn) {
+                    const showSearch = pageId === 'page-trades' || pageId === 'page-past';
+                    searchBtn.classList.toggle('hidden', !showSearch);
                 }
             }
 
@@ -2384,10 +2453,18 @@
                     openMoreFeature('money');
                     return;
                 }
+                if (page === 'plan') {
+                    activeMoreFeature = null;
+                    showPage(pageMap['trades']);
+                    setBottomNavActive('trades');
+                    setTradesViewMode('plan');
+                    updateFabVisibility('trades');
+                    saveNavState();
+                    return;
+                }
                 activeMoreFeature = null;
                 showPage(pageMap[page]);
                 setBottomNavActive(page);
-                if (page === 'plan') renderPlanTrades();
                 if (page === 'trades') renderCurrentView();
                 if (page === 'past') renderPastTrades();
                 updateFabVisibility(page);
@@ -2423,6 +2500,10 @@
             let tradeSearchQuery = '';
             let pastSearchQuery = '';
             let planSearchQuery = '';
+            let tradesViewMode = 'trade';
+            let pastPnlFilter = 'all';
+            let searchContext = 'trades';
+            let searchQuery = '';
             let txModalContext = 'trades';
             let moneyAccountFilter = 'all';
             let moneyPageTypeFilter = 'all';
@@ -3017,12 +3098,11 @@
                 const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
                 el.innerHTML = `
                     <div class="trade-summary-card__row">
-                        <span class="trade-summary-card__meta-group">
+                        <span class="trade-summary-card__meta-group trade-summary-card__meta-group--start">
                             <span class="trade-summary-card__meta-label">P&L</span>
                             <span class="trade-summary-card__meta-value trade-summary-card__meta-value--pnl ${toneClass}">${pnlFormatted}</span>
                         </span>
-                        <span class="trade-summary-card__meta-pipe" aria-hidden="true">|</span>
-                        <span class="trade-summary-card__meta-group">
+                        <span class="trade-summary-card__meta-group trade-summary-card__meta-group--end">
                             <span class="trade-summary-card__meta-label">${countLabel}</span>
                             <span class="trade-summary-card__meta-value trade-summary-card__meta-value--count">${count}</span>
                         </span>
@@ -3110,10 +3190,96 @@
                 container.innerHTML = renderFlatTradesList(filtered, renderPlanTradeListItem);
             }
 
-            // ---------- RENDER CURRENT VIEW (OPEN TRADES) ----------
+            // ---------- FULL-SCREEN SEARCH ----------
+            function openSearchPage() {
+                const current = getCurrentAppPage().page;
+                searchContext = current === 'past' ? 'past' : 'trades';
+                searchQuery = '';
+                showPage('page-search');
+                BottomBar.setBarVisible(false);
+                BottomBar.setFabVisible(false);
+                const input = document.getElementById('searchPageInput');
+                if (input) {
+                    input.value = '';
+                    setTimeout(() => input.focus(), 50);
+                }
+                toggleClearBtn('searchPageClear', false);
+                renderSearchResults();
+            }
+
+            function closeSearchPage() {
+                BottomBar.setBarVisible(true);
+                if (searchContext === 'past') {
+                    navigateTo('past');
+                } else if (tradesViewMode === 'plan') {
+                    navigateTo('plan');
+                } else {
+                    navigateTo('trades');
+                }
+            }
+
+            function runSearchPage(value) {
+                searchQuery = value || '';
+                toggleClearBtn('searchPageClear', searchQuery.trim());
+                renderSearchResults();
+            }
+
+            function clearSearchPage() {
+                searchQuery = '';
+                const input = document.getElementById('searchPageInput');
+                if (input) { input.value = ''; input.focus(); }
+                toggleClearBtn('searchPageClear', false);
+                renderSearchResults();
+            }
+
+            function renderSearchResults() {
+                const container = document.getElementById('searchPageList');
+                if (!container) return;
+
+                const isPast = searchContext === 'past';
+                const isPlan = !isPast && tradesViewMode === 'plan';
+
+                let dataset;
+                if (isPast) {
+                    dataset = getPastFiltered();
+                } else if (isPlan) {
+                    dataset = getTransactions().filter(isPlannedTrade);
+                } else {
+                    dataset = getTransactions().filter(isActiveOpenTrade);
+                }
+
+                const q = searchQuery.trim().toLowerCase();
+                let filtered = q
+                    ? dataset.filter(t => (t.company || '').toLowerCase().includes(q))
+                    : dataset;
+                filtered = sortTradesByHoldDays(filtered);
+
+                const renderer = isPast ? renderPastTradeListItem : (isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
+
+                if (filtered.length === 0) {
+                    const noun = isPast ? 'past trades' : (isPlan ? 'planned trades' : 'open trades');
+                    container.innerHTML = q
+                        ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No ${noun} match "${searchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name.</p></div>`
+                        : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-keyboard mb-3"></i><h6>Search ${noun}</h6><p class="text-sm text-base-content/60 mb-0">Start typing a company name.</p></div>`;
+                    return;
+                }
+
+                container.innerHTML = renderFlatTradesList(filtered, renderer);
+            }
+
+            // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
+            function setTradesViewMode(mode) {
+                tradesViewMode = mode === 'plan' ? 'plan' : 'trade';
+                const sel = document.getElementById('tradesViewMode');
+                if (sel && sel.value !== tradesViewMode) sel.value = tradesViewMode;
+                renderCurrentView();
+            }
+
+            // ---------- RENDER CURRENT VIEW (OPEN TRADES / PLANNED) ----------
             function renderCurrentView() {
+                const isPlan = tradesViewMode === 'plan';
                 const txs = getTransactions();
-                let filtered = txs.filter(isActiveOpenTrade);
+                let filtered = txs.filter(isPlan ? isPlannedTrade : isActiveOpenTrade);
 
                 const tradeQuery = tradeSearchQuery.trim().toLowerCase();
                 if (tradeQuery) {
@@ -3125,20 +3291,30 @@
                 let net = 0;
                 filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
 
-                paintOpenTradeSummary(net, filtered.length);
+                paintTradeRangeSummary({
+                    containerId: 'summaryOpenStats',
+                    wordsId: 'summaryNetWords',
+                    net,
+                    count: filtered.length,
+                    countLabel: isPlan ? 'Planned' : 'Open'
+                });
 
                 const container = document.getElementById('transactionList');
+                if (!container) return;
 
                 if (filtered.length === 0) {
                     if (tradeQuery) {
-                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No open trades match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
+                        const label = isPlan ? 'planned trades' : 'open trades';
+                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No ${label} match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
                         return;
                     }
-                    container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
+                    container.innerHTML = isPlan
+                        ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-clipboard-list mb-3"></i><h6>No trades planned yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to plan a trade. Tap Executed after you buy.</p></div>`
+                        : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
                     return;
                 }
 
-                container.innerHTML = renderFlatTradesList(filtered, renderOpenTradeListItem);
+                container.innerHTML = renderFlatTradesList(filtered, isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
             }
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
@@ -3170,8 +3346,24 @@
                 if (pastQuery) {
                     filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(pastQuery));
                 }
+
+                if (pastPnlFilter === 'profit') {
+                    filtered = filtered.filter(t => resolveTradeMetrics(t).netProfit >= 0);
+                } else if (pastPnlFilter === 'loss') {
+                    filtered = filtered.filter(t => resolveTradeMetrics(t).netProfit < 0);
+                } else if (pastPnlFilter === 'verified') {
+                    filtered = filtered.filter(t => !!t.verified);
+                }
+
                 filtered = sortTradesByHoldDays(filtered);
                 return filtered;
+            }
+
+            function setPastPnlFilter(value) {
+                pastPnlFilter = (value === 'profit' || value === 'loss' || value === 'verified') ? value : 'all';
+                const sel = document.getElementById('pastPnlFilter');
+                if (sel && sel.value !== pastPnlFilter) sel.value = pastPnlFilter;
+                renderPastTrades();
             }
 
             function renderPastTrades() {
@@ -4715,14 +4907,14 @@
             }
 
             // ---------- COPY TRANSACTION ----------
-            function copyTransaction(id) {
+            async function copyTransaction(id) {
                 const original = getTransaction(id);
                 if (!original) { showToast('Transaction not found.', 'danger'); return; }
                 const copyData = { ...original };
                 delete copyData.id;
                 delete copyData.verified;
                 copyData.executed = true;
-                const newTx = addTransaction(copyData);
+                const newTx = await addTransaction(copyData);
                 showToast(`Copied trade: ${newTx.company}`, 'success');
                 refreshTradeListViews();
                 renderMoney();
@@ -5674,7 +5866,10 @@
 
             function openAddModal() {
                 const currentPage = getCurrentAppPage().page;
-                txModalContext = currentPage === 'plan' ? 'plan' : (currentPage === 'past' ? 'past' : 'trades');
+                txModalContext = currentPage === 'plan' ? 'plan'
+                    : currentPage === 'past' ? 'past'
+                    : (currentPage === 'trades' && tradesViewMode === 'plan') ? 'plan'
+                    : 'trades';
                 document.getElementById('txEditId').value = '';
                 setTxSaveBtnLabel(false);
                 setTxModalMode(false);
@@ -6162,6 +6357,11 @@
             window.addCalcSellPctPreset = addCalcSellPctPreset;
             window.renderSettings = renderSettings;
             window.setTradeSearch = setTradeSearch;
+            window.setTradesViewMode = setTradesViewMode;
+            window.openSearchPage = openSearchPage;
+            window.closeSearchPage = closeSearchPage;
+            window.runSearchPage = runSearchPage;
+            window.clearSearchPage = clearSearchPage;
             window.clearTradeSearch = clearTradeSearch;
             window.setPastSearch = setPastSearch;
             window.clearPastSearch = clearPastSearch;
@@ -6171,6 +6371,7 @@
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;
+            window.setPastPnlFilter = setPastPnlFilter;
             window.updatePreview = updatePreview;
             window.connectSyncFromInput = connectSyncFromInput;
             window.disconnectSync = disconnectSync;
