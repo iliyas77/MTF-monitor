@@ -566,7 +566,6 @@
 
     // ---------- BOTTOM BAR (custom nav + FAB) ----------
     const BOTTOM_BAR_ITEMS = [
-        { id: 'plan', label: 'Plan', icon: 'fa-clipboard-list' },
         { id: 'trades', label: 'Trades', icon: 'fa-list-ul' },
         { id: 'past', label: 'Past Trades', icon: 'fa-history' },
         { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
@@ -638,6 +637,11 @@
             document.querySelectorAll('#bottomBarNav [data-page]').forEach(el => {
                 el.classList.toggle('bottom-bar__item--active', !!page && el.dataset.page === page);
             });
+        },
+
+        setBarVisible(visible) {
+            const bar = document.getElementById('bottomBar');
+            if (bar) bar.style.display = visible ? '' : 'none';
         },
 
         setFabVisible(visible) {
