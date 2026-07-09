@@ -2015,7 +2015,7 @@
             }
 
             // ---------- APP BUTTON WIRING ----------
-            // trade modal → components/organisms/trade-modal/trade-modal.js
+            // trade modal → components/trade-modal/trade-modal.js
             function renderSyncConnectRow() {
                 const row = document.getElementById('syncConnectRow');
                 if (!row) return;
@@ -2690,7 +2690,7 @@
             }
 
             // ---------- RENDER PLAN TRADES (O13) ----------
-            // renderPlanTrades → components/organisms/page-plan/plan-page.js
+            // renderPlanTrades → pages/plan/plan-page.js
 
             // ---------- FULL-SCREEN SEARCH ----------
             function openSearchPage() {
@@ -2743,7 +2743,7 @@
                 renderSearchResults();
             }
 
-            // renderSearchResults → components/organisms/page-search/search-page.js
+            // renderSearchResults → pages/search/search-page.js
 
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
@@ -2757,7 +2757,7 @@
                 }
             }
 
-            // renderCurrentView → components/organisms/page-trades/trades-page.js
+            // renderCurrentView → pages/trades/trades-page.js
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
             function getPastFiltered() {
@@ -2809,10 +2809,10 @@
                 if (isPastPageVisible()) startTradeLiveRefresh();
             }
 
-            // renderPastTrades → components/organisms/page-past/past-page.js
+            // renderPastTrades → pages/past/past-page.js
 
             // ---------- MONEY TRACKER ----------
-            // renderMoney, renderAccountHistorySheet → components/organisms/page-money/money-page.js
+            // renderMoney, renderAccountHistorySheet → pages/money/money-page.js
 
             function moneyPageDateFilterActive() {
                 return moneyPageRangeKey !== 'all' && (moneyPageFrom || moneyPageTo);
@@ -3104,7 +3104,7 @@
                 renderMoney();
             }
 
-            // money entry modal → components/organisms/money-entry-modal/money-entry-modal.js
+            // money entry modal → pages/money/money-entry-modal.js
             function setMoneyAccountModalMode(isEdit) {
                 const title = isEdit ? '<i class="fas fa-pen mr-2"></i>Edit Account' : '<i class="fas fa-plus mr-2"></i>Add Account';
                 const footer = `<div class="app-sheet__footer-actions w-full">${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
@@ -3274,9 +3274,9 @@
                 return stats;
             }
 
-            // renderTransactions → components/organisms/page-transactions/transactions-page.js
+            // renderTransactions → pages/transactions/transactions-page.js
 
-            // MTF Calculator → components/organisms/page-mtf-calculator/mtf-calculator-page.js
+            // MTF Calculator → pages/mtf-calculator/mtf-calculator-page.js
 
             // ---------- COPY TRANSACTION ----------
             async function copyTransaction(id) {
@@ -3337,7 +3337,7 @@
                 renderPlanTrades();
             }
 
-            // trade detail sheets → components/organisms/trade-*-sheet/
+            // trade detail sheets → components/trade-*-sheet/
             // ---------- INTEREST BREAKDOWN ----------
             function interestDetails(t) {
                 const sellPrice = getEffectiveSellPrice(t);
@@ -3508,9 +3508,9 @@
                 });
             }
 
-            // trade modal → components/organisms/trade-modal/trade-modal.js
+            // trade modal → components/trade-modal/trade-modal.js
             // ---------- SETTINGS ----------
-            // renderSettings, renderSettingsMoneyAccounts → components/organisms/page-settings/settings-page.js
+            // renderSettings, renderSettingsMoneyAccounts → pages/settings/settings-page.js
 
             function renderSyncStatus() {
                 const statusEl = document.getElementById('cloudSyncStatus');

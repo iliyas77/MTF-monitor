@@ -55,10 +55,11 @@ function runIntegrity(report) {
         report.pass('Integrity', `${scripts.length}/${scripts.length} manifest scripts present`);
     }
 
-    // --- Orphans under components/ and db/ ---
+    // --- Orphans under components/, pages/, and db/ ---
     const manifestSet = new Set(scripts.map((s) => s.split('/').join('/')));
     const discovered = [
         ...walkJsFiles(path.join(ROOT, 'components')),
+        ...walkJsFiles(path.join(ROOT, 'pages')),
         ...walkJsFiles(path.join(ROOT, 'db'))
     ];
     // main.js is in manifest; also allow nothing else at root of those trees
@@ -72,7 +73,7 @@ function runIntegrity(report) {
             `${orphans.length} JS file(s) not in manifest: ${orphans.slice(0, 4).join(', ')}${orphans.length > 4 ? '…' : ''}`
         );
     } else {
-        report.pass('Orphans', 'no component/db JS files missing from manifest');
+        report.pass('Orphans', 'no component/page/db JS files missing from manifest');
     }
 
     // --- Register calls ---
@@ -89,7 +90,7 @@ function runIntegrity(report) {
             if (!src.includes('MTFDbRegister')) {
                 registerIssues.push(`${script} (missing MTFDbRegister)`);
             }
-        } else if (script.startsWith('components/')) {
+        } else if (script.startsWith('components/') || script.startsWith('pages/')) {
             if (!src.includes('MTFRegister')) {
                 registerIssues.push(`${script} (missing MTFRegister)`);
             }
@@ -98,7 +99,7 @@ function runIntegrity(report) {
     if (registerIssues.length) {
         report.fail('Components', registerIssues.slice(0, 3).join('; ') + (registerIssues.length > 3 ? '…' : ''));
     } else {
-        report.pass('Components', 'all component/db modules register exports');
+        report.pass('Components', 'all component/page/db modules register exports');
     }
 
     // --- Syntax check ---
