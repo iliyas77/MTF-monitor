@@ -52,14 +52,44 @@ Restart Cursor once after pulling these hooks if they do not run immediately.
 
 You only need that one file — do not copy `main.css` or `main.js` separately.
 
+## Verify after a feature (health report)
+
+When you finish a feature or any source change, run a full health check:
+
+```bash
+npm run verify
+```
+
+This will:
+
+1. Check manifest / component integrity and JS syntax
+2. Run `npm run build`
+3. Open `production.html` in a headless browser and smoke-test main screens (nav, More hub, Money, Settings, storage)
+4. Print a pass/fail report (`RESULT: PASS` or `RESULT: FAIL`)
+
+Exit code `0` means everything checked out; non-zero means fix the failed line and re-run.
+
+One-time browser install (after `npm install`):
+
+```bash
+npx playwright install chromium
+```
+
+Fast integrity-only check (no browser):
+
+```bash
+npm run verify:integrity
+```
+
 ## Workflow going forward
 
 ```
-Edit sources  →  npm run build (or auto via Cursor hooks)  →  copy production.html
+Edit sources  →  npm run build (or auto via Cursor hooks)  →  npm run verify  →  copy production.html
 ```
 
 - **Do not edit `production.html` by hand** — your changes will be lost on the next build.
 - Always edit the source files, then rebuild.
+- Prefer `npm run verify` before shipping so you know screens and the build still work.
 
 ## Output file
 
