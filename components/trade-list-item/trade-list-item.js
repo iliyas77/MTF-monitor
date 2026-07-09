@@ -139,6 +139,7 @@
         return `<div class="trade-list-item__row trade-list-item__row--live">
             <div class="trade-list-item__live-grid"
                 data-live-symbol="${escapeHtml(symbol)}"
+                data-quote-symbol="${escapeHtml(symbol)}"
                 data-target-price="${escapeHtml(targetAttr)}"
                 data-trade-id="${tradeId}">
                 <button type="button" class="trade-list-item__live-cell trade-list-item__live-cell--clickable trade-list-item__live-price trade-list-item__live-price--${tone}${loading ? ' trade-list-item__live-price--loading' : ''}"

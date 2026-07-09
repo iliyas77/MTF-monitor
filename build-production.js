@@ -1,14 +1,19 @@
 #!/usr/bin/env node
 /**
- * Bundles and minifies main.html + main.css + component/page scripts + main.js into production.html.
+ * Bundles and minifies main.html + css/main.css (and its @imports) +
+ * component/page scripts + main.js into production.html.
  * Run: npm run build   (or: node build-production.js)
  * Ship (bump version + stamp date/time): npm run ship
+ *
+ * Always repairs components/manifest.json + main.html script tags first
+ * (same as `npm run repair`).
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const { minify } = require('html-minifier-terser');
+const { syncManifest } = require('./scripts/sync-manifest');
 
 const ROOT = __dirname;
 const OUT_FILE = path.join(ROOT, 'production.html');
@@ -17,7 +22,8 @@ const VERSION_JSON = path.join(ROOT, 'app-version.json');
 const VERSION_JS = path.join(ROOT, 'pages', 'more', 'app-version.js');
 
 const htmlPath = path.join(ROOT, 'main.html');
-const cssPath = path.join(ROOT, 'main.css');
+const cssEntryPath = path.join(ROOT, 'css', 'main.css');
+const CSS_LINK_RE = /<link rel="stylesheet" href="css\/main\.css"\s*\/?>/;
 
 const MINIFY_OPTIONS = {
     collapseWhitespace: true,
@@ -136,10 +142,40 @@ function bundleJs() {
     }).join('\n');
 }
 
+/**
+ * Resolve local @import "…" / @import '…' / @import url("…") into one CSS string.
+ * External URLs are left as-is. Detects circular imports.
+ */
+function bundleCss(entryPath, stack = []) {
+    const abs = path.resolve(entryPath);
+    if (stack.includes(abs)) {
+        console.error(`Circular CSS import: ${path.relative(ROOT, abs)}`);
+        process.exit(1);
+    }
+    if (!fs.existsSync(abs)) {
+        console.error(`Missing CSS file: ${path.relative(ROOT, abs)}`);
+        process.exit(1);
+    }
+
+    const dir = path.dirname(abs);
+    const source = fs.readFileSync(abs, 'utf8');
+    const importRe = /@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;?/g;
+
+    return source.replace(importRe, (full, importPath) => {
+        if (/^(https?:|data:|\/\/)/i.test(importPath)) {
+            return full;
+        }
+        const resolved = path.resolve(dir, importPath);
+        return `/* === ${path.relative(ROOT, resolved)} === */\n${bundleCss(resolved, stack.concat(abs))}\n`;
+    });
+}
+
 async function build() {
-    for (const file of [htmlPath, cssPath, MANIFEST]) {
+    syncManifest({ quiet: false });
+
+    for (const file of [htmlPath, cssEntryPath, MANIFEST]) {
         if (!fs.existsSync(file)) {
-            console.error(`Missing source file: ${path.basename(file)}`);
+            console.error(`Missing source file: ${path.relative(ROOT, file)}`);
             process.exit(1);
         }
     }
@@ -148,13 +184,15 @@ async function build() {
     const versionInfo = prepareVersion({ bump });
 
     let html = fs.readFileSync(htmlPath, 'utf8');
-    const css = fs.readFileSync(cssPath, 'utf8');
+    if (!CSS_LINK_RE.test(html)) {
+        console.error('main.html is missing <link rel="stylesheet" href="css/main.css" />');
+        process.exit(1);
+    }
+
+    const css = bundleCss(cssEntryPath);
     const js = bundleJs();
 
-    html = html.replace(
-        /<link rel="stylesheet" href="main\.css"\s*\/?>/,
-        `<style>${css}</style>`
-    );
+    html = html.replace(CSS_LINK_RE, `<style>${css}</style>`);
 
     html = html.replace(
         /<!-- COMPONENT SCRIPTS -->[\s\S]*?<script src="main\.js"><\/script>/,
@@ -178,7 +216,7 @@ async function build() {
     const scriptCount = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts.length;
 
     console.log(`✓ production.html (${sizeKb} KB, minified from ${unminKb} KB, −${saved}%)`);
-    console.log(`  Sources: main.html, main.css, ${scriptCount} JS files (components/manifest.json)`);
+    console.log(`  Sources: main.html, css/main.css (+imports), ${scriptCount} JS files (components/manifest.json)`);
     if (versionInfo.bumped) {
         console.log(`  Version: ${versionInfo.previous.version} → ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
     } else {

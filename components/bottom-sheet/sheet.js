@@ -13,8 +13,34 @@
         footerEl: () => document.getElementById('appSheetFooter'),
         _home: () => document.getElementById('sheetPanels'),
         _activePanel: null,
+        _bound: false,
+
+        _ensureBound() {
+            if (Sheet._bound) return;
+            const el = Sheet.el();
+            if (!el) return;
+            Sheet._bound = true;
+            el.addEventListener('close', () => {
+                Sheet._restoreActivePanel();
+            });
+        },
+
+        _restoreActivePanel() {
+            const panel = Sheet._activePanel;
+            const home = Sheet._home();
+            if (panel && home && panel.parentElement !== home) {
+                home.appendChild(panel);
+            }
+            Sheet._activePanel = null;
+            const footer = Sheet.footerEl();
+            if (footer) {
+                footer.innerHTML = '';
+                footer.classList.add('hidden');
+            }
+        },
 
         open(title, content, footerHtml = '') {
+            Sheet._ensureBound();
             const body = Sheet.bodyEl();
             const footer = Sheet.footerEl();
             if (Sheet.titleEl()) Sheet.titleEl().innerHTML = title;
@@ -43,14 +69,13 @@
         },
 
         close() {
-            const panel = Sheet._activePanel;
-            const home = Sheet._home();
-            if (panel && home) home.appendChild(panel);
-            Sheet._activePanel = null;
-            Sheet.el()?.close();
+            Sheet._restoreActivePanel();
+            const el = Sheet.el();
+            if (el?.open) el.close();
         },
 
         show() {
+            Sheet._ensureBound();
             Sheet.el()?.showModal();
         },
 

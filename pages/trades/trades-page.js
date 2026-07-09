@@ -49,7 +49,8 @@
             wordsId: 'summaryNetWords',
             net,
             count: filtered.length,
-            countLabel: isPlan ? 'Planned' : 'Open'
+            countLabel: isPlan ? 'Planned' : 'Open',
+            useTwoItemLayout: true
         });
 
         const container = document.getElementById('transactionList');

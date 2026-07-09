@@ -1,0 +1,155 @@
+/* ========== MAIN CSS ENTRY POINT ========== */
+
+/* Import all CSS modules */
+@import '_variables.css';
+@import '_reset.css';
+@import '_base.css';
+@import '_utilities.css';
+@import '_components.css';
+@import '_layout.css';
+
+/* Import component-scoped CSS files */
+@import '../components/amount/amount.css';
+@import '../components/button/button.css';
+@import '../components/icon-button/icon-button.css';
+@import '../components/form-field/form-field.css';
+@import '../components/card/card.css';
+@import '../components/alert/alert.css';
+@import '../components/divider/divider.css';
+@import '../components/dropdown/dropdown.css';
+@import '../components/radio/radio.css';
+@import '../components/toggle/toggle.css';
+@import '../components/checkbox/checkbox.css';
+@import '../components/label/label.css';
+@import '../components/table/table.css';
+@import '../components/join/join.css';
+@import '../components/menu/menu.css';
+@import '../components/spinner/spinner.css';
+@import '../components/empty-state/empty-state.css';
+@import '../components/toast/toast.css';
+@import '../components/progress/progress.css';
+@import '../components/avatar/avatar.css';
+@import '../components/chip/chip.css';
+@import '../components/tooltip/tooltip.css';
+@import '../components/skeleton/skeleton.css';
+@import '../components/divider-text/divider-text.css';
+@import '../components/badge/badge.css';
+@import '../components/search-bar/search-bar.css';
+@import '../components/input/input.css';
+
+/* ========== MISSING DAISYUI-STYLE ALIASES ==========
+
+   Add minimal definitions for classes that are still referenced in HTML/JS
+   but were not defined in the custom CSS.
+*/
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1;
+    background: var(--gr-bg-soft);
+    color: var(--gr-text);
+    border: 1px solid var(--gr-border);
+}
+.badge-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.7rem;
+}
+
+/* Buttons (DaisyUI-style variants used in HTML) */
+.btn-neutral {
+    --btn-bg: var(--gr-bg-soft);
+    --btn-text: var(--gr-text);
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid var(--gr-border);
+}
+.btn-outline {
+    background: transparent;
+    color: var(--gr-text);
+    border: 1px solid var(--gr-border);
+}
+.btn-primary {
+    --btn-bg: var(--gr-accent);
+    --btn-text: #fff;
+    background: var(--btn-bg);
+    color: var(--btn-text);
+    border: 1px solid transparent;
+}
+.btn-xs {
+    height: 2rem;
+    padding: 0 0.5rem;
+    font-size: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+/* Card */
+.card-body {
+    padding: 1rem;
+}
+
+/* Divider */
+.divider {
+    height: 1px;
+    background: var(--gr-border);
+    border: none;
+    margin: 0.75rem 0;
+}
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+    display: inline-flex;
+}
+.dropdown-end {
+    align-self: flex-end;
+}
+.dropdown-content {
+    position: absolute;
+    z-index: 50;
+    top: calc(100% + 0.25rem);
+}
+.menu.app-dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 12rem;
+    background: var(--gr-bg);
+    border: 1px solid var(--gr-border);
+    border-radius: 0.75rem;
+    padding: 0.5rem;
+    box-shadow: var(--gr-shadow);
+}
+
+/* Sheet aliases referenced from HTML */
+.app-sheet {
+    display: flex;
+    flex-direction: column;
+}
+.app-sheet__header {
+    flex-shrink: 0;
+}
+.app-sheet__body {
+    flex: 1 1 auto;
+}
+
+/* Amount display variants */
+.amount-display__icon {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.35rem;
+    opacity: 0.85;
+}
+.amount-display--quantity {
+    color: var(--content-accent-quantity);
+}
+
+/* ========== REMAINING CUSTOM STYLES ==========
+
+   Note: Amount component styles have been migrated to components/amount/amount.css
+   Trade-specific styles remain here as they are page-level compositions

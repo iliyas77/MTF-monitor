@@ -1,0 +1,44 @@
+/* ========== Dropdown Component Styles ========== */
+
+.app-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.app-dropdown__menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: var(--z-dropdown);
+    min-width: 12rem;
+    background: var(--gr-bg);
+    border: 1px solid var(--gr-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--gr-shadow-lg);
+    padding: var(--space-2);
+}
+
+.app-dropdown__item {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 0;
+    background: transparent;
+    color: var(--gr-text1);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: background-color var(--transition-fast);
+}
+
+.app-dropdown__item:hover {
+    background: var(--gr-row-hover);
+}
+
+.app-dropdown__item--active {
+    background: var(--gr-accent-soft) !important;
+    color: var(--gr-accent) !important;
+    font-weight: var(--font-semibold);
+}

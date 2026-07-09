@@ -9,7 +9,8 @@
         paintPastTradeSummary,
         renderFlatTradesList,
         renderPastTradeListItem,
-        renderPageEmptyCard
+        renderPageEmptyCard,
+        renderSelect
     } = global.MTFComponents;
 
     function tradePages() {
@@ -33,6 +34,23 @@
             rangeHost.innerHTML = renderDateRangeChip(getPastFrom(), getPastTo(), {
                 onclick: 'openFilterSheet()',
                 clickable: true
+            });
+        }
+
+        const pnlFilterHost = document.getElementById('pastPnlFilterHost');
+        if (pnlFilterHost && renderSelect) {
+            pnlFilterHost.innerHTML = renderSelect({
+                id: 'pastPnlFilter',
+                value: 'all',
+                onchange: 'setPastPnlFilter(this.value)',
+                ariaLabel: 'Filter by profit, loss, or verified',
+                options: [
+                    { value: 'all', label: 'All' },
+                    { value: 'profit', label: 'Profit' },
+                    { value: 'loss', label: 'Loss' },
+                    { value: 'verified', label: 'Verified' }
+                ],
+                fullWidth: false
             });
         }
 

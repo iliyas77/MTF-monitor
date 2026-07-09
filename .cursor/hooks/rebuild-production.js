@@ -25,8 +25,11 @@ function isSourceFile(filePath) {
         rel === 'main.css' ||
         rel === 'main.js' ||
         rel === 'app-version.json' ||
+        rel === 'build-production.js' ||
+        rel.startsWith('css/') ||
         rel.startsWith('components/') ||
-        rel.startsWith('pages/')
+        rel.startsWith('pages/') ||
+        rel.startsWith('db/')
     );
 }
 

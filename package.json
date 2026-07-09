@@ -2,10 +2,12 @@
   "name": "money-monitor",
   "private": true,
   "scripts": {
+    "repair": "node scripts/sync-manifest.js",
     "build": "node build-production.js",
     "ship": "node build-production.js --bump",
     "verify": "node scripts/verify.js",
-    "verify:integrity": "node -e \"const {createReport}=require('./scripts/verify-report');const {runIntegrity}=require('./scripts/verify-integrity');const r=createReport();runIntegrity(r);process.exit(r.print());\""
+    "verify:integrity": "node -e \"const {createReport}=require('./scripts/verify-report');const {runIntegrity}=require('./scripts/verify-integrity');const r=createReport();runIntegrity(r);process.exit(r.print());\"",
+    "all": "npm run repair && npm run build && npm run verify"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",

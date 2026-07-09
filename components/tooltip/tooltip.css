@@ -1,0 +1,27 @@
+/* ========== Tooltip Component Styles ========== */
+
+.app-tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.app-tooltip__content {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: var(--space-2) var(--space-3);
+    background: var(--gr-text1);
+    color: var(--gr-bg);
+    font-size: var(--text-xs);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-fast);
+    margin-bottom: var(--space-1);
+}
+
+.app-tooltip:hover .app-tooltip__content {
+    opacity: 1;
+}

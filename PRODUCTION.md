@@ -22,7 +22,7 @@ npm install
 
 ## Build the production file
 
-After any change to `main.html`, `main.css`, `main.js`, or files under `components/`, run:
+After any change to `main.html`, `css/main.css`, `main.js`, or files under `components/` / `pages/` / `db/`, run:
 
 ```bash
 npm run build
@@ -30,7 +30,17 @@ npm run build
 
 Or: `node build-production.js`
 
-The build **bundles** local CSS/JS into one HTML file, then **minifies** HTML, CSS, and JavaScript (whitespace removal, comment stripping, JS mangling). This **overwrites** `production.html` in the project root.
+The build **first repairs** `components/manifest.json` and the matching `<script>` tags in `main.html` (same as `npm run repair`), then **bundles** local CSS/JS into one HTML file and **minifies** HTML, CSS, and JavaScript. This **overwrites** `production.html` in the project root.
+
+### Repair manifest only
+
+If you added/renamed/deleted JS under `components/`, `pages/`, or `db/` and want to sync the lists without building:
+
+```bash
+npm run repair
+```
+
+This updates `components/manifest.json` and the `<!-- COMPONENT SCRIPTS -->` block in `main.html` so they match files on disk (existing load order is preserved; new files are appended before `main.js`).
 
 ### Automatic rebuild (Cursor)
 
@@ -84,11 +94,11 @@ npm run verify:integrity
 ## Workflow going forward
 
 ```
-Edit sources  →  npm run build (or auto via Cursor hooks)  →  npm run verify  →  copy production.html
+Edit sources  →  npm run build (auto-repairs manifest, or npm run repair alone)  →  npm run verify  →  copy production.html
 ```
 
 - **Do not edit `production.html` by hand** — your changes will be lost on the next build.
-- Always edit the source files, then rebuild.
+- Always edit the source files, then rebuild. You do not need to hand-edit `components/manifest.json` when adding/removing JS — `npm run repair` / `npm run build` syncs it.
 - Prefer `npm run verify` before shipping so you know screens and the build still work.
 
 ## Output file

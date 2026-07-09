@@ -52,6 +52,44 @@
         return `<ul class="${menuClass}${className ? ` ${className}` : ''}">${itemsHtml}</ul>`;
     }
 
+    function renderSelect(opts = {}) {
+        const {
+            id = '',
+            value = '',
+            onchange = '',
+            className = '',
+            ariaLabel = '',
+            options = [],
+            fullWidth = false
+        } = opts;
+
+        if (!options.length) return '';
+
+        const idAttr = id ? ` id="${id}"` : '';
+        const ariaAttr = ariaLabel ? ` aria-label="${ariaLabel}"` : '';
+        const changeAttr = onchange ? ` onchange="${onchange}"` : '';
+        const baseClass = 'select select-bordered h-10 min-h-10 rounded-xl bg-base-100 focus:outline-none focus:border-primary';
+        const widthClass = fullWidth ? ' w-full' : ' shrink-0';
+        const paddingClass = ' px-4';
+        const textCenterClass = ' text-center';
+        const finalClass = `${baseClass}${widthClass}${paddingClass}${textCenterClass}${className ? ` ${className}` : ''}`;
+
+        const optionsHtml = options.map(o => {
+            const selected = o.value === value ? ' selected' : '';
+            return `<option value="${escapeHtml(String(o.value))}"${selected}>${escapeHtml(o.label)}</option>`;
+        }).join('');
+
+        return `<select class="${finalClass}"${idAttr}${changeAttr}${ariaAttr}>${optionsHtml}</select>`;
+    }
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&')
+            .replace(/</g, '<')
+            .replace(/>/g, '>')
+            .replace(/"/g, '"');
+    }
+
     function renderDropdownTrigger(opts = {}) {
         const {
             id = '',
@@ -114,6 +152,7 @@
         renderActionDropdownItem,
         renderDropdownMenu,
         renderDropdownTrigger,
+        renderSelect,
         buildAppDropdownItems,
         syncAppSelectDropdown
     });

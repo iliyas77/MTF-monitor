@@ -1,0 +1,201 @@
+/* ========== CSS CUSTOM PROPERTIES ========== */
+
+/* ---------- Color Palette ---------- */
+:root {
+    /* Background Colors */
+    --whole-bg: #f8f9fa;
+    --gr-bg: #fff;
+    --gr-bg-soft: #f4f5f7;
+    --gr-bg-elevated: #fff;
+    --gr-bg-header: #fff;
+    --gr-bg-ticker: #f8f9fb;
+    --gr-input-bg: #f9fafb;
+
+    /* Text Colors */
+    --gr-text: #6b7280;
+    --gr-text1: #1f2937;
+    --gr-text-muted: #4b5563;
+    --gr-text-soft: #111827;
+    --gr-text-color: #111827;
+    --gr-text-color1: #1f2937;
+    --gr-heading-color: #111827;
+    --gr-suffix-color: #9ca3af;
+    --gr-calculator-text: #4b5563;
+    --gr-calculator-text-hover: #000;
+
+    /* Border Colors */
+    --gray150: #e9e9eb;
+    --gr-border: var(--gray150);
+    --gr-border-strong: #cfd4dc;
+    --gr-ui-border: var(--gray150);
+    --gr-table-border: var(--gray150);
+    --gr-icon-border: #afaeae;
+
+    /* Primary/Accent Colors */
+    --gr-accent: #159b5a;
+    --gr-accent-hover: #08653a;
+    --gr-accent-soft: #e6f5ec;
+    --gr-active-bg: #0a7d44;
+    --gr-active-text: #fff;
+    --gr-price-color: #159b5a;
+    --primary-color: #4b5563;
+    --primary-bg: #fff;
+
+    /* Secondary Colors */
+    --blue500: #1e40af;
+    --blue500-soft: #dbeafe;
+    --content-accent-secondary: var(--blue500);
+
+    /* Quantity Colors */
+    --orange500: #ea580c;
+    --orange500-soft: #ffedd5;
+    --content-accent-quantity: var(--orange500);
+
+    /* Danger/Error Colors */
+    --gr-danger: #ef4444;
+    --gr-danger-soft: #fce8e6;
+    --gr-pill-down-bg: #fce8e6;
+    --gr-pill-down-text: #ef4444;
+
+    /* Success Colors */
+    --gr-pill-up-bg: #fff;
+    --gr-pill-up-text: #159b5a;
+
+    /* Warning Colors */
+    --gr-warning-bg: #fff8d6;
+
+    /* Table Colors */
+    --gr-table-head-bg: #1f2937;
+    --gr-table-head-text: #d1d5db;
+    --gr-table-row-odd: #f3f4f6;
+    --gr-table-row-even: #f9fafb;
+    --gr-table-row-alt: #fafbfd;
+
+    /* Special Colors */
+    --gr-ad-bg: #eef0f4;
+    --gr-card-tint: #e9f6ee;
+    --gr-totals-tint: #f0fdf4;
+    --gr-history-head-bg: #f4f5f7;
+    --gr-inline-ad-bg: #e5e7eb;
+    --gr-row-hover: #ededee;
+    --gr-calculator-iconbg: #e1f4ee;
+    --gr-calculator-iconbg-hover: #b8e6d4;
+    --gr-calc-border: #bbf7d0;
+    --gr-calc-tools-bg: #fff;
+    --gr-calc-tools-border: #f3f4f6;
+    --gr-calc-tools-color: #374151;
+    --gr-calc-labelhead: #374151;
+    --gr-calc-separator: #f3f4f6;
+    --gr-icon-bg: #fff;
+
+    /* Shadows */
+    --gr-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.06);
+    --gr-shadow-lg: 0 4px 12px rgba(15, 23, 42, 0.08);
+    --gr-box-shadow: 0 4px 8px 0 #00000026;
+
+    /* Calculator Border Colors */
+    --gr-calculator-border: #16a34a99;
+    --gr-calc-border-color: #BBF7D099;
+}
+
+/* ---------- Spacing Scale ---------- */
+:root {
+    --space-1: 0.25rem;    /* 4px */
+    --space-2: 0.5rem;     /* 8px */
+    --space-3: 0.75rem;    /* 12px */
+    --space-4: 1rem;       /* 16px */
+    --space-5: 1.25rem;    /* 20px */
+    --space-6: 1.5rem;     /* 24px */
+    --space-8: 2rem;       /* 32px */
+    --space-10: 2.5rem;    /* 40px */
+    --space-12: 3rem;      /* 48px */
+}
+
+/* ---------- Typography Scale ---------- */
+:root {
+    --text-xs: 0.75rem;      /* 12px */
+    --text-sm: 0.875rem;     /* 14px */
+    --text-base: 1rem;       /* 16px */
+    --text-lg: 1.125rem;     /* 18px */
+    --text-xl: 1.25rem;      /* 20px */
+    --text-2xl: 1.5rem;      /* 24px */
+    --text-3xl: 1.75rem;     /* 28px */
+}
+
+/* ---------- Font Weights ---------- */
+:root {
+    --font-normal: 400;
+    --font-medium: 500;
+    --font-semibold: 600;
+    --font-bold: 700;
+}
+
+/* ---------- Line Heights ---------- */
+:root {
+    --leading-none: 1;
+    --leading-tight: 1.25;
+    --leading-snug: 1.375;
+    --leading-normal: 1.5;
+    --leading-relaxed: 1.625;
+}
+
+/* ---------- Border Radius ---------- */
+:root {
+    --radius-none: 0;
+    --radius-sm: 0.5rem;     /* 8px */
+    --radius-md: 0.75rem;    /* 12px */
+    --radius-lg: 1rem;       /* 16px */
+    --radius-xl: 1.25rem;    /* 20px */
+    --radius-2xl: 1.5rem;    /* 24px */
+    --radius-full: 9999px;
+}
+
+/* ---------- Z-Index Scale ---------- */
+:root {
+    --z-dropdown: 50;
+    --z-sticky: 40;
+    --z-fixed: 30;
+    --z-modal-backdrop: 100;
+    --z-modal: 200;
+    --z-toast: 2000;
+}
+
+/* ---------- Transitions ---------- */
+:root {
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.2s ease;
+    --transition-slow: 0.3s ease;
+}
+
+/* ---------- Breakpoints (for reference) ---------- */
+:root {
+    --breakpoint-sm: 400px;
+    --breakpoint-md: 768px;
+    --breakpoint-lg: 1024px;
+    --breakpoint-xl: 1280px;
+}
+
+/* ---------- Corporate Theme (DaisyUI compatibility) ---------- */
+[data-theme="corporate"] {
+    color-scheme: light;
+    --color-base-100: var(--gr-bg);
+    --color-base-200: var(--gr-bg-soft);
+    --color-base-300: var(--gr-border);
+    --color-base-content: var(--gr-text-muted);
+    --color-primary: var(--gr-accent);
+    --color-primary-content: var(--gr-active-text);
+    --color-secondary: var(--gr-bg-soft);
+    --color-secondary-content: var(--gr-text-muted);
+    --color-accent: var(--gr-accent);
+    --color-accent-content: var(--gr-active-text);
+    --color-neutral: var(--gr-text-muted);
+    --color-neutral-content: var(--gr-bg);
+    --color-info: var(--gr-accent);
+    --color-info-content: var(--gr-active-text);
+    --color-success: var(--gr-accent);
+    --color-success-content: var(--gr-active-text);
+    --color-warning: #ca8a04;
+    --color-warning-content: var(--gr-text-muted);
+    --color-error: var(--gr-danger);
+    --color-error-content: var(--gr-active-text);
+}

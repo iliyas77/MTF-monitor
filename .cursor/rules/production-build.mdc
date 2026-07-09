@@ -11,11 +11,13 @@ This project ships as a single minified `production.html` for mobile.
 
 Whenever you edit **any** of these, run the production build before finishing:
 
-- `main.html`, `main.css`, `main.js`
+- `main.html`, `main.js`
+- Any file under `css/` (entry: `css/main.css` and its `@import` modules)
 - Any file under `components/`
 - Any file under `pages/`
 - `components/manifest.json`
 - `app-version.json` (version + build stamp for More page)
+- `build-production.js`
 
 ```bash
 npm run build
