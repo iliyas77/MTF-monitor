@@ -59,6 +59,10 @@
     "components/organisms/trade-hold-sheet/trade-hold-sheet.js",
     "components/organisms/trade-modal/trade-modal.js",
     "components/organisms/money-entry-modal/money-entry-modal.js",
+    "db/_registry.js",
+    "db/firebase-config.js",
+    "db/storage-service.js",
+    "db/sync-service.js",
     "main.js"
   ]
 }
