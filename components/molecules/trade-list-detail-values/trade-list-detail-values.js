@@ -47,8 +47,9 @@
         const attrs = onclick
             ? ` type="button" class="trade-list-item__detail-cell trade-list-item__detail-cell--clickable" onclick="${onclick}"`
             : ` class="trade-list-item__detail-cell"`;
+        const { renderIcon } = global.MTFComponents;
         const iconHtml = icon
-            ? `<i class="fas ${icon} trade-list-item__detail-label-icon" aria-hidden="true"></i>`
+            ? `${renderIcon(icon, { className: 'trade-list-item__detail-label-icon' })}`
             : '';
         return `
             <${Tag}${attrs}>

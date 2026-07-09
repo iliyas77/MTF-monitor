@@ -42,7 +42,7 @@
                                 ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', pill: false, className: 'trade-card-header__pnl' })}
                                 <div class="dropdown dropdown-end trade-row-dropdown">
                                     <button type="button" class="${actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
-                                        <i class="fas fa-ellipsis-v text-sm"></i>
+                                        ${global.MTFComponents.renderIcon('fa-ellipsis-v', { size: 'sm' })}
                                     </button>
                                     <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]">
                                         <li>
@@ -53,27 +53,27 @@
                                         <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
                                         <li>
                                             <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
-                                                <span class="${menuIconClass('deposit')}"><i class="fas fa-plus"></i></span>
+                                                <span class="${menuIconClass('deposit')}">${global.MTFComponents.renderIcon('fa-plus')}</span>
                                                 <span class="flex-1 text-left">Deposit</span>
                                             </button>
                                         </li>
                                         <li>
                                             <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
-                                                <span class="${menuIconClass('withdraw')}"><i class="fas fa-minus"></i></span>
+                                                <span class="${menuIconClass('withdraw')}">${global.MTFComponents.renderIcon('fa-minus')}</span>
                                                 <span class="flex-1 text-left">Withdraw</span>
                                             </button>
                                         </li>
                                         <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
                                         <li>
                                             <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
-                                                <span class="${menuIconClass('history')}"><i class="fas fa-history"></i></span>
+                                                <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-history')}</span>
                                                 <span class="flex-1 text-left">History</span>
                                                 ${historyCount ? appTag(String(historyCount), 'accent') : ''}
                                             </button>
                                         </li>
                                         <li>
                                             <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyAccountModal('${acc.id}')">
-                                                <span class="${menuIconClass('edit')}"><i class="fas fa-pen"></i></span>
+                                                <span class="${menuIconClass('edit')}">${global.MTFComponents.renderIcon('fa-pen')}</span>
                                                 <span class="flex-1 text-left">Edit account</span>
                                             </button>
                                         </li>

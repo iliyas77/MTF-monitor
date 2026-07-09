@@ -152,8 +152,9 @@
         const sttLabel = isIntraday ? '0.025% sell only' : `${(chargeCfg.sttSellPct * 100).toFixed(4)}% buy &amp; sell`;
         const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
         const typeBadge = isIntraday ? appTag('Intraday', 'warning') : appTag('MTF');
+        const { renderIcon } = global.MTFComponents;
         return `
-            <h6 class="font-semibold text-base-content/80 mb-2 flex flex-wrap items-center gap-1.5"><i class="fas fa-info-circle mr-1"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
+            <h6 class="font-semibold text-base-content/80 mb-2 flex flex-wrap items-center gap-1.5">${renderIcon('fa-info-circle', { className: 'mr-1' })}${cfg.label} Broker Rates ${typeBadge}</h6>
             <table class="table table-sm w-full w-full">
                 <tbody>
                     <tr><td class="text-base-content/60">Interest</td><td class="text-end text-sm">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
@@ -218,7 +219,7 @@
             setAppTagElement(badge, 'Intraday', 'warning');
             badge.classList.remove('hidden');
             banner.className = 'alert alert-info py-2 text-sm mb-3';
-            banner.innerHTML = '<i class="fas fa-bolt mr-1"></i><strong>Same-day trade</strong> — charges use <strong>intraday rates</strong> for all brokers (STT 0.025% on sell only, stamp 0.003% on buy; no MTF interest, pledge, unpledge or DP).';
+            banner.innerHTML = `${global.MTFComponents.renderIcon('fa-bolt', { className: 'mr-1' })}<strong>Same-day trade</strong> — charges use <strong>intraday rates</strong> for all brokers (STT 0.025% on sell only, stamp 0.003% on buy; no MTF interest, pledge, unpledge or DP).`;
         } else if (inp.buyDate && inp.sellDate && calcInputsValid(inp)) {
             setAppTagElement(badge, 'MTF / Delivery', 'default');
             badge.classList.remove('hidden');
@@ -254,32 +255,32 @@
         const levDisplay = result.leverage > 1 ? `${result.leverage}x` : '1x';
         const isIntraday = tradeType === 'intraday' || result.tradeType === 'intraday';
         const sameDayNote = intDet.sameDay
-            ? `<div class="alert alert-info py-2 text-sm mb-3"><i class="fas fa-bolt mr-1"></i>Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
+            ? `<div class="alert alert-info py-2 text-sm mb-3">${global.MTFComponents.renderIcon('fa-bolt', { className: 'mr-1' })}Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
             : '';
 
         return `
             ${sameDayNote}
             ${renderBrokerRatesPanel(broker, result.mtfAmount, inp.buyDate, inp.sellDate)}
             <hr class="my-3" />
-            <div class="section-title"><i class="fas fa-hand-holding-usd mr-2"></i>Funding</div>
+            <div class="section-title">${global.MTFComponents.renderIcon('fa-hand-holding-usd', { className: 'mr-2' })}Funding</div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Investment</span><span class="text-sm font-semibold text-right">${fmtDec(result.totalInvestment)}</span></div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Your Margin</span><span class="text-sm font-semibold text-right">${fmtDec(result.ownMargin)}</span></div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Broker Funded</span><span class="text-sm font-semibold text-right">${fmtDec(result.mtfAmount)}</span></div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Leverage</span><span class="text-sm font-semibold text-right">${levDisplay}</span></div>
-            <div class="section-title"><i class="far fa-clock mr-2"></i>Holding</div>
+            <div class="section-title">${global.MTFComponents.renderIcon('fa-clock', { className: 'mr-2' })}Holding</div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="text-sm font-semibold text-right">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
-            <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&L</div>
+            <div class="section-title">${global.MTFComponents.renderIcon('fa-calculator', { className: 'mr-2' })}P&L</div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right text-warning">- ${fmtDec(result.interest)}</span></div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
-            <div class="section-title mt-3"><i class="fas fa-percent mr-2"></i>Interest Detail</div>
+            <div class="section-title mt-3">${global.MTFComponents.renderIcon('fa-percent', { className: 'mr-2' })}Interest Detail</div>
             <div class="bg-base-200 rounded-xl p-2 my-2 text-sm text-center">
                 ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
             </div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Rate / day</span><span class="text-sm font-semibold text-right">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
             <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Rate / year</span><span class="text-sm font-semibold text-right">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
-            <div class="section-title mt-3"><i class="fas fa-receipt mr-2"></i>Charges Breakdown</div>
+            <div class="section-title mt-3">${global.MTFComponents.renderIcon('fa-receipt', { className: 'mr-2' })}Charges Breakdown</div>
             ${chargesTable(buy, sell)}
         `;
     }
@@ -291,7 +292,7 @@
             return;
         }
         const b = broker || inp.broker;
-        Sheet.open(`<i class="fas fa-calculator mr-2"></i>${b} Breakdown`, buildCalcBreakdownHtml(b, inp), '');
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-calculator', { className: 'mr-2' })}${b} Breakdown`, buildCalcBreakdownHtml(b, inp), '');
     }
 
     function updateMtfCalculator() {
@@ -337,14 +338,14 @@
                     <td class="text-end font-semibold">${renderAmount(r.netProfit, { size: 'xs', decimals: true, align: 'right' })}</td>
                     <td class="text-end">
                         <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
-                            <i class="fas fa-circle-info text-primary"></i>
+                            ${global.MTFComponents.renderIcon('fa-circle-info', { colour: 'text-primary' })}
                         </button>
                     </td>
                 </tr>`;
         }).join('');
         const footnote = sameDay
-            ? '<i class="fas fa-bolt mr-1"></i>Same-day dates — all brokers use intraday charge rules. Tap info for full breakdown.'
-            : '<i class="fas fa-circle-info mr-1"></i>Overnight hold — MTF/delivery charges apply. Tap info for full breakdown.';
+            ? `${global.MTFComponents.renderIcon('fa-bolt', { className: 'mr-1' })}Same-day dates — all brokers use intraday charge rules. Tap info for full breakdown.`
+            : `${global.MTFComponents.renderIcon('fa-circle-info', { className: 'mr-1' })}Overnight hold — MTF/delivery charges apply. Tap info for full breakdown.`;
         if (comparePanel) {
             comparePanel.innerHTML = `
                 <table class="table table-sm w-full w-full">

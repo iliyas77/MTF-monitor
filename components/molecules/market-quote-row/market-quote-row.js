@@ -50,7 +50,7 @@
             ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
             : '—';
         const removeBtn = q.removable
-            ? `<button type="button" class="market-quote-row__remove" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist"><i class="fas fa-times" aria-hidden="true"></i></button>`
+            ? `<button type="button" class="market-quote-row__remove" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist">${global.MTFComponents.renderIcon('fa-times', { size: 'sm' })}</button>`
             : '';
 
         return `<div class="market-quote-row" data-symbol="${escapeHtml(q.symbol || '')}" role="listitem">

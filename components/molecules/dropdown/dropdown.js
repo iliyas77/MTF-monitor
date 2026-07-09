@@ -36,7 +36,8 @@
     }
 
     function renderMenuIcon(icon, variant = 'muted') {
-        return `<span class="${menuIconClass(variant)}"><i class="fas ${icon}"></i></span>`;
+        const { renderIcon } = global.MTFComponents;
+        return `<span class="${menuIconClass(variant)}">${renderIcon(icon)}</span>`;
     }
 
     function renderActionDropdownItem(icon, variant, label, onclick, opts = {}) {
@@ -68,10 +69,12 @@
         const labelIdAttr = labelId ? ` id="${labelId}"` : '';
         const iconIdAttr = iconId ? ` id="${iconId}"` : '';
         const ariaAttr = ariaLabel ? ` aria-label="${ariaLabel}"` : '';
+        const { renderIcon } = global.MTFComponents;
+        const chevronClasses = DROPDOWN_CLASSES.selectChevron.replace(/^fas\s+fa-chevron-down\s*/, '');
         return `<button type="button" class="${triggerClass}"${idAttr} tabindex="0" role="button" aria-expanded="false"${ariaAttr}>
-            <span class="${menuIconClass(iconVariant)}"${iconIdAttr}><i class="fas ${icon}"></i></span>
+            <span class="${menuIconClass(iconVariant)}"${iconIdAttr}>${renderIcon(icon)}</span>
             <span class="${DROPDOWN_CLASSES.selectLabel}"${labelIdAttr}>${label}</span>
-            <i class="${DROPDOWN_CLASSES.selectChevron}"></i>
+            ${renderIcon('fa-chevron-down', { className: chevronClasses })}
         </button>`;
     }
 
@@ -98,7 +101,7 @@
         if (labelEl) labelEl.textContent = selected.label;
         if (iconEl) {
             iconEl.className = menuIconClass(selected.variant || 'muted');
-            iconEl.innerHTML = `<i class="fas ${selected.icon}"></i>`;
+            iconEl.innerHTML = global.MTFComponents.renderIcon(selected.icon);
         }
         if (menuEl) menuEl.innerHTML = buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues);
     }

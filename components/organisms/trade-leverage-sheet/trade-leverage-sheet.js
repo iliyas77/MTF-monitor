@@ -46,7 +46,7 @@
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
         leverageModalTradeId = id;
         const lev = Number(tx.leverage) || 1;
-        Sheet.open(`<i class="fas fa-layer-group mr-2"></i>${tx.company} Leverage`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'mr-2' })}${tx.company} Leverage`, `
             <p class="text-sm text-base-content/60 mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
             <div class="mb-3">
                 <label class="label-text font-normal text-base-content/65 mb-1">Leverage (X)</label>

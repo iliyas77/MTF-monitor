@@ -49,6 +49,7 @@
     }
 
     function chargesTable(buy, sell) {
+        const { renderIcon } = global.MTFComponents;
         const rows = [
             ['Brokerage', buy.brokerage, sell.brokerage],
             ['STT', buy.stt, sell.stt],
@@ -73,8 +74,8 @@
                     <thead class="bg-base-200">
                         <tr>
                             <th>Charge</th>
-                            <th class="text-end buy-price-col"><i class="fas fa-arrow-down mr-1"></i>Buy</th>
-                            <th class="text-end"><i class="fas fa-arrow-up text-error mr-1"></i>Sell</th>
+                            <th class="text-end buy-price-col">${renderIcon('fa-arrow-down', { className: 'mr-1' })}Buy</th>
+                            <th class="text-end">${renderIcon('fa-arrow-up', { colour: 'text-error', className: 'mr-1' })}Sell</th>
                             <th class="text-end">Total</th>
                         </tr>
                     </thead>
