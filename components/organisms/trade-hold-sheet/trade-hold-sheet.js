@@ -112,7 +112,7 @@
             ? '<p class="text-sm text-base-content/60 mb-3">Open trade — dates below drive interest and charge estimates.</p>'
             : '';
 
-        Sheet.open(`<i class="far fa-clock mr-2"></i>${tx.company} Holding`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-clock', { className: 'mr-2' })}${tx.company} Holding`, `
             ${openNote}
             <div class="grid grid-cols-2 gap-2 mb-3">
                 <div>

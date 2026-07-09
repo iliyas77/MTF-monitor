@@ -14,10 +14,10 @@
 
     function escapeHtml(str) {
         return String(str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
+            .replace(/&/g, '&')
+            .replace(/</g, '<')
+            .replace(/>/g, '>')
+            .replace(/"/g, '"');
     }
 
     function getTradeTargetPrice(t) {
@@ -94,9 +94,10 @@
     }
 
     function withRefreshIcon(html, loading, hasValue) {
+        const { renderIcon } = global.MTFComponents;
         if (!loading) return html;
-        if (!hasValue) return '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
-        return `${html} <i class="fas fa-spinner fa-spin trade-list-item__live-refresh-icon" aria-hidden="true"></i>`;
+        if (!hasValue) return renderIcon('fa-spinner', { className: 'fa-spin' });
+        return `${html} ${renderIcon('fa-spinner', { className: 'fa-spin trade-list-item__live-refresh-icon' })}`;
     }
 
     function renderTradeLiveMetricsRow(t, variant) {
@@ -133,6 +134,8 @@
         const gapHtml = withRefreshIcon(gapText, loading, price != null);
         const returnHtml = withRefreshIcon(escapeHtml(returnText), loading, price != null && liveReturn != null);
 
+        const { renderIcon } = global.MTFComponents;
+
         return `<div class="trade-list-item__row trade-list-item__row--live">
             <div class="trade-list-item__live-grid"
                 data-live-symbol="${escapeHtml(symbol)}"
@@ -143,7 +146,7 @@
                     aria-label="Refresh current market price"
                     title="Tap to refresh live prices">
                     <span class="trade-list-item__live-label">
-                        <i class="fas fa-chart-line trade-list-item__live-label-icon trade-list-item__live-price-icon" aria-hidden="true"></i>
+                        ${renderIcon('fa-chart-line', { className: 'trade-list-item__live-label-icon trade-list-item__live-price-icon' })}
                         Current Market
                     </span>
                     <span class="trade-list-item__live-price-value">${priceHtml}</span>
@@ -153,7 +156,7 @@
                     aria-label="Refresh distance to target"
                     title="Tap to refresh live prices">
                     <span class="trade-list-item__live-label">
-                        <i class="fas fa-bullseye trade-list-item__live-label-icon trade-list-item__live-target-icon" aria-hidden="true"></i>
+                        ${renderIcon('fa-bullseye', { className: 'trade-list-item__live-label-icon trade-list-item__live-target-icon' })}
                         Target
                     </span>
                     <span class="trade-list-item__live-target-value">${gapHtml}</span>
@@ -163,7 +166,7 @@
                     aria-label="Refresh return if sold now"
                     title="Tap to refresh live prices">
                     <span class="trade-list-item__live-label">
-                        <i class="fas fa-hand-holding-usd trade-list-item__live-label-icon trade-list-item__live-return-icon" aria-hidden="true"></i>
+                        ${renderIcon('fa-hand-holding-usd', { className: 'trade-list-item__live-label-icon trade-list-item__live-return-icon' })}
                         If Sold Now
                     </span>
                     <span class="trade-list-item__live-return-value">${returnHtml}</span>
@@ -184,6 +187,8 @@
             ? `<span class="trade-list-item__verified-label">Verified</span>`
             : '';
 
+        const { renderIcon } = global.MTFComponents;
+
         return `
             <article class="trade-list-item">
                 <div class="trade-list-item__row trade-list-item__row--buy">
@@ -202,7 +207,7 @@
                 <div class="trade-list-item__row trade-list-item__row--title">
                     <div class="trade-list-item__title">
                         <span class="trade-list-item__company-group">
-                            <i class="fas fa-chart-line trade-list-item__company-icon" aria-hidden="true"></i>
+                            ${renderIcon('fa-chart-line', { className: 'trade-list-item__company-icon' })}
                             <span class="trade-list-item__company-name">${company}</span>
                             ${brokerLabel}
                             ${verifiedLabel}

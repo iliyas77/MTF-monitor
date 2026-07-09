@@ -27,7 +27,7 @@
             { label: 'Qty', amount: tx.quantity, quantity: true, labelClass: 'quantity-label' },
             { label: 'Broker', amount: tx.broker || '—', tag: 'default' },
             { label: 'Leverage', amount: levDisplay, tag: 'accent' },
-            { label: 'Hold', amount: `<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d`, tag: 'default' },
+            { label: 'Hold', amount: `${global.MTFComponents.renderIcon('fa-clock', { className: 'mr-1 opacity-70' })}${daysHeld}d`, tag: 'default' },
             { label: 'Total Investment', amount: totalInv, tone: 'neutral', compact: true },
             { label: 'Your Margin', amount: ownMargin, tone: 'neutral', compact: true },
             { label: 'MTF Funded', amount: mtfAmt, tone: mtfAmt > 0 ? 'secondary' : 'neutral', compact: true },
@@ -67,9 +67,10 @@
             { label: 'Total Cost', amount: totalCost, tone: 'negative', decimals: true },
             { label: 'P&L', amount: net, tone: net >= 0 ? 'positive' : 'negative', compact: true }
         ];
+        const { renderIcon } = global.MTFComponents;
         return `
             <div class="trade-view-sheet__summary mt-4">
-                <div class="trade-view-sheet__summary-title"><i class="fas fa-calculator mr-2"></i>P&L Summary</div>
+                <div class="trade-view-sheet__summary-title">${renderIcon('fa-calculator', { className: 'mr-2' })}P&L Summary</div>
                 <div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>
             </div>
         `;

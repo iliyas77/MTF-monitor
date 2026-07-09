@@ -50,7 +50,7 @@
             </div>
         `;
 
-        Sheet.open(`<i class="fas fa-eye mr-2"></i>${tx.company}`, html, '');
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-eye', { className: 'mr-2' })}${tx.company}`, html, '');
     }
 
     global.MTFRegister({ openViewModal });

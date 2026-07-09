@@ -30,7 +30,8 @@
         const titleAttr = title ? ` title="${title}"` : '';
         const ariaAttr = ariaLabel ? ` aria-label="${ariaLabel}"` : '';
         const disabledAttr = disabled ? ' disabled' : '';
-        return `<button type="${type}" class="${base}${className ? ` ${className}` : ''}"${idAttr}${onclickAttr}${titleAttr}${ariaAttr}${disabledAttr}><i class="fas ${icon}"></i></button>`;
+        const { renderIcon } = global.MTFComponents;
+        return `<button type="${type}" class="${base}${className ? ` ${className}` : ''}"${idAttr}${onclickAttr}${titleAttr}${ariaAttr}${disabledAttr}>${renderIcon(icon, { size: 'sm' })}</button>`;
     }
 
     global.MTFRegister({

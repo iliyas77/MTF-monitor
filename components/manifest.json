@@ -9,6 +9,7 @@
     "components/atoms/button/button.js",
     "components/molecules/button-row/button-row.js",
     "components/atoms/label/label.js",
+    "components/atoms/icon/icon.js",
     "components/atoms/icon-button/icon-button.js",
     "components/atoms/filter-chip/filter-chip.js",
     "components/atoms/range-quick-button/range-quick-button.js",

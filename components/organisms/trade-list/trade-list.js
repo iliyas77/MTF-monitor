@@ -43,7 +43,7 @@
             <button type="button" class="trade-date-group__header trade-date-group__header--toggle" onclick="toggleTradeDateGroupExpand(this)" aria-expanded="${expanded}" aria-label="${expanded ? 'Collapse' : 'Expand'} trades for ${label}">
                 <div class="flex justify-between items-center gap-2">
                     <div class="flex items-center gap-2 min-w-0">
-                        <i class="fas fa-chevron-down trade-date-group__expand-icon${expanded ? ' trade-date-group__expand-icon--expanded' : ''}" aria-hidden="true"></i>
+                        ${global.MTFComponents.renderIcon('fa-chevron-down', { className: `trade-date-group__expand-icon${expanded ? ' trade-date-group__expand-icon--expanded' : ''}` })}
                         ${dateLabel}
                     </div>
                     <div class="flex items-center gap-2 shrink-0">

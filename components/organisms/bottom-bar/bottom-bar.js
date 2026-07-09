@@ -12,8 +12,9 @@
     ];
 
     function renderBottomBarItem(item) {
+        const { renderIcon } = global.MTFComponents;
         return `<button type="button" class="bottom-bar__item" data-page="${item.id}" aria-label="${item.label}">
-            <i class="fas ${item.icon} bottom-bar__icon" aria-hidden="true"></i>
+            ${renderIcon(item.icon, { className: 'bottom-bar__icon' })}
             <span class="bottom-bar__label">${item.label}</span>
         </button>`;
     }
@@ -23,7 +24,7 @@
         return `<div class="bottom-bar" id="bottomBar">
             <div class="bottom-bar__frame">
                 <button type="button" class="bottom-bar__fab" id="bottomBarFab" aria-label="${fabLabel}">
-                    <i class="fas fa-plus bottom-bar__fab-icon" aria-hidden="true"></i>
+                    ${global.MTFComponents.renderIcon('fa-plus', { className: 'bottom-bar__fab-icon' })}
                 </button>
                 <nav class="bottom-bar__nav" id="bottomBarNav" aria-label="Main navigation" style="--bottom-bar-cols: ${cols}">
                     ${items.map(renderBottomBarItem).join('')}

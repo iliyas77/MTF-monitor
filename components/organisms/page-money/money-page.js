@@ -189,7 +189,7 @@
         }
 
         if (entries.length === 0) {
-            listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-ghost" onclick="openMoneyPageFilterSheet()">Change filter</button></div>';
+            listEl.innerHTML = `<div class="text-center text-base-content/60 py-4">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="text-sm text-base-content/60 mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-ghost" onclick="openMoneyPageFilterSheet()">Change filter</button></div>`;
             return;
         }
 
@@ -268,12 +268,12 @@
         }
 
         if (allEntries.length === 0) {
-            listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-inbox mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-0">No deposits or withdrawals yet.</p></div>';
+            listEl.innerHTML = `<div class="text-center text-base-content/60 py-4">${global.MTFComponents.renderIcon('fa-inbox', { className: 'mb-2 opacity-25' })}<p class="text-sm text-base-content/60 mb-0">No deposits or withdrawals yet.</p></div>`;
             return;
         }
 
         if (entries.length === 0) {
-            listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-ghost mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>';
+            listEl.innerHTML = `<div class="text-center text-base-content/60 py-4">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="text-sm text-base-content/60 mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-ghost mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>`;
             return;
         }
 
@@ -290,11 +290,11 @@
                                 <div class="money-stat-amount money-stat-amount--right">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
                                 ${renderMoneyAmountWords(e.amount, 'right')}
                             </div>
-                            <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit" aria-label="Edit entry"><i class="fas fa-pen text-base-content/55"></i></button>
-                            <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8 text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry"><i class="fas fa-trash-alt"></i></button>
+                            <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit" aria-label="Edit entry">${global.MTFComponents.renderIcon('fa-pen', { colour: 'text-base-content/55' })}</button>
+                            <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8 text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry">${global.MTFComponents.renderIcon('fa-trash-alt')}</button>
                         </div>
                     </div>
-                    <div class="app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                    <div class="app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time">${global.MTFComponents.renderIcon('fa-clock', { className: 'mr-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
                     ${note}
                 </div>
             `;
@@ -386,7 +386,7 @@
         if (accountList) {
             const allEntries = getMoneyEntries();
             if (visibleAccounts.length === 0) {
-                accountList.innerHTML = '<div class="text-center text-base-content/60 py-6"><i class="fas fa-university mb-3 text-2xl opacity-40"></i><h6>No accounts yet</h6><p class="text-sm text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
+                accountList.innerHTML = `<div class="text-center text-base-content/60 py-6">${global.MTFComponents.renderIcon('fa-university', { size: 'lg', className: 'mb-3 opacity-40' })}<h6>No accounts yet</h6><p class="text-sm text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>`;
             } else {
                 accountList.innerHTML = visibleAccounts.map((stats) => {
                     const historyCount = allEntries.filter((e) => e.accountId === stats.account.id).length;
