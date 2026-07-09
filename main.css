@@ -867,7 +867,7 @@ html {
 
 .bottom-bar__nav {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(var(--bottom-bar-cols, 4), minmax(0, 1fr));
     align-items: stretch;
     width: 100%;
     box-sizing: border-box;
