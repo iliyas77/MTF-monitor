@@ -37,6 +37,7 @@
     "components/app-dialog/dialog.js",
     "components/loading-overlay/loading.js",
     "pages/more/more-hub-option.js",
+    "pages/more/app-version.js",
     "pages/more/more-hub.js",
     "pages/plan/plan-page.js",
     "pages/trades/trades-page.js",

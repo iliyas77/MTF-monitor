@@ -15,9 +15,16 @@ Whenever you edit **any** of these, run the production build before finishing:
 - Any file under `components/`
 - Any file under `pages/`
 - `components/manifest.json`
+- `app-version.json` (version + build stamp for More page)
 
 ```bash
 npm run build
+```
+
+To bump the More-page version and stamp date/time before shipping to your phone:
+
+```bash
+npm run ship
 ```
 
 Do this **voluntarily at the end of your turn** even if the user did not ask. Do not skip because hooks may also run — always confirm with `npm run build` after your edits.
