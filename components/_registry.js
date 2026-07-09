@@ -1,5 +1,5 @@
 /**
- * MTF component registry — each atom/molecule calls MTFRegister({ ... }).
+ * MTF component registry — each component calls MTFRegister({ ... }).
  */
 (function (global) {
     'use strict';

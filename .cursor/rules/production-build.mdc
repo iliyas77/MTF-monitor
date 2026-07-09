@@ -13,6 +13,7 @@ Whenever you edit **any** of these, run the production build before finishing:
 
 - `main.html`, `main.css`, `main.js`
 - Any file under `components/`
+- Any file under `pages/`
 - `components/manifest.json`
 
 ```bash
