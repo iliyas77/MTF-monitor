@@ -731,6 +731,64 @@
     <!-- Firebase (compat SDK) for cloud sync -->
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <!-- COMPONENT SCRIPTS -->
+    <script src="components/_registry.js"></script>
+    <script src="components/atoms/format-helpers/format-helpers.js"></script>
+    <script src="components/atoms/tag/tag.js"></script>
+    <script src="components/atoms/amount/amount.js"></script>
+    <script src="components/atoms/date-chip/date-chip.js"></script>
+    <script src="components/atoms/date-field/date-field.js"></script>
+    <script src="components/atoms/button/button.js"></script>
+    <script src="components/molecules/button-row/button-row.js"></script>
+    <script src="components/atoms/label/label.js"></script>
+    <script src="components/atoms/icon-button/icon-button.js"></script>
+    <script src="components/atoms/filter-chip/filter-chip.js"></script>
+    <script src="components/atoms/range-quick-button/range-quick-button.js"></script>
+    <script src="components/atoms/toast/toast.js"></script>
+    <script src="components/atoms/empty-state/empty-state.js"></script>
+    <script src="components/atoms/money-entry-time/money-entry-time.js"></script>
+    <script src="components/molecules/search-bar/search-bar.js"></script>
+    <script src="components/molecules/dropdown/dropdown.js"></script>
+    <script src="components/molecules/money-value-block/money-value-block.js"></script>
+    <script src="components/molecules/trade-summary-row/trade-summary-row.js"></script>
+    <script src="components/molecules/trade-detail-row/trade-detail-row.js"></script>
+    <script src="components/molecules/form-field/form-field.js"></script>
+    <script src="components/molecules/trade-list-meta/trade-list-meta.js"></script>
+    <script src="components/molecules/trade-list-detail-values/trade-list-detail-values.js"></script>
+    <script src="components/molecules/trade-list-details/trade-list-details.js"></script>
+    <script src="components/molecules/trade-list-actions/trade-list-actions.js"></script>
+    <script src="components/molecules/page-empty-state/page-empty-state.js"></script>
+    <script src="components/molecules/more-hub-option/more-hub-option.js"></script>
+    <script src="components/molecules/money-filter-list-item/money-filter-list-item.js"></script>
+    <script src="components/molecules/money-account-card/money-account-card.js"></script>
+    <script src="components/organisms/trade-list-item/trade-list-item.js"></script>
+    <script src="components/organisms/trade-list/trade-list.js"></script>
+    <script src="components/organisms/bottom-bar/bottom-bar.js"></script>
+    <script src="components/organisms/app-header/app-header.js"></script>
+    <script src="components/organisms/bottom-sheet/sheet.js"></script>
+    <script src="components/organisms/app-dialog/dialog.js"></script>
+    <script src="components/organisms/loading-overlay/loading.js"></script>
+    <script src="components/organisms/more-hub/more-hub.js"></script>
+    <script src="components/organisms/page-plan/plan-page.js"></script>
+    <script src="components/organisms/page-trades/trades-page.js"></script>
+    <script src="components/organisms/page-past/past-page.js"></script>
+    <script src="components/organisms/page-search/search-page.js"></script>
+    <script src="components/organisms/page-transactions/transactions-page.js"></script>
+    <script src="components/organisms/page-settings/settings-page.js"></script>
+    <script src="components/organisms/page-money/money-page.js"></script>
+    <script src="components/molecules/trade-sheet-meta/trade-sheet-meta.js"></script>
+    <script src="components/molecules/charges-table/charges-table.js"></script>
+    <script src="components/molecules/trade-view-details/trade-view-details.js"></script>
+    <script src="components/organisms/page-mtf-calculator/mtf-calculator-page.js"></script>
+    <script src="components/organisms/trade-view-sheet/trade-view-sheet.js"></script>
+    <script src="components/organisms/trade-charges-sheet/trade-charges-sheet.js"></script>
+    <script src="components/organisms/trade-interest-sheet/trade-interest-sheet.js"></script>
+    <script src="components/organisms/trade-target-sell-sheet/trade-target-sell-sheet.js"></script>
+    <script src="components/organisms/trade-buy-price-sheet/trade-buy-price-sheet.js"></script>
+    <script src="components/organisms/trade-leverage-sheet/trade-leverage-sheet.js"></script>
+    <script src="components/organisms/trade-hold-sheet/trade-hold-sheet.js"></script>
+    <script src="components/organisms/trade-modal/trade-modal.js"></script>
+    <script src="components/organisms/money-entry-modal/money-entry-modal.js"></script>
     <script src="main.js"></script>
 
     <script>
@@ -738,7 +796,7 @@
         //  MTF PROFIT TRACKER – FINAL REFINED VERSION
         // ======================================================================
 
-        (function() {
+        (function(global) {
             'use strict';
 
             const {
@@ -774,23 +832,114 @@
                 renderAppButtonRow,
                 paintAppButton,
                 resolveAppButtonVariant,
-                BottomBar
+                BottomBar,
+                LABEL_CLASSES,
+                ICON_BUTTON_CLASSES,
+                renderEmptyState,
+                showToast,
+                renderSearchBar,
+                DROPDOWN_CLASSES,
+                menuIconClass,
+                renderActionDropdownItem,
+                renderDropdownMenu,
+                buildAppDropdownItems,
+                syncAppSelectDropdown,
+                renderMoneyValueBlock,
+                paintTradeRangeSummary,
+                renderTradeDetailRow,
+                renderFormField,
+                renderDetailRow,
+                renderOpenTradeListItem,
+                renderPastTradeListItem,
+                renderPlanTradeListItem,
+                renderTradesList,
+                renderGroupedTrades,
+                groupTradesByDate,
+                renderDateGroupHeader,
+                Sheet,
+                AppDialog,
+                closeSheet,
+                closeDialog,
+                confirmAction,
+                showLoading,
+                hideLoading,
+                updateAppHeader,
+                renderPlanTrades,
+                renderCurrentView,
+                renderPastTrades,
+                renderSearchResults,
+                renderTransactions,
+                renderSettings,
+                renderSettingsMoneyAccounts,
+                formatMoneyEntryTimeDisplay,
+                sortMoneyEntries,
+                renderMoney,
+                renderAccountHistorySheet,
+                renderMtfCalculator,
+                updateMtfCalculator,
+                setCalcSellPct,
+                onCalcBuyPriceInput,
+                onCalcSellPriceInput,
+                addCalcSellPctPreset,
+                onCalcDateInput,
+                setCalcSameDay,
+                setCalcTodayPair,
+                openCalcBreakdownSheet,
+                openViewModal,
+                openChargesModal,
+                openInterestModal,
+                openTargetModal,
+                setTargetSellPct,
+                applyTargetSellPctCustom,
+                onTargetSellPriceInput,
+                saveTargetSellPrice,
+                openBuyPriceModal,
+                saveBuyPrice,
+                openLeverageModal,
+                onLeverageModalInput,
+                saveLeverage,
+                openHoldModal,
+                onHoldModalDateInput,
+                onHoldModalDaysInput,
+                setHoldModalSameDay,
+                setHoldModalTodayPair,
+                saveHoldDates,
+                renderTxModalFooter,
+                setTxModalMode,
+                openViewFromEditor,
+                deleteTradeFromEditor,
+                onTxStatusChange,
+                updatePreview,
+                openAddModal,
+                openEditModal,
+                saveTransaction,
+                initTradeModal,
+                renderMoneyEntryFooter,
+                openMoneyEntryModal,
+                openEditMoneyEntryModal,
+                saveMoneyEntry,
+                onMoneyEntryTypeToggle,
+                setMoneyEntryType,
+                toggleMoneyEntryDateTimeEdit,
+                onMoneyEntryDateTimeChange,
+                chargeSides,
+                chargesTable
             } = window.MTFComponents;
 
             // ---------- UI HELPERS ----------
             const UI = {
                 card: 'card bg-base-100 rounded-2xl',
-                statLabel: 'text-xs uppercase text-base-content/50 font-medium tracking-wide',
-                sheetLabel: 'block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5',
+                statLabel: LABEL_CLASSES.stat,
+                sheetLabel: LABEL_CLASSES.sheet,
                 heroValue: 'font-bold text-6xl leading-none mb-3',
-                iconBtn: 'btn btn-ghost btn-circle border border-base-200 shrink-0 focus:outline-none text-base-content/55',
+                iconBtn: ICON_BUTTON_CLASSES.default,
                 toolbarRow: 'flex items-center gap-2 mb-3',
                 toolbarInput: 'input input-bordered border-base-200 w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary/50 text-base-content/80 placeholder:text-base-content/40',
                 toolbarIconBtn: 'btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none text-base-content/55 p-0',
                 actionBtn: 'btn btn-sm min-h-0 h-9 w-9 rounded-xl p-0 flex items-center justify-center',
                 actionBtnSm: 'btn btn-sm min-h-0 h-8 w-8 rounded-lg p-0 flex items-center justify-center',
                 tradeStatBox: 'flex-1 bg-base-200/25 border border-base-200/60 rounded-xl p-2.5 text-center min-w-0',
-                tradeStatLabel: 'text-[0.65rem] uppercase text-base-content/45 font-medium leading-tight',
+                tradeStatLabel: LABEL_CLASSES.tradeStat,
                 tradeStatValue: 'text-base font-semibold text-base-content/90 whitespace-nowrap tabular-nums tracking-tight mt-0.5',
                 tradeStatValueSuccess: 'text-base font-semibold text-success whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-success/15',
                 tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15 gr-danger-soft-text',
@@ -798,20 +947,12 @@
                 moneyToneNegative: 'bg-error/15 text-error',
                 moneyActionDeposit: 'deposit-action-btn',
                 moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
-                selectTrigger: 'btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-medium h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none text-base-content/75',
-                selectLabel: 'truncate max-w-[5.5rem]',
-                selectChevron: 'text-[0.6rem] opacity-50 ml-auto',
-                dropdownItemActive: 'app-dropdown-item--active',
-                dropdownMenu: 'dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]',
-                menuIconStyles: {
-                    deposit: 'deposit-menu-icon', withdraw: 'bg-error/15 text-error',
-                    history: 'bg-base-200 text-base-content/60', view: 'bg-base-200 text-base-content/60',
-                    edit: 'bg-base-200 text-base-content/55', copy: 'bg-base-200 text-base-content/55',
-                    muted: 'bg-base-200 text-base-content/55', charges: 'bg-base-200 text-base-content/55',
-                    interest: 'bg-warning/20 text-warning', delete: 'bg-error/20 text-error',
-                    account: 'bg-base-200 text-base-content/60', broker: 'app-menu-icon--broker'
-                },
-                menuIcon: (v) => `inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 ${UI.menuIconStyles[v] || UI.menuIconStyles.muted}`,
+                selectTrigger: DROPDOWN_CLASSES.selectTrigger,
+                selectLabel: DROPDOWN_CLASSES.selectLabel,
+                selectChevron: DROPDOWN_CLASSES.selectChevron,
+                dropdownItemActive: DROPDOWN_CLASSES.itemActive,
+                dropdownMenu: DROPDOWN_CLASSES.menu,
+                menuIcon: menuIconClass,
                 summaryCard(heroIcon, heroLabel, heroId, stats, cardId) {
                     const cols = stats.length === 2 ? 'grid-cols-2' : 'grid-cols-3';
                     const statHtml = stats.map(s => `
@@ -825,11 +966,7 @@
                         </div></div>`;
                 },
                 searchBar(inputId, clearId, placeholder, onInput, onClear, extraClass = '') {
-                    return `<div class="relative mb-3 ${extraClass}">
-                        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                        <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10" id="${inputId}" placeholder="${placeholder}" oninput="${onInput}(this.value)" autocomplete="off" />
-                        <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="${clearId}" onclick="${onClear}()" title="Clear"><i class="fas fa-times"></i></button>
-                    </div>`;
+                    return renderSearchBar({ inputId, clearId, placeholder, onInput, onClear, extraClass });
                 },
                 subHeader(title, backFn, icon = '') {
                     return `<div class="flex items-center gap-3 mb-4">
@@ -837,110 +974,20 @@
                         <h6 class="font-semibold text-base-content/80 mb-0">${icon ? `<i class="fas ${icon} mr-2"></i>` : ''}${title}</h6></div>`;
                 },
                 detailRow(label, value, extra = '') {
-                    return `<div class="flex justify-between gap-4 py-2 border-b border-base-200 ${extra}"><span class="text-sm text-base-content/55">${label}</span><span class="text-sm font-medium text-base-content/80 text-right">${value}</span></div>`;
+                    return renderDetailRow(label, value, extra);
                 },
                 emptyState(icon, msg) {
-                    return `<div class="text-center text-base-content/50 py-5"><i class="fas ${icon} text-4xl opacity-25 block mb-2"></i><p class="mb-0">${msg}</p></div>`;
+                    return renderEmptyState(icon, msg);
                 },
                 sheetDialog: 'modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0',
                 sheetBox: 'modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200',
                 actionDropdown(items) {
-                    return `<ul class="${UI.dropdownMenu}">${items}</ul>`;
+                    return renderDropdownMenu(items);
                 },
                 dropdownItem(icon, variant, label, onclick, danger = false) {
-                    return `<li><button type="button" class="flex items-center gap-3 w-full ${danger ? 'text-error' : ''}" onclick="${onclick}">
-                        <span class="${UI.menuIcon(variant)}"><i class="fas ${icon}"></i></span><span class="flex-1 text-left">${label}</span></button></li>`;
+                    return renderActionDropdownItem(icon, variant, label, onclick, { danger });
                 }
             };
-
-            function buildTradeMetaTags(tx, extras = []) {
-                const lev = tx.leverage || 1;
-                const levDisplay = lev > 1 ? `${parseFloat(Number(lev).toFixed(2))}x` : '1x';
-                const daysHeld = (tx.buyDate && tx.sellDate)
-                    ? calcInterestDays(tx.buyDate, tx.sellDate)
-                    : getDaysHeld(tx);
-                const holdLabel = daysHeld === 1 ? '1d hold' : `${daysHeld}d hold`;
-                const tags = [
-                    appTag(tx.broker || '—'),
-                    appTag(levDisplay, 'accent'),
-                    appTag(`<i class="far fa-clock mr-1 opacity-70"></i>${holdLabel}`)
-                ].concat(extras);
-                return `<div class="flex flex-wrap gap-1.5 justify-center mb-3">${tags.join('')}</div>`;
-            }
-
-            function interestSheetRow(label, value, valueClass = '') {
-                return `
-                    <div class="interest-sheet__row">
-                        <span class="interest-sheet__row-label">${label}</span>
-                        <span class="interest-sheet__row-value ${valueClass}">${value}</span>
-                    </div>
-                `;
-            }
-
-            const Sheet = {
-                el: () => document.getElementById('appSheet'),
-                titleEl: () => document.getElementById('appSheetTitle'),
-                bodyEl: () => document.getElementById('appSheetBody'),
-                footerEl: () => document.getElementById('appSheetFooter'),
-                _home: () => document.getElementById('sheetPanels'),
-                _activePanel: null,
-                open(title, content, footerHtml = '', opts = {}) {
-                    const body = Sheet.bodyEl();
-                    const footer = Sheet.footerEl();
-                    Sheet.titleEl().innerHTML = title;
-                    if (Sheet._activePanel) {
-                        Sheet._home()?.appendChild(Sheet._activePanel);
-                        Sheet._activePanel = null;
-                    }
-                    body.innerHTML = '';
-                    if (typeof content === 'string') {
-                        body.innerHTML = content;
-                    } else if (content instanceof HTMLElement) {
-                        body.appendChild(content);
-                        Sheet._activePanel = content;
-                    }
-                    footer.innerHTML = footerHtml || '';
-                    footer.classList.toggle('hidden', !footerHtml);
-                    initDateFields(body);
-                    Sheet.el().showModal();
-                },
-                mountPanel(title, panelId, footerHtml) {
-                    const panel = document.getElementById(panelId);
-                    if (panel) Sheet.open(title, panel, footerHtml);
-                },
-                close() {
-                    const panel = Sheet._activePanel;
-                    const home = Sheet._home();
-                    if (panel && home) home.appendChild(panel);
-                    Sheet._activePanel = null;
-                    Sheet.el()?.close();
-                },
-                show() { Sheet.el()?.showModal(); },
-                hide() { Sheet.close(); }
-            };
-
-            const AppDialog = {
-                el: () => document.getElementById('appDialog'),
-                titleEl: () => document.getElementById('appDialogTitle'),
-                bodyEl: () => document.getElementById('appDialogBody'),
-                footerEl: () => document.getElementById('appDialogFooter'),
-                open(title, bodyHtml, footerHtml) {
-                    AppDialog.titleEl().innerHTML = title;
-                    AppDialog.bodyEl().innerHTML = bodyHtml;
-                    AppDialog.footerEl().innerHTML = footerHtml || '';
-                    initDateFields(AppDialog.bodyEl());
-                    AppDialog.el().showModal();
-                },
-                close() { AppDialog.el()?.close(); },
-                hide() { AppDialog.close(); }
-            };
-
-            function closeSheet() { Sheet.close(); }
-            function closeDialog() { AppDialog.close(); }
-            window.closeSheet = closeSheet;
-            window.closeDialog = closeDialog;
-
-
 
             // ======================================================================
             //  FIREBASE CLOUD SYNC CONFIG
@@ -2070,48 +2117,7 @@
             }
 
             // ---------- APP BUTTON WIRING ----------
-            function renderTxModalFooter(isEdit = false) {
-                const footer = document.getElementById('txModalFooter');
-                if (!footer) return;
-                const deleteBtn = isEdit
-                    ? `<div class="mt-2">${renderAppButton('Delete Trade', { variant: 'danger', onclick: 'deleteTradeFromEditor()', icon: 'fa-trash-alt', fullWidth: true })}</div>`
-                    : '';
-                footer.innerHTML = `${renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
-                    actionId: 'txSaveBtn',
-                    actionOnClick: 'saveTransaction()'
-                })}${deleteBtn}`;
-            }
-
-            function setTxModalMode(isEdit = false) {
-                renderTxModalFooter(isEdit);
-                const viewBtn = document.getElementById('txViewBtn');
-                if (viewBtn) viewBtn.classList.toggle('hidden', !isEdit);
-            }
-
-            function openViewFromEditor() {
-                const id = document.getElementById('txEditId')?.value;
-                if (!id) return;
-                openViewModal(id);
-            }
-
-            function deleteTradeFromEditor() {
-                const id = document.getElementById('txEditId')?.value;
-                if (!id) return;
-                confirmDelete(id);
-            }
-
-            function renderMoneyEntryFooter(label, icon = 'fa-plus') {
-                const footer = document.getElementById('moneyEntryFooter');
-                if (!footer) return;
-                footer.innerHTML = renderAppButton(label, {
-                    variant: 'action',
-                    id: 'moneyEntrySaveBtn',
-                    onclick: 'saveMoneyEntry()',
-                    icon,
-                    fullWidth: true
-                });
-            }
-
+            // trade modal → components/organisms/trade-modal/trade-modal.js
             function renderSyncConnectRow() {
                 const row = document.getElementById('syncConnectRow');
                 if (!row) return;
@@ -2170,6 +2176,11 @@
                 }
             }
 
+            function initModals() {
+                initAppButtons();
+                initTradeModal();
+            }
+
             // ---------- FORMAT HELPERS ----------
             function fmtDate(d) {
                 if (!d) return '-';
@@ -2201,77 +2212,10 @@
                 const sign = n >= 0 ? '+' : '';
                 return sign + n.toFixed(2) + '%';
             }
-            function formatSellGainPctLabel(buyPrice, sellPrice) {
-                const buy = Number(buyPrice) || 0;
-                const sell = Number(sellPrice) || 0;
-                if (buy <= 0 || sell <= 0) return null;
-                const pct = ((sell - buy) / buy) * 100;
-                const sign = pct >= 0 ? '+' : '-';
-                const num = Math.abs(pct).toFixed(2);
-                return `(${sign}${num}%)`;
-            }
-            function renderTradeSellDetailValue(buyPrice, sellPrice) {
-                const sell = fmtDec(sellPrice);
-                const pctLabel = formatSellGainPctLabel(buyPrice, sellPrice);
-                if (!pctLabel) {
-                    return `<span class="trade-list-item__detail-value--sell">${sell}</span>`;
-                }
-                return `
-                    <span class="trade-list-item__detail-value--sell">${sell}</span>
-                    <span class="trade-list-item__sell-pct-tag">${pctLabel}</span>
-                `;
-            }
-            function renderTradeInterestDetailValue(t, interestAmount) {
-                const interest = fmtDec(interestAmount);
-                const d = interestDetails(t);
-                if (d.perDayInterest <= 0 || d.days <= 0) {
-                    return `<span class="trade-list-item__detail-value--interest">${interest}</span>`;
-                }
-                const breakdown = `(${fmtDec(d.perDayInterest)} × ${d.days}d)`;
-                return `
-                    <span class="trade-list-item__detail-value--interest">${interest}</span>
-                    <span class="trade-list-item__detail-breakdown-tag">${breakdown}</span>
-                `;
-            }
             function pnlClass(n) {
                 return (n || 0) >= 0
                     ? 'text-success bg-success/15 rounded-lg px-1.5 py-0.5'
                     : 'text-error bg-error/15 gr-danger-soft-text rounded-lg px-1.5 py-0.5';
-            }
-
-            // ---------- TOAST ----------
-            function showToast(msg, type = 'success') {
-                const container = document.getElementById('toastContainer');
-                const colors = { success: 'alert-success', danger: 'alert-error', warning: 'alert-warning', info: 'alert-info' };
-                const div = document.createElement('div');
-                div.className = `alert ${colors[type] || colors.info} mb-2 text-center rounded-2xl`;
-                div.innerHTML = msg;
-                container.appendChild(div);
-                setTimeout(() => { if (div.parentNode) div.remove(); }, 3500);
-            }
-
-            // ---------- LOADING OVERLAY ----------
-            let loadingCount = 0;
-            let loadingCancelInit = false;
-            function showLoading() {
-                loadingCount++;
-                if (loadingCount === 1) {
-                    const el = document.getElementById('appLoading');
-                    if (el) {
-                        if (!loadingCancelInit) {
-                            loadingCancelInit = true;
-                            el.addEventListener('cancel', (e) => e.preventDefault());
-                        }
-                        if (!el.open) el.showModal();
-                    }
-                }
-            }
-            function hideLoading() {
-                loadingCount = Math.max(0, loadingCount - 1);
-                if (loadingCount === 0) {
-                    const el = document.getElementById('appLoading');
-                    if (el && el.open) el.close();
-                }
             }
 
             // ---------- FILTER SHEET ----------
@@ -2408,38 +2352,6 @@
                 updateAppHeader(pageId);
             }
 
-            const moreFeatureTitles = {
-                money: '<i class="fas fa-coins mr-2"></i>Money',
-                transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
-                'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
-            };
-
-            function updateAppHeader(pageId) {
-                const def = document.getElementById('appHeaderDefault');
-                const settings = document.getElementById('appHeaderSettings');
-                const subpage = document.getElementById('appHeaderSubpage');
-                const subpageTitle = document.getElementById('appHeaderSubpageTitle');
-                if (!def || !settings) return;
-
-                const onSettings = pageId === 'page-settings';
-                const onSearch = pageId === 'page-search';
-                const moreFeature = Object.entries(moreFeatureMap).find(([, id]) => id === pageId)?.[0];
-                const onSubpage = !!moreFeature;
-
-                def.classList.toggle('hidden', onSettings || onSubpage || onSearch);
-                settings.classList.toggle('hidden', !onSettings || onSearch);
-                if (subpage) subpage.classList.toggle('hidden', !onSubpage || onSearch);
-                if (subpageTitle && moreFeature) {
-                    subpageTitle.innerHTML = moreFeatureTitles[moreFeature] || '';
-                }
-
-                const searchBtn = document.getElementById('appHeaderSearchBtn');
-                if (searchBtn) {
-                    const showSearch = pageId === 'page-trades' || pageId === 'page-past';
-                    searchBtn.classList.toggle('hidden', !showSearch);
-                }
-            }
-
             function setBottomNavActive(page) {
                 BottomBar.setActive(page);
             }
@@ -2532,34 +2444,6 @@
                 { value: 'Dhan', label: 'Dhan', icon: 'fa-chart-line', variant: 'broker' },
                 { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' }
             ];
-
-            function buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues) {
-                return options.map(o => {
-                    const active = o.value === selectedValue ? ` ${UI.dropdownItemActive}` : '';
-                    const danger = o.danger ? ' text-error' : '';
-                    const badge = o.badge ? appTag(o.badge, 'accent') : '';
-                    const arg = escapeValues
-                        ? `decodeURIComponent('${encodeURIComponent(o.value)}')`
-                        : `'${String(o.value).replace(/'/g, "\\'")}'`;
-                    return `<li><button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200${active}${danger}" onclick="${selectHandler}(${arg})">
-                        <span class="${UI.menuIcon(o.variant || 'muted')}"><i class="fas ${o.icon}"></i></span>
-                        <span class="flex-1 text-left">${o.label}</span>${badge}
-                    </button></li>`;
-                }).join('');
-            }
-
-            function syncAppSelectDropdown({ options, selectedValue, labelId, iconId, menuId, selectHandler, escapeValues }) {
-                const selected = options.find(o => o.value === selectedValue) || options[0];
-                const labelEl = document.getElementById(labelId);
-                const iconEl = document.getElementById(iconId);
-                const menuEl = document.getElementById(menuId);
-                if (labelEl) labelEl.textContent = selected.label;
-                if (iconEl) {
-                    iconEl.className = UI.menuIcon(selected.variant || 'muted');
-                    iconEl.innerHTML = `<i class="fas ${selected.icon}"></i>`;
-                }
-                if (menuEl) menuEl.innerHTML = buildAppDropdownItems(options, selectedValue, selectHandler, escapeValues);
-            }
 
             function setFilterBtnHighlight(btn, active) {
                 if (!btn) return;
@@ -2760,357 +2644,6 @@
                 });
             }
 
-            function renderTradeDetailRow(opts) {
-                const {
-                    label,
-                    amount,
-                    tone = 'neutral',
-                    decimals = false,
-                    compact = false,
-                    plain = false,
-                    quantity = false,
-                    tag = false,
-                    labelClass = ''
-                } = opts;
-                let valueHtml;
-                if (tag) {
-                    valueHtml = appTag(amount, tag === true ? 'default' : tag);
-                } else if (plain) {
-                    valueHtml = `<span class="trade-detail-row__plain tabular-nums">${amount}</span>`;
-                } else if (quantity) {
-                    valueHtml = renderQuantity(amount, { size: 'sm', align: 'right', pill: true });
-                } else {
-                    valueHtml = renderAmount(amount, { size: 'sm', tone, decimals, compact, align: 'right', pill: true });
-                }
-                return `<div class="trade-detail-row">
-                    <span class="trade-detail-row__label ${labelClass}">${label}</span>
-                    <div class="trade-detail-row__value">${valueHtml}</div>
-                </div>`;
-            }
-
-            function renderTradeDetailsList(t) {
-                const tx = resolveTradeForDisplay(t);
-                const bd = tx.breakdown || {};
-                const totalInv = tx.totalInvestment || (tx.quantity * tx.buyPrice) || 0;
-                const ownMargin = tx.ownMargin || totalInv;
-                const mtfAmt = tx.mtfAmount || 0;
-                const gross = tx.grossProfit || 0;
-                const lev = tx.leverage || 1;
-                const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
-                const daysHeld = getDaysHeld(tx);
-                const rows = [
-                    { label: 'Buy', amount: tx.buyPrice, tone: 'secondary', decimals: true, labelClass: 'buy-price-label' },
-                    { label: 'Sell', amount: tx.sellPrice, tone: 'positive', decimals: true },
-                    { label: 'Qty', amount: tx.quantity, quantity: true, labelClass: 'quantity-label' },
-                    { label: 'Broker', amount: tx.broker || '—', tag: 'default' },
-                    { label: 'Leverage', amount: levDisplay, tag: 'accent' },
-                    { label: 'Hold', amount: `<i class="far fa-clock mr-1 opacity-70"></i>${daysHeld}d`, tag: 'default' },
-                    { label: 'Total Investment', amount: totalInv, tone: 'neutral', compact: true },
-                    { label: 'Your Margin', amount: ownMargin, tone: 'neutral', compact: true },
-                    { label: 'MTF Funded', amount: mtfAmt, tone: mtfAmt > 0 ? 'secondary' : 'neutral', compact: true },
-                    { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
-                    { label: 'MTF Interest', amount: tx.interest || 0, tone: 'warning', decimals: true },
-                    { label: 'Total Charges', amount: tx.charges || 0, tone: 'negative', decimals: true }
-                ];
-                const chargeItems = [
-                    { key: 'brokerage', label: 'Brokerage' },
-                    { key: 'stt', label: 'STT' },
-                    { key: 'exchange', label: 'Exchange' },
-                    { key: 'sebi', label: 'SEBI' },
-                    { key: 'stamp', label: 'Stamp Duty' },
-                    { key: 'gst', label: 'GST' },
-                    { key: 'pledge', label: 'Pledge' },
-                    { key: 'unpledge', label: 'Unpledge' },
-                    { key: 'dp', label: 'DP Charges' }
-                ].filter(i => (bd[i.key] || 0) > 0);
-                chargeItems.forEach(i => {
-                    rows.push({ label: i.label, amount: bd[i.key], tone: 'negative', decimals: true });
-                });
-                return `<div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>`;
-            }
-
-            function renderTradeViewPnLSummary(t) {
-                const tx = resolveTradeForDisplay(t);
-                const gross = tx.grossProfit || 0;
-                const interest = tx.interest || 0;
-                const charges = tx.charges || 0;
-                const totalCost = charges + interest;
-                const net = tx.netProfit || 0;
-                const rows = [
-                    { label: 'Gross Profit', amount: gross, tone: gross >= 0 ? 'positive' : 'negative', compact: true },
-                    { label: 'MTF Interest', amount: interest, tone: 'warning', decimals: true },
-                    { label: 'Total Charges', amount: charges, tone: 'negative', decimals: true },
-                    { label: 'Total Cost', amount: totalCost, tone: 'negative', decimals: true },
-                    { label: 'P&L', amount: net, tone: net >= 0 ? 'positive' : 'negative', compact: true }
-                ];
-                return `
-                    <div class="trade-view-sheet__summary mt-4">
-                        <div class="trade-view-sheet__summary-title"><i class="fas fa-calculator mr-2"></i>P&L Summary</div>
-                        <div class="trade-detail-list">${rows.map(renderTradeDetailRow).join('')}</div>
-                    </div>
-                `;
-            }
-
-            function renderTradeCardPnl(amount, opts = {}) {
-                const {
-                    size = 'sm',
-                    compact = false,
-                    className = 'trade-list-item__pnl',
-                    groupClass = 'trade-list-item__pnl-group'
-                } = opts;
-                return `
-                    <span class="trade-list-item__meta-group ${groupClass}">
-                        <span class="trade-list-item__meta-label">P&L</span>
-                        ${renderAmount(amount, { size, compact, showSign: true, align: 'right', pill: false, className })}
-                    </span>
-                `;
-            }
-
-            function renderTradeListItemHoldMeta(t) {
-                const daysHeld = getDaysHeld(t);
-                const holdText = daysHeld === 1 ? '1 day' : `${daysHeld} days`;
-                return `
-                    <button type="button" class="trade-list-item__meta-group trade-list-item__hold-meta" onclick="openHoldModal('${t.id}')" aria-label="Edit holding period">
-                        <span class="trade-list-item__meta-label">Hold</span>
-                        <span class="trade-list-item__meta-value trade-list-item__meta-value--hold">${holdText}</span>
-                    </button>
-                `;
-            }
-
-            function renderTradeListItemLeverageMeta(t) {
-                const leverage = formatTradeLeverageLabel(t);
-                return `
-                    <button type="button" class="trade-list-item__meta-group trade-list-item__lev-meta" onclick="openLeverageModal('${t.id}')" aria-label="Edit leverage">
-                        <span class="trade-list-item__meta-label">Lev</span>
-                        <span class="trade-list-item__meta-value trade-list-item__meta-value--lev">${leverage}</span>
-                    </button>
-                `;
-            }
-
-            function renderTradeListItemDetails(t) {
-                const isOpen = (t.status || 'closed') === 'open';
-                const metrics = resolveTradeMetrics(t);
-                const buy = fmtDec(t.buyPrice || 0);
-                const sellHtml = renderTradeSellDetailValue(t.buyPrice, metrics.sellPrice);
-                const interestHtml = renderTradeInterestDetailValue(t, metrics.interest);
-                const charges = fmtDec(metrics.charges);
-                const buyDate = t.buyDate ? fmtDateShort(t.buyDate) : '—';
-                const sellDate = t.sellDate ? fmtDateShort(t.sellDate) : '—';
-                const isPast = !isOpen;
-                const buyOnclick = isPast ? `openBuyPriceModal('${t.id}')` : '';
-                const sellOnclick = `openTargetModal('${t.id}')`;
-                const detailCell = (label, value, valueClass = '', onclick = '') => {
-                    const Tag = onclick ? 'button' : 'div';
-                    const attrs = onclick
-                        ? ` type="button" class="trade-list-item__detail-cell trade-list-item__detail-cell--clickable" onclick="${onclick}"`
-                        : ` class="trade-list-item__detail-cell"`;
-                    return `
-                        <${Tag}${attrs}>
-                            <span class="trade-list-item__detail-label">${label}</span>
-                            <span class="trade-list-item__detail-value ${valueClass}">${value}</span>
-                        </${Tag}>
-                    `;
-                };
-                return `
-                    <div class="trade-list-item__details">
-                        <div class="trade-list-item__details-grid">
-                            ${detailCell('Buy', buy, 'trade-list-item__detail-value--buy', buyOnclick)}
-                            ${detailCell('Sell', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick)}
-                            ${detailCell('Interest', interestHtml, 'trade-list-item__detail-value--interest-wrap', `openInterestModal('${t.id}')`)}
-                            ${detailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`)}
-                            ${detailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
-                            ${detailCell('Sold', sellDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
-                        </div>
-                    </div>
-                `;
-            }
-
-            function renderTradeListItemActions(t, variant = 'open') {
-                const isPast = variant === 'past';
-                const btn = (label, onclick, btnVariant = 'tonal', icon = '', className = 'trade-list-item__action-btn') =>
-                    renderAppButton(label, { variant: btnVariant, size: 'sm', onclick, icon, className });
-                const copyBtn = isPast ? btn('Copy', `confirmCopy('${t.id}')`, 'tonal', 'fa-copy') : '';
-                const verifyBtn = isPast && !t.verified
-                    ? btn('Verified', `confirmVerifyTrade('${t.id}')`, 'tonal', 'fa-check-circle')
-                    : '';
-                const executeBtn = variant === 'plan'
-                    ? btn('Executed', `confirmExecuteTrade('${t.id}')`, 'tonal', 'fa-play')
-                    : '';
-                const doneBtn = variant === 'open'
-                    ? btn('Done', `confirmCloseTrade('${t.id}')`, 'tonal', 'fa-check')
-                    : '';
-                return `
-                    <div class="trade-list-item__actions">
-                        <div class="trade-list-item__actions-main">
-                            ${copyBtn}
-                            ${verifyBtn}
-                            ${executeBtn}
-                            ${doneBtn}
-                            ${btn('Edit', `openEditModal('${t.id}')`, 'tonal', 'fa-edit')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            function renderTradeListItem(t, serialNo, variant = 'open') {
-                const qty = Number(t.quantity) || 0;
-                const company = t.company || 'trade';
-                const brokerLabel = (variant === 'past' || variant === 'plan') && t.broker
-                    ? `<span class="trade-list-item__broker-label">${t.broker}</span>`
-                    : '';
-                const verifiedLabel = variant === 'past' && t.verified
-                    ? `<span class="trade-list-item__verified-label">Verified</span>`
-                    : '';
-                const metrics = resolveTradeMetrics(t);
-                return `
-                    <article class="trade-list-item">
-                        <div class="trade-list-item__row trade-list-item__row--buy">
-                            <div class="trade-list-item__buy">
-                                <span class="trade-list-item__meta-group trade-list-item__qty-group">
-                                    <span class="trade-list-item__meta-label quantity-label">Qty</span>
-                                    <span class="trade-list-item__meta-value qty-value">${qty}</span>
-                                </span>
-                                <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
-                                ${renderTradeListItemLeverageMeta(t)}
-                                <span class="trade-list-item__meta-pipe" aria-hidden="true">|</span>
-                                ${renderTradeListItemHoldMeta(t)}
-                            </div>
-                            <div class="trade-list-item__pnl-wrap">${renderTradeCardPnl(metrics.netProfit)}</div>
-                        </div>
-                        <div class="trade-list-item__row trade-list-item__row--title">
-                            <div class="trade-list-item__title">
-                                <span class="trade-list-item__company-group">
-                                    <i class="fas fa-chart-line trade-list-item__company-icon" aria-hidden="true"></i>
-                                    <span class="trade-list-item__company-name">${company}</span>
-                                    ${brokerLabel}
-                                    ${verifiedLabel}
-                                </span>
-                            </div>
-                        </div>
-                        ${renderTradeListItemDetails(t)}
-                        <div class="trade-list-item__row trade-list-item__row--actions">
-                            ${renderTradeListItemActions(t, variant)}
-                        </div>
-                    </article>
-                `;
-            }
-
-            function renderOpenTradeListItem(t, serialNo) {
-                return renderTradeListItem(t, serialNo, 'open');
-            }
-
-            function renderPastTradeListItem(t, serialNo) {
-                return renderTradeListItem(t, serialNo, 'past');
-            }
-
-            function renderPlanTradeListItem(t, serialNo) {
-                return renderTradeListItem(t, serialNo, 'plan');
-            }
-
-            function formatTradeLeverageLabel(t) {
-                const lev = Number(t.leverage) || 1;
-                return lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
-            }
-
-            function renderTradesList(trades, renderItem) {
-                return `<div class="trade-list">${trades.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
-            }
-
-            function renderFlatTradesList(trades, renderItem, opts = {}) {
-                return renderTradesList(trades, renderItem);
-            }
-
-            function tradeDateKey(t, field = 'buyDate') {
-                const d = t[field];
-                if (!d) return 'unknown';
-                return new Date(d).toISOString().split('T')[0];
-            }
-
-            function groupTradesByDate(trades, dateField = 'buyDate') {
-                const groups = new Map();
-                trades.forEach(t => {
-                    const key = tradeDateKey(t, dateField);
-                    if (!groups.has(key)) groups.set(key, []);
-                    groups.get(key).push(t);
-                });
-                return Array.from(groups.entries()).sort((a, b) => b[0].localeCompare(a[0]));
-            }
-
-            function renderDateGroupHeader(dateKey, items, opts = {}) {
-                const { expanded = false } = opts;
-                const count = items.length;
-                const net = items.reduce((sum, t) => sum + (Number(t.netProfit) || 0), 0);
-                const label = dateKey === 'unknown' ? 'No date' : fmtDateDisplay(dateKey);
-                const tradeLabel = count === 1 ? '1 trade' : `${count} trades`;
-                const dateLabel = dateKey === 'unknown'
-                    ? `<span class="font-semibold text-base text-base-content/80">${label}</span>`
-                    : renderDateChip(label, { size: 'sm' });
-                return `
-                    <button type="button" class="trade-date-group__header trade-date-group__header--toggle" onclick="toggleTradeDateGroupExpand(this)" aria-expanded="${expanded}" aria-label="${expanded ? 'Collapse' : 'Expand'} trades for ${label}">
-                        <div class="flex justify-between items-center gap-2">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <i class="fas fa-chevron-down trade-date-group__expand-icon${expanded ? ' trade-date-group__expand-icon--expanded' : ''}" aria-hidden="true"></i>
-                                ${dateLabel}
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                ${renderAmount(net, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false, className: 'trade-date-group__day-pnl' })}
-                                ${appTag(tradeLabel)}
-                            </div>
-                        </div>
-                    </button>
-                `;
-            }
-
-            function renderGroupedTrades(trades, renderItem, dateField = 'buyDate', opts = {}) {
-                const { wrapInCard = false, defaultExpanded = false } = opts;
-                return groupTradesByDate(trades, dateField).map(([dateKey, items], idx) => {
-                    const expanded = defaultExpanded;
-                    const header = renderDateGroupHeader(dateKey, items, { expanded });
-                    const itemsHtml = renderTradesList(items, renderItem);
-                    if (wrapInCard) {
-                        return `
-                            <section class="trade-date-group${expanded ? ' trade-date-group--expanded' : ''}">
-                                <div class="card bg-base-100 rounded-2xl">
-                                    <div class="card-body p-3">
-                                        ${header}
-                                        <div class="trade-date-group__list${expanded ? '' : ' trade-date-group__list--hidden'}">${itemsHtml}</div>
-                                    </div>
-                                </div>
-                            </section>
-                        `;
-                    }
-                    return `
-                        <section class="${idx ? 'mt-4' : ''}">
-                            ${header}
-                            ${itemsHtml}
-                        </section>
-                    `;
-                }).join('');
-            }
-
-            function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel }) {
-                const el = document.getElementById(containerId);
-                if (!el) return;
-                const toneClass = net >= 0
-                    ? 'trade-summary-card__meta-value--positive'
-                    : 'trade-summary-card__meta-value--negative';
-                const n = Number(net) || 0;
-                const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
-                el.innerHTML = `
-                    <div class="trade-summary-card__row">
-                        <span class="trade-summary-card__meta-group trade-summary-card__meta-group--start">
-                            <span class="trade-summary-card__meta-label">P&L</span>
-                            <span class="trade-summary-card__meta-value trade-summary-card__meta-value--pnl ${toneClass}">${pnlFormatted}</span>
-                        </span>
-                        <span class="trade-summary-card__meta-group trade-summary-card__meta-group--end">
-                            <span class="trade-summary-card__meta-label">${countLabel}</span>
-                            <span class="trade-summary-card__meta-value trade-summary-card__meta-value--count">${count}</span>
-                        </span>
-                    </div>
-                `;
-                paintMoneyAmountWords(document.getElementById(wordsId), net, 'center');
-            }
-
             function paintOpenTradeSummary(net, openCount) {
                 paintTradeRangeSummary({
                     containerId: 'summaryOpenStats',
@@ -3118,26 +2651,6 @@
                     net,
                     count: openCount,
                     countLabel: 'Open'
-                });
-            }
-
-            function paintPastTradeSummary(net, tradeCount) {
-                paintTradeRangeSummary({
-                    containerId: 'pastSummaryStats',
-                    wordsId: 'pastSummaryNetWords',
-                    net,
-                    count: tradeCount,
-                    countLabel: 'Trades'
-                });
-            }
-
-            function paintPlanTradeSummary(net, planCount) {
-                paintTradeRangeSummary({
-                    containerId: 'planSummaryStats',
-                    wordsId: 'planSummaryNetWords',
-                    net,
-                    count: planCount,
-                    countLabel: 'Planned'
                 });
             }
 
@@ -3158,37 +2671,8 @@
                 return `${y}-${m}-${day}`;
             }
 
-            // ---------- RENDER PLAN TRADES ----------
-            function renderPlanTrades() {
-                const txs = getTransactions();
-                let filtered = txs.filter(isPlannedTrade);
-
-                const planQuery = planSearchQuery.trim().toLowerCase();
-                if (planQuery) {
-                    filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(planQuery));
-                }
-
-                filtered = sortTradesByHoldDays(filtered);
-
-                let net = 0;
-                filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
-
-                paintPlanTradeSummary(net, filtered.length);
-
-                const container = document.getElementById('planTradesList');
-                if (!container) return;
-
-                if (filtered.length === 0) {
-                    if (planQuery) {
-                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No planned trades match "${planSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
-                        return;
-                    }
-                    container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-clipboard-list mb-3"></i><h6>No trades planned yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add companies for tomorrow. Tap Executed after you buy.</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = renderFlatTradesList(filtered, renderPlanTradeListItem);
-            }
+            // ---------- RENDER PLAN TRADES (O13) ----------
+            // renderPlanTrades → components/organisms/page-plan/plan-page.js
 
             // ---------- FULL-SCREEN SEARCH ----------
             function openSearchPage() {
@@ -3232,40 +2716,7 @@
                 renderSearchResults();
             }
 
-            function renderSearchResults() {
-                const container = document.getElementById('searchPageList');
-                if (!container) return;
-
-                const isPast = searchContext === 'past';
-                const isPlan = !isPast && tradesViewMode === 'plan';
-
-                let dataset;
-                if (isPast) {
-                    dataset = getPastFiltered();
-                } else if (isPlan) {
-                    dataset = getTransactions().filter(isPlannedTrade);
-                } else {
-                    dataset = getTransactions().filter(isActiveOpenTrade);
-                }
-
-                const q = searchQuery.trim().toLowerCase();
-                let filtered = q
-                    ? dataset.filter(t => (t.company || '').toLowerCase().includes(q))
-                    : dataset;
-                filtered = sortTradesByHoldDays(filtered);
-
-                const renderer = isPast ? renderPastTradeListItem : (isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
-
-                if (filtered.length === 0) {
-                    const noun = isPast ? 'past trades' : (isPlan ? 'planned trades' : 'open trades');
-                    container.innerHTML = q
-                        ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No ${noun} match "${searchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name.</p></div>`
-                        : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-keyboard mb-3"></i><h6>Search ${noun}</h6><p class="text-sm text-base-content/60 mb-0">Start typing a company name.</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = renderFlatTradesList(filtered, renderer);
-            }
+            // renderSearchResults → components/organisms/page-search/search-page.js
 
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
@@ -3275,47 +2726,7 @@
                 renderCurrentView();
             }
 
-            // ---------- RENDER CURRENT VIEW (OPEN TRADES / PLANNED) ----------
-            function renderCurrentView() {
-                const isPlan = tradesViewMode === 'plan';
-                const txs = getTransactions();
-                let filtered = txs.filter(isPlan ? isPlannedTrade : isActiveOpenTrade);
-
-                const tradeQuery = tradeSearchQuery.trim().toLowerCase();
-                if (tradeQuery) {
-                    filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(tradeQuery));
-                }
-
-                filtered = sortTradesByHoldDays(filtered);
-
-                let net = 0;
-                filtered.forEach(t => { net += resolveTradeMetrics(t).netProfit; });
-
-                paintTradeRangeSummary({
-                    containerId: 'summaryOpenStats',
-                    wordsId: 'summaryNetWords',
-                    net,
-                    count: filtered.length,
-                    countLabel: isPlan ? 'Planned' : 'Open'
-                });
-
-                const container = document.getElementById('transactionList');
-                if (!container) return;
-
-                if (filtered.length === 0) {
-                    if (tradeQuery) {
-                        const label = isPlan ? 'planned trades' : 'open trades';
-                        container.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No ${label} match "${tradeSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`;
-                        return;
-                    }
-                    container.innerHTML = isPlan
-                        ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-clipboard-list mb-3"></i><h6>No trades planned yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to plan a trade. Tap Executed after you buy.</p></div>`
-                        : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No open trades yet.</h6><p class="text-sm text-base-content/60 mb-0">Tap the + button to add a trade. Closed trades appear under Past Trades.</p></div>`;
-                    return;
-                }
-
-                container.innerHTML = renderFlatTradesList(filtered, isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
-            }
+            // renderCurrentView → components/organisms/page-trades/trades-page.js
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
             function getPastFiltered() {
@@ -3366,55 +2777,10 @@
                 renderPastTrades();
             }
 
-            function renderPastTrades() {
-                const filtered = getPastFiltered();
-                const pastQuery = pastSearchQuery.trim().toLowerCase();
-                const listContainer = document.getElementById('pastTradesList');
-
-                const rangeHost = document.getElementById('pastRangeChipHost');
-                if (rangeHost) {
-                    rangeHost.innerHTML = renderDateRangeChip(pastFrom, pastTo, {
-                        onclick: 'openFilterSheet()',
-                        clickable: true
-                    });
-                }
-
-                let net = 0;
-                filtered.forEach(t => { net += t.netProfit || 0; });
-                paintPastTradeSummary(net, filtered.length);
-
-                const emptyHtml = pastQuery
-                    ? `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-search mb-3"></i><h6>No past trades match "${pastSearchQuery.trim()}"</h6><p class="text-sm text-base-content/60 mb-0">Try a different company name or clear the search.</p></div>`
-                    : `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-history mb-3"></i><h6>No past trades in this period</h6></div>`;
-
-                if (filtered.length === 0) {
-                    listContainer.innerHTML = emptyHtml;
-                    return;
-                }
-
-                listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem);
-            }
+            // renderPastTrades → components/organisms/page-past/past-page.js
 
             // ---------- MONEY TRACKER ----------
-            function computeAccountTotalValue(acc, entries) {
-                let total = Number(acc.openingBalance) || 0;
-                entries.filter(e => e.accountId === acc.id).forEach(e => {
-                    const amt = Number(e.amount) || 0;
-                    if (e.type === 'deposit') total += amt;
-                    else if (e.type === 'withdraw') total -= amt;
-                });
-                return total;
-            }
-
-            function summarizeMoneyEntries(entries) {
-                let deposited = 0, withdrawn = 0, depositCount = 0, withdrawCount = 0;
-                entries.forEach(e => {
-                    const amt = Number(e.amount) || 0;
-                    if (e.type === 'deposit') { deposited += amt; depositCount++; }
-                    else if (e.type === 'withdraw') { withdrawn += amt; withdrawCount++; }
-                });
-                return { deposited, withdrawn, depositCount, withdrawCount };
-            }
+            // renderMoney, renderAccountHistorySheet → components/organisms/page-money/money-page.js
 
             function moneyPageDateFilterActive() {
                 return moneyPageRangeKey !== 'all' && (moneyPageFrom || moneyPageTo);
@@ -3435,64 +2801,9 @@
                 return true;
             }
 
-            function getMoneyPageRangeLabel() {
-                if (!moneyPageDateFilterActive()) return 'All time';
-                const quickLabels = { yesterday: 'Yesterday', 7: 'Last 1 week', 30: 'Last 1 month', 90: 'Last 3 months' };
-                const prefix = quickLabels[moneyPageRangeKey] || '';
-                if (moneyPageFrom && moneyPageTo) {
-                    if (moneyPageFrom === moneyPageTo) {
-                        return prefix ? `${prefix} · ${fmtDate(moneyPageFrom)}` : fmtDate(moneyPageFrom);
-                    }
-                    const range = `${fmtDate(moneyPageFrom)} – ${fmtDate(moneyPageTo)}`;
-                    return prefix ? `${prefix} · ${range}` : range;
-                }
-                return prefix || 'Custom range';
-            }
-
-            function computeMoneyStats() {
-                const accounts = getMoneyAccounts();
-                const allEntries = getMoneyEntries();
-                const pageFiltered = moneyPageFiltersActive()
-                    ? allEntries.filter(matchesMoneyPageEntryFilter)
-                    : allEntries;
-                const portfolio = { deposited: 0, withdrawn: 0, totalValue: 0, depositCount: 0, withdrawCount: 0 };
-
-                const perAccount = accounts.map(acc => {
-                    const acctAll = allEntries.filter(e => e.accountId === acc.id);
-                    const acctDisplay = moneyPageFiltersActive()
-                        ? pageFiltered.filter(e => e.accountId === acc.id)
-                        : acctAll;
-                    const summary = summarizeMoneyEntries(acctDisplay);
-                    const totalValue = computeAccountTotalValue(acc, allEntries);
-
-                    portfolio.deposited += summary.deposited;
-                    portfolio.withdrawn += summary.withdrawn;
-                    portfolio.depositCount += summary.depositCount;
-                    portfolio.withdrawCount += summary.withdrawCount;
-                    portfolio.totalValue += totalValue;
-
-                    return { account: acc, ...summary, totalValue };
-                });
-
-                return { perAccount, portfolio };
-            }
-
-            
-
             function getMoneyPageFilterViewTitle() {
                 const titles = { deposit: 'Investments', withdraw: 'Withdrawals' };
                 return titles[moneyPageTypeFilter] || 'Transactions';
-            }
-
-            function getMoneyPageFilterViewMeta() {
-                const parts = [];
-                if (moneyAccountFilter !== 'all') {
-                    const acc = getMoneyAccounts().find(a => a.id === moneyAccountFilter);
-                    if (acc) parts.push(acc.name);
-                }
-                const range = getMoneyPageRangeLabel();
-                if (range !== 'All time') parts.push(range);
-                return parts.join(' · ') || 'All accounts · All time';
             }
 
             function getMoneyPageFilteredEntries() {
@@ -3501,120 +2812,6 @@
                     entries = entries.filter(e => e.accountId === moneyAccountFilter);
                 }
                 return sortMoneyEntries(entries);
-            }
-
-            function renderMoneyFilterListItem(e, showAccount, hideTypeBadge) {
-                const isDeposit = e.type === 'deposit';
-                const typeBadge = hideTypeBadge ? '' : (isDeposit
-                    ? appTag('Invest', 'secondary')
-                    : appTag('Withdraw', 'error'));
-                const accounts = getMoneyAccounts();
-                const acc = accounts.find(a => a.id === e.accountId);
-                const accountChip = showAccount && acc
-                    ? appTag(`<i class="fas fa-university mr-1"></i>${acc.name}`)
-                    : '';
-                const topRow = (accountChip || typeBadge)
-                    ? `<div class="flex flex-wrap gap-1.5 mb-1">${accountChip}${typeBadge}</div>`
-                    : '';
-                return `
-                    <div class="flex justify-between items-start gap-3 py-3 border-b border-base-200 last:border-0">
-                        <div class="min-w-0 flex-1">
-                            ${topRow}
-                            <div class="text-sm text-base-content/60 app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(e.time)}</span></div>
-                        </div>
-                        <div class="money-value-block money-value-block--right shrink-0 max-w-[58%]">
-                            <div class="money-stat-amount money-stat-amount--right">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
-                            ${renderMoneyAmountWords(e.amount, 'right')}
-                        </div>
-                    </div>
-                `;
-            }
-
-            function renderMoneyFilterView(displayPortfolio) {
-                const titleEl = document.getElementById('moneyPageFilterViewTitle');
-                const metaEl = document.getElementById('moneyPageFilterViewMeta');
-                const summaryEl = document.getElementById('moneyPageFilterSummary');
-                const listEl = document.getElementById('moneyPageFilterList');
-                if (!titleEl || !summaryEl || !listEl) return;
-
-                const entries = getMoneyPageFilteredEntries();
-                const showAccount = moneyAccountFilter === 'all';
-                const isWithdrawOnly = moneyPageTypeFilter === 'withdraw';
-                const isDepositOnly = moneyPageTypeFilter === 'deposit';
-
-                titleEl.textContent = getMoneyPageFilterViewTitle();
-                if (metaEl) {
-                    const parts = [];
-                    if (moneyAccountFilter !== 'all') {
-                        const acc = getMoneyAccounts().find(a => a.id === moneyAccountFilter);
-                        if (acc) parts.push(acc.name);
-                    }
-                    const quickLabels = { yesterday: 'Yesterday', 7: 'Last 1 week', 30: 'Last 1 month', 90: 'Last 3 months' };
-                    const prefix = quickLabels[moneyPageRangeKey] || '';
-                    if (prefix) parts.push(prefix);
-                    metaEl.textContent = parts.join(' · ') || 'All accounts · All time';
-                }
-                const dateChipHost = document.getElementById('moneyPageFilterDateChipHost');
-                if (dateChipHost) {
-                    dateChipHost.innerHTML = moneyPageDateFilterActive()
-                        ? renderDateRangeChip(moneyPageFrom, moneyPageTo, { size: 'sm', onclick: 'openMoneyPageFilterSheet()', clickable: true })
-                        : '';
-                }
-
-                const typeSelect = document.getElementById('moneyPageFilterTypeLabel');
-                if (typeSelect) syncMoneyTypeDropdowns();
-
-                if (isWithdrawOnly) {
-                    summaryEl.innerHTML = `
-                        <div class="${UI.statLabel}">Total Withdrawn</div>
-                        <div class="money-value-block money-value-block--center mx-auto">
-                            <div class="money-stat-amount money-stat-amount--center">
-                                ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', tone: 'withdraw', align: 'center' })}
-                            </div>
-                            ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
-                        </div>
-                        <div class="text-xs text-base-content/60 mt-2">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
-                    `;
-                } else if (isDepositOnly) {
-                    summaryEl.innerHTML = `
-                        <div class="${UI.statLabel} deposit-label">Total Deposited</div>
-                        <div class="money-value-block money-value-block--center mx-auto">
-                            <div class="money-stat-amount money-stat-amount--center">
-                                ${renderAmount(displayPortfolio.deposited, { size: 'lg', tone: 'deposit', align: 'center' })}
-                            </div>
-                            ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
-                        </div>
-                        <div class="text-xs text-base-content/60 mt-2">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
-                    `;
-                } else {
-                    summaryEl.innerHTML = `
-                        <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="money-value-block money-value-block--center">
-                                <div class="${UI.statLabel} deposit-label">Deposited</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    ${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}
-                                </div>
-                                ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
-                                <div class="text-xs text-base-content/60 mt-1">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
-                            </div>
-                            <div class="money-value-block money-value-block--center">
-                                <div class="${UI.statLabel}">Withdrawn</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    ${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
-                                </div>
-                                ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
-                                <div class="text-xs text-base-content/60 mt-1">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
-                            </div>
-                        </div>
-                    `;
-                }
-
-                if (entries.length === 0) {
-                    listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-ghost" onclick="openMoneyPageFilterSheet()">Change filter</button></div>';
-                    return;
-                }
-
-                listEl.innerHTML = entries.map(e => renderMoneyFilterListItem(e, showAccount, isWithdrawOnly || isDepositOnly)).join('');
             }
 
             function syncMoneyPageFilterUI() {
@@ -3866,186 +3063,8 @@
                 return moneyHistoryTypeFilter !== 'all' || moneyHistoryDateFilterActive();
             }
 
-            function renderAccountHistorySheet() {
-                const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
-                const metaEl = document.getElementById('moneyHistoryMeta');
-                const summaryEl = document.getElementById('moneyHistorySheetSummary');
-                const listEl = document.getElementById('moneyHistorySheetList');
-                if (!acc || !listEl) return;
-
-                if (Sheet._activePanel?.id === 'panelMoneyHistory' && Sheet.titleEl()) {
-                    Sheet.titleEl().textContent = getMoneyHistorySheetTitle();
-                }
-
-                syncMoneyHistoryFilterUI();
-
-                const allEntries = sortMoneyEntries(getMoneyEntries().filter(e => e.accountId === acc.id));
-                const entries = filterMoneyHistoryEntries(allEntries);
-                let deposited = 0, withdrawn = 0;
-                entries.forEach(e => {
-                    const amt = Number(e.amount) || 0;
-                    if (e.type === 'deposit') deposited += amt;
-                    else if (e.type === 'withdraw') withdrawn += amt;
-                });
-
-                if (metaEl) {
-                    let meta = getMoneyHistoryActiveFilterLabel();
-                    if (moneyHistoryFiltersActive()) meta += ` · ${entries.length} of ${allEntries.length}`;
-                    metaEl.textContent = meta;
-                    metaEl.classList.toggle('is-filtered', moneyHistoryFiltersActive());
-                }
-                const historyDateChipHost = document.getElementById('moneyHistoryDateChipHost');
-                if (historyDateChipHost) {
-                    historyDateChipHost.innerHTML = moneyHistoryDateFilterActive()
-                        ? renderDateRangeChip(moneyHistoryFrom, moneyHistoryTo, { size: 'sm', onclick: 'openMoneyHistoryRangeSheet()', clickable: true })
-                        : '';
-                }
-
-                if (summaryEl) {
-                    summaryEl.innerHTML = `
-                        <div class="grid grid-cols-2 gap-2 text-center">
-                            <div class="money-value-block money-value-block--center">
-                                <div class="${UI.statLabel} deposit-label">Deposited</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    ${renderAmount(deposited, { size: 'md', tone: 'deposit', align: 'center' })}
-                                </div>
-                                ${renderMoneyAmountWords(deposited, 'center')}
-                            </div>
-                            <div class="money-value-block money-value-block--center">
-                                <div class="${UI.statLabel}">Withdrawn</div>
-                                <div class="money-stat-amount money-stat-amount--center">
-                                    ${renderAmount(withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
-                                </div>
-                                ${renderMoneyAmountWords(withdrawn, 'center')}
-                            </div>
-                        </div>
-                    `;
-                }
-
-                if (allEntries.length === 0) {
-                    listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-inbox mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-0">No deposits or withdrawals yet.</p></div>';
-                    return;
-                }
-
-                if (entries.length === 0) {
-                    listEl.innerHTML = '<div class="text-center text-base-content/60 py-4"><i class="fas fa-filter mb-2 opacity-25"></i><p class="text-sm text-base-content/60 mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-ghost mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>';
-                    return;
-                }
-
-                listEl.innerHTML = entries.map(e => {
-                    const isDeposit = e.type === 'deposit';
-                    const typeBadge = isDeposit
-                        ? appTag('Deposit', 'secondary')
-                        : appTag('Withdraw', 'error');
-                    const note = e.note ? `<div class="text-sm text-base-content/60 mt-1.5">${e.note}</div>` : '';
-                    return `
-                        <div class="money-history-item">
-                            <div class="money-history-item__top">
-                                <div class="money-history-item__badge">${typeBadge}</div>
-                                <div class="money-history-item__actions">
-                                    <div class="money-value-block money-value-block--right shrink-0 max-w-[58%]">
-                                        <div class="money-stat-amount money-stat-amount--right">${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}</div>
-                                        ${renderMoneyAmountWords(e.amount, 'right')}
-                                    </div>
-                                    <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit" aria-label="Edit entry"><i class="fas fa-pen text-base-content/55"></i></button>
-                                    <button type="button" class="btn btn-sm btn-ghost btn-circle min-h-0 h-8 w-8 text-error" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry"><i class="fas fa-trash-alt"></i></button>
-                                </div>
-                            </div>
-                            <div class="app-datetime-row">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(e.time)}</span></div>
-                            ${note}
-                        </div>
-                    `;
-                }).join('');
-            }
-
             function refreshMoneyHistorySheetIfOpen() {
                 if (moneyHistorySheetAccountId) renderAccountHistorySheet();
-            }
-
-            function sortMoneyEntries(entries) {
-                return [...entries].sort((a, b) => {
-                    const da = (a.date || '') + 'T' + (a.time || '00:00');
-                    const db = (b.date || '') + 'T' + (b.time || '00:00');
-                    if (db !== da) return db.localeCompare(da);
-                    return (a.id < b.id ? 1 : -1);
-                });
-            }
-
-            function renderMoneyAccountCard(stats) {
-                const acc = stats.account;
-                const holderLine = acc.holderName ? appTag(acc.holderName) : '';
-                const historyCount = getMoneyEntries().filter(e => e.accountId === acc.id).length;
-                const row = (label, amount, extra = '', tone = 'positive') =>
-                    `<div class="py-2 border-b border-base-200 ${extra}">
-                        <div class="flex justify-between items-start gap-4">
-                            <span class="text-sm shrink-0 pt-1 ${tone === 'deposit' ? 'deposit-label' : 'text-base-content/60'}">${label}</span>
-                            <div class="money-value-block money-value-block--right min-w-0 max-w-[62%]">
-                                <div class="money-stat-amount money-stat-amount--right">${renderAmount(amount, { size: 'md', tone, align: 'right', pill: false })}</div>
-                                ${renderMoneyAmountWords(amount, 'right')}
-                            </div>
-                        </div>
-                    </div>`;
-                return `
-                    <div class="card bg-base-100 rounded-2xl money-account-card">
-                        <div class="card-body p-0">
-                            <div class="px-4 pt-4 pb-3">
-                                <div class="trade-card-header items-start">
-                                    <div class="money-account-card__title-row min-w-0">
-                                        <div class="trade-card-header__title">${acc.name}</div>
-                                        ${holderLine}
-                                    </div>
-                                    <div class="trade-card-header__actions">
-                                        ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', pill: false, className: 'trade-card-header__pnl' })}
-                                        <div class="dropdown dropdown-end trade-row-dropdown">
-                                            <button type="button" class="${UI.actionBtnSm} btn-ghost bg-base-200 border border-base-200" tabindex="0" role="button" aria-expanded="false" title="More" aria-label="More">
-                                                <i class="fas fa-ellipsis-v text-sm"></i>
-                                            </button>
-                                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]">
-                                                <li>
-                                                    <button type="button" class="flex items-center w-full px-2 py-2 rounded-lg hover:bg-base-200 money-account-expand-toggle" onclick="toggleMoneyAccountExpand(this)" aria-expanded="false">
-                                                        <span class="flex-1 text-left money-account-expand-toggle__label">Expand details</span>
-                                                    </button>
-                                                </li>
-                                                <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
-                                                <li>
-                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
-                                                        <span class="${UI.menuIcon('deposit')}"><i class="fas fa-plus"></i></span>
-                                                        <span class="flex-1 text-left">Deposit</span>
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
-                                                        <span class="${UI.menuIcon('withdraw')}"><i class="fas fa-minus"></i></span>
-                                                        <span class="flex-1 text-left">Withdraw</span>
-                                                    </button>
-                                                </li>
-                                                <li class="menu-title p-0"><hr class="my-0 opacity-20"></li>
-                                                <li>
-                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openAccountHistorySheet('${acc.id}')">
-                                                        <span class="${UI.menuIcon('history')}"><i class="fas fa-history"></i></span>
-                                                        <span class="flex-1 text-left">History</span>
-                                                        ${historyCount ? appTag(String(historyCount), 'accent') : ''}
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button type="button" class="flex items-center gap-3 w-full px-2 py-2 rounded-lg hover:bg-base-200" onclick="openMoneyAccountModal('${acc.id}')">
-                                                        <span class="${UI.menuIcon('edit')}"><i class="fas fa-pen"></i></span>
-                                                        <span class="flex-1 text-left">Edit account</span>
-                                                    </button>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="trade-card-details trade-card-details--hidden px-4 pb-4">
-                                ${row('Deposited', stats.deposited, '', 'deposit')}
-                                ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
-                                ${row('<span class="font-medium text-base-content/80">Total Value</span>', stats.totalValue, 'border-b-0 pt-2 mt-1', 'positive')}
-                            </div>
-                        </div>
-                    </div>
-                `;
             }
 
             function setMoneyAccountFilter(value) {
@@ -4053,283 +3072,7 @@
                 renderMoney();
             }
 
-            function renderMoney() {
-                const page = document.getElementById('page-money');
-                if (!page) return;
-
-                const { perAccount, portfolio } = computeMoneyStats();
-                const accounts = getMoneyAccounts();
-                const filterActive = moneyPageFiltersActive();
-                const defaultView = document.getElementById('moneyPageDefaultView');
-                const filterView = document.getElementById('moneyPageFilterView');
-
-                let visibleAccounts = perAccount;
-                if (moneyAccountFilter !== 'all') {
-                    visibleAccounts = perAccount.filter(s => s.account.id === moneyAccountFilter);
-                }
-
-                let displayPortfolio = portfolio;
-                if (moneyAccountFilter !== 'all') {
-                    const one = perAccount.find(s => s.account.id === moneyAccountFilter);
-                    if (one) {
-                        displayPortfolio = {
-                            deposited: one.deposited,
-                            withdrawn: one.withdrawn,
-                            depositCount: one.depositCount,
-                            withdrawCount: one.withdrawCount,
-                            totalValue: one.totalValue
-                        };
-                    }
-                }
-
-                syncMoneyPageFilterUI();
-
-                if (filterActive) {
-                    if (defaultView) defaultView.classList.add('hidden');
-                    if (filterView) filterView.classList.remove('hidden');
-                    renderMoneyFilterView(displayPortfolio);
-                    return;
-                }
-
-                if (defaultView) defaultView.classList.remove('hidden');
-                if (filterView) filterView.classList.add('hidden');
-
-                const heroEl = document.getElementById('moneyTotalValueHero');
-                if (heroEl) paintTotalAmountCard(heroEl, displayPortfolio.totalValue, {
-                    label: 'Total Value',
-                    size: 'hero',
-                    tone: 'positive'
-                });
-                paintMoneyAmountWords(document.getElementById('moneyTotalValueWords'), displayPortfolio.totalValue, 'center');
-                paintTotalAmountCard(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, {
-                    label: 'Deposited',
-                    size: 'sm',
-                    tone: 'deposit'
-                });
-                paintMoneyAmountWords(document.getElementById('moneyTotalDepositedWords'), displayPortfolio.deposited, 'center');
-                paintTotalAmountCard(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, {
-                    label: 'Withdrawn',
-                    size: 'sm',
-                    tone: 'withdraw'
-                });
-                paintMoneyAmountWords(document.getElementById('moneyTotalWithdrawnWords'), displayPortfolio.withdrawn, 'center');
-
-                const filterEl = document.getElementById('moneyAccountFilterMenu');
-                if (filterEl) {
-                    if (moneyAccountFilter !== 'all' && !accounts.find(a => a.id === moneyAccountFilter)) {
-                        moneyAccountFilter = 'all';
-                    }
-                    syncMoneyAccountFilterDropdown(accounts);
-                }
-
-                const accountList = document.getElementById('moneyAccountList');
-                if (accountList) {
-                    if (visibleAccounts.length === 0) {
-                        accountList.innerHTML = '<div class="text-center text-base-content/60 py-6"><i class="fas fa-university mb-3 text-2xl opacity-40"></i><h6>No accounts yet</h6><p class="text-sm text-base-content/60 mb-0">Go to <span class="font-semibold">Settings</span> and tap <span class="font-semibold">Add Account</span> to create your first trading account.</p></div>';
-                    } else {
-                        accountList.innerHTML = visibleAccounts.map(renderMoneyAccountCard).join('');
-                    }
-                }
-            }
-
-            let moneyEntryIsEdit = false;
-            let moneyEntryDateTimeEditing = false;
-
-            function formatMoneyEntryTimeDisplay(time) {
-                if (!time) return '-';
-                const parts = time.split(':');
-                const h = parseInt(parts[0], 10);
-                const m = parseInt(parts[1], 10) || 0;
-                if (isNaN(h)) return time;
-                const ampm = h >= 12 ? 'PM' : 'AM';
-                const hr = h % 12 || 12;
-                return `${String(hr).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
-            }
-
-            function getMoneyEntryType() {
-                return document.getElementById('moneyEntryType')?.value || 'deposit';
-            }
-
-            function updateMoneyEntryDateTimeDisplay() {
-                const date = document.getElementById('moneyEntryDate')?.value || '';
-                const time = document.getElementById('moneyEntryTime')?.value || '';
-                const el = document.getElementById('moneyEntryDateTimeDisplay');
-                if (!el) return;
-                if (!date) {
-                    el.textContent = '—';
-                    return;
-                }
-                el.innerHTML = `${renderDateChip(fmtDateDisplay(date), { size: 'sm' })}<span class="app-datetime-sep">·</span><span class="app-datetime-time"><i class="far fa-clock mr-1"></i>${formatMoneyEntryTimeDisplay(time)}</span>`;
-            }
-
-            function setMoneyEntryDateTimeEditing(editing) {
-                moneyEntryDateTimeEditing = editing;
-                const row = document.getElementById('moneyEntryDateTimeRow');
-                const fields = document.getElementById('moneyEntryDateTimeFields');
-                const btn = document.getElementById('moneyEntryDateTimeEditBtn');
-                if (row) row.classList.toggle('hidden', editing);
-                if (fields) {
-                    fields.classList.toggle('hidden', !editing);
-                    fields.classList.toggle('flex', editing);
-                }
-                if (btn) {
-                    btn.innerHTML = editing ? '<i class="fas fa-check"></i>' : '<i class="fas fa-pen"></i>';
-                    btn.title = editing ? 'Done' : 'Edit date & time';
-                }
-                if (!editing) updateMoneyEntryDateTimeDisplay();
-            }
-
-            function toggleMoneyEntryDateTimeEdit() {
-                setMoneyEntryDateTimeEditing(!moneyEntryDateTimeEditing);
-            }
-
-            function onMoneyEntryDateTimeChange() {
-                updateMoneyEntryDateTimeDisplay();
-            }
-
-            function onMoneyEntryTypeToggle(isWithdraw) {
-                setMoneyEntryType(isWithdraw ? 'withdraw' : 'deposit');
-            }
-
-            function setMoneyEntryType(type) {
-                const entryType = type === 'withdraw' ? 'withdraw' : 'deposit';
-                const isWithdraw = entryType === 'withdraw';
-                const typeEl = document.getElementById('moneyEntryType');
-                if (typeEl) typeEl.value = entryType;
-                const header = document.getElementById('moneyEntryHeader');
-                if (header) {
-                    header.classList.remove(
-                        'bg-success', 'text-success-content', 'bg-error', 'text-error-content',
-                        'bg-success/15', 'bg-error/15', 'text-success', 'text-error',
-                        'border-success/20', 'border-error/20', 'deposit-entry-header'
-                    );
-                    header.classList.add(
-                        isWithdraw ? 'bg-error/15 text-error border-error/20' : 'deposit-entry-header',
-                        'border-b'
-                    );
-                }
-                const toggle = document.getElementById('moneyEntryTypeToggle');
-                if (toggle) toggle.checked = isWithdraw;
-                const previewEl = document.getElementById('moneyEntryAmountPreview');
-                if (previewEl) {
-                    previewEl.classList.remove('bg-success/15', 'bg-error/15', 'text-success', 'text-error', 'p-2', 'rounded-xl', 'font-semibold');
-                }
-                setMoneyEntryModalMode(moneyEntryIsEdit, entryType);
-            }
-
-            function applyMoneyEntryForm(accountId, type, isEdit) {
-                moneyEntryIsEdit = !!isEdit;
-                const acc = getMoneyAccounts().find(a => a.id === accountId);
-                const accountIdEl = document.getElementById('moneyEntryAccountId');
-                if (accountIdEl) accountIdEl.value = accountId || '';
-                const titleEl = document.getElementById('moneyEntryAccountTitle');
-                if (titleEl) titleEl.textContent = acc ? acc.name : 'Account';
-                setMoneyEntryType(type || 'deposit');
-                setMoneyEntryDateTimeEditing(false);
-                updateMoneyEntryDateTimeDisplay();
-            }
-
-            function setMoneyEntryModalMode(isEdit, type) {
-                const isWithdraw = type === 'withdraw';
-                if (isEdit) {
-                    renderMoneyEntryFooter('Update', 'fa-save');
-                } else {
-                    renderMoneyEntryFooter(isWithdraw ? 'Record Withdrawal' : 'Add Deposit', isWithdraw ? 'fa-minus' : 'fa-plus');
-                }
-            }
-
-            function updateMoneyEntryAmountPreview() {
-                const previewEl = document.getElementById('moneyEntryAmountPreview');
-                const inputEl = document.getElementById('moneyEntryAmount');
-                if (!previewEl || !inputEl) return;
-                const amount = parseFloat(inputEl.value);
-                if (!amount || amount <= 0 || isNaN(amount)) {
-                    previewEl.innerHTML = '';
-                    previewEl.classList.add('hidden');
-                    return;
-                }
-                previewEl.innerHTML = `<div class="money-value-block money-value-block--left">${renderAmount(amount, {
-                    size: 'md',
-                    tone: document.getElementById('moneyEntryType')?.value === 'withdraw' ? 'withdraw' : 'deposit',
-                    align: 'left'
-                })}${renderMoneyAmountWords(amount, 'left')}</div>`;
-                previewEl.classList.remove('hidden');
-            }
-
-            function openMoneyEntryModal(accountId, type) {
-                const accounts = getMoneyAccounts();
-                if (!accounts.length) {
-                    showToast('Add an account first.', 'warning');
-                    return;
-                }
-                const resolvedAccountId = accountId || accounts[0]?.id;
-                document.getElementById('moneyEntryEditId').value = '';
-                document.getElementById('moneyEntryAmount').value = '';
-                setDateInputValue(document.getElementById('moneyEntryDate'), new Date().toISOString().split('T')[0]);
-                document.getElementById('moneyEntryTime').value = getNowTime();
-                applyMoneyEntryForm(resolvedAccountId, type || 'deposit', false);
-                updateMoneyEntryAmountPreview();
-                document.getElementById('moneyEntryModal').showModal();
-            }
-
-            function openEditMoneyEntryModal(entryId) {
-                const entry = getMoneyEntry(entryId);
-                if (!entry) { showToast('Entry not found.', 'danger'); return; }
-                document.getElementById('moneyEntryEditId').value = entry.id;
-                document.getElementById('moneyEntryAmount').value = entry.amount || '';
-                setDateInputValue(document.getElementById('moneyEntryDate'), entry.date || '');
-                document.getElementById('moneyEntryTime').value = entry.time || getNowTime();
-                applyMoneyEntryForm(entry.accountId, entry.type || 'deposit', true);
-                updateMoneyEntryAmountPreview();
-                document.getElementById('moneyEntryModal').showModal();
-            }
-
-            function saveMoneyEntry() {
-                const editId = document.getElementById('moneyEntryEditId').value;
-                const accountId = document.getElementById('moneyEntryAccountId').value;
-                const type = getMoneyEntryType();
-                const amount = parseFloat(document.getElementById('moneyEntryAmount').value);
-                const date = document.getElementById('moneyEntryDate').value;
-                const time = document.getElementById('moneyEntryTime').value;
-                const note = '';
-
-                if (!accountId) { showToast('Please select an account.', 'warning'); return; }
-                if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
-                if (!date) { showToast('Please select a date.', 'warning'); return; }
-                if (!time) { showToast('Please select a time.', 'warning'); return; }
-
-                const payload = { accountId, type, amount, date, time, note };
-                const typeLabel = type === 'withdraw' ? 'withdrawal' : 'deposit';
-                const synced = syncCode && fbDb ? ' and synced' : '';
-
-                const finish = async () => {
-                    if (editId) {
-                        await updateMoneyEntry(editId, payload);
-                        showToast(`Entry updated${synced}!`, 'success');
-                    } else {
-                        await addMoneyEntry(payload);
-                        showToast(type === 'withdraw' ? `Withdrawal recorded${synced}!` : `Deposit added${synced}!`, 'success');
-                    }
-                    document.getElementById('moneyEntryModal')?.close();
-                    moneyHistorySheetAccountId = accountId;
-                    renderMoney();
-                    refreshMoneyHistorySheetIfOpen();
-                };
-
-                if (editId) {
-                    confirmAction({
-                        title: '<i class="fas fa-pen mr-2"></i>Update Entry?',
-                        titleClass: 'text-primary',
-                        message: `Save changes to this ${typeLabel} of ${fmtINR(amount)}?`,
-                        confirmLabel: '<i class="fas fa-save mr-1"></i> Update',
-                        confirmClass: 'btn-primary',
-                        onConfirm: finish
-                    });
-                } else {
-                    finish();
-                }
-            }
-
+            // money entry modal → components/organisms/money-entry-modal/money-entry-modal.js
             function setMoneyAccountModalMode(isEdit) {
                 const title = isEdit ? '<i class="fas fa-pen mr-2"></i>Edit Account' : '<i class="fas fa-plus mr-2"></i>Add Account';
                 const footer = `<div class="app-sheet__footer-actions w-full">${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
@@ -4499,412 +3242,9 @@
                 return stats;
             }
 
-            function renderTransactionsDateGroupHeader(dateKey, items) {
-                const label = dateKey === 'unknown' ? 'No date' : fmtDateDisplay(dateKey);
-                const tradeLabel = items.length === 1 ? '1 trade' : `${items.length} trades`;
-                const counts = {};
-                items.forEach(t => {
-                    const b = t.broker || 'Other';
-                    counts[b] = (counts[b] || 0) + 1;
-                });
-                const chips = Object.entries(counts).map(([b, n]) => appTag(`${b} ${n}`)).join('');
-                return `
-                    <div class="mb-2">
-                        <div class="flex justify-between items-center">
-                            ${dateKey === 'unknown' ? `<span class="font-semibold text-base-content">${label}</span>` : renderDateChip(label, { size: 'sm' })}
-                            ${appTag(tradeLabel)}
-                        </div>
-                        ${chips ? `<div class="flex flex-wrap gap-1.5 mt-1">${chips}</div>` : ''}
-                    </div>
-                `;
-            }
+            // renderTransactions → components/organisms/page-transactions/transactions-page.js
 
-            function renderGroupedTradesWithChips(trades, renderItem) {
-                return groupTradesByDate(trades).map(([dateKey, items], idx) => `
-                    <section class="${idx ? 'mt-4' : ''}">
-                        ${renderTransactionsDateGroupHeader(dateKey, items)}
-                        ${renderTradesList(items, renderItem)}
-                    </section>
-                `).join('');
-            }
-
-            function renderBrokerBreakdown(byBroker) {
-                const brokers = ['Zerodha', 'Dhan', 'Groww'];
-                const html = brokers.map(b => {
-                    const s = byBroker[b];
-                    if (!s || s.total === 0) return '';
-                    return `
-                        <div class="bg-base-200 rounded-xl p-3 mb-2">
-                            <div class="flex justify-between items-center mb-2">
-                                <span class="font-semibold">${b}</span>
-                                ${appTag(`${s.total} trades`)}
-                            </div>
-                            <div class="grid grid-cols-4 gap-1 text-center">
-                                <div><div class="${UI.tradeStatLabel}">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
-                                <div><div class="${UI.tradeStatLabel}">Closed</div><div class="font-semibold">${s.closed}</div></div>
-                                <div><div class="${UI.tradeStatLabel}">Success</div><div class="inline-flex items-center justify-center rounded-lg px-1.5 py-0.5 font-semibold bg-success/15 text-success">${s.successful}</div></div>
-                                <div><div class="${UI.tradeStatLabel}">Net</div>${renderAmount(s.net, { size: 'sm', compact: true, align: 'center' })}</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                return html || '<p class="text-base-content/60 text-sm mb-0">No trades yet.</p>';
-            }
-
-            function renderTransactions() {
-                const txs = getTransactions().slice().sort((a, b) => (a.id < b.id ? 1 : -1));
-                const stats = getTransactionStats(txs);
-
-                document.getElementById('txHistTotal').textContent = stats.total;
-                document.getElementById('txHistOpen').textContent = stats.open;
-                document.getElementById('txHistClosed').textContent = stats.closed;
-                document.getElementById('txHistSuccessful').textContent = stats.successful;
-
-                const netEl = document.getElementById('txHistNet');
-                if (netEl) paintAmount(netEl, stats.net, { size: 'sm', compact: true, align: 'center' });
-                paintAmount(document.getElementById('txHistGross'), stats.gross, { size: 'sm', compact: true, tone: 'neutral', align: 'center' });
-                paintAmount(document.getElementById('txHistCharges'), stats.charges, { size: 'sm', compact: true, tone: 'negative', align: 'center' });
-
-                document.getElementById('txHistBrokerBreakdown').innerHTML = renderBrokerBreakdown(stats.byBroker);
-
-                const listEl = document.getElementById('txHistList');
-                if (txs.length === 0) {
-                    listEl.innerHTML = `<div class="text-center text-base-content/60 card bg-base-100 rounded-2xl p-4"><i class="fas fa-inbox mb-3"></i><h6>No transactions yet</h6><p class="text-sm text-base-content/60 mb-0">Add trades from the Trades tab.</p></div>`;
-                    return;
-                }
-                listEl.innerHTML = renderGroupedTradesWithChips(txs, (t, i) => {
-                    if (isPlannedTrade(t)) return renderTradeListItem(t, i, 'plan');
-                    return renderTradeListItem(t, i, (t.status || 'closed') === 'open' ? 'open' : 'past');
-                });
-            }
-
-            // ---------- MTF CALCULATOR (MORE) ----------
-            const CALC_SELL_PCT_KEY = 'mtf_calc_sell_pct_presets';
-            const DEFAULT_CALC_SELL_PCTS = [0.5, 1, 1.3, 1.5, 2, 3];
-            let calcActiveSellPct = null;
-            let calcSellPriceProgrammatic = false;
-
-            function getCalcSellPctPresets() {
-                try {
-                    const saved = JSON.parse(localStorage.getItem(CALC_SELL_PCT_KEY));
-                    if (Array.isArray(saved) && saved.length) {
-                        return [...new Set(saved.map(p => parseFloat(p)).filter(p => p > 0))].sort((a, b) => a - b);
-                    }
-                } catch (_) {}
-                return [...DEFAULT_CALC_SELL_PCTS];
-            }
-
-            function saveCalcSellPctPresets(presets) {
-                localStorage.setItem(CALC_SELL_PCT_KEY, JSON.stringify(presets));
-            }
-
-            function fmtCalcPctLabel(pct) {
-                const n = parseFloat(pct);
-                if (!Number.isFinite(n)) return '';
-                return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/\.?0+$/, '')) + '%';
-            }
-
-            function setCalcSellPriceValue(val) {
-                calcSellPriceProgrammatic = true;
-                document.getElementById('calcSellPrice').value = val;
-                calcSellPriceProgrammatic = false;
-            }
-
-            function applyCalcSellFromPct(pct) {
-                const buy = parseFloat(document.getElementById('calcBuyPrice').value) || 0;
-                if (buy <= 0) return false;
-                setCalcSellPriceValue((buy * (1 + pct / 100)).toFixed(2));
-                return true;
-            }
-
-            function renderCalcSellPctChips() {
-                const wrap = document.getElementById('calcSellPctChips');
-                if (!wrap) return;
-                const presets = getCalcSellPctPresets();
-                wrap.innerHTML = presets.map(p => {
-                    const active = calcActiveSellPct != null && Math.abs(calcActiveSellPct - p) < 0.0001;
-                    return `<button type="button" class="btn btn-sm ${active ? 'btn-outline btn-primary' : 'btn-outline btn-neutral'} rounded-full min-h-0 h-8 px-3" onclick="setCalcSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
-                }).join('');
-            }
-
-            function setCalcSellPct(pct) {
-                calcActiveSellPct = pct;
-                if (!applyCalcSellFromPct(pct)) {
-                    showToast('Enter buy price first.', 'warning');
-                }
-                renderCalcSellPctChips();
-                updateMtfCalculator();
-            }
-
-            function onCalcBuyPriceInput() {
-                if (calcActiveSellPct != null) applyCalcSellFromPct(calcActiveSellPct);
-                updateMtfCalculator();
-            }
-
-            function onCalcSellPriceInput() {
-                if (!calcSellPriceProgrammatic) calcActiveSellPct = null;
-                renderCalcSellPctChips();
-                updateMtfCalculator();
-            }
-
-            function addCalcSellPctPreset() {
-                const el = document.getElementById('calcSellPctCustom');
-                const pct = parseFloat(el.value);
-                if (!pct || pct <= 0) {
-                    showToast('Enter a valid percentage.', 'warning');
-                    return;
-                }
-                const presets = getCalcSellPctPresets();
-                if (!presets.some(p => Math.abs(p - pct) < 0.0001)) {
-                    presets.push(pct);
-                    presets.sort((a, b) => a - b);
-                    saveCalcSellPctPresets(presets);
-                }
-                el.value = '';
-                setCalcSellPct(pct);
-            }
-
-            function getCalcInputs() {
-                return {
-                    company: 'Calculator',
-                    broker: 'Zerodha',
-                    buyDate: document.getElementById('calcBuyDate').value,
-                    sellDate: document.getElementById('calcSellDate').value,
-                    quantity: parseFloat(document.getElementById('calcQty').value) || 0,
-                    buyPrice: parseFloat(document.getElementById('calcBuyPrice').value) || 0,
-                    sellPrice: parseFloat(document.getElementById('calcSellPrice').value) || 0,
-                    leverage: parseFloat(document.getElementById('calcLeverage').value) || 1
-                };
-            }
-
-            function calcInputsValid(inp) {
-                return inp.buyDate && inp.sellDate && inp.quantity > 0 && inp.buyPrice > 0 && inp.sellPrice > 0;
-            }
-
-            function renderBrokerRatesPanel(broker, mtfAmount, buyDate, sellDate) {
-                const cfg = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
-                const chargeCfg = getChargeConfig(broker, buyDate, sellDate);
-                const isIntraday = chargeCfg.tradeType === 'intraday';
-                let interestLine;
-                if (broker === 'Dhan') {
-                    if (mtfAmount > 0) {
-                        const daily = getDhanInterestRate(mtfAmount);
-                        interestLine = `Slab: ${(daily * 365 * 100).toFixed(2)}% p.a. (${(daily * 100).toFixed(4)}% / day)`;
-                    } else {
-                        interestLine = 'Slab-based (set leverage &amp; prices to see rate)';
-                    }
-                } else {
-                    interestLine = `${(cfg.interestRatePerDay * 100).toFixed(4)}% / day (${(cfg.interestRatePerDay * 365 * 100).toFixed(2)}% p.a.)`;
-                }
-                const brkPct = chargeCfg.brokeragePct;
-                const brkCap = chargeCfg.brokerageCap;
-                const capLabel = brkCap === Infinity ? 'No cap' : (brkCap > 0 ? fmtDec(brkCap) : '₹0');
-                const brkLabel = isIntraday
-                    ? `Intraday: ${(brkPct * 100).toFixed(4)}% or ${capLabel}/order`
-                    : (brkPct > 0 ? `${(brkPct * 100).toFixed(4)}%` : '₹0 (delivery)');
-                const sttLabel = isIntraday ? '0.025% sell only' : `${(chargeCfg.sttSellPct * 100).toFixed(4)}% buy &amp; sell`;
-                const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
-                const typeBadge = isIntraday
-                    ? appTag('Intraday', 'warning')
-                    : appTag('MTF');
-                return `
-                    <h6 class="font-semibold text-base-content/80 mb-2 flex flex-wrap items-center gap-1.5"><i class="fas fa-info-circle mr-1"></i>${cfg.label} Broker Rates ${typeBadge}</h6>
-                    <table class="table table-sm w-full w-full">
-                        <tbody>
-                            <tr><td class="text-base-content/60">Interest</td><td class="text-end text-sm">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
-                            <tr><td class="text-base-content/60">Brokerage</td><td class="text-end text-sm">${brkLabel}</td></tr>
-                            <tr><td class="text-base-content/60">Pledge</td><td class="text-end">${fmtDec(chargeCfg.pledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">Unpledge</td><td class="text-end">${fmtDec(chargeCfg.unpledgeCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">DP charges</td><td class="text-end">${fmtDec(chargeCfg.dpCharge || 0)}</td></tr>
-                            <tr><td class="text-base-content/60">STT</td><td class="text-end text-sm">${sttLabel}</td></tr>
-                            <tr><td class="text-base-content/60">Exchange</td><td class="text-end">${(cfg.exchangePct * 100).toFixed(6)}%</td></tr>
-                            <tr><td class="text-base-content/60">SEBI</td><td class="text-end">${(cfg.sebiPct * 100).toFixed(6)}%</td></tr>
-                            <tr><td class="text-base-content/60">Stamp duty</td><td class="text-end text-sm">${stampLabel}</td></tr>
-                            <tr><td class="text-base-content/60">GST</td><td class="text-end">${(cfg.gstPct * 100).toFixed(0)}%</td></tr>
-                        </tbody>
-                    </table>
-                `;
-            }
-
-            function renderMtfCalculator() {
-                const buyEl = document.getElementById('calcBuyDate');
-                const sellEl = document.getElementById('calcSellDate');
-                if (buyEl && !buyEl.value) {
-                    const today = new Date().toISOString().split('T')[0];
-                    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                    setDateInputValue(buyEl, yesterday);
-                    setDateInputValue(sellEl, today);
-                }
-                renderCalcSellPctChips();
-            }
-
-            function onCalcDateInput() {
-                updateMtfCalculator();
-            }
-
-            function setCalcSameDay() {
-                const buyEl = document.getElementById('calcBuyDate');
-                const sellEl = document.getElementById('calcSellDate');
-                const day = buyEl.value || new Date().toISOString().split('T')[0];
-                setDateInputValue(buyEl, day);
-                setDateInputValue(sellEl, day);
-                updateMtfCalculator();
-            }
-
-            function setCalcTodayPair() {
-                const buyEl = document.getElementById('calcBuyDate');
-                const sellEl = document.getElementById('calcSellDate');
-                const today = new Date();
-                const tomorrow = new Date(today.getTime() + 86400000);
-                setDateInputValue(buyEl, today.toISOString().split('T')[0]);
-                setDateInputValue(sellEl, tomorrow.toISOString().split('T')[0]);
-                updateMtfCalculator();
-            }
-
-            function renderCalcChargeMode(inp) {
-                const badge = document.getElementById('calcModeBadge');
-                const banner = document.getElementById('calcIntradayBanner');
-                if (!badge || !banner) return;
-                const sameDay = isSameDayTrade(inp.buyDate, inp.sellDate);
-                if (sameDay && calcInputsValid(inp)) {
-                    setAppTagElement(badge, 'Intraday', 'warning');
-                    badge.classList.remove('hidden');
-                    banner.className = 'alert alert-info py-2 text-sm mb-3';
-                    banner.innerHTML = '<i class="fas fa-bolt mr-1"></i><strong>Same-day trade</strong> — charges use <strong>intraday rates</strong> for all brokers (STT 0.025% on sell only, stamp 0.003% on buy; no MTF interest, pledge, unpledge or DP).';
-                } else if (inp.buyDate && inp.sellDate && calcInputsValid(inp)) {
-                    setAppTagElement(badge, 'MTF / Delivery', 'default');
-                    badge.classList.remove('hidden');
-                    banner.className = 'hidden';
-                    banner.innerHTML = '';
-                } else {
-                    badge.classList.add('hidden');
-                    banner.className = 'hidden';
-                    banner.innerHTML = '';
-                }
-            }
-
-            function buildCalcBreakdownHtml(broker, inp) {
-                const calcInp = { ...inp, broker };
-                const result = calculateTrade(calcInp);
-                const mockTx = {
-                    ...calcInp,
-                    mtfAmount: result.mtfAmount,
-                    holdingDays: result.holdingDays,
-                    interest: result.interest,
-                    charges: result.totalCharges,
-                    totalInvestment: result.totalInvestment,
-                    ownMargin: result.ownMargin,
-                    leverage: result.leverage
-                };
-                const intDet = interestDetails(mockTx);
-                const { buy, sell, tradeType } = chargeSides(mockTx);
-                const levDisplay = result.leverage > 1 ? `${result.leverage}x` : '1x';
-                const netClass = result.netProfit >= 0 ? 'text-success' : 'text-error';
-                const isIntraday = tradeType === 'intraday' || result.tradeType === 'intraday';
-                const sameDayNote = intDet.sameDay
-                    ? `<div class="alert alert-info py-2 text-sm mb-3"><i class="fas fa-bolt mr-1"></i>Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
-                    : '';
-
-                return `
-                    ${sameDayNote}
-                    ${renderBrokerRatesPanel(broker, result.mtfAmount, inp.buyDate, inp.sellDate)}
-                    <hr class="my-3" />
-                    <div class="section-title"><i class="fas fa-hand-holding-usd mr-2"></i>Funding</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Investment</span><span class="text-sm font-semibold text-right">${fmtDec(result.totalInvestment)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Your Margin</span><span class="text-sm font-semibold text-right">${fmtDec(result.ownMargin)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Broker Funded</span><span class="text-sm font-semibold text-right">${fmtDec(result.mtfAmount)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Leverage</span><span class="text-sm font-semibold text-right">${levDisplay}</span></div>
-                    <div class="section-title"><i class="far fa-clock mr-2"></i>Holding</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="text-sm font-semibold text-right">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
-                    <div class="section-title"><i class="fas fa-calculator mr-2"></i>P&L</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">MTF Interest</span><span class="text-sm font-semibold text-right text-warning">- ${fmtDec(result.interest)}</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200 font-medium text-base-content/80 border-t border-base-200 pt-2 mt-1"><span class="text-sm text-base-content/60">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
-                    <div class="section-title mt-3"><i class="fas fa-percent mr-2"></i>Interest Detail</div>
-                    <div class="bg-base-200 rounded-xl p-2 my-2 text-sm text-center">
-                        ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
-                    </div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Rate / day</span><span class="text-sm font-semibold text-right">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
-                    <div class="flex justify-between gap-4 py-2 border-b border-base-200"><span class="text-sm text-base-content/60">Rate / year</span><span class="text-sm font-semibold text-right">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
-                    <div class="section-title mt-3"><i class="fas fa-receipt mr-2"></i>Charges Breakdown</div>
-                    ${chargesTable(buy, sell)}
-                `;
-            }
-
-            function openCalcBreakdownSheet(broker) {
-                const inp = getCalcInputs();
-                if (!calcInputsValid(inp)) {
-                    showToast('Please fill in all calculator fields first.', 'warning');
-                    return;
-                }
-                const b = broker || inp.broker;
-                Sheet.open(`<i class="fas fa-calculator mr-2"></i>${b} Breakdown`, buildCalcBreakdownHtml(b, inp), '');
-            }
-
-            function updateMtfCalculator() {
-                const inp = getCalcInputs();
-                const comparePanel = document.getElementById('calcComparePanel');
-                const totalHost = document.getElementById('calcTotalAmountHost');
-                renderCalcChargeMode(inp);
-
-                if (!calcInputsValid(inp)) {
-                    if (totalHost) totalHost.innerHTML = '';
-                    comparePanel.innerHTML = '<p class="text-base-content/60 text-sm mb-0">Fill in all fields to compare brokers.</p>';
-                    return;
-                }
-
-                const preview = calculateTrade({ ...inp, broker: 'Zerodha' });
-                const totalAmount = preview.totalInvestment + preview.totalCharges + preview.interest;
-                if (totalHost) {
-                    totalHost.innerHTML = renderTotalAmountCard(totalAmount, {
-                        label: 'Total Amount',
-                        note: shouldShowAmountInWords(totalAmount) ? amountInWords(totalAmount) : '',
-                        size: 'hero',
-                        decimals: true,
-                        tone: 'positive'
-                    });
-                }
-
-                const sameDay = isSameDayTrade(inp.buyDate, inp.sellDate);
-                const brokers = ['Zerodha', 'Dhan', 'Groww'];
-                const rows = brokers.map(b => {
-                    const r = calculateTrade({ ...inp, broker: b });
-                    const typeBadge = r.tradeType === 'intraday'
-                        ? appTag('Intraday', 'warning')
-                        : '';
-                    return `
-                        <tr>
-                            <td class="font-semibold"><span class="inline-flex flex-wrap items-center gap-1.5">${b}${typeBadge}</span></td>
-                            <td class="text-end">${fmtDec(r.interest)}</td>
-                            <td class="text-end">${renderAmount(r.totalCharges, { size: 'xs', decimals: true, tone: 'negative', align: 'right' })}</td>
-                            <td class="text-end font-semibold">${renderAmount(r.netProfit, { size: 'xs', decimals: true, align: 'right' })}</td>
-                            <td class="text-end">
-                                <button type="button" class="btn btn-sm btn-circle btn-ghost" onclick="openCalcBreakdownSheet('${b}')" title="View breakdown" aria-label="View ${b} breakdown">
-                                    <i class="fas fa-circle-info text-primary"></i>
-                                </button>
-                            </td>
-                        </tr>`;
-                }).join('');
-                const footnote = sameDay
-                    ? '<i class="fas fa-bolt mr-1"></i>Same-day dates — all brokers use intraday charge rules. Tap info for full breakdown.'
-                    : '<i class="fas fa-circle-info mr-1"></i>Overnight hold — MTF/delivery charges apply. Tap info for full breakdown.';
-                comparePanel.innerHTML = `
-                    <table class="table table-sm w-full w-full">
-                        <thead class="bg-base-200">
-                            <tr>
-                                <th>Broker</th>
-                                <th class="text-end">Interest</th>
-                                <th class="text-end">Charges</th>
-                                <th class="text-end">Net Profit</th>
-                                <th class="text-end w-10"></th>
-                            </tr>
-                        </thead>
-                        <tbody>${rows}</tbody>
-                    </table>
-                    <p class="text-base-content/60 text-sm mt-2 mb-0">${footnote}</p>
-                `;
-            }
+            // MTF Calculator → components/organisms/page-mtf-calculator/mtf-calculator-page.js
 
             // ---------- COPY TRANSACTION ----------
             async function copyTransaction(id) {
@@ -4963,611 +3303,7 @@
                 renderPlanTrades();
             }
 
-            // ---------- VIEW MODAL ----------
-            
-
-            function openViewModal(id) {
-                const raw = getTransaction(id);
-                if (!raw) { showToast('Transaction not found.', 'danger'); return; }
-                const tx = resolveTradeForDisplay(raw);
-
-                const isOpen = (tx.status || 'closed') === 'open';
-                const statusLabel = isOpen ? appTag('Open', 'warning') : appTag('Closed');
-                const notesBlock = tx.notes
-                    ? `<div class="trade-view-sheet__notes mt-4 pt-4 border-t border-base-200">
-                        <div class="text-sm font-medium text-base-content/70 mb-1">Notes</div>
-                        <p class="text-sm text-base-content/60 mb-0">${tx.notes}</p>
-                       </div>`
-                    : '';
-
-                const html = `
-                    <div class="trade-view-sheet">
-                        <div class="trade-card-header mb-3">
-                            <div class="min-w-0">
-                                <div class="trade-card-header__title">${tx.company}</div>
-                                ${isOpen ? `<div class="mt-1.5">${statusLabel}</div>` : ''}
-                            </div>
-                            <div class="trade-card-header__actions">
-                                ${renderTradeCardPnl(tx.netProfit, { size: 'md', compact: true, className: 'trade-card-header__pnl', groupClass: 'trade-card-header__pnl-group' })}
-                            </div>
-                        </div>
-                        ${renderTradeDetailsList(tx)}
-                        ${renderTradeViewPnLSummary(tx)}
-                        ${notesBlock}
-                        <div class="text-xs text-base-content/45 mt-3 text-center">ID: ${tx.id}</div>
-                    </div>
-                `;
-
-                Sheet.open(`<i class="fas fa-eye mr-2"></i>${tx.company}`, html, '');
-            }
-
-            // ---------- CHARGES BREAKDOWN ----------
-            function chargeSides(t) {
-                const chargeCfg = getChargeConfig(t.broker, t.buyDate, t.sellDate);
-                const qty = t.quantity || 0;
-                const buyVal = (t.buyPrice || 0) * qty;
-                const sellVal = getEffectiveSellPrice(t) * qty;
-
-                const buy = {
-                    orderValue: buyVal,
-                    brokerage: calcOrderBrokerage(buyVal, chargeCfg),
-                    stt: buyVal * chargeCfg.sttBuyPct,
-                    exchange: buyVal * chargeCfg.exchangePct,
-                    sebi: buyVal * chargeCfg.sebiPct,
-                    stamp: buyVal * chargeCfg.stampPct,
-                    pledge: chargeCfg.pledgeCharge || 0,
-                    unpledge: 0,
-                    dp: 0
-                };
-                buy.gst = (buy.brokerage + buy.exchange + buy.sebi + buy.pledge) * chargeCfg.gstPct;
-                buy.total = buy.brokerage + buy.stt + buy.exchange + buy.sebi + buy.stamp + buy.pledge + buy.gst;
-
-                const sell = {
-                    orderValue: sellVal,
-                    brokerage: calcOrderBrokerage(sellVal, chargeCfg),
-                    stt: sellVal * chargeCfg.sttSellPct,
-                    exchange: sellVal * chargeCfg.exchangePct,
-                    sebi: sellVal * chargeCfg.sebiPct,
-                    stamp: 0,
-                    pledge: 0,
-                    unpledge: chargeCfg.unpledgeCharge || 0,
-                    dp: chargeCfg.dpCharge || 0
-                };
-                sell.gst = (sell.brokerage + sell.exchange + sell.sebi + sell.unpledge + sell.dp) * chargeCfg.gstPct;
-                sell.total = sell.brokerage + sell.stt + sell.exchange + sell.sebi + sell.unpledge + sell.dp + sell.gst;
-
-                return { buy, sell, tradeType: chargeCfg.tradeType };
-            }
-
-            function chargesTable(buy, sell) {
-                const rows = [
-                    ['Brokerage', buy.brokerage, sell.brokerage],
-                    ['STT', buy.stt, sell.stt],
-                    ['Exchange / Txn', buy.exchange, sell.exchange],
-                    ['SEBI', buy.sebi, sell.sebi],
-                    ['Stamp Duty', buy.stamp, sell.stamp],
-                    ['Pledge', buy.pledge, sell.pledge],
-                    ['Unpledge', buy.unpledge, sell.unpledge],
-                    ['DP Charges', buy.dp, sell.dp],
-                    ['GST (18%)', buy.gst, sell.gst]
-                ].filter(([, b, s]) => (b + s) > 0);
-                const body = rows.map(([l, b, s]) => `
-                    <tr>
-                        <td class="text-base-content/60">${l}</td>
-                        <td class="text-end buy-price-col">${fmtDec(b)}</td>
-                        <td class="text-end">${fmtDec(s)}</td>
-                        <td class="text-end font-semibold">${fmtDec(b + s)}</td>
-                    </tr>`).join('');
-                return `
-                    <div class="overflow-x-auto">
-                        <table class="table table-sm w-full w-full">
-                            <thead class="bg-base-200">
-                                <tr>
-                                    <th>Charge</th>
-                                    <th class="text-end buy-price-col"><i class="fas fa-arrow-down mr-1"></i>Buy</th>
-                                    <th class="text-end"><i class="fas fa-arrow-up text-error mr-1"></i>Sell</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="text-sm">
-                                    <td class="text-base-content/60">Order Value</td>
-                                    <td class="text-end buy-price-col">${fmtDec(buy.orderValue)}</td>
-                                    <td class="text-end">${fmtDec(sell.orderValue)}</td>
-                                    <td class="text-end font-semibold">${fmtDec(buy.orderValue + sell.orderValue)}</td>
-                                </tr>
-                                ${body}
-                                <tr class="font-medium text-base-content/80 border-t border-base-200">
-                                    <td>Total Charges</td>
-                                    <td class="text-end buy-price-col">${fmtDec(buy.total)}</td>
-                                    <td class="text-end">${fmtDec(sell.total)}</td>
-                                    <td class="text-end text-base-content/55">${fmtDec(buy.total + sell.total)}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                `;
-            }
-
-            
-            let targetModalTradeId = null;
-            let targetActiveSellPct = null;
-
-            function renderTargetSellPctChips() {
-                const wrap = document.getElementById('targetSellPctChips');
-                if (!wrap) return;
-                const presets = getCalcSellPctPresets();
-                wrap.innerHTML = presets.map(p => {
-                    const active = targetActiveSellPct != null && Math.abs(targetActiveSellPct - p) < 0.0001;
-                    return `<button type="button" class="md-filter-chip${active ? ' md-filter-chip--selected' : ''}" onclick="setTargetSellPct(${p})" aria-pressed="${active}">${fmtCalcPctLabel(p)}</button>`;
-                }).join('');
-            }
-
-            function updateTargetModalPreview() {
-                const tx = getTransaction(targetModalTradeId);
-                if (!tx) return;
-                const buy = Number(tx.buyPrice) || 0;
-                const sell = parseFloat(document.getElementById('targetSellPrice')?.value) || 0;
-                const previewEl = document.getElementById('targetSellPreview');
-                const gainEl = document.getElementById('targetGainPreview');
-                if (previewEl) previewEl.textContent = sell > 0 ? fmtDec(sell) : '—';
-                if (!gainEl) return;
-                if (buy > 0 && sell > 0) {
-                    const pct = ((sell - buy) / buy) * 100;
-                    const diff = sell - buy;
-                    const sign = pct >= 0 ? '+' : '';
-                    const tone = pct >= 0 ? 'target-sheet__gain--up' : 'target-sheet__gain--down';
-                    gainEl.className = `target-sheet__gain ${tone}`;
-                    gainEl.innerHTML = `<span>${sign}${pct.toFixed(2)}%</span><span class="target-sheet__gain-dot" aria-hidden="true">·</span><span>${sign}${fmtDec(Math.abs(diff))} per share</span>`;
-                } else {
-                    gainEl.className = 'target-sheet__gain target-sheet__gain--neutral';
-                    const tx = getTransaction(targetModalTradeId);
-                    const isOpen = (tx?.status || 'closed') === 'open';
-                    gainEl.textContent = isOpen ? 'Set a target sell price' : 'Set a sell price';
-                }
-            }
-
-            function setTargetSellPct(pct) {
-                targetActiveSellPct = pct;
-                const tx = getTransaction(targetModalTradeId);
-                const buy = Number(tx?.buyPrice) || 0;
-                if (buy <= 0) {
-                    showToast('Buy price missing on this trade.', 'warning');
-                    return;
-                }
-                const el = document.getElementById('targetSellPrice');
-                if (el) el.value = (buy * (1 + pct / 100)).toFixed(2);
-                renderTargetSellPctChips();
-                updateTargetModalPreview();
-            }
-
-            function applyTargetSellPctCustom() {
-                const el = document.getElementById('targetSellPctCustom');
-                const pct = parseFloat(el?.value);
-                if (!pct || pct <= 0) {
-                    showToast('Enter a valid percentage.', 'warning');
-                    return;
-                }
-                const presets = getCalcSellPctPresets();
-                if (!presets.some(p => Math.abs(p - pct) < 0.0001)) {
-                    presets.push(pct);
-                    presets.sort((a, b) => a - b);
-                    saveCalcSellPctPresets(presets);
-                }
-                if (el) el.value = '';
-                setTargetSellPct(pct);
-            }
-
-            function onTargetSellPriceInput() {
-                targetActiveSellPct = null;
-                renderTargetSellPctChips();
-                updateTargetModalPreview();
-            }
-
-            function openTargetModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                targetModalTradeId = id;
-                targetActiveSellPct = null;
-                const isOpen = (tx.status || 'closed') === 'open';
-                const buy = Number(tx.buyPrice) || 0;
-                const sellVal = tx.sellPrice || getEffectiveSellPrice(tx) || '';
-                const sellLabel = isOpen ? 'Target sell' : 'Sell';
-                const gainPlaceholder = isOpen ? 'Set a target sell price' : 'Set a sell price';
-                const sheetTitle = isOpen
-                    ? `<i class="fas fa-bullseye mr-2 text-[var(--gr-accent)]"></i>${tx.company}`
-                    : `<i class="fas fa-tag mr-2 text-[var(--gr-danger)]"></i>${tx.company} Sell`;
-                const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
-                Sheet.open(sheetTitle, `
-                    <div class="target-sheet">
-                        <div class="target-sheet__hero">
-                            <div class="target-sheet__price-col">
-                                <span class="target-sheet__price-label">Buy</span>
-                                <span class="target-sheet__price-value target-sheet__price-value--buy">${fmtDec(buy)}</span>
-                            </div>
-                            <div class="target-sheet__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
-                            <div class="target-sheet__price-col target-sheet__price-col--sell">
-                                <span class="target-sheet__price-label">${sellLabel}</span>
-                                <span class="target-sheet__price-value target-sheet__price-value--sell" id="targetSellPreview">—</span>
-                            </div>
-                        </div>
-                        <div class="target-sheet__gain target-sheet__gain--neutral" id="targetGainPreview">${gainPlaceholder}</div>
-
-                        <section class="target-sheet__section">
-                            <h4 class="target-sheet__section-label">Quick target %</h4>
-                            <div class="md-chip-group md-chip-group--filter target-sheet__chips" id="targetSellPctChips"></div>
-                            <div class="target-sheet__custom-pct">
-                                <input type="number" class="target-sheet__custom-pct-input" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
-                                <button type="button" class="md-filter-chip target-sheet__custom-pct-btn" onclick="applyTargetSellPctCustom()">Add</button>
-                            </div>
-                        </section>
-
-                        <section class="target-sheet__section">
-                            <h4 class="target-sheet__section-label">Sell price</h4>
-                            <div class="target-sheet__sell-input-wrap">
-                                <span class="target-sheet__sell-currency" aria-hidden="true">₹</span>
-                                <input type="number" class="target-sheet__sell-input" id="targetSellPrice" min="0.01" step="0.01" value="${sellVal}" oninput="onTargetSellPriceInput()" inputmode="decimal" />
-                            </div>
-                            <p class="target-sheet__hint">${isOpen ? 'Tap a % above or enter your target sell price manually.' : 'Tap a % above or enter the sell price manually.'}</p>
-                        </section>
-                    </div>
-                `, renderAppButtonRow('Cancel', actionLabel, {
-                    cancelOnClick: 'closeSheet()',
-                    actionOnClick: 'saveTargetSellPrice()',
-                    actionIcon: 'fa-check'
-                }));
-                renderTargetSellPctChips();
-                updateTargetModalPreview();
-            }
-
-            let buyPriceModalTradeId = null;
-
-            function openBuyPriceModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                buyPriceModalTradeId = id;
-                const bp = Number(tx.buyPrice) || 0;
-                Sheet.open(`<i class="fas fa-tag mr-2 text-[var(--content-accent-secondary)]"></i>${tx.company} Buy`, `
-                    <p class="text-sm text-base-content/60 mb-3">Update buy price. Margin, charges, and P&L will recalculate.</p>
-                    <div class="mb-3">
-                        <label class="label-text font-normal buy-price-label mb-1">Buy Price</label>
-                        <input type="number" class="input input-bordered w-full" id="buyPriceModalInput" min="0.01" step="0.01" value="${bp}" inputmode="decimal" />
-                    </div>
-                `, renderAppButtonRow('Cancel', 'Update Buy Price', {
-                    cancelOnClick: 'closeSheet()',
-                    actionOnClick: 'saveBuyPrice()',
-                    actionIcon: 'fa-check'
-                }));
-            }
-
-            async function saveBuyPrice() {
-                const id = buyPriceModalTradeId;
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const buyPrice = parseFloat(document.getElementById('buyPriceModalInput')?.value);
-                if (!buyPrice || buyPrice <= 0) {
-                    showToast('Enter a valid buy price.', 'warning');
-                    return;
-                }
-                const sellPrice = getEffectiveSellPrice(tx);
-                const calc = calculateTrade({ ...tx, buyPrice, sellPrice });
-                const saved = await updateTransaction(id, applyVerifiedReset(tx, {
-                    buyPrice,
-                    grossProfit: calc.grossProfit,
-                    interest: calc.interest,
-                    charges: calc.totalCharges,
-                    netProfit: calc.netProfit,
-                    holdingDays: calc.holdingDays,
-                    mtfAmount: calc.mtfAmount,
-                    ownMargin: calc.ownMargin,
-                    totalInvestment: calc.totalInvestment,
-                    breakdown: calc.breakdown
-                }));
-                if (saved) {
-                    showToast('Buy price updated.', 'success');
-                    buyPriceModalTradeId = null;
-                    Sheet.close();
-                    refreshTradeListViews();
-                    refreshActiveMoreView();
-                } else {
-                    showToast('Error updating buy price.', 'danger');
-                }
-            }
-
-            async function saveTargetSellPrice() {
-                const id = targetModalTradeId;
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const sellPrice = parseFloat(document.getElementById('targetSellPrice')?.value);
-                if (!sellPrice || sellPrice <= 0) {
-                    showToast('Enter a valid sell price.', 'warning');
-                    return;
-                }
-                const calc = calculateTrade({ ...tx, sellPrice });
-                const saved = await updateTransaction(id, applyVerifiedReset(tx, {
-                    sellPrice,
-                    grossProfit: calc.grossProfit,
-                    interest: calc.interest,
-                    charges: calc.totalCharges,
-                    netProfit: calc.netProfit,
-                    holdingDays: calc.holdingDays,
-                    mtfAmount: calc.mtfAmount,
-                    ownMargin: calc.ownMargin,
-                    totalInvestment: calc.totalInvestment,
-                    breakdown: calc.breakdown
-                }));
-                if (saved) {
-                    showToast('Sell price updated.', 'success');
-                    targetModalTradeId = null;
-                    targetActiveSellPct = null;
-                    Sheet.close();
-                    refreshTradeListViews();
-                    refreshActiveMoreView();
-                } else {
-                    showToast('Error updating sell price.', 'danger');
-                }
-            }
-
-            function addDaysToDateKey(dateKey, days) {
-                const key = parseDateKey(dateKey);
-                if (!key) return '';
-                const d = new Date(key + 'T12:00:00');
-                d.setDate(d.getDate() + Math.round(days));
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                return `${y}-${m}-${day}`;
-            }
-
-            let holdModalTradeId = null;
-            let holdModalSyncing = false;
-            let leverageModalTradeId = null;
-
-            function leverageModalBreakdownHtml(tx, leverage) {
-                const lev = Math.max(1, Number(leverage) || 1);
-                const qty = Number(tx.quantity) || 0;
-                const bp = Number(tx.buyPrice) || 0;
-                const totalInv = bp * qty;
-                const ownMargin = lev > 1 ? totalInv / lev : totalInv;
-                const mtfAmt = lev > 1 ? totalInv * (1 - 1 / lev) : 0;
-                return `
-                    <div>Total investment: ${fmtDec(totalInv)}</div>
-                    <div>Your margin: ${fmtDec(ownMargin)}</div>
-                    <div>Broker funded: ${fmtDec(mtfAmt)}</div>
-                `;
-            }
-
-            function onLeverageModalInput() {
-                const tx = getTransaction(leverageModalTradeId);
-                if (!tx) return;
-                const lev = parseFloat(document.getElementById('levModalInput')?.value) || 1;
-                const el = document.getElementById('levModalBreakdown');
-                if (el) el.innerHTML = leverageModalBreakdownHtml(tx, lev);
-            }
-
-            function openLeverageModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                leverageModalTradeId = id;
-                const lev = Number(tx.leverage) || 1;
-                Sheet.open(`<i class="fas fa-layer-group mr-2"></i>${tx.company} Leverage`, `
-                    <p class="text-sm text-base-content/60 mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
-                    <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65 mb-1">Leverage (X)</label>
-                        <input type="number" class="input input-bordered w-full" id="levModalInput" min="1" step="0.1" value="${lev}" oninput="onLeverageModalInput()" />
-                        <p class="label-text-alt mt-1 mb-0">Your margin = total investment ÷ leverage. Broker funds the rest.</p>
-                    </div>
-                    <div class="text-sm text-base-content/60 space-y-1" id="levModalBreakdown">
-                        ${leverageModalBreakdownHtml(tx, lev)}
-                    </div>
-                `, renderAppButtonRow('Cancel', 'Update Leverage', {
-                    cancelOnClick: 'closeSheet()',
-                    actionOnClick: 'saveLeverage()',
-                    actionIcon: 'fa-check'
-                }));
-            }
-
-            async function saveLeverage() {
-                const id = leverageModalTradeId;
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const leverage = parseFloat(document.getElementById('levModalInput')?.value);
-                if (!leverage || leverage < 1) {
-                    showToast('Enter leverage of 1 or higher.', 'warning');
-                    return;
-                }
-                const sellPrice = getEffectiveSellPrice(tx);
-                const calc = calculateTrade({ ...tx, leverage, sellPrice });
-                const saved = await updateTransaction(id, {
-                    leverage,
-                    grossProfit: calc.grossProfit,
-                    interest: calc.interest,
-                    charges: calc.totalCharges,
-                    netProfit: calc.netProfit,
-                    holdingDays: calc.holdingDays,
-                    mtfAmount: calc.mtfAmount,
-                    ownMargin: calc.ownMargin,
-                    totalInvestment: calc.totalInvestment,
-                    breakdown: calc.breakdown
-                });
-                if (saved) {
-                    showToast('Leverage updated.', 'success');
-                    leverageModalTradeId = null;
-                    Sheet.close();
-                    refreshTradeListViews();
-                    refreshActiveMoreView();
-                } else {
-                    showToast('Error updating leverage.', 'danger');
-                }
-            }
-
-            function syncHoldModalDaysFromDates() {
-                if (holdModalSyncing) return;
-                const buyEl = document.getElementById('holdBuyDate');
-                const sellEl = document.getElementById('holdSellDate');
-                const daysEl = document.getElementById('holdDays');
-                if (!buyEl || !sellEl || !daysEl) return;
-                const buy = buyEl.value;
-                const sell = sellEl.value;
-                if (!buy || !sell) {
-                    daysEl.value = '';
-                    return;
-                }
-                holdModalSyncing = true;
-                daysEl.value = String(calcInterestDays(buy, sell));
-                holdModalSyncing = false;
-            }
-
-            function onHoldModalDaysInput() {
-                if (holdModalSyncing) return;
-                const buyEl = document.getElementById('holdBuyDate');
-                const sellEl = document.getElementById('holdSellDate');
-                const daysEl = document.getElementById('holdDays');
-                if (!buyEl || !sellEl || !daysEl) return;
-                const buy = buyEl.value;
-                const days = parseInt(daysEl.value, 10);
-                if (!buy || Number.isNaN(days) || days < 0) return;
-                holdModalSyncing = true;
-                if (days === 0) {
-                    setDateInputValue(sellEl, buy);
-                } else {
-                    setDateInputValue(sellEl, addDaysToDateKey(buy, days - 1));
-                }
-                holdModalSyncing = false;
-            }
-
-            function onHoldModalDateInput() {
-                syncHoldModalDaysFromDates();
-            }
-
-            function setHoldModalSameDay() {
-                const buyEl = document.getElementById('holdBuyDate');
-                const sellEl = document.getElementById('holdSellDate');
-                if (!buyEl?.value) return;
-                holdModalSyncing = true;
-                setDateInputValue(sellEl, buyEl.value);
-                const daysEl = document.getElementById('holdDays');
-                if (daysEl) daysEl.value = '0';
-                holdModalSyncing = false;
-            }
-
-            function setHoldModalTodayPair() {
-                const buyEl = document.getElementById('holdBuyDate');
-                const sellEl = document.getElementById('holdSellDate');
-                if (!buyEl || !sellEl) return;
-                const today = new Date();
-                const tomorrow = new Date(today);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                holdModalSyncing = true;
-                setDateInputValue(buyEl, today.toISOString().split('T')[0]);
-                setDateInputValue(sellEl, tomorrow.toISOString().split('T')[0]);
-                const daysEl = document.getElementById('holdDays');
-                if (daysEl) daysEl.value = String(calcInterestDays(buyEl.value, sellEl.value));
-                holdModalSyncing = false;
-            }
-
-            function openHoldModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                holdModalTradeId = id;
-                const isOpen = (tx.status || 'closed') === 'open';
-                const buyDate = parseDateKey(tx.buyDate) || '';
-                const sellDate = parseDateKey(tx.sellDate) || '';
-                const holdDays = buyDate && sellDate ? calcInterestDays(buyDate, sellDate) : getDaysHeld(tx);
-                const openNote = isOpen
-                    ? '<p class="text-sm text-base-content/60 mb-3">Open trade — dates below drive interest and charge estimates.</p>'
-                    : '';
-
-                Sheet.open(`<i class="far fa-clock mr-2"></i>${tx.company} Holding`, `
-                    ${openNote}
-                    <div class="grid grid-cols-2 gap-2 mb-3">
-                        <div>
-                            <label class="label-text font-normal buy-price-label mb-1">Buy Date</label>
-                            <input type="date" class="input input-bordered w-full" id="holdBuyDate" value="${buyDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
-                        </div>
-                        <div>
-                            <label class="label-text font-normal text-base-content/65 mb-1">Sell Date</label>
-                            <input type="date" class="input input-bordered w-full" id="holdSellDate" value="${sellDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65 mb-1">Financed days</label>
-                        <input type="number" class="input input-bordered w-full" id="holdDays" min="0" step="1" value="${holdDays}" oninput="onHoldModalDaysInput()" />
-                        <p class="label-text-alt mt-1 mb-0">Includes buy and sell days (matches broker interest). Change days to shift sell date, or edit dates directly.</p>
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setHoldModalSameDay()">Same day</button>
-                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setHoldModalTodayPair()">Today → Tomorrow</button>
-                    </div>
-                `, renderAppButtonRow('Cancel', 'Update Dates', {
-                    cancelOnClick: 'closeSheet()',
-                    actionOnClick: 'saveHoldDates()',
-                    actionIcon: 'fa-check'
-                }));
-            }
-
-            async function saveHoldDates() {
-                const id = holdModalTradeId;
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const buyDate = document.getElementById('holdBuyDate')?.value;
-                const sellDate = document.getElementById('holdSellDate')?.value;
-                if (!buyDate || !sellDate) {
-                    showToast('Please select both buy and sell dates.', 'warning');
-                    return;
-                }
-                if (new Date(sellDate + 'T12:00:00') < new Date(buyDate + 'T12:00:00')) {
-                    showToast('Sell date cannot be before buy date.', 'warning');
-                    return;
-                }
-                const calc = calculateTrade({ ...tx, buyDate, sellDate, sellPrice: getEffectiveSellPrice(tx) });
-                const saved = await updateTransaction(id, {
-                    buyDate,
-                    sellDate,
-                    grossProfit: calc.grossProfit,
-                    interest: calc.interest,
-                    charges: calc.totalCharges,
-                    netProfit: calc.netProfit,
-                    holdingDays: calc.holdingDays,
-                    mtfAmount: calc.mtfAmount,
-                    ownMargin: calc.ownMargin,
-                    totalInvestment: calc.totalInvestment,
-                    breakdown: calc.breakdown
-                });
-                if (saved) {
-                    showToast('Dates updated.', 'success');
-                    holdModalTradeId = null;
-                    Sheet.close();
-                    refreshTradeListViews();
-                    refreshActiveMoreView();
-                } else {
-                    showToast('Error updating dates.', 'danger');
-                }
-            }
-
-            function openChargesModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const { buy, sell, tradeType } = chargeSides(tx);
-                const grand = buy.total + sell.total;
-                const intraNote = tradeType === 'intraday'
-                    ? `<div class="alert alert-info py-2 text-sm mb-2"><i class="fas fa-bolt mr-1"></i>Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
-                    : '';
-
-                const chargesHtml = `
-                    ${buildTradeMetaTags(tx, tradeType === 'intraday' ? [appTag('Intraday', 'warning')] : [])}
-                    ${intraNote}
-                    ${chargesTable(buy, sell)}
-                    <div class="grid grid-cols-3 gap-2 text-center mt-3">
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm buy-price-label">Buy Side</div><div class="buy-side-value">${fmtDec(buy.total)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/60">Sell Side</div><div class="font-medium text-base-content/80">${fmtDec(sell.total)}</div></div></div>
-                        <div class=""><div class="bg-base-200 rounded-xl p-2"><div class="text-sm text-base-content/55">Total</div><div class="font-medium text-base-content/75">${fmtDec(grand)}</div></div></div>
-                    </div>
-                `;
-
-                Sheet.open(`<i class="fas fa-receipt mr-2"></i>${tx.company} Charges`, chargesHtml, '');
-            }
-
+            // trade detail sheets → components/organisms/trade-*-sheet/
             // ---------- INTEREST BREAKDOWN ----------
             function interestDetails(t) {
                 const sellPrice = getEffectiveSellPrice(t);
@@ -5599,81 +3335,7 @@
             }
 
             
-            function openInterestModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                const d = interestDetails(tx);
-                const lev = Number(tx.leverage) || 1;
-                const levDisplay = lev > 1 ? `${parseFloat(lev.toFixed(2))}x` : '1x';
-                const broker = tx.broker || '—';
-                const noLeverage = d.mtf <= 0;
-                const sameDayNote = d.sameDay
-                    ? '<p class="interest-sheet__note">Same-day trade — no MTF interest. Broker charges use intraday rates.</p>'
-                    : '';
-                const noLevNote = noLeverage && !d.sameDay
-                    ? '<p class="interest-sheet__note">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
-                    : '';
-
-                Sheet.open(`<i class="fas fa-percent mr-2 text-[var(--content-accent-quantity)]"></i><span class="interest-sheet__title-name">${tx.company}</span><span class="interest-sheet__title-broker">${broker}</span>`, `
-                    <div class="interest-sheet">
-                        <div class="interest-sheet__card">
-                            ${interestSheetRow('Total interest', fmtDec(d.interest), 'interest-sheet__row-value--interest interest-sheet__row-value--total')}
-                            ${interestSheetRow('Total investment', fmtDec(d.totalInvestment))}
-                            ${interestSheetRow('Your margin', fmtDec(d.ownMargin))}
-                            ${interestSheetRow('Leverage', levDisplay, 'interest-sheet__row-value--lev')}
-                            ${interestSheetRow('Broker funded', fmtDec(d.mtf), 'interest-sheet__row-value--strong')}
-                            ${interestSheetRow('Days financed', d.sameDay ? '0 day(s)' : `${d.days} day(s)`, 'interest-sheet__row-value--days')}
-                            ${interestSheetRow('Interest per day', fmtDec(d.perDayInterest), 'interest-sheet__row-value--interest')}
-                            ${interestSheetRow('Rate per day', `${(d.dailyRate * 100).toFixed(4)}%`)}
-                            ${interestSheetRow('Rate per year', `${(d.annualRate * 100).toFixed(2)}%`)}
-                        </div>
-                        ${sameDayNote}
-                        ${noLevNote}
-                    </div>
-                `, '');
-            }
-
             // ---------- CONFIRMATION DIALOG (copy / edit / delete) ----------
-            let confirmPending = null;
-            let confirmRun = false;
-            function getConfirmModal() {
-                const el = AppDialog.el();
-                if (!el._confirmInit) {
-                    el._confirmInit = true;
-                    el.addEventListener('close', () => {
-                        const cb = confirmPending;
-                        const run = confirmRun;
-                        confirmPending = null;
-                        confirmRun = false;
-                        if (run && typeof cb === 'function') {
-                            Promise.resolve(cb()).catch(err => console.warn('confirm action failed', err));
-                        }
-                    });
-                }
-                return el;
-            }
-
-            function confirmAction({ title, titleClass = '', message, confirmLabel, confirmClass = 'action', onConfirm }) {
-                getConfirmModal();
-                confirmPending = onConfirm;
-                confirmRun = false;
-                AppDialog.titleEl().innerHTML = title;
-                AppDialog.titleEl().className = 'font-semibold text-base-content/80 text-lg ' + titleClass;
-                AppDialog.bodyEl().textContent = message;
-                const variant = resolveAppButtonVariant(confirmClass);
-                AppDialog.footerEl().innerHTML = renderAppButtonRow('Cancel', 'Confirm', {
-                    cancelOnClick: 'closeDialog()',
-                    actionId: 'confirmModalConfirmBtn',
-                    actionVariant: variant,
-                    actionLabelHtml: confirmLabel,
-                    cancelInForm: false
-                });
-                document.getElementById('confirmModalConfirmBtn').addEventListener('click', () => {
-                    confirmRun = true;
-                    AppDialog.close();
-                }, { once: true });
-                AppDialog.el().showModal();
-            }
 
             function confirmDelete(id) {
                 const tx = getTransaction(id);
@@ -5812,279 +3474,9 @@
                 });
             }
 
-            function setTxSaveBtnLabel(isEdit) {
-                renderTxModalFooter(isEdit);
-            }
-
-            function initModals() {
-                initAppButtons();
-
-                const txEl = document.getElementById('txModal');
-                txEl.addEventListener('close', () => {
-                    document.getElementById('txEditId').value = '';
-                    document.getElementById('txForm').reset();
-                    setTxSaveBtnLabel(false);
-                    document.getElementById('statusClosed').checked = true;
-                    document.getElementById('txLeverage').value = 1;
-                    setTxBroker('');
-                    resetCompanyAutocomplete();
-                    clearPreview();
-                });
-
-                // Delete modal already set up in confirmDelete
-            }
-
-            function getTxFormStatus() {
-                return document.querySelector('input[name="status"]:checked')?.value || 'closed';
-            }
-
-            function syncTxSellPriceField() {
-                const isOpen = getTxFormStatus() === 'open';
-                const sellEl = document.getElementById('txSellPrice');
-                const reqMark = document.getElementById('txSellPriceRequired');
-                const hint = document.getElementById('txSellPriceHint');
-                if (sellEl) {
-                    sellEl.required = !isOpen;
-                    sellEl.placeholder = isOpen ? 'Same as buy' : '0.00';
-                }
-                if (reqMark) reqMark.classList.toggle('hidden', isOpen);
-                if (hint) hint.classList.toggle('hidden', !isOpen);
-            }
-
-            function syncTxModalStatusField() {
-                const row = document.getElementById('txStatusRow');
-                const editId = document.getElementById('txEditId')?.value;
-                const editingPlan = editId && isPlannedTrade(getTransaction(editId) || {});
-                const hideStatus = txModalContext === 'plan' || editingPlan;
-                if (row) row.classList.toggle('hidden', hideStatus);
-            }
-
-            function onTxStatusChange() {
-                syncTxSellPriceField();
-                updatePreview();
-            }
-
-            function openAddModal() {
-                const currentPage = getCurrentAppPage().page;
-                txModalContext = currentPage === 'plan' ? 'plan'
-                    : currentPage === 'past' ? 'past'
-                    : (currentPage === 'trades' && tradesViewMode === 'plan') ? 'plan'
-                    : 'trades';
-                document.getElementById('txEditId').value = '';
-                setTxSaveBtnLabel(false);
-                setTxModalMode(false);
-                document.getElementById('txForm').reset();
-                document.getElementById('txLeverage').value = 1;
-                setTxBroker('');
-                const today = new Date().toISOString().split('T')[0];
-                const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-                const tomorrow = getTomorrowDateKey();
-                if (txModalContext === 'plan') {
-                    document.getElementById('statusOpen').checked = true;
-                    setDateInputValue(document.getElementById('txBuyDate'), tomorrow);
-                    setDateInputValue(document.getElementById('txSellDate'), tomorrow);
-                } else {
-                    document.getElementById('statusClosed').checked = true;
-                    setDateInputValue(document.getElementById('txBuyDate'), yesterday);
-                    setDateInputValue(document.getElementById('txSellDate'), today);
-                }
-                clearPreview();
-                syncTxModalStatusField();
-                syncTxSellPriceField();
-                initDateFields(document.getElementById('txModal'));
-                document.getElementById("txModal").showModal();
-                attachCalcListeners();
-                updateLeverageBreakdown();
-            }
-
-            function openEditModal(id) {
-                const tx = getTransaction(id);
-                if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-                txModalContext = isPlannedTrade(tx) ? 'plan' : ((tx.status || 'closed') === 'open' ? 'trades' : 'past');
-                document.getElementById('txEditId').value = id;
-                setTxSaveBtnLabel(true);
-                setTxModalMode(true);
-
-                resetCompanyAutocomplete();
-                const editMatch = findStockMetaForCompany(tx.company || '');
-                document.getElementById('txCompany').value = editMatch ? editMatch.n : (tx.company || '');
-                if (editMatch) setTxCompanyMeta(editMatch);
-                setTxBroker(tx.broker || '');
-                setDateInputValue(document.getElementById('txBuyDate'), tx.buyDate || '');
-                setDateInputValue(document.getElementById('txSellDate'), tx.sellDate || '');
-                document.getElementById('txQty').value = tx.quantity || '';
-                document.getElementById('txBuyPrice').value = tx.buyPrice || '';
-                document.getElementById('txSellPrice').value = tx.sellPrice || '';
-                document.getElementById('txLeverage').value = tx.leverage || 1;
-                document.getElementById('txNotes').value = tx.notes || '';
-
-                const status = tx.status || 'closed';
-                document.querySelector(`input[name="status"][value="${status}"]`).checked = true;
-
-                syncTxModalStatusField();
-                syncTxSellPriceField();
-                updatePreview();
-                updateLeverageBreakdown();
-                attachCalcListeners();
-                initDateFields(document.getElementById('txModal'));
-                document.getElementById("txModal").showModal();
-            }
-
-            function attachCalcListeners() {
-                const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage', 'txBroker'];
-                fields.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.removeEventListener('input', updatePreview);
-                        el.removeEventListener('change', updatePreview);
-                        el.addEventListener('input', updatePreview);
-                        el.addEventListener('change', updatePreview);
-                    }
-                });
-                document.getElementById('txLeverage').addEventListener('input', updateLeverageBreakdown);
-                document.getElementById('txBuyPrice').addEventListener('input', updateLeverageBreakdown);
-                document.getElementById('txQty').addEventListener('input', updateLeverageBreakdown);
-            }
-
-            function updateLeverageBreakdown() {
-                const qty = parseFloat(document.getElementById('txQty').value) || 0;
-                const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
-                const lev = parseFloat(document.getElementById('txLeverage').value) || 1;
-                const totalInv = qty * bp;
-                let ownMargin = totalInv;
-                let mtfAmt = 0;
-                if (lev > 1 && totalInv > 0) {
-                    ownMargin = totalInv / lev;
-                    mtfAmt = totalInv - ownMargin;
-                }
-                document.getElementById('previewTotalInv').textContent = fmtDec(totalInv);
-                document.getElementById('previewOwnMargin').textContent = fmtDec(ownMargin);
-                document.getElementById('previewMtfAmt').textContent = fmtDec(mtfAmt);
-            }
-
-            function clearPreview() {
-                document.getElementById('previewDays').textContent = '0';
-                paintAmount(document.getElementById('previewGross'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-                paintAmount(document.getElementById('previewInterest'), 0, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-                paintAmount(document.getElementById('previewCharges'), 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
-                paintAmount(document.getElementById('previewNet'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-                document.getElementById('previewTotalInv').textContent = '₹0';
-                document.getElementById('previewOwnMargin').textContent = '₹0';
-                document.getElementById('previewMtfAmt').textContent = '₹0';
-            }
-
-            function updatePreview() {
-                const company = document.getElementById('txCompany').value || 'Preview';
-                const broker = document.getElementById('txBroker').value || 'Zerodha';
-                const qty = parseFloat(document.getElementById('txQty').value) || 0;
-                const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
-                let sp = parseFloat(document.getElementById('txSellPrice').value) || 0;
-                const buyDate = document.getElementById('txBuyDate').value;
-                const sellDate = document.getElementById('txSellDate').value;
-                const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
-                const status = getTxFormStatus();
-
-                if (status === 'open' && sp <= 0 && bp > 0) sp = bp;
-
-                if (!buyDate || !sellDate || qty <= 0 || bp <= 0 || sp <= 0) {
-                    clearPreview();
-                    return;
-                }
-
-                const result = calculateTrade({ company, broker, quantity: qty, buyPrice: bp, sellPrice: sp, buyDate, sellDate, leverage });
-                document.getElementById('previewDays').textContent = result.holdingDays;
-                paintAmount(document.getElementById('previewGross'), result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-                paintAmount(document.getElementById('previewInterest'), result.interest, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-                paintAmount(document.getElementById('previewCharges'), result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
-                paintAmount(document.getElementById('previewNet'), result.netProfit, { size: 'sm', decimals: true, align: 'right' });
-                updateLeverageBreakdown();
-            }
-
-            async function saveTransaction() {
-                const editId = document.getElementById('txEditId').value;
-                const company = resolveCompanyName(document.getElementById('txCompany').value);
-                const broker = document.getElementById('txBroker').value;
-                const buyDate = document.getElementById('txBuyDate').value;
-                const sellDate = document.getElementById('txSellDate').value;
-                const quantity = parseFloat(document.getElementById('txQty').value);
-                const buyPrice = parseFloat(document.getElementById('txBuyPrice').value);
-                let sellPrice = parseFloat(document.getElementById('txSellPrice').value);
-                const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
-                const notes = document.getElementById('txNotes').value.trim();
-                const status = getTxFormStatus();
-
-                if (!company) { showToast('Please enter company name.', 'warning'); return; }
-                if (!broker) { showToast('Please select a broker.', 'warning'); return; }
-                if (!buyDate || !sellDate) { showToast('Please select both dates.', 'warning'); return; }
-                if (!quantity || quantity <= 0) { showToast('Please enter a valid quantity.', 'warning'); return; }
-                if (!buyPrice || buyPrice <= 0) { showToast('Please enter a valid buy price.', 'warning'); return; }
-                if (status === 'open') {
-                    if (!sellPrice || sellPrice <= 0) sellPrice = buyPrice;
-                } else if (!sellPrice || sellPrice <= 0) {
-                    showToast('Please enter a valid sell price.', 'warning');
-                    return;
-                }
-
-                const txData = { company, broker, buyDate, sellDate, quantity, buyPrice, sellPrice, leverage, notes, status };
-                const calc = calculateTrade(txData);
-                let finalTx = { ...txData, grossProfit: calc.grossProfit, interest: calc.interest, charges: calc.totalCharges, netProfit: calc.netProfit, holdingDays: calc.holdingDays, mtfAmount: calc.mtfAmount, ownMargin: calc.ownMargin, totalInvestment: calc.totalInvestment, breakdown: calc.breakdown };
-
-                const synced = syncCode && fbDb ? ' and synced' : '';
-                if (editId) {
-                    const existing = getTransaction(editId);
-                    let updates = existing ? applyVerifiedReset(existing, finalTx) : finalTx;
-                    if (existing && isPlannedTrade(existing)) {
-                        updates = { ...updates, executed: false, status: 'open' };
-                    }
-                    const saved = await updateTransaction(editId, updates);
-                    if (saved) showToast(`Trade updated${synced}!`, 'success');
-                    else showToast('Error updating trade.', 'danger');
-                } else {
-                    if (txModalContext === 'plan') {
-                        finalTx = { ...finalTx, executed: false, status: 'open' };
-                    } else {
-                        finalTx = { ...finalTx, executed: true };
-                    }
-                    await addTransaction(finalTx);
-                    showToast(`Trade saved${synced}!`, 'success');
-                }
-                document.getElementById("txModal").close();
-                refreshTradeListViews();
-                renderMoney();
-                refreshActiveMoreView();
-            }
-
+            // trade modal → components/organisms/trade-modal/trade-modal.js
             // ---------- SETTINGS ----------
-            function renderSettings() {
-                const txs = getTransactions();
-                document.getElementById('totalTxCount').textContent = txs.length + ' records';
-                document.getElementById('totalTxBadge').textContent = txs.length;
-                renderSettingsMoneyAccounts();
-                renderSyncStatus();
-            }
-
-            function renderSettingsMoneyAccounts() {
-                const accounts = getMoneyAccounts();
-                const countEl = document.getElementById('settingsMoneyAccountCount');
-                const badgeEl = document.getElementById('settingsMoneyAccountBadge');
-                const listEl = document.getElementById('settingsMoneyAccountList');
-                if (countEl) countEl.textContent = accounts.length === 1 ? '1 account' : `${accounts.length} accounts`;
-                if (badgeEl) badgeEl.textContent = accounts.length;
-                if (!listEl) return;
-                if (!accounts.length) {
-                    listEl.innerHTML = '<p class="text-sm text-base-content/60 mb-0">No accounts yet. Tap Add Account above to create one.</p>';
-                    return;
-                }
-                listEl.innerHTML = accounts.map(a => {
-                    const holder = a.holderName ? `<div class="text-sm text-base-content/60">${a.holderName}</div>` : '';
-                    return `
-                        <button type="button" class="btn btn-ghost border border-base-200 w-full text-start mb-2 rounded-xl" onclick="openMoneyAccountModal('${a.id}')">
-                            <div class="font-semibold">${a.name}</div>
-                            ${holder}
-                        </button>
-                    `;
-                }).join('');
-            }
+            // renderSettings, renderSettingsMoneyAccounts → components/organisms/page-settings/settings-page.js
 
             function renderSyncStatus() {
                 const statusEl = document.getElementById('cloudSyncStatus');
@@ -6297,6 +3689,134 @@
             });
 
             // Expose global functions
+            global.MTFAppHelpers = {
+                getDaysHeld,
+                resolveTradeMetrics,
+                interestDetails,
+                ui: {
+                    statLabel: UI.statLabel,
+                    actionBtnSm: UI.actionBtnSm
+                },
+                appHeader: {
+                    moreFeatureMap: { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' },
+                    moreFeatureTitles: {
+                        money: '<i class="fas fa-coins mr-2"></i>Money',
+                        transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
+                        'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
+                    }
+                },
+                tradePages: {
+                    getTransactions,
+                    isPlannedTrade,
+                    isActiveOpenTrade,
+                    sortTradesByHoldDays,
+                    resolveTradeMetrics,
+                    getPastFiltered,
+                    getTransactionStats,
+                    getPlanSearchQuery: () => planSearchQuery,
+                    getTradeSearchQuery: () => tradeSearchQuery,
+                    getPastSearchQuery: () => pastSearchQuery,
+                    getSearchQuery: () => searchQuery,
+                    getSearchContext: () => searchContext,
+                    getTradesViewMode: () => tradesViewMode,
+                    getPastFrom: () => pastFrom,
+                    getPastTo: () => pastTo
+                },
+                settingsPages: {
+                    getTransactions,
+                    getMoneyAccounts,
+                    renderSyncStatus
+                },
+                moneyPages: {
+                    getMoneyAccounts,
+                    getMoneyEntries,
+                    moneyPageFiltersActive,
+                    moneyPageDateFilterActive,
+                    matchesMoneyPageEntryFilter,
+                    getMoneyPageFilterViewTitle,
+                    getMoneyPageFilteredEntries,
+                    syncMoneyPageFilterUI,
+                    syncMoneyTypeDropdowns,
+                    syncMoneyAccountFilterDropdown,
+                    getMoneyAccountFilter: () => moneyAccountFilter,
+                    getMoneyPageTypeFilter: () => moneyPageTypeFilter,
+                    getMoneyPageFrom: () => moneyPageFrom,
+                    getMoneyPageTo: () => moneyPageTo,
+                    getMoneyPageRangeKey: () => moneyPageRangeKey,
+                    setMoneyAccountFilter,
+                    getMoneyHistorySheetAccountId: () => moneyHistorySheetAccountId,
+                    getMoneyHistorySheetTitle,
+                    syncMoneyHistoryFilterUI,
+                    filterMoneyHistoryEntries,
+                    getMoneyHistoryActiveFilterLabel,
+                    moneyHistoryFiltersActive,
+                    moneyHistoryDateFilterActive,
+                    getMoneyHistoryFrom: () => moneyHistoryFrom,
+                    getMoneyHistoryTo: () => moneyHistoryTo
+                },
+                calculator: {
+                    BROKER_CONFIG,
+                    getChargeConfig,
+                    getDhanInterestRate,
+                    calculateTrade,
+                    isSameDayTrade,
+                    interestDetails
+                },
+                tradeSheets: {
+                    getTransaction,
+                    resolveTradeForDisplay,
+                    getEffectiveSellPrice,
+                    interestDetails,
+                    getChargeConfig,
+                    calcOrderBrokerage,
+                    calcInterestDays,
+                    getDaysHeld,
+                    parseDateKey,
+                    calculateTrade,
+                    updateTransaction,
+                    applyVerifiedReset,
+                    refreshTradeListViews,
+                    refreshActiveMoreView
+                },
+                tradeModal: {
+                    getTxModalContext: () => txModalContext,
+                    setTxModalContext: (v) => { txModalContext = v; },
+                    getTransaction,
+                    addTransaction,
+                    updateTransaction,
+                    calculateTrade,
+                    applyVerifiedReset,
+                    isPlannedTrade,
+                    getCurrentAppPage,
+                    getTradesViewMode: () => tradesViewMode,
+                    setTxBroker,
+                    resetCompanyAutocomplete,
+                    findStockMetaForCompany,
+                    setTxCompanyMeta,
+                    resolveCompanyName,
+                    getTomorrowDateKey,
+                    getSyncNote: () => (syncCode && fbDb ? ' and synced' : ''),
+                    refreshTradeListViews,
+                    renderMoney,
+                    refreshActiveMoreView,
+                    confirmDelete
+                },
+                moneyModal: {
+                    getMoneyAccounts,
+                    getMoneyEntry,
+                    getNowTime,
+                    addMoneyEntry,
+                    updateMoneyEntry,
+                    setMoneyHistorySheetAccountId: (id) => { moneyHistorySheetAccountId = id; },
+                    renderMoney,
+                    refreshMoneyHistorySheetIfOpen,
+                    getSyncNote: () => (syncCode && fbDb ? ' and synced' : '')
+                }
+            };
+
+            window.closeSheet = closeSheet;
+            window.closeDialog = closeDialog;
+
             window.navigateTo = navigateTo;
             window.openMoreFeature = openMoreFeature;
             window.backToMoreHub = backToMoreHub;
@@ -6408,7 +3928,7 @@
             window.confirmDeleteMoneyAccount = confirmDeleteMoneyAccount;
             window.confirmDeleteMoneyEntry = confirmDeleteMoneyEntry;
 
-        })();
+        })(typeof window !== 'undefined' ? window : globalThis);
     </script>
 
 </body>
