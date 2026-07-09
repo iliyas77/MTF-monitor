@@ -51,6 +51,11 @@
         const filter = (getMarketFilterQuery() || '').trim().toLowerCase();
         let quotes = getMarketQuotes() || [];
 
+        const sectionLabel = document.getElementById('marketSectionLabel');
+        if (sectionLabel) {
+            sectionLabel.textContent = subTab === 'watchlist' ? 'Watchlist' : 'Live market';
+        }
+
         if (statusEl) {
             statusEl.textContent = loading
                 ? 'Refreshing prices…'
@@ -114,7 +119,7 @@
             return;
         }
 
-        listContainer.innerHTML = `<div class="market-quote-list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
+        listContainer.innerHTML = `<div class="market-quote-list" role="list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
     }
 
     global.MTFRegister({ renderMarketPage });

@@ -44,13 +44,16 @@
         const live = Number(livePrice);
         const target = Number(targetPrice);
         if (!(live > 0) || !(target > 0)) return '—';
-        const diff = Math.abs(target - live);
-        const pct = Math.abs(((target - live) / live) * 100);
+        const signed = target - live;
+        const diff = Math.abs(signed);
+        const pct = Math.abs((signed / live) * 100);
         const diffText = diff.toLocaleString('en-IN', {
             minimumFractionDigits: diff % 1 === 0 ? 0 : 2,
             maximumFractionDigits: 2
         });
-        return `(₹${diffText}) - ${pct.toFixed(2)}%`;
+        // Percentage plain; ₹ difference in orange pill
+        const overshootSign = signed < -0.005 ? '+' : '';
+        return `${pct.toFixed(2)}% <span class="trade-list-item__live-target-pipe" aria-hidden="true">|</span> <span class="trade-list-item__live-target-diff">${overshootSign}₹${diffText}</span>`;
     }
 
     function targetGapTone(livePrice, targetPrice) {
@@ -97,7 +100,6 @@
     }
 
     function renderTradeLiveMetricsRow(t, variant) {
-        if (variant === 'past') return '';
         const helpers = (global.MTFAppHelpers || {}).tradePages || {};
         const resolveSymbol = helpers.resolveTradeLiveSymbol;
         const getQuote = helpers.getTradeLiveQuote;
@@ -128,7 +130,7 @@
         const tradeId = escapeHtml(t.id || '');
 
         const priceHtml = withRefreshIcon(escapeHtml(formatLivePrice(price)), loading, price != null);
-        const gapHtml = withRefreshIcon(escapeHtml(gapText), loading, price != null);
+        const gapHtml = withRefreshIcon(gapText, loading, price != null);
         const returnHtml = withRefreshIcon(escapeHtml(returnText), loading, price != null && liveReturn != null);
 
         return `<div class="trade-list-item__row trade-list-item__row--live">
@@ -136,18 +138,36 @@
                 data-live-symbol="${escapeHtml(symbol)}"
                 data-target-price="${escapeHtml(targetAttr)}"
                 data-trade-id="${tradeId}">
-                <div class="trade-list-item__live-cell trade-list-item__live-price trade-list-item__live-price--${tone}${loading ? ' trade-list-item__live-price--loading' : ''}">
-                    <span class="trade-list-item__live-label">Current Market</span>
+                <button type="button" class="trade-list-item__live-cell trade-list-item__live-cell--clickable trade-list-item__live-price trade-list-item__live-price--${tone}${loading ? ' trade-list-item__live-price--loading' : ''}"
+                    onclick="refreshTradeLivePricesNow()"
+                    aria-label="Refresh current market price"
+                    title="Tap to refresh live prices">
+                    <span class="trade-list-item__live-label">
+                        <i class="fas fa-chart-line trade-list-item__live-label-icon trade-list-item__live-price-icon" aria-hidden="true"></i>
+                        Current Market
+                    </span>
                     <span class="trade-list-item__live-price-value">${priceHtml}</span>
-                </div>
-                <div class="trade-list-item__live-cell trade-list-item__live-target trade-list-item__live-target--${gapTone}${loading ? ' trade-list-item__live-target--loading' : ''}">
-                    <span class="trade-list-item__live-label">To Target</span>
+                </button>
+                <button type="button" class="trade-list-item__live-cell trade-list-item__live-cell--clickable trade-list-item__live-target trade-list-item__live-target--${gapTone}${loading ? ' trade-list-item__live-target--loading' : ''}"
+                    onclick="refreshTradeLivePricesNow()"
+                    aria-label="Refresh distance to target"
+                    title="Tap to refresh live prices">
+                    <span class="trade-list-item__live-label">
+                        <i class="fas fa-bullseye trade-list-item__live-label-icon trade-list-item__live-target-icon" aria-hidden="true"></i>
+                        Target
+                    </span>
                     <span class="trade-list-item__live-target-value">${gapHtml}</span>
-                </div>
-                <div class="trade-list-item__live-cell trade-list-item__live-return trade-list-item__live-return--${returnTone}${loading ? ' trade-list-item__live-return--loading' : ''}">
-                    <span class="trade-list-item__live-label">If Sold Now</span>
+                </button>
+                <button type="button" class="trade-list-item__live-cell trade-list-item__live-cell--clickable trade-list-item__live-return trade-list-item__live-return--${returnTone}${loading ? ' trade-list-item__live-return--loading' : ''}"
+                    onclick="refreshTradeLivePricesNow()"
+                    aria-label="Refresh return if sold now"
+                    title="Tap to refresh live prices">
+                    <span class="trade-list-item__live-label">
+                        <i class="fas fa-hand-holding-usd trade-list-item__live-label-icon trade-list-item__live-return-icon" aria-hidden="true"></i>
+                        If Sold Now
+                    </span>
                     <span class="trade-list-item__live-return-value">${returnHtml}</span>
-                </div>
+                </button>
             </div>
         </div>`;
     }

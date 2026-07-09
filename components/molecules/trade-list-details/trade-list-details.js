@@ -29,12 +29,12 @@
         return `
             <div class="trade-list-item__details">
                 <div class="trade-list-item__details-grid">
-                    ${renderTradeDetailCell('Buy', buy, 'trade-list-item__detail-value--buy', buyOnclick)}
-                    ${renderTradeDetailCell('Target', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick)}
-                    ${renderTradeDetailCell('Interest', interestHtml, 'trade-list-item__detail-value--interest-wrap', `openInterestModal('${t.id}')`)}
-                    ${renderTradeDetailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`)}
-                    ${renderTradeDetailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
-                    ${renderTradeDetailCell('Sold', sellDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}
+                    ${renderTradeDetailCell('Buy', buy, 'trade-list-item__detail-value--buy', buyOnclick, 'fa-tag')}
+                    ${renderTradeDetailCell('Target', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick, 'fa-bullseye')}
+                    ${renderTradeDetailCell('Interest', interestHtml, 'trade-list-item__detail-value--interest-wrap', `openInterestModal('${t.id}')`, 'fa-percent')}
+                    ${renderTradeDetailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`, 'fa-receipt')}
+                    ${renderTradeDetailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`, 'fa-calendar-plus')}
+                    ${renderTradeDetailCell('Sold', sellDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`, 'fa-calendar-check')}
                 </div>
             </div>
         `;

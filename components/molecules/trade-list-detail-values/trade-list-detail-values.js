@@ -42,14 +42,17 @@
         `;
     }
 
-    function renderTradeDetailCell(label, value, valueClass = '', onclick = '') {
+    function renderTradeDetailCell(label, value, valueClass = '', onclick = '', icon = '') {
         const Tag = onclick ? 'button' : 'div';
         const attrs = onclick
             ? ` type="button" class="trade-list-item__detail-cell trade-list-item__detail-cell--clickable" onclick="${onclick}"`
             : ` class="trade-list-item__detail-cell"`;
+        const iconHtml = icon
+            ? `<i class="fas ${icon} trade-list-item__detail-label-icon" aria-hidden="true"></i>`
+            : '';
         return `
             <${Tag}${attrs}>
-                <span class="trade-list-item__detail-label">${label}</span>
+                <span class="trade-list-item__detail-label">${iconHtml}${label}</span>
                 <span class="trade-list-item__detail-value ${valueClass}">${value}</span>
             </${Tag}>
         `;
