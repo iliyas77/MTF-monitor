@@ -26,7 +26,8 @@
         } = opts;
         const cls = LABEL_CLASSES[variant] || LABEL_CLASSES.field;
         const forAttr = forId ? ` for="${forId}"` : '';
-        const content = html || (icon ? `<i class="fas ${icon} mr-1"></i>${text}` : text);
+        const { renderIcon } = global.MTFComponents;
+        const content = html || (icon ? `${renderIcon(icon, { className: 'mr-1' })}${text}` : text);
         return `<${tag} class="${cls}${className ? ` ${className}` : ''}"${forAttr}>${content}</${tag}>`;
     }
 

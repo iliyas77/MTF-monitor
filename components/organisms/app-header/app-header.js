@@ -5,9 +5,9 @@
     'use strict';
 
     const DEFAULT_MORE_FEATURE_TITLES = {
-        money: '<i class="fas fa-coins mr-2"></i>Money',
-        transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
-        'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
+        money: `${global.MTFComponents.renderIcon('fa-coins', { className: 'mr-2' })}Money`,
+        transactions: `${global.MTFComponents.renderIcon('fa-database', { className: 'mr-2' })}Total Transactions`,
+        'mtf-calc': `${global.MTFComponents.renderIcon('fa-calculator', { className: 'mr-2' })}MTF Calculator`
     };
 
     function getHeaderConfig() {

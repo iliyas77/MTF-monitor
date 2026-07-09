@@ -20,15 +20,16 @@
             spellcheck = ''
         } = opts;
 
+        const { renderIcon } = global.MTFComponents;
+
         const onInputAttr = onInput ? ` oninput="${onInput}(this.value)"` : '';
         const clearBtn = clearId
-            ? `<button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="${clearId}"${onClear ? ` onclick="${onClear}()"` : ''} title="Clear"><i class="fas fa-times"></i></button>`
+            ? `<button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="${clearId}"${onClear ? ` onclick="${onClear}()"` : ''} title="Clear">${renderIcon('fa-times', { size: 'xs' })}</button>`
             : '';
         const capAttr = autocapitalize ? ` autocapitalize="${autocapitalize}"` : '';
         const spellAttr = spellcheck !== '' ? ` spellcheck="${spellcheck}"` : '';
-
         return `<div class="relative mb-3 ${extraClass}">
-            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
+            ${renderIcon('fa-search', { className: 'absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none' })}
             <input type="text" class="${inputClass}" id="${inputId}" placeholder="${placeholder}"${onInputAttr} autocomplete="off"${capAttr}${spellAttr} />
             ${clearBtn}
         </div>`;

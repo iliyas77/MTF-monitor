@@ -117,8 +117,9 @@
         };
         const iconSizes = { sm: 'text-xs', md: 'text-sm', lg: 'text-lg' };
         const formatted = formatAmountNumber(amount, { decimals, compact, showSign });
+        const { renderIcon } = global.MTFComponents;
         const iconHtml = icon
-            ? `<span class="amount-display__icon ${iconSizes[iconSize] || iconSizes.sm} opacity-80 mb-0.5"><i class="fas ${icon}"></i></span>`
+            ? `<span class="amount-display__icon ${iconSizes[iconSize] || iconSizes.sm} opacity-80 mb-0.5">${renderIcon(icon, { size: iconSize === 'lg' ? 'sm' : 'xs' })}</span>`
             : '';
         const valueHtml = `<span class="amount-display__value ${cfg.value} whitespace-nowrap">${formatted}</span>`;
         const pillHtml = pill
@@ -205,7 +206,7 @@
 
     function renderTradesCountCard(count, opts = {}) {
         return renderTotalAmountCard(count, {
-            labelHtml: '<span class="gr-total-card__label"><i class="fas fa-exchange-alt mr-1"></i>Trades</span>',
+            labelHtml: `<span class="gr-total-card__label">${global.MTFComponents.renderIcon('fa-exchange-alt', { className: 'mr-1' })}Trades</span>`,
             size: 'sm',
             tone: 'neutral',
             plain: true,

@@ -106,8 +106,8 @@
         const sellLabel = isOpen ? 'Target sell' : 'Sell';
         const gainPlaceholder = isOpen ? 'Set a target sell price' : 'Set a sell price';
         const sheetTitle = isOpen
-            ? `<i class="fas fa-bullseye mr-2 text-[var(--gr-accent)]"></i>${tx.company}`
-            : `<i class="fas fa-tag mr-2 text-[var(--gr-danger)]"></i>${tx.company} Sell`;
+            ? `${global.MTFComponents.renderIcon('fa-bullseye', { className: 'mr-2 text-[var(--gr-accent)]' })}${tx.company}`
+            : `${global.MTFComponents.renderIcon('fa-tag', { className: 'mr-2 text-[var(--gr-danger)]' })}${tx.company} Sell`;
         const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
         Sheet.open(sheetTitle, `
             <div class="target-sheet">
@@ -116,7 +116,7 @@
                         <span class="target-sheet__price-label">Buy</span>
                         <span class="target-sheet__price-value target-sheet__price-value--buy">${fmtDec(buy)}</span>
                     </div>
-                    <div class="target-sheet__arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                    <div class="target-sheet__arrow" aria-hidden="true">${global.MTFComponents.renderIcon('fa-arrow-right')}</div>
                     <div class="target-sheet__price-col target-sheet__price-col--sell">
                         <span class="target-sheet__price-label">${sellLabel}</span>
                         <span class="target-sheet__price-value target-sheet__price-value--sell" id="targetSellPreview">—</span>

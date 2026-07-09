@@ -5,10 +5,11 @@
     'use strict';
 
     function renderMoreHubOption(label, icon, iconVariant, onclick) {
+        const { renderIcon } = global.MTFComponents;
         return `<button type="button" class="more-hub-option" onclick="${onclick}">
-            <span class="more-hub-option__icon more-hub-option__icon--${iconVariant}"><i class="fas ${icon}"></i></span>
+            <span class="more-hub-option__icon more-hub-option__icon--${iconVariant}">${renderIcon(icon)}</span>
             <span class="more-hub-option__label">${label}</span>
-            <i class="fas fa-chevron-right more-hub-option__chevron"></i>
+            ${renderIcon('fa-chevron-right', { className: 'more-hub-option__chevron' })}
         </button>`;
     }
 

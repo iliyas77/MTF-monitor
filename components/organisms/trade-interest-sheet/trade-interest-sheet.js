@@ -31,7 +31,7 @@
             ? '<p class="interest-sheet__note">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
             : '';
 
-        Sheet.open(`<i class="fas fa-percent mr-2 text-[var(--content-accent-quantity)]"></i><span class="interest-sheet__title-name">${tx.company}</span><span class="interest-sheet__title-broker">${broker}</span>`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'mr-2 text-[var(--content-accent-quantity)]' })}<span class="interest-sheet__title-name">${tx.company}</span><span class="interest-sheet__title-broker">${broker}</span>`, `
             <div class="interest-sheet">
                 <div class="interest-sheet__card">
                     ${interestSheetRow('Total interest', fmtDec(d.interest), 'interest-sheet__row-value--interest interest-sheet__row-value--total')}
