@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "hooks": {
+    "afterFileEdit": [
+      {
+        "command": "node .cursor/hooks/rebuild-production.js"
+      }
+    ],
+    "afterTabFileEdit": [
+      {
+        "command": "node .cursor/hooks/rebuild-production.js"
+      }
+    ],
+    "stop": [
+      {
+        "command": "node .cursor/hooks/rebuild-production.js"
+      }
+    ]
+  }
+}

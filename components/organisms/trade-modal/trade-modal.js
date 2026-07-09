@@ -223,9 +223,12 @@
         setTxModalMode(true);
 
         if (resetCompanyAutocomplete) resetCompanyAutocomplete();
-        const editMatch = findStockMetaForCompany ? findStockMetaForCompany(tx.company || '') : null;
+        const editMatch = (tx.symbol && findStockMetaForCompany)
+            ? (findStockMetaForCompany(tx.symbol) || findStockMetaForCompany(tx.company || ''))
+            : (findStockMetaForCompany ? findStockMetaForCompany(tx.company || '') : null);
         document.getElementById('txCompany').value = editMatch ? editMatch.n : (tx.company || '');
         if (editMatch && setTxCompanyMeta) setTxCompanyMeta(editMatch);
+        else if (tx.symbol && setTxCompanyMeta) setTxCompanyMeta({ s: tx.symbol, n: tx.company || tx.symbol, e: 'NSE' });
         if (setTxBroker) setTxBroker(tx.broker || '');
         setDateInputValue(document.getElementById('txBuyDate'), tx.buyDate || '');
         setDateInputValue(document.getElementById('txSellDate'), tx.sellDate || '');
@@ -257,6 +260,7 @@
             isPlannedTrade,
             getTxModalContext,
             resolveCompanyName,
+            resolveCompanySymbol,
             getSyncNote,
             refreshTradeListViews,
             renderMoney,
@@ -265,6 +269,9 @@
 
         const editId = document.getElementById('txEditId').value;
         const company = resolveCompanyName ? resolveCompanyName(document.getElementById('txCompany').value) : document.getElementById('txCompany').value;
+        const symbol = resolveCompanySymbol
+            ? resolveCompanySymbol(document.getElementById('txCompany').value)
+            : '';
         const broker = document.getElementById('txBroker').value;
         const buyDate = document.getElementById('txBuyDate').value;
         const sellDate = document.getElementById('txSellDate').value;
@@ -288,6 +295,7 @@
         }
 
         const txData = { company, broker, buyDate, sellDate, quantity, buyPrice, sellPrice, leverage, notes, status };
+        if (symbol) txData.symbol = symbol;
         const calc = calculateTrade(txData);
         let finalTx = {
             ...txData,

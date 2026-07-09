@@ -30,7 +30,7 @@
             <div class="trade-list-item__details">
                 <div class="trade-list-item__details-grid">
                     ${renderTradeDetailCell('Buy', buy, 'trade-list-item__detail-value--buy', buyOnclick)}
-                    ${renderTradeDetailCell('Sell', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick)}
+                    ${renderTradeDetailCell('Target', sellHtml, 'trade-list-item__detail-value--sell-wrap', sellOnclick)}
                     ${renderTradeDetailCell('Interest', interestHtml, 'trade-list-item__detail-value--interest-wrap', `openInterestModal('${t.id}')`)}
                     ${renderTradeDetailCell('Charges', charges, 'trade-list-item__detail-value--charges', `openChargesModal('${t.id}')`)}
                     ${renderTradeDetailCell('Bought', buyDate, 'trade-list-item__detail-value--date', `openHoldModal('${t.id}')`)}

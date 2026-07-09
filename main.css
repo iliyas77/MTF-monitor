@@ -1836,6 +1836,14 @@ html {
     border-top: 1px solid var(--gray150);
 }
 
+.trade-list-item__row--live {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
 .trade-list-item__details {
     width: 100%;
     min-width: 0;
@@ -2472,6 +2480,93 @@ html {
     text-overflow: ellipsis;
 }
 
+.trade-list-item__live-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    min-width: 0;
+    border: 1px solid var(--gray150);
+    border-radius: 0.625rem;
+    overflow: hidden;
+    background: transparent;
+}
+
+.trade-list-item__live-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.25rem;
+    min-width: 0;
+    min-height: 3.125rem;
+    padding: 0.5rem 0.5rem;
+    border-right: 1px solid var(--gray150);
+    text-align: left;
+}
+
+.trade-list-item__live-cell:last-child {
+    border-right: none;
+}
+
+.trade-list-item__live-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--gr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+.trade-list-item__live-price-value,
+.trade-list-item__live-target-value,
+.trade-list-item__live-return-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trade-list-item__live-price--up .trade-list-item__live-price-value,
+.trade-list-item__live-target--up .trade-list-item__live-target-value,
+.trade-list-item__live-return--up .trade-list-item__live-return-value {
+    color: var(--gr-accent);
+}
+
+.trade-list-item__live-price--down .trade-list-item__live-price-value,
+.trade-list-item__live-target--down .trade-list-item__live-target-value,
+.trade-list-item__live-return--down .trade-list-item__live-return-value {
+    color: var(--gr-danger);
+}
+
+.trade-list-item__live-price--neutral .trade-list-item__live-price-value,
+.trade-list-item__live-target--neutral .trade-list-item__live-target-value,
+.trade-list-item__live-return--neutral .trade-list-item__live-return-value {
+    color: var(--gr-text1);
+}
+
+.trade-list-item__live-price--loading .trade-list-item__live-price-value,
+.trade-list-item__live-target--loading .trade-list-item__live-target-value,
+.trade-list-item__live-return--loading .trade-list-item__live-return-value {
+    min-width: 2.5rem;
+}
+
+.trade-list-item__live-refresh-icon,
+.trade-list-item__live-price-value .fa-spinner,
+.trade-list-item__live-target-value .fa-spinner,
+.trade-list-item__live-return-value .fa-spinner {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    flex-shrink: 0;
+}
+
 .trade-list-item__broker-label {
     flex-shrink: 0;
     display: inline-flex;
@@ -2640,4 +2735,145 @@ html {
     font-size: 0.875rem;
     font-weight: 600;
     color: var(--gr-text1);
+}
+
+/* ---------- Market quotes ---------- */
+.market-subtabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.375rem;
+    padding: 0.25rem;
+    border: 1px solid var(--gr-ui-border);
+    border-radius: 0.875rem;
+    background: color-mix(in srgb, var(--gr-bg) 92%, var(--gr-text-muted) 8%);
+}
+
+.market-subtabs__btn {
+    appearance: none;
+    border: 0;
+    border-radius: 0.7rem;
+    min-height: 2.25rem;
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    color: var(--gr-text-muted);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.market-subtabs__btn--active {
+    background: var(--gr-bg);
+    color: var(--gr-accent);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--gr-text1) 10%, transparent);
+}
+
+.market-quote-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.market-quote-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--gr-ui-border);
+}
+
+.market-quote-row:last-child {
+    border-bottom: 0;
+}
+
+.market-quote-row__left {
+    min-width: 0;
+    flex: 1;
+}
+
+.market-quote-row__symbol {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--gr-text1);
+    line-height: 1.25;
+}
+
+.market-quote-row__name {
+    margin-top: 0.125rem;
+    font-size: 0.75rem;
+    color: var(--gr-text-muted);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.market-quote-row__right {
+    text-align: right;
+    flex-shrink: 0;
+}
+
+.market-quote-row__remove {
+    appearance: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--gr-ui-border);
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--gr-text-muted);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.market-quote-row__remove:hover {
+    color: var(--gr-danger);
+    border-color: color-mix(in srgb, var(--gr-danger) 35%, var(--gr-ui-border));
+}
+
+.market-quote-row__price {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--gr-text1);
+    line-height: 1.25;
+}
+
+.market-quote-row__change {
+    margin-top: 0.125rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+.market-quote-row__change--up {
+    color: var(--gr-accent);
+}
+
+.market-quote-row__change--down {
+    color: var(--gr-danger);
+}
+
+.market-quote-row__change--neutral {
+    color: var(--gr-text-muted);
+}
+
+.market-search-wrap {
+    position: relative;
+}
+
+.market-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
 }
