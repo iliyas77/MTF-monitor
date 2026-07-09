@@ -1,5 +1,6 @@
 /**
- * Market quote list row — symbol/name left, price + day change right.
+ * Market quote list row — icon + symbol/name left, price + day change right.
+ * Visual language matches more-hub option rows.
  */
 (function (global) {
     'use strict';
@@ -27,6 +28,12 @@
         });
     }
 
+    function symbolInitial(symbol) {
+        const s = String(symbol || '').trim();
+        if (!s) return '•';
+        return s.charAt(0).toUpperCase();
+    }
+
     function renderMarketQuoteRow(quote) {
         const q = quote || {};
         const change = Number(q.change);
@@ -46,7 +53,8 @@
             ? `<button type="button" class="market-quote-row__remove" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist"><i class="fas fa-times" aria-hidden="true"></i></button>`
             : '';
 
-        return `<div class="market-quote-row" data-symbol="${escapeHtml(q.symbol || '')}">
+        return `<div class="market-quote-row" data-symbol="${escapeHtml(q.symbol || '')}" role="listitem">
+            <span class="market-quote-row__icon market-quote-row__icon--${tone}" aria-hidden="true">${escapeHtml(symbolInitial(q.symbol))}</span>
             <div class="market-quote-row__left">
                 <div class="market-quote-row__symbol">${escapeHtml(q.symbol || '—')}</div>
                 <div class="market-quote-row__name">${escapeHtml(q.name || q.symbol || '')}</div>

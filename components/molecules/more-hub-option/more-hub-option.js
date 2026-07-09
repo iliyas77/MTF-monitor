@@ -1,5 +1,5 @@
 /**
- * M18 — More hub option molecule.
+ * M18 — More hub option molecule (single table row).
  */
 (function (global) {
     'use strict';

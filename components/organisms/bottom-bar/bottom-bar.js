@@ -18,14 +18,15 @@
         </button>`;
     }
 
-    function renderBottomBar() {
+    function renderBottomBar(items = BOTTOM_BAR_ITEMS, fabLabel = 'Add trade') {
+        const cols = items.length || 4;
         return `<div class="bottom-bar" id="bottomBar">
             <div class="bottom-bar__frame">
-                <button type="button" class="bottom-bar__fab" id="bottomBarFab" aria-label="Add trade">
+                <button type="button" class="bottom-bar__fab" id="bottomBarFab" aria-label="${fabLabel}">
                     <i class="fas fa-plus bottom-bar__fab-icon" aria-hidden="true"></i>
                 </button>
-                <nav class="bottom-bar__nav" id="bottomBarNav" aria-label="Main navigation">
-                    ${BOTTOM_BAR_ITEMS.map(renderBottomBarItem).join('')}
+                <nav class="bottom-bar__nav" id="bottomBarNav" aria-label="Main navigation" style="--bottom-bar-cols: ${cols}">
+                    ${items.map(renderBottomBarItem).join('')}
                 </nav>
             </div>
         </div>`;
@@ -36,7 +37,11 @@
 
         mount(container, opts = {}) {
             if (!container) return;
-            container.innerHTML = renderBottomBar();
+            const items = Array.isArray(opts.items) && opts.items.length
+                ? opts.items
+                : BOTTOM_BAR_ITEMS;
+            const fabLabel = opts.fabLabel || 'Add trade';
+            container.innerHTML = renderBottomBar(items, fabLabel);
             this._onNavigate = opts.onNavigate || null;
             this._onFabClick = opts.onFabClick || null;
 
