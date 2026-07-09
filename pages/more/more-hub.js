@@ -20,6 +20,7 @@
                     </div>
                 </div>
             </div>
+            <p id="more-hub-build-meta" class="more-hub-build-meta" aria-label="App version"></p>
         </div>
     </section>`;
     }
