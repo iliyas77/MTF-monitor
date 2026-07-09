@@ -1,0 +1,63 @@
+/**
+ * Market quote list row — symbol/name left, price + day change right.
+ */
+(function (global) {
+    'use strict';
+
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    function formatChangePct(n) {
+        if (n === null || n === undefined || isNaN(n)) return '—';
+        const sign = n >= 0 ? '+' : '';
+        return sign + Number(n).toFixed(2) + '%';
+    }
+
+    function formatChangeAbs(n) {
+        if (n === null || n === undefined || isNaN(n)) return '—';
+        const sign = n >= 0 ? '+' : '−';
+        return sign + '₹' + Number(Math.abs(n)).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    }
+
+    function renderMarketQuoteRow(quote) {
+        const q = quote || {};
+        const change = Number(q.change);
+        const changePct = Number(q.changePct);
+        const hasChange = !isNaN(change);
+        const tone = !hasChange ? 'neutral' : change >= 0 ? 'up' : 'down';
+        const priceText = q.price == null || isNaN(Number(q.price))
+            ? '—'
+            : '₹' + Number(q.price).toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        const changeText = hasChange
+            ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
+            : '—';
+        const removeBtn = q.removable
+            ? `<button type="button" class="market-quote-row__remove" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist"><i class="fas fa-times" aria-hidden="true"></i></button>`
+            : '';
+
+        return `<div class="market-quote-row" data-symbol="${escapeHtml(q.symbol || '')}">
+            <div class="market-quote-row__left">
+                <div class="market-quote-row__symbol">${escapeHtml(q.symbol || '—')}</div>
+                <div class="market-quote-row__name">${escapeHtml(q.name || q.symbol || '')}</div>
+            </div>
+            <div class="market-quote-row__right">
+                <div class="market-quote-row__price tabular-nums">${priceText}</div>
+                <div class="market-quote-row__change market-quote-row__change--${tone} tabular-nums">${changeText}</div>
+            </div>
+            ${removeBtn}
+        </div>`;
+    }
+
+    global.MTFRegister({ renderMarketQuoteRow, formatChangePct, formatChangeAbs });
+})(typeof window !== 'undefined' ? window : globalThis);
