@@ -1,0 +1,28 @@
+---
+description: Rebuild minified production.html after source changes
+alwaysApply: true
+---
+
+# Production build (required)
+
+This project ships as a single minified `production.html` for mobile.
+
+## After every source change
+
+Whenever you edit **any** of these, run the production build before finishing:
+
+- `main.html`, `main.css`, `main.js`
+- Any file under `components/`
+- `components/manifest.json`
+
+```bash
+npm run build
+```
+
+Do this **voluntarily at the end of your turn** even if the user did not ask. Do not skip because hooks may also run — always confirm with `npm run build` after your edits.
+
+## Rules
+
+- Never edit `production.html` by hand.
+- If the build fails, fix the error and run `npm run build` again.
+- Report the built file size when you changed source files.

@@ -1,1 +1,4 @@
 node_modules/
+.cursor/hooks/.rebuild-scheduled
+.cursor/hooks/.rebuild.lock
+.cursor/hooks/.rebuild.log

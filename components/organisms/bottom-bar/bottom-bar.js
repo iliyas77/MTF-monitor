@@ -7,6 +7,7 @@
     const BOTTOM_BAR_ITEMS = [
         { id: 'trades', label: 'Trades', icon: 'fa-list-ul' },
         { id: 'past', label: 'Past Trades', icon: 'fa-history' },
+        { id: 'market', label: 'Market', icon: 'fa-chart-line' },
         { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
     ];
 

@@ -36,7 +36,7 @@
 
         const searchBtn = document.getElementById('appHeaderSearchBtn');
         if (searchBtn) {
-            const showSearch = pageId === 'page-trades' || pageId === 'page-past';
+            const showSearch = pageId === 'page-trades' || pageId === 'page-past' || pageId === 'page-market';
             searchBtn.classList.toggle('hidden', !showSearch);
         }
     }
