@@ -24,7 +24,8 @@ function isSourceFile(filePath) {
         rel === 'main.html' ||
         rel === 'main.css' ||
         rel === 'main.js' ||
-        rel.startsWith('components/')
+        rel.startsWith('components/') ||
+        rel.startsWith('pages/')
     );
 }
 

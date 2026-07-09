@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Bundles and minifies main.html + main.css + component scripts + main.js into production.html.
+ * Bundles and minifies main.html + main.css + component/page scripts + main.js into production.html.
  * Run: npm run build   (or: node build-production.js)
  */
 'use strict';
