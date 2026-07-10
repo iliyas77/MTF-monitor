@@ -3198,8 +3198,8 @@
                 moneyPageTypeFilter = value || 'all';
                 const hiddenType = document.getElementById('moneyPageTypeFilter');
                 if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-                syncMoneyTypeDropdowns();
                 renderMoney();
+                syncMoneyTypeDropdowns();
             }
 
             function clearMoneyPageFilters() {

@@ -1615,12 +1615,20 @@ dialog.modal::backdrop {
     max-width: 100%;
 }
 
-.trade-list-item__company-icon {
+.trade-list-item__company-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    letter-spacing: 0.02em;
     flex-shrink: 0;
-    font-size: 0.8125rem;
-    line-height: 1;
+    text-transform: uppercase;
+    background: var(--gr-calculator-iconbg);
     color: var(--gr-accent);
-    opacity: 0.9;
 }
 
 .trade-list-item__company-name {
