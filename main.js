@@ -80,6 +80,8 @@
                 confirmAction,
                 showLoading,
                 hideLoading,
+                hideModal,
+                hideOffcanvas,
                 updateAppHeader,
                 renderPlanTrades,
                 renderCurrentView,
@@ -121,6 +123,7 @@
                 onHoldModalDaysInput,
                 setHoldModalSameDay,
                 setHoldModalTodayPair,
+                setHoldModalSellDateToday,
                 saveHoldDates,
                 renderTxModalFooter,
                 setTxModalMode,
@@ -182,25 +185,25 @@
 
             // ---------- UI HELPERS ----------
             const UI = {
-                card: 'card bg-base-100 rounded-2xl',
+                card: 'card bg-body rounded-3',
                 statLabel: LABEL_CLASSES.stat,
                 sheetLabel: LABEL_CLASSES.sheet,
-                heroValue: 'font-bold text-6xl leading-none mb-3',
+                heroValue: 'fw-bold display-6 lh-1 mb-3',
                 iconBtn: ICON_BUTTON_CLASSES.default,
-                toolbarRow: 'flex items-center gap-2 mb-3',
-                toolbarInput: 'input input-bordered border-base-200 w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary/50 text-base-content/80 placeholder:text-base-content/40',
-                toolbarIconBtn: 'btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none text-base-content/55 p-0',
-                actionBtn: 'btn btn-sm min-h-0 h-9 w-9 rounded-xl p-0 flex items-center justify-center',
-                actionBtnSm: 'btn btn-sm min-h-0 h-8 w-8 rounded-lg p-0 flex items-center justify-center',
-                tradeStatBox: 'flex-1 bg-base-200/25 border border-base-200/60 rounded-xl p-2.5 text-center min-w-0',
+                toolbarRow: 'd-flex align-items-center gap-2 mb-3',
+                toolbarInput: 'form-control border w-100 rounded-pill bg-body text-body-secondary',
+                toolbarIconBtn: 'btn btn-outline-secondary rounded-3 text-muted p-0',
+                actionBtn: 'btn btn-sm rounded-3 p-0 d-flex align-items-center justify-content-center',
+                actionBtnSm: 'btn btn-sm rounded-3 p-0 d-flex align-items-center justify-content-center',
+                tradeStatBox: 'flex-fill bg-light border rounded-3 p-2 text-center min-w-0',
                 tradeStatLabel: LABEL_CLASSES.tradeStat,
-                tradeStatValue: 'text-base font-semibold text-base-content/90 whitespace-nowrap tabular-nums tracking-tight mt-0.5',
-                tradeStatValueSuccess: 'text-base font-semibold text-success whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-success/15',
-                tradeStatValueError: 'text-base font-semibold text-error whitespace-nowrap tabular-nums tracking-tight mt-0.5 inline-block rounded-lg px-1.5 py-0.5 bg-error/15 gr-danger-soft-text',
-                moneyTonePositive: 'bg-success/15 text-success',
-                moneyToneNegative: 'bg-error/15 text-error',
-                moneyActionDeposit: 'deposit-action-btn',
-                moneyActionWithdraw: 'bg-error/15 text-error border-0 hover:bg-error/25',
+                tradeStatValue: 'fw-normal text-body text-nowrap mt-1',
+                tradeStatValueSuccess: 'fw-normal text-success text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-success-subtle',
+                tradeStatValueError: 'fw-normal text-danger text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-danger-subtle',
+                moneyTonePositive: 'bg-success-subtle text-success',
+                moneyToneNegative: 'bg-danger-subtle text-danger',
+                moneyActionDeposit: 'bg-success-subtle text-success border-0',
+                moneyActionWithdraw: 'bg-danger-subtle text-danger border-0',
                 selectTrigger: DROPDOWN_CLASSES.selectTrigger,
                 selectLabel: DROPDOWN_CLASSES.selectLabel,
                 selectChevron: DROPDOWN_CLASSES.selectChevron,
@@ -208,24 +211,24 @@
                 dropdownMenu: DROPDOWN_CLASSES.menu,
                 menuIcon: menuIconClass,
                 summaryCard(heroIcon, heroLabel, heroId, stats, cardId) {
-                    const cols = stats.length === 2 ? 'grid-cols-2' : 'grid-cols-3';
+                    const cols = stats.length === 2 ? 'row-cols-2' : 'row-cols-3';
                     const statHtml = stats.map(s => `
-                        <div><div class="${UI.statLabel}">${s.icon ? `<i class="fas ${s.icon} mr-1"></i>` : ''}${s.label}</div>
-                        <div class="font-medium ${s.cls || 'text-base-content/80'}" ${s.id ? `id="${s.id}"` : ''}>${s.value ?? '0'}</div></div>`).join('');
+                        <div class="col"><div class="${UI.statLabel}">${s.icon ? `<i class="fas ${s.icon} me-1"></i>` : ''}${s.label}</div>
+                        <div class="fw-medium ${s.cls || 'text-body-secondary'}" ${s.id ? `id="${s.id}"` : ''}>${s.value ?? '0'}</div></div>`).join('');
                     return `<div class="${UI.card} mb-3" ${cardId ? `id="${cardId}"` : ''}>
                         <div class="card-body text-center py-4">
-                            <div class="${UI.statLabel}"><i class="fas ${heroIcon} mr-1"></i>${heroLabel}</div>
-                            <div class="${UI.heroValue} ${heroId.includes('Net') || heroId.includes('Value') ? 'text-success' : 'text-base-content/85'}" id="${heroId}">₹0</div>
-                            <div class="grid ${cols} gap-2">${statHtml}</div>
+                            <div class="${UI.statLabel}"><i class="fas ${heroIcon} me-1"></i>${heroLabel}</div>
+                            <div class="${UI.heroValue} ${heroId.includes('Net') || heroId.includes('Value') ? 'text-success' : 'text-body-secondary'}" id="${heroId}">₹0</div>
+                            <div class="row g-2 ${cols}">${statHtml}</div>
                         </div></div>`;
                 },
                 searchBar(inputId, clearId, placeholder, onInput, onClear, extraClass = '') {
                     return renderSearchBar({ inputId, clearId, placeholder, onInput, onClear, extraClass });
                 },
                 subHeader(title, backFn, icon = '') {
-                    return `<div class="flex items-center gap-3 mb-4">
-                        <button type="button" class="${UI.iconBtn} w-9 h-9 min-h-0" onclick="${backFn}()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
-                        <h6 class="font-semibold text-base-content/80 mb-0">${icon ? `<i class="fas ${icon} mr-2"></i>` : ''}${title}</h6></div>`;
+                    return `<div class="d-flex align-items-center gap-3 mb-4">
+                        <button type="button" class="${UI.iconBtn}" style="width:2.25rem;height:2.25rem" onclick="${backFn}()" aria-label="Back"><i class="fas fa-arrow-left"></i></button>
+                        <h6 class="fw-semibold text-body-secondary mb-0">${icon ? `<i class="fas ${icon} me-2"></i>` : ''}${title}</h6></div>`;
                 },
                 detailRow(label, value, extra = '') {
                     return renderDetailRow(label, value, extra);
@@ -233,8 +236,6 @@
                 emptyState(icon, msg) {
                     return renderEmptyState(icon, msg);
                 },
-                sheetDialog: 'modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0',
-                sheetBox: 'modal-box w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200',
                 actionDropdown(items) {
                     return renderDropdownMenu(items);
                 },
@@ -412,8 +413,21 @@
                 const res = await fetch(JINA_PROXY + targetUrl, {
                     headers: { Accept: 'text/plain' }
                 });
-                if (!res.ok) throw new Error('Proxy fetch failed');
+                if (res.status === 429) throw new Error('HTTP 429');
+                if (!res.ok) throw new Error('Proxy fetch failed ' + res.status);
                 return res.text();
+            }
+
+            let lastJinaRequestAt = 0;
+            const JINA_MIN_GAP_MS = 900;
+
+            async function fetchViaJinaThrottled(targetUrl) {
+                const wait = lastJinaRequestAt + JINA_MIN_GAP_MS - Date.now();
+                if (wait > 0) {
+                    await new Promise((resolve) => setTimeout(resolve, wait));
+                }
+                lastJinaRequestAt = Date.now();
+                return fetchViaJina(targetUrl);
             }
 
             async function fetchNseEquityCsvText() {
@@ -471,13 +485,8 @@
 
             async function fetchYahooStockSearch(query) {
                 const url = `${YAHOO_SEARCH_BASE}?q=${encodeURIComponent(query)}&quotesCount=25&newsCount=0&listsCount=0&enableFuzzyQuery=true`;
-                try {
-                    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-                    if (res.ok) {
-                        const data = await res.json();
-                        return extractYahooQuotes(data);
-                    }
-                } catch (_) {}
+                // Always use Jina — direct Yahoo search is blocked by CORS in browsers
+                // and still dumps red console errors even when a catch/fallback exists.
                 const proxied = await fetchViaJina(url);
                 const data = parseJinaJson(proxied);
                 return extractYahooQuotes(data);
@@ -541,8 +550,8 @@
             function showCompanyAcLoading(msg) {
                 const list = document.getElementById('txCompanyAcList');
                 if (!list) return;
-                list.innerHTML = `<div class="px-3 py-2 text-sm text-base-content/60"><i class="fas fa-spinner fa-spin mr-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
-                list.classList.remove('hidden');
+                list.innerHTML = `<div class="px-3 py-2 small text-muted"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
+                list.classList.remove('d-none');
             }
 
             async function runStockSearch(query) {
@@ -580,8 +589,8 @@
                         } else if (!results.length) {
                             const list = document.getElementById('txCompanyAcList');
                             if (list) {
-                                list.innerHTML = `<div class="px-3 py-2 text-sm text-base-content/60">Could not reach market data. Check internet and try again, or type the name manually.</div>`;
-                                list.classList.remove('hidden');
+                                list.innerHTML = `<div class="px-3 py-2 small text-muted">Could not reach market data. Check internet and try again, or type the name manually.</div>`;
+                                list.classList.remove('d-none');
                             }
                         }
                     }
@@ -599,7 +608,7 @@
             function hideCompanyAcList() {
                 const list = document.getElementById('txCompanyAcList');
                 if (list) {
-                    list.classList.add('hidden');
+                    list.classList.add('d-none');
                     list.innerHTML = '';
                 }
                 stockAcResults = [];
@@ -616,9 +625,9 @@
                 if (!stockAcResults.length) {
                     const q = (input.value || '').trim();
                     list.innerHTML = q.length
-                        ? `<div class="px-3 py-2 text-sm text-base-content/60">No match for “${escapeHtml(q)}”. You can still type any name.</div>`
+                        ? `<div class="px-3 py-2 small text-muted">No match for “${escapeHtml(q)}”. You can still type any name.</div>`
                         : '';
-                    list.classList.toggle('hidden', q.length < 1);
+                    list.classList.toggle('d-none', q.length < 1);
                     return;
                 }
 
@@ -626,15 +635,15 @@
                     const meta = it.sector
                         ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
                         : (it.i ? `${escapeHtml(it.i)} · ${escapeHtml(it.e || 'NSE')}` : escapeHtml(it.e || 'NSE'));
-                    const activeCls = idx === stockAcActiveIdx ? ' bg-base-200' : '';
+                    const activeCls = idx === stockAcActiveIdx ? ' bg-light' : '';
                     return `
-                    <div class="px-3 py-2 cursor-pointer hover:bg-base-200 border-b border-base-200 last:border-0${activeCls}" role="option" data-idx="${idx}" onmousedown="selectStockSymbol(${idx})">
-                        <div class="font-medium text-base-content/80 text-sm">${escapeHtml(it.s)}</div>
-                        <div class="text-sm">${escapeHtml(it.n)}</div>
-                        <div class="text-xs text-base-content/60">${meta}</div>
+                    <div class="list-group-item list-group-item-action border-0 border-bottom rounded-0${activeCls}" role="option" data-idx="${idx}" onmousedown="selectStockSymbol(${idx})">
+                        <div class="fw-medium text-body-secondary small">${escapeHtml(it.s)}</div>
+                        <div class="small">${escapeHtml(it.n)}</div>
+                        <div class="small text-muted">${meta}</div>
                     </div>`;
                 }).join('');
-                list.classList.remove('hidden');
+                list.classList.remove('d-none');
             }
 
             function escapeHtml(str) {
@@ -650,22 +659,166 @@
                 const el = document.getElementById('txCompanyMeta');
                 if (!el) return;
                 if (!meta) {
-                    el.classList.add('hidden');
+                    el.classList.add('d-none');
                     el.textContent = '';
                     return;
                 }
-                el.classList.remove('hidden');
+                el.classList.remove('d-none');
                 const extra = meta.sector ? ` · ${meta.sector}` : (meta.i ? ` · ${meta.i}` : '');
                 el.textContent = `${meta.s} · ${meta.e || 'NSE'}${extra}`;
             }
 
-            function selectStockSymbol(idx) {
+            /** Same-day target +1%; overnight / multi-day target +1.3%. */
+            const TX_SELL_PCT_SAME_DAY = 0.01;
+            const TX_SELL_PCT_OVERNIGHT = 0.013;
+            let txSellPriceAuto = false;
+            let txLivePriceSeq = 0;
+
+            function roundTradePrice(n) {
+                const v = Number(n);
+                if (!v || isNaN(v) || v <= 0) return '';
+                return Math.round(v * 100) / 100;
+            }
+
+            function isSameDayTradeDates(buyDate, sellDate) {
+                return !!(buyDate && sellDate && buyDate === sellDate);
+            }
+
+            function suggestedSellPriceFromBuy(buyPrice, buyDate, sellDate) {
+                const buy = Number(buyPrice);
+                if (!buy || isNaN(buy) || buy <= 0) return '';
+                const pct = isSameDayTradeDates(buyDate, sellDate) ? TX_SELL_PCT_SAME_DAY : TX_SELL_PCT_OVERNIGHT;
+                return roundTradePrice(buy * (1 + pct));
+            }
+
+            function markTxSellPriceManual() {
+                txSellPriceAuto = false;
+            }
+
+            function resetTxPriceAutoFlags() {
+                txSellPriceAuto = false;
+            }
+
+            function applySuggestedSellPrice(opts) {
+                const force = !!(opts && opts.force);
+                if (!force && !txSellPriceAuto) return false;
+                const buyEl = document.getElementById('txBuyPrice');
+                const sellEl = document.getElementById('txSellPrice');
+                const buyDateEl = document.getElementById('txBuyDate');
+                const sellDateEl = document.getElementById('txSellDate');
+                if (!buyEl || !sellEl) return false;
+                const suggested = suggestedSellPriceFromBuy(
+                    buyEl.value,
+                    buyDateEl && buyDateEl.value,
+                    sellDateEl && sellDateEl.value
+                );
+                if (suggested === '') return false;
+                sellEl.value = suggested;
+                txSellPriceAuto = true;
+                return true;
+            }
+
+            function setTxLivePriceStatus(msg, isError) {
+                const el = document.getElementById('txCompanyMeta');
+                if (!el || !selectedStockMeta) return;
+                const base = `${selectedStockMeta.s} · ${selectedStockMeta.e || 'NSE'}${selectedStockMeta.sector ? ` · ${selectedStockMeta.sector}` : (selectedStockMeta.i ? ` · ${selectedStockMeta.i}` : '')}`;
+                el.classList.remove('d-none');
+                el.innerHTML = msg
+                    ? `${escapeHtml(base)} · <span class="${isError ? 'text-danger' : 'text-muted'}">${msg}</span>`
+                    : escapeHtml(base);
+            }
+
+            function setTxLivePriceBtnBusy(busy) {
+                const btn = document.getElementById('txBuyPriceLiveBtn');
+                if (!btn) return;
+                btn.disabled = !!busy;
+                btn.innerHTML = busy
+                    ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>'
+                    : '<i class="fas fa-sync-alt" aria-hidden="true"></i>';
+            }
+
+            async function fillTradeFormFromLivePrice(itemOrNull) {
+                const item = (itemOrNull && itemOrNull.s)
+                    ? itemOrNull
+                    : (selectedStockMeta || findStockMetaForCompany(
+                        (document.getElementById('txCompany') && document.getElementById('txCompany').value) || ''
+                    ));
+                if (!item || !item.s) {
+                    showToast('Select a company from the list first.', 'warning');
+                    return null;
+                }
+
+                const seq = ++txLivePriceSeq;
+                setTxLivePriceBtnBusy(true);
+                setTxLivePriceStatus('<i class="fas fa-spinner fa-spin me-1"></i>Fetching live price…', false);
+
+                let quote = getTradeLiveQuote(item.s);
+                if (!isFreshMarketQuote(quote)) {
+                    quote = await fetchOneMarketQuote(item);
+                    cacheMarketQuote(quote);
+                }
+
+                if (seq !== txLivePriceSeq) return null;
+                setTxLivePriceBtnBusy(false);
+
+                if (!isValidMarketQuote(quote)) {
+                    setTxLivePriceStatus('Live price unavailable — enter buy manually', true);
+                    showToast('Could not fetch live price. Enter buy price manually.', 'warning');
+                    return null;
+                }
+
+                const buy = roundTradePrice(quote.price);
+                const buyEl = document.getElementById('txBuyPrice');
+                if (buyEl) buyEl.value = buy;
+                applySuggestedSellPrice({ force: true });
+
+                const buyDate = document.getElementById('txBuyDate')?.value;
+                const sellDate = document.getElementById('txSellDate')?.value;
+                const pctLabel = isSameDayTradeDates(buyDate, sellDate) ? '+1% same-day' : '+1.3% overnight';
+                const sellVal = document.getElementById('txSellPrice')?.value;
+                setTxLivePriceStatus(`Live ₹${Number(buy).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Sell ${pctLabel} ₹${sellVal}`, false);
+                showToast(`Buy ₹${buy} · Sell target ${pctLabel}`, 'success');
+
+                try {
+                    if (typeof updatePreview === 'function') updatePreview();
+                    if (typeof window.MTFComponents?.updateLeverageBreakdown === 'function') {
+                        window.MTFComponents.updateLeverageBreakdown();
+                    }
+                } catch (_) {}
+
+                return quote;
+            }
+
+            function onTxBuyPriceInputForSuggest() {
+                if (!txSellPriceAuto) return;
+                applySuggestedSellPrice();
+            }
+
+            function onTxSellPriceInputManual() {
+                markTxSellPriceManual();
+            }
+
+            function onTxTradeDatesChangeForSuggest() {
+                if (!txSellPriceAuto) return;
+                applySuggestedSellPrice();
+                const buy = document.getElementById('txBuyPrice')?.value;
+                const sell = document.getElementById('txSellPrice')?.value;
+                const buyDate = document.getElementById('txBuyDate')?.value;
+                const sellDate = document.getElementById('txSellDate')?.value;
+                if (selectedStockMeta && buy && sell) {
+                    const pctLabel = isSameDayTradeDates(buyDate, sellDate) ? '+1% same-day' : '+1.3% overnight';
+                    setTxLivePriceStatus(`Sell target ${pctLabel} ₹${sell}`, false);
+                }
+            }
+
+            async function selectStockSymbol(idx) {
                 const item = stockAcResults[idx];
                 if (!item) return;
                 if (stockAcBlurTimer) clearTimeout(stockAcBlurTimer);
                 document.getElementById('txCompany').value = item.n;
                 setTxCompanyMeta(item);
                 hideCompanyAcList();
+                await fillTradeFormFromLivePrice(item);
             }
 
             function onTxCompanyInput() {
@@ -694,7 +847,7 @@
 
             function onTxCompanyKeydown(e) {
                 const list = document.getElementById('txCompanyAcList');
-                if (!list || list.classList.contains('hidden') || !stockAcResults.length) return;
+                if (!list || list.classList.contains('d-none') || !stockAcResults.length) return;
                 if (e.key === 'ArrowDown') {
                     e.preventDefault();
                     stockAcActiveIdx = Math.min(stockAcActiveIdx + 1, stockAcResults.length - 1);
@@ -715,7 +868,7 @@
                 const list = document.getElementById('txCompanyAcList');
                 if (!list) return;
                 list.querySelectorAll('[role="option"]').forEach((el, i) => {
-                    el.classList.toggle('bg-primary/10', i === stockAcActiveIdx);
+                    el.classList.toggle('bg-primary-subtle', i === stockAcActiveIdx);
                     if (i === stockAcActiveIdx) el.scrollIntoView({ block: 'nearest' });
                 });
             }
@@ -731,6 +884,7 @@
                 hideCompanyAcList();
                 setTxCompanyMeta(null);
                 clearTimeout(stockSearchTimer);
+                setTxLivePriceBtnBusy(false);
             }
 
             function findStockMetaForSymbol(symbol) {
@@ -853,7 +1007,7 @@
 
             // ---------- MARKET QUOTES (live Yahoo chart via Jina fallback) ----------
             const YAHOO_CHART_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
-            const MARKET_REFRESH_MS = 30000;
+            const MARKET_REFRESH_MS = 60000;
 
             let marketQuoteCache = {};
             let marketUpdatedAt = null;
@@ -985,7 +1139,7 @@
             function syncMarketSubTabUI() {
                 document.querySelectorAll('[data-market-tab]').forEach((btn) => {
                     const active = btn.dataset.marketTab === marketSubTab;
-                    btn.classList.toggle('market-subtabs__btn--active', active);
+                    btn.classList.toggle('active', active);
                     btn.setAttribute('aria-selected', active ? 'true' : 'false');
                 });
                 const input = document.getElementById('marketSearchInput');
@@ -1003,7 +1157,7 @@
                 const input = document.getElementById('marketSearchInput');
                 if (input) input.value = '';
                 const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('hidden');
+                if (clearBtn) clearBtn.classList.add('d-none');
                 syncMarketSubTabUI();
                 try { renderMarketPage(); } catch (_) {}
                 refreshMarketQuotes();
@@ -1036,18 +1190,9 @@
 
             async function fetchYahooChartJson(yahooSymbol) {
                 const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol)}?range=1d&interval=1d`;
-                // Prefer direct Yahoo when possible; never set forbidden headers (User-Agent)
-                // — Safari/WebView on mobile rejects them and can break the request.
-                try {
-                    const res = await fetch(url, {
-                        headers: { Accept: 'application/json' },
-                        mode: 'cors',
-                        cache: 'no-store'
-                    });
-                    if (res.ok) return await res.json();
-                } catch (_) {}
-                // Mobile / file:// / rate-limit fallback via Jina proxy
-                const proxied = await fetchViaJina(url);
+                // Always use Jina — direct Yahoo chart fetch is blocked by CORS in browsers.
+                // Throttle so we do not trip Jina's 429 rate limit.
+                const proxied = await fetchViaJinaThrottled(url);
                 return parseJinaJson(proxied);
             }
 
@@ -1055,49 +1200,323 @@
                 return !!(quote && quote.symbol && quote.price != null && !isNaN(Number(quote.price)) && !quote.error);
             }
 
-            async function fetchOneMarketQuote(item, opts) {
-                const attempts = Math.max(1, (opts && opts.attempts) || 3);
-                const sym = normalizeMarketSymbol(item.s);
-                const candidates = [yahooSymbolForNse(sym)];
-                if (!String(sym).endsWith('.BO')) candidates.push(sym + '.BO');
+            function isFreshMarketQuote(quote, maxAgeMs) {
+                if (!isValidMarketQuote(quote)) return false;
+                const t = Date.parse(quote.updatedAt || '');
+                if (isNaN(t)) return false;
+                return (Date.now() - t) < (maxAgeMs == null ? QUOTE_FRESH_MS : maxAgeMs);
+            }
 
-                let lastError = null;
-                for (let attempt = 0; attempt < attempts; attempt++) {
-                    for (let c = 0; c < candidates.length; c++) {
-                        try {
-                            const data = await fetchYahooChartJson(candidates[c]);
-                            const quote = parseYahooChartQuote(data, sym, item.n);
-                            if (!quote || quote.price == null || isNaN(Number(quote.price))) {
-                                throw new Error('No quote data');
-                            }
-                            quote.pinned = !!item.pinned;
-                            quote.extra = !!item.extra;
-                            quote.removable = !!item.removable;
-                            quote.error = false;
-                            return quote;
-                        } catch (e) {
-                            lastError = e;
+            function isRateLimitError(errOrMsg) {
+                return /HTTP 429|429|rate.?limit|Proxy fetch failed 429/i.test(String(
+                    (errOrMsg && errOrMsg.message) || errOrMsg || ''
+                ));
+            }
+
+            // ---------- Viewport quote queue (fetch only on-screen symbols) ----------
+            const QUOTE_QUEUE_CONCURRENCY = 1;
+            const QUOTE_FRESH_MS = 60000;
+            const QUOTE_BACKOFF_BASE_MS = 5000;
+            const QUOTE_BACKOFF_MAX_MS = 60000;
+            const QUOTE_ROOT_MARGIN = '120px 0px';
+
+            let quoteQueue = [];
+            let quoteQueuedKeys = new Set();
+            let quoteInFlight = 0;
+            let quoteBackoffUntil = 0;
+            let quoteBackoffMs = QUOTE_BACKOFF_BASE_MS;
+            let quoteDrainTimer = null;
+            let quoteVisibilityObserver = null;
+            const visibleQuoteSymbols = new Set();
+            const observedQuoteEls = new WeakSet();
+            // Remember which Yahoo suffix worked ('.NS' or '.BO') so we do not double-fetch.
+            const yahooSuffixBySymbol = {};
+
+            function getQuoteSymbolFromEl(el) {
+                if (!el || !el.dataset) return '';
+                return normalizeMarketSymbol(
+                    el.dataset.quoteSymbol || el.dataset.liveSymbol || el.dataset.symbol || ''
+                );
+            }
+
+            function resolveQuoteItem(sym) {
+                const key = normalizeMarketSymbol(sym);
+                if (!key) return null;
+                const fromMarket = getMarketUniverse().find((u) => u.s === key);
+                if (fromMarket) return fromMarket;
+                const fromTrade = getVisibleTradeLiveSymbols().find((u) => u.s === key);
+                if (fromTrade) return fromTrade;
+                const meta = findStockMetaForSymbol(key);
+                return { s: key, n: (meta && meta.n) || key };
+            }
+
+            function isQuoteRowOnActivePage(el) {
+                if (!el) return false;
+                const page = el.closest('[id^="page-"]');
+                if (page && page.classList.contains('d-none')) return false;
+                return true;
+            }
+
+            function getDomVisibleQuoteItems() {
+                const items = [];
+                const seen = new Set();
+                const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+                const pad = 200;
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (!isQuoteRowOnActivePage(el)) return;
+                    const sym = getQuoteSymbolFromEl(el);
+                    if (!sym || seen.has(sym)) return;
+                    const rect = el.getBoundingClientRect();
+                    if (rect.bottom < -pad || rect.top > vh + pad) return;
+                    seen.add(sym);
+                    const item = resolveQuoteItem(sym);
+                    if (item) items.push(item);
+                });
+                return items;
+            }
+
+            function getVisibleQuoteItems() {
+                const mounted = new Set();
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (!isQuoteRowOnActivePage(el)) return;
+                    const sym = getQuoteSymbolFromEl(el);
+                    if (sym) mounted.add(sym);
+                });
+
+                const items = [];
+                const seen = new Set();
+                visibleQuoteSymbols.forEach((sym) => {
+                    if (!sym || !mounted.has(sym) || seen.has(sym)) return;
+                    seen.add(sym);
+                    const item = resolveQuoteItem(sym);
+                    if (item) items.push(item);
+                });
+                if (items.length) return items;
+                return getDomVisibleQuoteItems();
+            }
+
+            function paintAfterQuoteUpdate() {
+                if (isMarketPageVisible()) {
+                    try { paintMarketQuotes(); } catch (_) {}
+                }
+                if (isTradeLivePageVisible()) {
+                    try { paintTradeLivePrices(); } catch (_) {}
+                }
+            }
+
+            function paintMarketQuotes() {
+                if (!isMarketPageVisible()) return;
+                const formatChangePct = (window.MTFComponents && window.MTFComponents.formatChangePct) || null;
+                const formatChangeAbs = (window.MTFComponents && window.MTFComponents.formatChangeAbs) || null;
+                const iconToneClass = (tone) => {
+                    if (tone === 'up') return 'text-success bg-success-subtle';
+                    if (tone === 'down') return 'text-danger bg-danger-subtle';
+                    return 'text-body-secondary bg-light';
+                };
+                const changeToneClass = (tone) => {
+                    if (tone === 'up') return 'text-success';
+                    if (tone === 'down') return 'text-danger';
+                    return 'text-muted';
+                };
+                document.querySelectorAll('[data-quote-symbol]').forEach((el) => {
+                    const sym = getQuoteSymbolFromEl(el);
+                    const q = marketQuoteCache[sym];
+                    if (!q) return;
+                    const change = Number(q.change);
+                    const changePct = Number(q.changePct);
+                    const hasChange = !isNaN(change);
+                    const tone = !hasChange ? 'neutral' : change >= 0 ? 'up' : 'down';
+                    const priceEl = el.querySelector('[data-quote-price]');
+                    const changeEl = el.querySelector('[data-quote-change]');
+                    const iconEl = el.querySelector('[data-quote-icon]');
+                    if (priceEl) {
+                        priceEl.textContent = q.price == null || isNaN(Number(q.price))
+                            ? '—'
+                            : '₹' + Number(q.price).toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                    }
+                    if (changeEl) {
+                        changeEl.textContent = hasChange && formatChangeAbs && formatChangePct
+                            ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
+                            : '—';
+                        changeEl.classList.remove('text-success', 'text-danger', 'text-muted');
+                        changeEl.classList.add(changeToneClass(tone));
+                    }
+                    if (iconEl) {
+                        iconEl.classList.remove(
+                            'text-success', 'bg-success-subtle',
+                            'text-danger', 'bg-danger-subtle',
+                            'text-body-secondary', 'bg-light'
+                        );
+                        iconToneClass(tone).split(/\s+/).forEach((c) => iconEl.classList.add(c));
+                    }
+                });
+                const statusEl = document.getElementById('marketUpdatedAt');
+                if (statusEl && marketUpdatedAt && !marketLoading) {
+                    try {
+                        const d = new Date(marketUpdatedAt);
+                        if (!isNaN(d.getTime())) {
+                            statusEl.textContent = 'Updated ' + d.toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                            });
                         }
-                    }
-                    if (attempt < attempts - 1) {
-                        await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
-                    }
+                    } catch (_) {}
+                }
+            }
+
+            function enqueueQuoteFetch(item, opts) {
+                const force = !!(opts && opts.force);
+                const sym = normalizeMarketSymbol(item && item.s);
+                if (!sym) return Promise.resolve(null);
+                const cached = marketQuoteCache[sym];
+                if (!force && isFreshMarketQuote(cached)) return Promise.resolve(cached);
+                if (quoteQueuedKeys.has(sym)) return Promise.resolve(cached || null);
+
+                quoteQueuedKeys.add(sym);
+                return new Promise((resolve) => {
+                    quoteQueue.push({
+                        item: Object.assign({}, item, { s: sym }),
+                        force,
+                        resolve
+                    });
+                    drainQuoteQueue();
+                });
+            }
+
+            function drainQuoteQueue() {
+                if (quoteDrainTimer) return;
+                const now = Date.now();
+                if (now < quoteBackoffUntil) {
+                    quoteDrainTimer = setTimeout(() => {
+                        quoteDrainTimer = null;
+                        drainQuoteQueue();
+                    }, quoteBackoffUntil - now);
+                    return;
                 }
 
-                return {
-                    symbol: sym,
-                    name: item.n || sym,
-                    price: null,
-                    previousClose: null,
-                    change: null,
-                    changePct: null,
-                    pinned: !!item.pinned,
-                    extra: !!item.extra,
-                    removable: !!item.removable,
-                    error: true,
-                    updatedAt: new Date().toISOString(),
-                    lastError: lastError ? String(lastError.message || lastError) : ''
-                };
+                while (quoteInFlight < QUOTE_QUEUE_CONCURRENCY && quoteQueue.length) {
+                    const job = quoteQueue.shift();
+                    quoteInFlight += 1;
+                    (async () => {
+                        try {
+                            if (!job.force && isFreshMarketQuote(marketQuoteCache[job.item.s])) {
+                                job.resolve(marketQuoteCache[job.item.s]);
+                                return;
+                            }
+                            const quote = await fetchOneMarketQuote(job.item, { attempts: 1 });
+                            cacheMarketQuote(quote);
+                            if (isValidMarketQuote(quote)) {
+                                quoteBackoffMs = QUOTE_BACKOFF_BASE_MS;
+                            } else if (isRateLimitError(quote && quote.lastError)) {
+                                quoteBackoffMs = Math.min(QUOTE_BACKOFF_MAX_MS, Math.max(QUOTE_BACKOFF_BASE_MS, quoteBackoffMs * 2));
+                                quoteBackoffUntil = Date.now() + quoteBackoffMs;
+                            }
+                            marketUpdatedAt = new Date().toISOString();
+                            paintAfterQuoteUpdate();
+                            job.resolve(quote);
+                        } catch (e) {
+                            if (isRateLimitError(e)) {
+                                quoteBackoffMs = Math.min(QUOTE_BACKOFF_MAX_MS, quoteBackoffMs * 2);
+                                quoteBackoffUntil = Date.now() + quoteBackoffMs;
+                            }
+                            job.resolve(null);
+                        } finally {
+                            quoteQueuedKeys.delete(job.item.s);
+                            quoteInFlight -= 1;
+                            drainQuoteQueue();
+                        }
+                    })();
+                }
+            }
+
+            function ensureQuoteVisibilityObserver() {
+                if (quoteVisibilityObserver) return quoteVisibilityObserver;
+                quoteVisibilityObserver = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        const sym = getQuoteSymbolFromEl(entry.target);
+                        if (!sym) return;
+                        if (entry.isIntersecting && isQuoteRowOnActivePage(entry.target)) {
+                            visibleQuoteSymbols.add(sym);
+                            const item = resolveQuoteItem(sym);
+                            if (item) enqueueQuoteFetch(item, { force: false });
+                        } else {
+                            visibleQuoteSymbols.delete(sym);
+                        }
+                    });
+                }, { root: null, rootMargin: QUOTE_ROOT_MARGIN, threshold: 0.01 });
+                return quoteVisibilityObserver;
+            }
+
+            function observeQuoteRows() {
+                if (typeof IntersectionObserver === 'undefined') {
+                    getDomVisibleQuoteItems().forEach((item) => enqueueQuoteFetch(item, { force: false }));
+                    return;
+                }
+                const obs = ensureQuoteVisibilityObserver();
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (observedQuoteEls.has(el)) return;
+                    observedQuoteEls.add(el);
+                    obs.observe(el);
+                });
+            }
+
+            async function fetchOneMarketQuote(item, opts) {
+                const sym = normalizeMarketSymbol(item.s);
+                const remembered = yahooSuffixBySymbol[sym];
+                // Prefer the exchange that worked before. Default to NSE only —
+                // blindly also hitting .BO doubled Jina calls and caused 429s.
+                const primary = remembered ? (sym + remembered) : yahooSymbolForNse(sym);
+
+                async function tryOne(yahooSym) {
+                    const data = await fetchYahooChartJson(yahooSym);
+                    const quote = parseYahooChartQuote(data, sym, item.n);
+                    if (!quote || quote.price == null || isNaN(Number(quote.price))) {
+                        throw new Error('No quote data');
+                    }
+                    yahooSuffixBySymbol[sym] = yahooSym.endsWith('.BO') ? '.BO' : '.NS';
+                    quote.pinned = !!item.pinned;
+                    quote.extra = !!item.extra;
+                    quote.removable = !!item.removable;
+                    quote.error = false;
+                    return quote;
+                }
+
+                function failQuote(err) {
+                    return {
+                        symbol: sym,
+                        name: item.n || sym,
+                        price: null,
+                        previousClose: null,
+                        change: null,
+                        changePct: null,
+                        pinned: !!item.pinned,
+                        extra: !!item.extra,
+                        removable: !!item.removable,
+                        error: true,
+                        updatedAt: new Date().toISOString(),
+                        lastError: err ? String(err.message || err) : ''
+                    };
+                }
+
+                try {
+                    return await tryOne(primary);
+                } catch (e) {
+                    if (isRateLimitError(e)) return failQuote(e);
+                    // BSE fallback only when NSE had no data (not on 429), and only once.
+                    if (!remembered && primary.endsWith('.NS')) {
+                        try {
+                            return await tryOne(sym + '.BO');
+                        } catch (e2) {
+                            return failQuote(e2);
+                        }
+                    }
+                    return failQuote(e);
+                }
             }
 
             function cacheMarketQuote(quote) {
@@ -1137,33 +1556,30 @@
 
             async function refreshMarketQuotes(opts) {
                 const silent = opts && opts.silent;
+                const force = !(opts && opts.silent) || !!(opts && opts.force);
                 if (marketLoading) return;
                 marketLoading = true;
                 marketError = '';
                 if (!silent) {
                     try { renderMarketPage(); } catch (_) {}
+                    observeQuoteRows();
                 }
                 try {
                     loadStockCatalogFromInternet();
-                    const universe = getMarketUniverse();
-                    if (!universe.length) {
-                        marketUpdatedAt = new Date().toISOString();
+                    observeQuoteRows();
+                    const items = getVisibleQuoteItems();
+                    if (!items.length) {
+                        marketUpdatedAt = marketUpdatedAt || new Date().toISOString();
                         marketError = '';
                         return;
                     }
-                    const concurrency = 4;
-                    for (let i = 0; i < universe.length; i += concurrency) {
-                        const batch = universe.slice(i, i + concurrency);
-                        const results = await Promise.all(batch.map((item) => fetchOneMarketQuote(item, { attempts: 2 })));
-                        results.forEach((q) => cacheMarketQuote(q));
-                        try { renderMarketPage(); } catch (_) {}
-                    }
+                    await Promise.all(items.map((item) => enqueueQuoteFetch(item, { force })));
                     marketUpdatedAt = new Date().toISOString();
-                    const failed = universe.filter((u) => {
+                    const failed = items.filter((u) => {
                         const q = marketQuoteCache[u.s];
                         return !q || q.price == null || q.error;
                     }).length;
-                    if (failed === universe.length && universe.length) {
+                    if (failed === items.length && items.length) {
                         marketError = 'Could not reach market data. Check internet and try again.';
                     } else {
                         marketError = '';
@@ -1174,6 +1590,7 @@
                 } finally {
                     marketLoading = false;
                     try { renderMarketPage(); } catch (_) {}
+                    observeQuoteRows();
                 }
             }
 
@@ -1187,14 +1604,17 @@
             function startMarketRefresh() {
                 stopMarketRefresh();
                 syncMarketSubTabUI();
+                try { renderMarketPage(); } catch (_) {}
+                observeQuoteRows();
                 refreshMarketQuotes();
                 marketRefreshTimer = setInterval(() => {
                     const page = document.getElementById('page-market');
-                    if (!page || page.classList.contains('hidden')) {
+                    if (!page || page.classList.contains('d-none')) {
                         stopMarketRefresh();
                         return;
                     }
-                    refreshMarketQuotes({ silent: true });
+                    observeQuoteRows();
+                    refreshMarketQuotes({ silent: true, force: false });
                 }, MARKET_REFRESH_MS);
             }
 
@@ -1270,16 +1690,29 @@
             }
 
             function paintTradeLivePrices() {
+                const toneText = (tone) => {
+                    if (tone === 'up') return 'text-success';
+                    if (tone === 'down') return 'text-danger';
+                    return 'text-body-secondary';
+                };
+                const setBtnTone = (btn, tone) => {
+                    if (!btn) return;
+                    btn.classList.remove('text-success', 'text-danger', 'text-body-secondary');
+                    btn.classList.add(toneText(tone));
+                };
+                const spinnerHtml = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
+
                 document.querySelectorAll('[data-live-symbol]').forEach((el) => {
                     const symbol = el.dataset.liveSymbol || '';
                     const tradeId = el.dataset.tradeId || '';
                     const quote = getTradeLiveQuote(symbol);
-                    const priceEl = el.querySelector('.trade-list-item__live-price');
-                    const valueEl = el.querySelector('.trade-list-item__live-price-value');
-                    const targetEl = el.querySelector('.trade-list-item__live-target');
-                    const targetValueEl = el.querySelector('.trade-list-item__live-target-value');
-                    const returnEl = el.querySelector('.trade-list-item__live-return');
-                    const returnValueEl = el.querySelector('.trade-list-item__live-return-value');
+                    const priceBtn = el.querySelector('[data-live-field="price"]');
+                    const targetBtn = el.querySelector('[data-live-field="target"]');
+                    const returnBtn = el.querySelector('[data-live-field="return"]');
+                    const valueEl = priceBtn && priceBtn.querySelector('[data-live-value]');
+                    const targetValueEl = targetBtn && targetBtn.querySelector('[data-live-value]');
+                    const returnValueEl = returnBtn && returnBtn.querySelector('[data-live-value]');
+                    const loadingSlot = el.querySelector('[data-live-loading]');
                     const hasPrice = isValidMarketQuote(quote);
                     const livePrice = hasPrice ? Number(quote.price) : null;
                     const change = hasPrice ? Number(quote.change) : NaN;
@@ -1299,10 +1732,8 @@
                             minimumFractionDigits: diff % 1 === 0 ? 0 : 2,
                             maximumFractionDigits: 2
                         });
-                        // Percentage plain; ₹ difference in orange pill
                         const overshootSign = signedDiff < -0.005 ? '+' : '';
-                        gapHtml = `${pct.toFixed(2)}% <span class="trade-list-item__live-target-pipe" aria-hidden="true">|</span> <span class="trade-list-item__live-target-diff">${overshootSign}₹${diffText}</span>`;
-                        // Still below target (distance remaining) → down; already at/above target → up
+                        gapHtml = `${pct.toFixed(2)}% <span class="text-muted" aria-hidden="true">|</span> <span class="badge rounded-pill border bg-transparent text-body-secondary">${overshootSign}₹${diffText}</span>`;
                         if (Math.abs(signedPct) >= 0.005) gapTone = signedPct > 0 ? 'down' : 'up';
                     }
 
@@ -1313,59 +1744,12 @@
                         returnTone = Number(liveReturn) >= 0 ? 'up' : 'down';
                     }
                     const returnText = formatTradeLiveReturnText(liveReturn);
-
                     const refreshing = !!(tradeLiveRefreshing || tradeLiveRetryPending);
 
-                    if (priceEl) {
-                        priceEl.classList.remove(
-                            'trade-list-item__live-price--up',
-                            'trade-list-item__live-price--down',
-                            'trade-list-item__live-price--neutral',
-                            'trade-list-item__live-price--loading'
-                        );
-                        priceEl.classList.add(`trade-list-item__live-price--${tone}`);
-                    }
-                    if (targetEl) {
-                        targetEl.classList.remove(
-                            'trade-list-item__live-target--up',
-                            'trade-list-item__live-target--down',
-                            'trade-list-item__live-target--neutral',
-                            'trade-list-item__live-target--loading'
-                        );
-                        targetEl.classList.add(`trade-list-item__live-target--${gapTone}`);
-                    }
-                    if (returnEl) {
-                        returnEl.classList.remove(
-                            'trade-list-item__live-return--up',
-                            'trade-list-item__live-return--down',
-                            'trade-list-item__live-return--neutral',
-                            'trade-list-item__live-return--loading'
-                        );
-                        returnEl.classList.add(`trade-list-item__live-return--${returnTone}`);
-                    }
-
-                    // Always show a visible refresh indicator while fetching.
-                    if (refreshing) {
-                        if (priceEl) priceEl.classList.add('trade-list-item__live-price--loading');
-                        if (targetEl) targetEl.classList.add('trade-list-item__live-target--loading');
-                        if (returnEl) returnEl.classList.add('trade-list-item__live-return--loading');
-                        if (valueEl) {
-                            valueEl.innerHTML = hasPrice
-                                ? `${formatTradeLivePriceText(quote)} <i class="fas fa-spinner fa-spin trade-list-item__live-refresh-icon" aria-hidden="true"></i>`
-                                : '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
-                        }
-                        if (targetValueEl) {
-                            targetValueEl.innerHTML = hasPrice
-                                ? `${gapHtml} <i class="fas fa-spinner fa-spin trade-list-item__live-refresh-icon" aria-hidden="true"></i>`
-                                : '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
-                        }
-                        if (returnValueEl) {
-                            returnValueEl.innerHTML = hasPrice && liveReturn != null
-                                ? `${returnText} <i class="fas fa-spinner fa-spin trade-list-item__live-refresh-icon" aria-hidden="true"></i>`
-                                : '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
-                        }
-                        return;
-                    }
+                    setBtnTone(priceBtn, tone);
+                    setBtnTone(targetBtn, gapTone);
+                    setBtnTone(returnBtn, returnTone);
+                    if (loadingSlot) loadingSlot.innerHTML = refreshing ? spinnerHtml : '';
 
                     if (valueEl) valueEl.textContent = formatTradeLivePriceText(quote);
                     if (targetValueEl) targetValueEl.innerHTML = hasPrice ? gapHtml : '—';
@@ -1375,17 +1759,17 @@
 
             function isTradesPageVisible() {
                 const page = document.getElementById('page-trades');
-                return !!(page && !page.classList.contains('hidden'));
+                return !!(page && !page.classList.contains('d-none'));
             }
 
             function isPastPageVisible() {
                 const page = document.getElementById('page-past');
-                return !!(page && !page.classList.contains('hidden'));
+                return !!(page && !page.classList.contains('d-none'));
             }
 
             function isMarketPageVisible() {
                 const page = document.getElementById('page-market');
-                return !!(page && !page.classList.contains('hidden'));
+                return !!(page && !page.classList.contains('d-none'));
             }
 
             function isTradeLivePageVisible() {
@@ -1430,13 +1814,13 @@
             }
 
             async function refreshTradeLivePrices(opts) {
-                const silent = opts && opts.silent;
-                const forceAll = !!(opts && opts.forceAll);
+                const force = !!(opts && opts.force);
                 if (!isTradeLivePageVisible()) return;
                 if (tradeLiveRefreshing) return;
 
-                const universe = getVisibleTradeLiveSymbols();
-                if (!universe.length) {
+                observeQuoteRows();
+                const items = getVisibleQuoteItems();
+                if (!items.length) {
                     tradeLiveRefreshing = false;
                     tradeLiveRetryPending = false;
                     paintTradeLivePrices();
@@ -1447,44 +1831,26 @@
                 tradeLiveRefreshing = true;
                 paintTradeLivePrices();
 
-                const maxRounds = forceAll ? 4 : 3;
-                const concurrency = 3;
                 try {
                     loadStockCatalogFromInternet();
-                    for (let round = 0; round < maxRounds; round++) {
-                        if (seq !== tradeLiveRefreshSeq) return;
-                        if (!isTradeLivePageVisible()) return;
-
-                        const pending = forceAll && round === 0
-                            ? universe.slice()
-                            : getMissingTradeLiveSymbols(universe);
-                        if (!pending.length) break;
-
+                    if (seq !== tradeLiveRefreshSeq) return;
+                    const pending = force
+                        ? items.slice()
+                        : items.filter((item) => !isFreshMarketQuote(marketQuoteCache[item.s]));
+                    if (pending.length) {
                         tradeLiveRetryPending = true;
-                        for (let i = 0; i < pending.length; i += concurrency) {
-                            if (seq !== tradeLiveRefreshSeq) return;
-                            const batch = pending.slice(i, i + concurrency);
-                            const results = await Promise.all(
-                                batch.map((item) => fetchOneMarketQuote(item, { attempts: 3 }))
-                            );
-                            results.forEach((q) => cacheMarketQuote(q));
-                            paintTradeLivePrices();
-                        }
-
-                        if (!getMissingTradeLiveSymbols(universe).length) break;
-                        if (round < maxRounds - 1) {
-                            await new Promise((resolve) => setTimeout(resolve, 700 * (round + 1)));
-                        }
+                        await Promise.all(pending.map((item) => enqueueQuoteFetch(item, { force })));
                     }
                 } catch (e) {
                     console.warn('Trade live price refresh failed', e);
                 } finally {
                     if (seq === tradeLiveRefreshSeq) {
                         tradeLiveRefreshing = false;
-                        const stillMissing = getMissingTradeLiveSymbols(universe);
+                        const stillMissing = items.filter((item) => !isValidMarketQuote(marketQuoteCache[item.s]));
                         tradeLiveRetryPending = stillMissing.length > 0;
                         paintTradeLivePrices();
-                        if (stillMissing.length) scheduleTradeLiveRetry(stillMissing);
+                        observeQuoteRows();
+                        if (stillMissing.length) scheduleTradeLiveRetry();
                         else clearTradeLiveRetry();
                     }
                 }
@@ -1508,8 +1874,8 @@
                         tradeLiveRetryPending = false;
                         return;
                     }
-                    refreshTradeLivePrices({ silent: true });
-                }, 5000);
+                    refreshTradeLivePrices({ silent: true, force: false });
+                }, 15000);
             }
 
             function stopTradeLiveRefresh() {
@@ -1525,29 +1891,53 @@
             function startTradeLiveRefresh() {
                 stopTradeLiveRefresh();
                 if (!isTradeLivePageVisible()) return;
-                refreshTradeLivePrices({ forceAll: true });
+                observeQuoteRows();
+                refreshTradeLivePrices({ force: false });
                 tradeLiveRefreshTimer = setInterval(() => {
                     if (!isTradeLivePageVisible()) {
                         stopTradeLiveRefresh();
                         return;
                     }
-                    refreshTradeLivePrices({ silent: true, forceAll: true });
+                    observeQuoteRows();
+                    refreshTradeLivePrices({ silent: true, force: false });
                 }, MARKET_REFRESH_MS);
             }
 
-            function refreshTradeLivePricesNow() {
+            function refreshTradeLivePricesNow(symbol) {
                 if (!isTradeLivePageVisible()) return;
                 // Cancel any in-flight refresh so a manual tap always restarts.
                 tradeLiveRefreshSeq += 1;
                 tradeLiveRefreshing = false;
                 clearTradeLiveRetry();
-                refreshTradeLivePrices({ forceAll: true });
+                observeQuoteRows();
+
+                const key = normalizeMarketSymbol(symbol || '');
+                if (key) {
+                    const item = resolveQuoteItem(key);
+                    if (item) {
+                        const seq = ++tradeLiveRefreshSeq;
+                        tradeLiveRefreshing = true;
+                        paintTradeLivePrices();
+                        // Drop any stale queue lock so a manual tap always re-fetches.
+                        quoteQueuedKeys.delete(key);
+                        enqueueQuoteFetch(item, { force: true }).finally(() => {
+                            if (seq !== tradeLiveRefreshSeq) return;
+                            tradeLiveRefreshing = false;
+                            tradeLiveRetryPending = !isValidMarketQuote(marketQuoteCache[key]);
+                            paintTradeLivePrices();
+                            if (tradeLiveRetryPending) scheduleTradeLiveRetry();
+                        });
+                        return;
+                    }
+                }
+                refreshTradeLivePrices({ force: true });
             }
 
             function hideMarketAcList() {
                 const list = document.getElementById('marketAcList');
                 if (list) {
-                    list.classList.add('hidden');
+                    list.classList.add('d-none');
+                    list.classList.remove('d-block');
                     list.innerHTML = '';
                 }
                 marketAcResults = [];
@@ -1557,8 +1947,9 @@
             function showMarketAcLoading(msg) {
                 const list = document.getElementById('marketAcList');
                 if (!list) return;
-                list.innerHTML = `<div class="px-3 py-2 text-sm text-base-content/60"><i class="fas fa-spinner fa-spin mr-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
-                list.classList.remove('hidden');
+                list.innerHTML = `<div class="px-3 py-2 small text-muted"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
+                list.classList.remove('d-none');
+                list.classList.add('d-block');
             }
 
             function renderMarketAcList(items) {
@@ -1571,9 +1962,10 @@
                 if (!marketAcResults.length) {
                     const q = (input.value || '').trim();
                     list.innerHTML = q.length
-                        ? `<div class="px-3 py-2 text-sm text-base-content/60">No match for “${escapeHtml(q)}”.</div>`
+                        ? `<div class="px-3 py-2 small text-muted">No match for “${escapeHtml(q)}”.</div>`
                         : '';
-                    list.classList.toggle('hidden', q.length < 1);
+                    list.classList.toggle('d-none', q.length < 1);
+                    list.classList.toggle('d-block', q.length >= 1);
                     return;
                 }
 
@@ -1581,15 +1973,17 @@
                     const meta = it.sector
                         ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
                         : escapeHtml(it.e || 'NSE');
-                    const activeCls = idx === marketAcActiveIdx ? ' bg-base-200' : '';
+                    const activeCls = idx === marketAcActiveIdx ? ' active' : '';
+                    const name = it.n || '';
                     return `
-                    <div class="px-3 py-2 cursor-pointer hover:bg-base-200 border-b border-base-200 last:border-0${activeCls}" role="option" data-idx="${idx}" onmousedown="selectMarketSymbol(${idx})">
-                        <div class="font-medium text-base-content/80 text-sm">${escapeHtml(it.s)}</div>
-                        <div class="text-sm">${escapeHtml(it.n)}</div>
-                        <div class="text-xs text-base-content/60">${meta}</div>
-                    </div>`;
+                    <button type="button" class="dropdown-item py-2${activeCls}" role="option" data-idx="${idx}" onmousedown="selectMarketSymbol(${idx})">
+                        <div class="fw-semibold text-truncate">${escapeHtml(it.s)}</div>
+                        <div class="small text-body-secondary text-truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+                        <div class="small text-muted text-truncate">${meta}</div>
+                    </button>`;
                 }).join('');
-                list.classList.remove('hidden');
+                list.classList.remove('d-none');
+                list.classList.add('d-block');
             }
 
             async function runMarketStockSearch(query) {
@@ -1623,8 +2017,9 @@
                         } else if (!results.length) {
                             const list = document.getElementById('marketAcList');
                             if (list) {
-                                list.innerHTML = `<div class="px-3 py-2 text-sm text-base-content/60">Could not reach market data. Check internet and try again.</div>`;
-                                list.classList.remove('hidden');
+                                list.innerHTML = `<div class="px-3 py-2 small text-muted">Could not reach market data. Check internet and try again.</div>`;
+                                list.classList.remove('d-none');
+                                list.classList.add('d-block');
                             }
                         }
                     }
@@ -1637,7 +2032,7 @@
                 const input = document.getElementById('marketSearchInput');
                 const q = (input && input.value || '').trim();
                 const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.toggle('hidden', !q);
+                if (clearBtn) clearBtn.classList.toggle('d-none', !q);
 
                 if (marketSubTab === 'in-trade') {
                     marketFilterQuery = (input && input.value) || '';
@@ -1673,7 +2068,7 @@
                     return;
                 }
                 const list = document.getElementById('marketAcList');
-                if (!list || list.classList.contains('hidden') || !marketAcResults.length) {
+                if (!list || list.classList.contains('d-none') || !marketAcResults.length) {
                     if (e.key === 'Escape') hideMarketAcList();
                     return;
                 }
@@ -1702,7 +2097,7 @@
                 const input = document.getElementById('marketSearchInput');
                 if (input) input.value = '';
                 const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('hidden');
+                if (clearBtn) clearBtn.classList.add('d-none');
                 addToMarketWatchlist(item).then(() => {
                     try { renderMarketPage(); } catch (_) {}
                     return refreshMarketQuotes();
@@ -1716,7 +2111,7 @@
                     input.focus();
                 }
                 const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('hidden');
+                if (clearBtn) clearBtn.classList.add('d-none');
                 hideMarketAcList();
                 if (marketSubTab === 'in-trade') {
                     marketFilterQuery = '';
@@ -1740,6 +2135,7 @@
                 try { renderPastTrades(); } catch (_) {}
                 if (isTradeLivePageVisible()) {
                     paintTradeLivePrices();
+                    observeQuoteRows();
                     // Re-kick feed after list re-render (sync / edits) so mobile
                     // does not stay on empty placeholders until a manual tap.
                     if (!tradeLiveRefreshing && !tradeLiveRefreshTimer) {
@@ -1751,8 +2147,8 @@
             function refreshActiveMoreView() {
                 const txPage = document.getElementById('page-transactions');
                 const calcPage = document.getElementById('page-mtf-calc');
-                if (txPage && !txPage.classList.contains('hidden') && txPage.offsetParent !== null) renderTransactions();
-                if (calcPage && !calcPage.classList.contains('hidden') && calcPage.offsetParent !== null) updateMtfCalculator();
+                if (txPage && !txPage.classList.contains('d-none') && txPage.offsetParent !== null) renderTransactions();
+                if (calcPage && !calcPage.classList.contains('d-none') && calcPage.offsetParent !== null) updateMtfCalculator();
             }
 
             // ---------- CALCULATION ENGINE ----------
@@ -2015,14 +2411,14 @@
             }
 
             // ---------- APP BUTTON WIRING ----------
-            // trade modal → components/trade-modal/trade-modal.js
+            // trade modal → pages/common/trade-modal.js
             function renderSyncConnectRow() {
                 const row = document.getElementById('syncConnectRow');
                 if (!row) return;
-                row.className = 'flex gap-2';
+                row.className = 'd-flex gap-2';
                 row.innerHTML =
                     renderAppButton('Connect', { id: 'syncConnectBtn', variant: 'action', onclick: 'connectSyncFromInput()', icon: 'fa-plug', flex: true }) +
-                    renderAppButton('Disconnect', { id: 'syncDisconnectBtn', variant: 'cancel', onclick: 'disconnectSync()', icon: 'fa-unlink', flex: true, className: 'hidden' });
+                    renderAppButton('Disconnect', { id: 'syncDisconnectBtn', variant: 'cancel', onclick: 'disconnectSync()', icon: 'fa-unlink', flex: true, className: 'd-none' });
             }
 
             function paintAddMoneyAccountBtn() {
@@ -2074,18 +2470,18 @@
                 const result = document.getElementById('marketFeedCheckResult');
                 const btn = document.getElementById('settingsMarketFeedBtn');
                 if (badge) {
-                    badge.className = 'inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium border';
+                    badge.className = 'd-inline-flex align-items-center badge  rounded-pill px-2 py-1  h-auto small fw-medium border';
                     if (state === 'ok') {
-                        badge.className += ' bg-success/15 border-success/20 text-success';
+                        badge.className += ' bg-success-subtle border-success/20 text-success';
                         badge.textContent = 'Live';
                     } else if (state === 'error') {
-                        badge.className += ' bg-error/15 border-error/20 text-error';
+                        badge.className += ' bg-danger-subtle border-danger text-danger';
                         badge.textContent = 'Unavailable';
                     } else if (state === 'checking') {
-                        badge.className += ' bg-base-200/30 border-base-200/60 text-base-content/80';
+                        badge.className += ' bg-light border text-body-secondary';
                         badge.textContent = 'Checking…';
                     } else {
-                        badge.className += ' bg-base-200/30 border-base-200/60 text-base-content/80';
+                        badge.className += ' bg-light border text-body-secondary';
                         badge.textContent = 'Not checked';
                     }
                 }
@@ -2102,7 +2498,7 @@
             async function checkMarketFeed() {
                 if (marketFeedChecking) return;
                 marketFeedChecking = true;
-                setMarketFeedStatusUI('checking', '<i class="fas fa-spinner fa-spin mr-1"></i>Fetching live quote for RELIANCE…');
+                setMarketFeedStatusUI('checking', '<i class="fas fa-spinner fa-spin me-1"></i>Fetching live quote for RELIANCE…');
                 try {
                     const quote = await fetchOneMarketQuote({
                         s: 'RELIANCE',
@@ -2129,20 +2525,20 @@
                     });
                     setMarketFeedStatusUI(
                         'ok',
-                        `<span class="text-success font-medium">Yes — real-time market data is coming through.</span><br>` +
-                        `<span class="text-base-content/80"><strong>RELIANCE</strong> ${priceText}` +
+                        `<span class="text-success fw-medium">Yes — real-time market data is coming through.</span><br>` +
+                        `<span class="text-body-secondary"><strong>RELIANCE</strong> ${priceText}` +
                         (hasChange ? ` · ${changeText}` : '') +
-                        `</span><br><span class="text-base-content/60">Checked at ${checkedAt}</span>`
+                        `</span><br><span class="text-muted">Checked at ${checkedAt}</span>`
                     );
-                    showToast('Yes — we are getting real-time market data.', 'success');
+                    try { showToast('Yes — we are getting real-time market data.', 'success'); } catch (_) {}
                 } catch (e) {
                     console.warn('Market feed check failed', e);
                     setMarketFeedStatusUI(
                         'error',
-                        '<span class="text-error font-medium">Could not reach live market data.</span><br>' +
-                        '<span class="text-base-content/60">Check your internet connection and try again.</span>'
+                        '<span class="text-danger fw-medium">Could not reach live market data.</span><br>' +
+                        '<span class="text-muted">Check your internet connection and try again.</span>'
                     );
-                    showToast('Market feed unavailable. Check your internet and try again.', 'danger');
+                    try { showToast('Market feed unavailable. Check your internet and try again.', 'danger'); } catch (_) {}
                 } finally {
                     marketFeedChecking = false;
                     const btn = document.getElementById('settingsMarketFeedBtn');
@@ -2166,7 +2562,7 @@
                         variant: 'action',
                         onclick: 'addCalcSellPctPreset()',
                         size: 'sm',
-                        className: 'whitespace-nowrap'
+                        className: 'text-nowrap'
                     });
                 }
             }
@@ -2209,13 +2605,13 @@
             }
             function pnlClass(n) {
                 return (n || 0) >= 0
-                    ? 'text-success bg-success/15 rounded-lg px-1.5 py-0.5'
-                    : 'text-error bg-error/15 gr-danger-soft-text rounded-lg px-1.5 py-0.5';
+                    ? 'text-success bg-success-subtle rounded px-2 py-1'
+                    : 'text-danger bg-danger-subtle rounded px-2 py-1';
             }
 
             // ---------- FILTER SHEET ----------
             function openFilterSheet() {
-                Sheet.mountPanel('<i class="fas fa-tune mr-2 text-[var(--gr-accent)]"></i>Filter Past Trades', 'panelPastFilter',
+                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filter Past Trades', 'panelPastFilter',
                     renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyPastRangeFilter()', actionIcon: 'fa-check' }));
                 setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
@@ -2223,18 +2619,34 @@
                     setRangeButtonsActive('#pastRangeButtons', pastRangeDays);
                 }
             }
+
+            function openTradeFilterSheet() {
+                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filter Trades', 'panelTradeFilter',
+                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyTradeRangeFilter()', actionIcon: 'fa-check' }));
+                setDateInputValue(document.getElementById('tradeFrom'), tradeFrom);
+                setDateInputValue(document.getElementById('tradeTo'), tradeTo);
+                if (tradeRangeDays != null && tradeRangeDays !== '') {
+                    setRangeButtonsActive('#tradeRangeButtons', tradeRangeDays);
+                } else {
+                    clearRangeButtonsActive('#tradeRangeButtons');
+                }
+            }
+
             function closeFilterSheet() { Sheet.close(); }
 
             let settingsReturnPage = 'trades';
             let settingsReturnMoreFeature = null;
 
             function getCurrentAppPage() {
-                const active = document.querySelector('.page-section:not(.hidden)');
+                // Pages use Bootstrap `d-none` (not legacy `.hidden`).
+                const active = Array.from(document.querySelectorAll('section[id^="page-"]')).find(
+                    (el) => !el.classList.contains('d-none')
+                );
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
                 if (id === 'page-search') return { page: searchContext === 'past' ? 'past' : 'trades', moreFeature: null };
-                if (id === 'page-plan') return { page: 'plan', moreFeature: null };
-                if (id === 'page-trades') return { page: 'trades', moreFeature: null };
+                // Plan is an in-page switch on Trades — nav always treats it as trades.
+                if (id === 'page-plan' || id === 'page-trades') return { page: 'trades', moreFeature: null };
                 if (id === 'page-past') return { page: 'past', moreFeature: null };
                 if (id === 'page-market') return { page: 'market', moreFeature: null };
                 if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
@@ -2272,14 +2684,14 @@
             function isNavStateMismatch(saved) {
                 if (!saved || !saved.page) return false;
                 if (saved.page === 'settings') {
-                    return document.getElementById('page-settings')?.classList.contains('hidden');
+                    return document.getElementById('page-settings')?.classList.contains('d-none');
                 }
                 if (saved.moreFeature) {
                     const featPage = moreFeatureMap[saved.moreFeature];
-                    return document.getElementById(featPage)?.classList.contains('hidden');
+                    return document.getElementById(featPage)?.classList.contains('d-none');
                 }
                 const expected = pageMap[saved.page];
-                return expected ? document.getElementById(expected)?.classList.contains('hidden') : false;
+                return expected ? document.getElementById(expected)?.classList.contains('d-none') : false;
             }
 
             function restoreNavState() {
@@ -2300,6 +2712,11 @@
                 }
                 if (saved.page === 'money') {
                     openMoreFeature('money');
+                    return true;
+                }
+                // Legacy / mistaken "plan" nav → always land on current open trades.
+                if (saved.page === 'plan') {
+                    navigateTo('trades');
                     return true;
                 }
                 if (pageMap[saved.page]) {
@@ -2344,9 +2761,9 @@
             let activeMoreFeature = null;
 
             function showPage(pageId) {
-                document.querySelectorAll('.page-section').forEach(el => el.classList.add('hidden'));
+                document.querySelectorAll('section[id^="page-"]').forEach(el => el.classList.add('d-none'));
                 const target = document.getElementById(pageId);
-                if (target) target.classList.remove('hidden');
+                if (target) target.classList.remove('d-none');
                 updateAppHeader(pageId);
             }
 
@@ -2383,7 +2800,8 @@
                     startMarketRefresh();
                 } else if (page === 'trades') {
                     stopMarketRefresh();
-                    renderCurrentView();
+                    // Trades tab always opens current open trades (not Plan).
+                    setTradesViewMode('trade');
                     startTradeLiveRefresh();
                 } else if (page === 'past') {
                     stopMarketRefresh();
@@ -2425,6 +2843,9 @@
             let pastRangeDays = 'this-week';
             let pastFrom = null;
             let pastTo = null;
+            let tradeRangeDays = 'all';
+            let tradeFrom = null;
+            let tradeTo = null;
             let tradeSearchQuery = '';
             let pastSearchQuery = '';
             let planSearchQuery = '';
@@ -2464,27 +2885,23 @@
             function setFilterBtnHighlight(btn, active) {
                 if (!btn) return;
                 btn.classList.remove('btn-primary');
-                btn.classList.toggle('border-base-300', active);
-                btn.classList.toggle('bg-base-200', active);
-                btn.classList.toggle('text-base-content', active);
-                btn.classList.toggle('border-base-200', !active);
+                btn.classList.toggle('border', active);
+                btn.classList.toggle('bg-light', active);
+                btn.classList.toggle('text-body', active);
+                btn.classList.toggle('border', !active);
                 const icon = btn.querySelector('i');
-                if (icon) icon.classList.toggle('text-base-content/70', active);
-                if (icon) icon.classList.toggle('text-base-content/55', !active);
+                if (icon) icon.classList.toggle('text-muted', active);
+                if (icon) icon.classList.toggle('text-muted', !active);
             }
 
             function setRangeButtonsActive(containerSelector, activeRange) {
                 document.querySelectorAll(`${containerSelector} [data-range]`).forEach(b => {
                     const on = activeRange != null && activeRange !== '' && b.dataset.range === String(activeRange);
-                    if (b.classList.contains('md-filter-chip')) {
-                        b.classList.toggle('md-filter-chip--selected', on);
-                        b.setAttribute('aria-pressed', on ? 'true' : 'false');
-                        return;
-                    }
-                    b.classList.remove('btn-primary');
-                    b.classList.add('btn-outline', 'btn-sm');
-                    b.classList.toggle('btn-primary', on);
-                    b.classList.toggle('btn-neutral', !on);
+                    b.classList.remove('btn-primary', 'btn-outline-primary', 'btn-outline-secondary', 'btn-success', 'btn-outline-success');
+                    b.classList.add('btn', 'btn-sm');
+                    b.classList.toggle('active', on);
+                    b.classList.add(on ? 'btn-success' : 'btn-outline-success');
+                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
                 });
             }
 
@@ -2496,18 +2913,19 @@
                 syncAppSelectDropdown({
                     options: APP_MONEY_TYPE_OPTIONS,
                     selectedValue: moneyPageTypeFilter,
-                    labelId: 'moneyPageFilterTypeLabel',
-                    iconId: 'moneyPageFilterTypeIcon',
-                    menuId: 'moneyPageFilterTypeMenu',
-                    selectHandler: 'setMoneyPageTypeFilter'
+                    hostId: 'moneyPageFilterTypeHost',
+                    id: 'moneyPageFilterType',
+                    selectHandler: 'setMoneyPageTypeFilter',
+                    ariaLabel: 'Filter type'
                 });
                 syncAppSelectDropdown({
                     options: APP_MONEY_TYPE_FILTER_OPTIONS,
                     selectedValue: moneyPageTypeFilter,
-                    labelId: 'moneyPageTypeFilterLabel',
-                    iconId: 'moneyPageTypeFilterIcon',
-                    menuId: 'moneyPageTypeFilterMenu',
-                    selectHandler: 'pickMoneyPageTypeFilter'
+                    hostId: 'moneyPageTypeFilterHost',
+                    id: 'moneyPageTypeFilterSelect',
+                    selectHandler: 'pickMoneyPageTypeFilter',
+                    ariaLabel: 'Filter type',
+                    fullWidth: true
                 });
                 const hiddenType = document.getElementById('moneyPageTypeFilter');
                 if (hiddenType) hiddenType.value = moneyPageTypeFilter;
@@ -2517,43 +2935,49 @@
                 syncAppSelectDropdown({
                     options: APP_MONEY_TYPE_OPTIONS,
                     selectedValue: moneyHistoryTypeFilter,
-                    labelId: 'moneyHistoryTypeLabel',
-                    iconId: 'moneyHistoryTypeIcon',
-                    menuId: 'moneyHistoryTypeMenu',
-                    selectHandler: 'setMoneyHistoryTypeFilter'
+                    hostId: 'moneyHistoryTypeHost',
+                    id: 'moneyHistoryType',
+                    selectHandler: 'setMoneyHistoryTypeFilter',
+                    ariaLabel: 'Filter type'
                 });
             }
 
             function syncMoneyAccountFilterDropdown(accounts) {
                 const options = [
-                    { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
-                    ...accounts.map(a => ({ value: a.id, label: a.name, icon: 'fa-university', variant: 'account' }))
+                    { value: 'all', label: 'All' },
+                    ...accounts.map(a => ({ value: a.id, label: a.name }))
                 ];
                 syncAppSelectDropdown({
                     options,
                     selectedValue: moneyAccountFilter,
-                    labelId: 'moneyAccountFilterLabel',
-                    iconId: 'moneyAccountFilterIcon',
-                    menuId: 'moneyAccountFilterMenu',
+                    hostId: 'moneyAccountFilterHost',
+                    id: 'moneyAccountFilter',
                     selectHandler: 'setMoneyAccountFilter',
-                    escapeValues: true
+                    escapeValues: true,
+                    ariaLabel: 'Filter accounts'
                 });
             }
 
             function setTxBroker(value) {
                 const hidden = document.getElementById('txBroker');
-                if (hidden) {
-                    hidden.value = value || '';
-                    hidden.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                syncAppSelectDropdown({
+                if (!hidden) return;
+                hidden.value = value || '';
+                hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                const host = document.getElementById('txBrokerHost');
+                if (!host) return;
+                const { renderAppSelectDropdown } = global.MTFComponents;
+                if (!renderAppSelectDropdown) return;
+                host.innerHTML = renderAppSelectDropdown({
+                    id: 'txBrokerTrigger',
+                    value: value || '',
                     options: APP_BROKER_OPTIONS,
-                    selectedValue: value || '',
-                    labelId: 'txBrokerLabel',
-                    iconId: 'txBrokerIcon',
-                    menuId: 'txBrokerMenu',
-                    selectHandler: 'setTxBroker'
+                    selectHandler: 'setTxBroker',
+                    ariaLabel: 'Select Broker',
+                    fullWidth: true,
+                    size: ''
                 });
+                if (typeof updatePreview === 'function') { try { updatePreview(); } catch (_) {} }
+                try { global.MTFComponents.hideOpenDropdowns?.(document.getElementById('txModal')); } catch (_) {}
             }
 
             function pickMoneyPageTypeFilter(value) {
@@ -2590,6 +3014,44 @@
                 return { from: localDateStr(monday), to: localDateStr(friday) };
             }
 
+            /** Previous Mon–Fri trading week (before the current week). */
+            function getLastWeekMonFriRange() {
+                const thisWeek = getThisWeekMonFriRange();
+                const monday = new Date(thisWeek.from + 'T12:00:00');
+                monday.setDate(monday.getDate() - 7);
+                const friday = new Date(monday);
+                friday.setDate(monday.getDate() + 4);
+                return { from: localDateStr(monday), to: localDateStr(friday) };
+            }
+
+            /** NSE/BSE session days: Mon–Fri (weekends excluded). */
+            function isMarketWorkingDay(d) {
+                const day = d.getDay();
+                return day >= 1 && day <= 5;
+            }
+
+            function getLastMarketWorkingDay(fromDate = new Date()) {
+                const d = new Date(fromDate);
+                d.setHours(12, 0, 0, 0);
+                while (!isMarketWorkingDay(d)) {
+                    d.setDate(d.getDate() - 1);
+                }
+                return d;
+            }
+
+            /** Inclusive range covering the last N market working days ending on the latest session day. */
+            function getWorkingDayRange(workingDays) {
+                const n = Math.max(1, Math.round(Number(workingDays) || 1));
+                const to = getLastMarketWorkingDay(new Date());
+                const from = new Date(to);
+                let left = n - 1;
+                while (left > 0) {
+                    from.setDate(from.getDate() - 1);
+                    if (isMarketWorkingDay(from)) left -= 1;
+                }
+                return { from: localDateStr(from), to: localDateStr(to) };
+            }
+
             function setPastRange(daysOrKey) {
                 pastRangeDays = daysOrKey;
                 if (daysOrKey === 'today') {
@@ -2604,6 +3066,18 @@
                     pastTo = date;
                 } else if (daysOrKey === 'this-week') {
                     const range = getThisWeekMonFriRange();
+                    pastFrom = range.from;
+                    pastTo = range.to;
+                } else if (daysOrKey === 'last-week') {
+                    const range = getLastWeekMonFriRange();
+                    pastFrom = range.from;
+                    pastTo = range.to;
+                } else if (daysOrKey === 'work-20') {
+                    const range = getWorkingDayRange(20);
+                    pastFrom = range.from;
+                    pastTo = range.to;
+                } else if (daysOrKey === 'work-30') {
+                    const range = getWorkingDayRange(30);
                     pastFrom = range.from;
                     pastTo = range.to;
                 } else {
@@ -2639,6 +3113,68 @@
                 showToast('Range applied.', 'success');
             }
 
+            function resetTradeFilters() {
+                setTradeRange('all');
+                clearTradeSearch();
+                showToast('Filters reset.', 'success');
+            }
+
+            function setTradeRange(daysOrKey) {
+                tradeRangeDays = daysOrKey;
+                if (daysOrKey === 'all') {
+                    tradeFrom = null;
+                    tradeTo = null;
+                    setDateInputValue(document.getElementById('tradeFrom'), '');
+                    setDateInputValue(document.getElementById('tradeTo'), '');
+                } else if (daysOrKey === 'today') {
+                    const date = localDateStr(new Date());
+                    tradeFrom = date;
+                    tradeTo = date;
+                } else if (daysOrKey === 'yesterday') {
+                    const y = new Date();
+                    y.setDate(y.getDate() - 1);
+                    const date = localDateStr(y);
+                    tradeFrom = date;
+                    tradeTo = date;
+                } else if (daysOrKey === 'this-week') {
+                    const range = getThisWeekMonFriRange();
+                    tradeFrom = range.from;
+                    tradeTo = range.to;
+                } else {
+                    const range = getDateRange(daysOrKey);
+                    tradeFrom = range.from;
+                    tradeTo = range.to;
+                }
+                if (daysOrKey !== 'all') {
+                    setDateInputValue(document.getElementById('tradeFrom'), tradeFrom);
+                    setDateInputValue(document.getElementById('tradeTo'), tradeTo);
+                }
+                setRangeButtonsActive('#tradeRangeButtons', daysOrKey);
+                renderCurrentView();
+                if (isTradesPageVisible()) startTradeLiveRefresh();
+                closeFilterSheet();
+            }
+
+            function onTradeFilterDateChange() {
+                tradeRangeDays = null;
+                clearRangeButtonsActive('#tradeRangeButtons');
+            }
+
+            function applyTradeRangeFilter() {
+                const from = document.getElementById('tradeFrom').value;
+                const to = document.getElementById('tradeTo').value;
+                if (!from || !to) { showToast('Please select both dates.', 'warning'); return; }
+                if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
+                tradeFrom = from;
+                tradeTo = to;
+                tradeRangeDays = null;
+                clearRangeButtonsActive('#tradeRangeButtons');
+                renderCurrentView();
+                if (isTradesPageVisible()) startTradeLiveRefresh();
+                closeFilterSheet();
+                showToast('Range applied.', 'success');
+            }
+
             // ---------- SHARED TRADE CARD ----------
             function getDaysHeld(t) {
                 if (t.buyDate && t.sellDate) {
@@ -2668,7 +3204,8 @@
                     wordsId: 'summaryNetWords',
                     net,
                     count: openCount,
-                    countLabel: 'Open'
+                    countLabel: 'Open',
+                    useTwoItemLayout: true
                 });
             }
 
@@ -2748,11 +3285,9 @@
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
                 tradesViewMode = mode === 'plan' ? 'plan' : 'trade';
-                const sel = document.getElementById('tradesViewMode');
-                if (sel && sel.value !== tradesViewMode) sel.value = tradesViewMode;
                 renderCurrentView();
                 const tradesPage = document.getElementById('page-trades');
-                if (tradesPage && !tradesPage.classList.contains('hidden')) {
+                if (tradesPage && !tradesPage.classList.contains('d-none')) {
                     startTradeLiveRefresh();
                 }
             }
@@ -2803,8 +3338,6 @@
 
             function setPastPnlFilter(value) {
                 pastPnlFilter = (value === 'profit' || value === 'loss' || value === 'verified') ? value : 'all';
-                const sel = document.getElementById('pastPnlFilter');
-                if (sel && sel.value !== pastPnlFilter) sel.value = pastPnlFilter;
                 renderPastTrades();
                 if (isPastPageVisible()) startTradeLiveRefresh();
             }
@@ -2861,7 +3394,7 @@
 
             function openMoneyPageFilterSheet() {
                 syncMoneyPageFilterUI();
-                Sheet.mountPanel('<i class="fas fa-filter mr-2"></i>Filter Money', 'panelMoneyPageFilter',
+                Sheet.mountPanel('<i class="fas fa-filter me-2"></i>Filter Money', 'panelMoneyPageFilter',
                     renderAppButtonRow('Clear', 'Apply', { cancelOnClick: 'clearMoneyPageFilters()', actionOnClick: 'applyMoneyPageFilter()', actionIcon: 'fa-check' }));
             }
 
@@ -2910,7 +3443,7 @@
                 if (from && to) {
                     moneyPageFrom = from;
                     moneyPageTo = to;
-                    if (!document.querySelector(`#moneyPageRangeButtons .btn[data-range="${moneyPageRangeKey}"]`)?.classList.contains('btn-primary')) {
+                    if (!document.querySelector(`#moneyPageRangeButtons .btn[data-range="${moneyPageRangeKey}"]`)?.classList.contains('btn-outline-primary')) {
                         moneyPageRangeKey = 'custom';
                     }
                 } else {
@@ -2924,18 +3457,15 @@
 
             function onMoneyPageDateInputChange() {
                 moneyPageRangeKey = 'custom';
-                document.querySelectorAll('#moneyPageRangeButtons .btn').forEach(b => {
-                    b.classList.remove('btn-primary');
-                    b.classList.add('btn-outline', 'btn-neutral', 'btn-sm');
-                });
+                setRangeButtonsActive('#moneyPageRangeButtons', '');
             }
 
             function setMoneyPageTypeFilter(value) {
                 moneyPageTypeFilter = value || 'all';
                 const hiddenType = document.getElementById('moneyPageTypeFilter');
                 if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-                syncMoneyTypeDropdowns();
                 renderMoney();
+                syncMoneyTypeDropdowns();
             }
 
             function clearMoneyPageFilters() {
@@ -3016,7 +3546,7 @@
 
             function openMoneyHistoryRangeSheet() {
                 syncMoneyHistoryRangeSheetUI();
-                Sheet.mountPanel('<i class="fas fa-calendar-alt mr-2"></i>Date Range', 'panelMoneyHistoryRange',
+                Sheet.mountPanel('<i class="fas fa-calendar-alt me-2 text-primary"></i>Date Range', 'panelMoneyHistoryRange',
                     renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeMoneyHistoryRangeSheet()', actionOnClick: 'applyMoneyHistoryDateRange()', actionIcon: 'fa-check' }));
             }
 
@@ -3104,11 +3634,11 @@
                 renderMoney();
             }
 
-            // money entry modal → pages/money/money-entry-modal.js
+            // money entry modal → pages/money/money-page.js
             function setMoneyAccountModalMode(isEdit) {
-                const title = isEdit ? '<i class="fas fa-pen mr-2"></i>Edit Account' : '<i class="fas fa-plus mr-2"></i>Add Account';
-                const footer = `<div class="app-sheet__footer-actions w-full">${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
-                    ${isEdit ? renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true }) : ''}</div>`;
+                const title = isEdit ? '<i class="fas fa-pen me-2"></i>Edit Account' : '<i class="fas fa-plus me-2"></i>Add Account';
+                const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
+                    ${isEdit ? `<div class="mt-2">${renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true })}</div>` : ''}`;
                 Sheet.mountPanel(title, 'panelMoneyAccount', footer);
             }
 
@@ -3121,7 +3651,7 @@
                 const amount = parseFloat(inputEl.value);
                 if (!amount || amount <= 0 || isNaN(amount)) {
                     previewEl.innerHTML = '';
-                    previewEl.classList.add('hidden');
+                    previewEl.classList.add('d-none');
                     return;
                 }
                 previewEl.innerHTML = renderAmount(amount, {
@@ -3129,7 +3659,7 @@
                     tone: 'positive',
                     align: 'left'
                 });
-                previewEl.classList.remove('hidden');
+                previewEl.classList.remove('d-none');
             }
 
             function openAddMoneyAccountModal() {
@@ -3165,15 +3695,15 @@
                 const existing = isEdit ? getMoneyAccounts().find(a => a.id === id) : null;
                 confirmAction({
                     title: isEdit
-                        ? '<i class="fas fa-pen mr-2"></i>Save Account?'
-                        : '<i class="fas fa-plus-circle mr-2"></i>Add Account?',
+                        ? '<i class="fas fa-pen me-2"></i>Save Account?'
+                        : '<i class="fas fa-plus-circle me-2"></i>Add Account?',
                     titleClass: 'text-primary',
                     message: isEdit
                         ? `Save changes to "${name}"?`
                         : `Add account "${name}"?`,
                     confirmLabel: isEdit
-                        ? '<i class="fas fa-save mr-1"></i> Save'
-                        : '<i class="fas fa-plus mr-1"></i> Add',
+                        ? '<i class="fas fa-save me-1"></i> Save'
+                        : '<i class="fas fa-plus me-1"></i> Add',
                     confirmClass: 'btn-primary',
                     onConfirm: async () => {
                         if (isEdit) {
@@ -3198,10 +3728,10 @@
                 const entryCount = getMoneyEntries().filter(e => e.accountId === id).length;
                 const extra = entryCount ? ` This will also remove ${entryCount} deposit/withdrawal record(s).` : '';
                 confirmAction({
-                    title: '<i class="fas fa-exclamation-triangle mr-2"></i>Delete Account?',
-                    titleClass: 'text-error',
+                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Account?',
+                    titleClass: 'text-danger',
                     message: `Delete "${name}"?${extra} This cannot be undone.`,
-                    confirmLabel: '<i class="fas fa-trash-alt mr-1"></i> Delete',
+                    confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
                         await deleteMoneyAccount(id);
@@ -3223,14 +3753,14 @@
                 const amt = entry ? fmtINR(entry.amount) : 'this entry';
                 const typeLabel = entry?.type === 'deposit' ? 'deposit' : 'withdrawal';
                 confirmAction({
-                    title: '<i class="fas fa-exclamation-triangle mr-2"></i>Delete Entry?',
-                    titleClass: 'text-error',
+                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Entry?',
+                    titleClass: 'text-danger',
                     message: `Delete this ${typeLabel} of ${amt}? This cannot be undone.`,
-                    confirmLabel: '<i class="fas fa-trash-alt mr-1"></i> Delete',
+                    confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
                         await deleteMoneyEntry(id);
-                        document.getElementById('moneyEntryModal')?.close();
+                        hideModal(document.getElementById('moneyEntryModal'));
                         renderMoney();
                         refreshMoneyHistorySheetIfOpen();
                         showToast(isSyncConnected() ? 'Entry deleted and synced.' : 'Entry deleted.', 'danger');
@@ -3296,7 +3826,7 @@
             // ---------- SEARCH ----------
             function toggleClearBtn(btnId, hasValue) {
                 const btn = document.getElementById(btnId);
-                if (btn) btn.classList.toggle('hidden', !hasValue);
+                if (btn) btn.classList.toggle('d-none', !hasValue);
             }
             function setTradeSearch(value) {
                 tradeSearchQuery = value || '';
@@ -3337,7 +3867,7 @@
                 renderPlanTrades();
             }
 
-            // trade detail sheets → components/trade-*-sheet/
+            // trade detail sheets → pages/common/trade-*-sheet.js
             // ---------- INTEREST BREAKDOWN ----------
             function interestDetails(t) {
                 const sellPrice = getEffectiveSellPrice(t);
@@ -3375,15 +3905,14 @@
                 const tx = getTransaction(id);
                 const name = tx ? tx.company : 'this trade';
                 confirmAction({
-                    title: '<i class="fas fa-exclamation-triangle mr-2"></i>Delete Trade?',
-                    titleClass: 'text-error',
+                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Trade?',
+                    titleClass: 'text-danger',
                     message: `Delete "${name}"? This action cannot be undone.`,
-                    confirmLabel: '<i class="fas fa-trash-alt mr-1"></i> Delete',
+                    confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
                         await deleteTransaction(id);
-                        const txModal = document.getElementById('txModal');
-                        if (txModal?.open) txModal.close();
+                        hideOffcanvas(document.getElementById('txModal'));
                         refreshTradeListViews();
                         renderMoney();
                         refreshActiveMoreView();
@@ -3396,10 +3925,10 @@
                 const tx = getTransaction(id);
                 const name = tx ? tx.company : 'this trade';
                 confirmAction({
-                    title: '<i class="fas fa-copy mr-2"></i>Copy Trade?',
+                    title: '<i class="fas fa-copy me-2"></i>Copy Trade?',
                     titleClass: 'text-success',
                     message: `Create a duplicate of "${name}"?`,
-                    confirmLabel: '<i class="fas fa-copy mr-1"></i> Copy',
+                    confirmLabel: '<i class="fas fa-copy me-1"></i> Copy',
                     confirmClass: 'btn-success',
                     onConfirm: () => copyTransaction(id)
                 });
@@ -3411,10 +3940,10 @@
                 const name = tx.company || 'this trade';
                 const broker = tx.broker || 'broker';
                 confirmAction({
-                    title: '<i class="fas fa-check-circle mr-2"></i>Verify Trade?',
+                    title: '<i class="fas fa-check-circle me-2"></i>Verify Trade?',
                     titleClass: 'text-success',
                     message: `Confirm that the P&L shown for "${name}" matches your ${broker} statement?`,
-                    confirmLabel: '<i class="fas fa-check-circle mr-1"></i> Verified',
+                    confirmLabel: '<i class="fas fa-check-circle me-1"></i> Verified',
                     confirmClass: 'btn-success',
                     onConfirm: async () => {
                         const saved = await updateTransaction(id, { verified: true });
@@ -3433,10 +3962,10 @@
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
                 const name = tx.company || 'this trade';
                 confirmAction({
-                    title: '<i class="fas fa-play mr-2"></i>Execute Trade?',
+                    title: '<i class="fas fa-play me-2"></i>Execute Trade?',
                     titleClass: 'text-success',
                     message: `Move "${name}" from Plan to active Trades? This marks it as executed.`,
-                    confirmLabel: '<i class="fas fa-play mr-1"></i> Executed',
+                    confirmLabel: '<i class="fas fa-play me-1"></i> Executed',
                     confirmClass: 'btn-success',
                     onConfirm: async () => {
                         const saved = await updateTransaction(id, { executed: true, status: 'open' });
@@ -3455,10 +3984,10 @@
                 if (!tx) { showToast('Transaction not found.', 'danger'); return; }
                 const name = tx.company || 'this trade';
                 confirmAction({
-                    title: '<i class="fas fa-check-circle mr-2"></i>Close Trade?',
+                    title: '<i class="fas fa-check-circle me-2"></i>Close Trade?',
                     titleClass: 'text-success',
                     message: `Move "${name}" to Past Trades? This will mark the trade as closed.`,
-                    confirmLabel: '<i class="fas fa-check mr-1"></i> Move to Past',
+                    confirmLabel: '<i class="fas fa-check me-1"></i> Move to Past',
                     confirmClass: 'btn-success',
                     onConfirm: async () => {
                         const sellPrice = getEffectiveSellPrice(tx);
@@ -3489,26 +4018,9 @@
             }
 
             // ---------- MODAL HELPERS ----------
-            function initDropdowns() {
-                document.addEventListener('click', (e) => {
-                    if (e.target.closest('.dropdown-content button, .dropdown-content a, .dropdown-content li button')) {
-                        document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
-                        return;
-                    }
-                    const trigger = e.target.closest('.dropdown > button, .dropdown > [tabindex="0"]');
-                    if (trigger && trigger.closest('.dropdown')) {
-                        e.stopPropagation();
-                        const dd = trigger.closest('.dropdown');
-                        const wasOpen = dd.classList.contains('dropdown-open');
-                        document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
-                        if (!wasOpen) dd.classList.add('dropdown-open');
-                        return;
-                    }
-                    document.querySelectorAll('.dropdown.dropdown-open').forEach(d => d.classList.remove('dropdown-open'));
-                });
-            }
+            // Dropdowns use Bootstrap data-bs-toggle (no custom init needed).
 
-            // trade modal → components/trade-modal/trade-modal.js
+            // trade modal → pages/common/trade-modal.js
             // ---------- SETTINGS ----------
             // renderSettings, renderSettingsMoneyAccounts → pages/settings/settings-page.js
 
@@ -3524,7 +4036,7 @@
                     setAppTagElement(statusEl, 'Not configured', 'default');
                     if (hintEl) hintEl.textContent = 'Paste your Firebase config in db/firebase-config.js to enable cloud sync. The app works offline until then.';
                     if (connectBtn) connectBtn.disabled = true;
-                    if (disconnectBtn) disconnectBtn.classList.add('hidden');
+                    if (disconnectBtn) disconnectBtn.classList.add('d-none');
                     return;
                 }
                 if (connectBtn) connectBtn.disabled = false;
@@ -3542,13 +4054,13 @@
 
                 if (currentCode) {
                     if (input && document.activeElement !== input) input.value = currentCode;
-                    if (disconnectBtn) disconnectBtn.classList.remove('hidden');
+                    if (disconnectBtn) disconnectBtn.classList.remove('d-none');
                     if (hintEl) hintEl.textContent = 'Synced under code "' + currentCode + '". Use the same code on your other device.';
                 } else {
                     if (input && document.activeElement !== input && !input.value.trim()) {
                         input.value = DEFAULT_SYNC_CODE;
                     }
-                    if (disconnectBtn) disconnectBtn.classList.add('hidden');
+                    if (disconnectBtn) disconnectBtn.classList.add('d-none');
                     if (hintEl) hintEl.textContent = 'Default code is pre-filled. Just tap Connect (or change it if you use a different one).';
                 }
             }
@@ -3568,8 +4080,8 @@
                         return;
                     }
                     ta.value = JSON.stringify(data, null, 2);
-                    Sheet.mountPanel('<i class="fas fa-clipboard mr-2"></i>Backup as Text', 'panelBackup',
-                        `<div class="app-btn-row">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
+                    Sheet.mountPanel('<i class="fas fa-clipboard me-2"></i>Backup as Text', 'panelBackup',
+                        `<div class="d-flex gap-2">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
                 } catch (_) {
                     showToast('Could not open backup.', 'danger');
                 }
@@ -3630,17 +4142,17 @@
             }
 
             function resetData() {
-                const syncNote = getSyncCode() ? '<p class="text-sm text-base-content/60 mb-2"><i class="fas fa-cloud mr-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="font-medium text-base-content/80">all synced devices</span>.</p>' : '';
+                const syncNote = getSyncCode() ? '<p class="small text-muted mb-2"><i class="fas fa-cloud me-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="fw-medium text-body-secondary">all synced devices</span>.</p>' : '';
                 AppDialog.open(
-                    '<span class="text-error"><i class="fas fa-exclamation-triangle mr-2"></i>Reset All Data?</span>',
-                    `<p class="mb-2 font-semibold text-base-content/80">This will permanently delete ALL your transactions.</p>
-                    <p class="text-sm text-base-content/60 mb-2">This action <span class="text-error font-semibold">cannot be undone</span>.</p>${syncNote}
-                    <p class="text-sm text-base-content/60 mb-0">Tip: use <span class="font-medium text-base-content/80">Backup as Text</span> first.</p>`,
+                    '<span class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Reset All Data?</span>',
+                    `<p class="mb-2 fw-semibold text-body-secondary">This will permanently delete ALL your transactions.</p>
+                    <p class="small text-muted mb-2">This action <span class="text-danger fw-semibold">cannot be undone</span>.</p>${syncNote}
+                    <p class="small text-muted mb-0">Tip: use <span class="fw-medium text-body-secondary">Backup as Text</span> first.</p>`,
                     renderAppButtonRow('Cancel', 'Delete Everything', {
                         cancelOnClick: 'closeDialog()',
                         actionOnClick: 'performReset()',
                         actionVariant: 'danger',
-                        actionLabelHtml: '<i class="fas fa-trash-alt mr-1"></i> Delete Everything',
+                        actionLabelHtml: '<i class="fas fa-trash-alt me-1"></i> Delete Everything',
                         cancelInForm: false
                     })
                 );
@@ -3673,7 +4185,6 @@
                 });
 
                 initModals();
-                initDropdowns();
                 initCompanyAutocomplete();
                 migrateChargeLogic();
                 migrateTradeCompanySymbols();
@@ -3687,12 +4198,15 @@
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
                 setRangeButtonsActive('#pastRangeButtons', 'this-week');
 
+                tradeRangeDays = 'all';
+                tradeFrom = null;
+                tradeTo = null;
+                setDateInputValue(document.getElementById('tradeFrom'), '');
+                setDateInputValue(document.getElementById('tradeTo'), '');
+                setRangeButtonsActive('#tradeRangeButtons', 'all');
+
                 if (!restoreNavState()) {
-                    setBottomNavActive('trades');
-                    refreshTradeListViews();
-                    // Default landing is Trades — must start live feed here.
-                    // restoreNavState() → navigateTo() already starts it when a
-                    // saved page is restored; this path previously never did.
+                    navigateTo('trades');
                     startTradeLiveRefresh();
                 }
 
@@ -3727,19 +4241,19 @@
                         return;
                     }
                     restoreNavStateIfNeeded();
-                    if (!document.getElementById('page-plan').classList.contains('hidden')) {
+                    if (!document.getElementById('page-plan').classList.contains('d-none')) {
                         renderPlanTrades();
                     }
-                    if (!document.getElementById('page-trades').classList.contains('hidden')) {
+                    if (!document.getElementById('page-trades').classList.contains('d-none')) {
                         renderCurrentView();
                     }
-                    if (!document.getElementById('page-past').classList.contains('hidden')) {
+                    if (!document.getElementById('page-past').classList.contains('d-none')) {
                         renderPastTrades();
                     }
-                    if (!document.getElementById('page-market').classList.contains('hidden')) {
+                    if (!document.getElementById('page-market').classList.contains('d-none')) {
                         try { renderMarketPage(); } catch (_) {}
                     }
-                    if (!document.getElementById('page-money').classList.contains('hidden')) {
+                    if (!document.getElementById('page-money').classList.contains('d-none')) {
                         renderMoney();
                     }
                     refreshActiveMoreView();
@@ -3760,9 +4274,9 @@
                 appHeader: {
                     moreFeatureMap: { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' },
                     moreFeatureTitles: {
-                        money: '<i class="fas fa-coins mr-2"></i>Money',
-                        transactions: '<i class="fas fa-database mr-2"></i>Total Transactions',
-                        'mtf-calc': '<i class="fas fa-calculator mr-2"></i>MTF Calculator'
+                        money: '<i class="fas fa-coins me-2"></i>Money',
+                        transactions: '<i class="fas fa-database me-2"></i>Total Transactions',
+                        'mtf-calc': '<i class="fas fa-calculator me-2"></i>MTF Calculator'
                     }
                 },
                 tradePages: {
@@ -3779,8 +4293,12 @@
                     getSearchQuery: () => searchQuery,
                     getSearchContext: () => searchContext,
                     getTradesViewMode: () => tradesViewMode,
+                    getTradeFrom: () => tradeFrom,
+                    getTradeTo: () => tradeTo,
                     getPastFrom: () => pastFrom,
                     getPastTo: () => pastTo,
+                    getPastPnlFilter: () => pastPnlFilter,
+                    parseDateKey,
                     resolveTradeLiveSymbol,
                     getTradeLiveQuote,
                     isTradeLiveRefreshing,
@@ -3870,6 +4388,12 @@
                     resolveCompanyName,
                     resolveCompanySymbol,
                     getTomorrowDateKey,
+                    resetTxPriceAutoFlags,
+                    applySuggestedSellPrice,
+                    fillTradeFormFromLivePrice,
+                    onTxBuyPriceInputForSuggest,
+                    onTxSellPriceInputManual,
+                    onTxTradeDatesChangeForSuggest,
                     getSyncNote: () => (isSyncConnected() ? ' and synced' : ''),
                     refreshTradeListViews,
                     renderMoney,
@@ -3902,6 +4426,7 @@
             window.onTxCompanyFocus = onTxCompanyFocus;
             window.onTxCompanyBlur = onTxCompanyBlur;
             window.selectStockSymbol = selectStockSymbol;
+            window.fillTradeFormFromLivePrice = fillTradeFormFromLivePrice;
             window.openEditModal = openEditModal;
             window.openViewModal = openViewModal;
             window.openViewFromEditor = openViewFromEditor;
@@ -3936,6 +4461,7 @@
             window.onHoldModalDaysInput = onHoldModalDaysInput;
             window.setHoldModalSameDay = setHoldModalSameDay;
             window.setHoldModalTodayPair = setHoldModalTodayPair;
+            window.setHoldModalSellDateToday = setHoldModalSellDateToday;
             window.saveHoldDates = saveHoldDates;
             window.openChargesModal = openChargesModal;
             window.openInterestModal = openInterestModal;
@@ -3944,6 +4470,7 @@
             window.renderMarketPage = renderMarketPage;
             window.refreshMarketQuotes = refreshMarketQuotes;
             window.refreshTradeLivePricesNow = refreshTradeLivePricesNow;
+            window.observeQuoteRows = observeQuoteRows;
             window.setMarketSubTab = setMarketSubTab;
             window.removeMarketWatchlistSymbol = removeMarketWatchlistSymbol;
             window.onMarketSearchInput = onMarketSearchInput;
@@ -3978,6 +4505,11 @@
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;
+            window.openTradeFilterSheet = openTradeFilterSheet;
+            window.applyTradeRangeFilter = applyTradeRangeFilter;
+            window.setTradeRange = setTradeRange;
+            window.resetTradeFilters = resetTradeFilters;
+            window.onTradeFilterDateChange = onTradeFilterDateChange;
             window.setPastPnlFilter = setPastPnlFilter;
             window.updatePreview = updatePreview;
             window.connectSyncFromInput = connectSyncFromInput;

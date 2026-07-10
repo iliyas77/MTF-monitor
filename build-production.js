@@ -1,23 +1,30 @@
 #!/usr/bin/env node
 /**
- * Bundles and minifies main.html + main.css + component/page scripts + main.js into production.html.
+ * Bundles and minifies main.html + brand theme CSS + component/page scripts + main.js
+ * into production.html. Bootstrap CSS/JS stay as external CDN links.
  * Run: npm run build   (or: node build-production.js)
  * Ship (bump version + stamp date/time): npm run ship
+ *
+ * Always repairs scripts/manifest.json + main.html script tags first
+ * (same as `npm run repair`).
  */
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const { minify } = require('html-minifier-terser');
+const { syncManifest } = require('./scripts/sync-manifest');
 
 const ROOT = __dirname;
 const OUT_FILE = path.join(ROOT, 'production.html');
-const MANIFEST = path.join(ROOT, 'components', 'manifest.json');
+const MANIFEST = path.join(ROOT, 'scripts', 'manifest.json');
 const VERSION_JSON = path.join(ROOT, 'app-version.json');
-const VERSION_JS = path.join(ROOT, 'pages', 'more', 'app-version.js');
+const VERSION_JS = path.join(ROOT, 'pages', 'common', 'app-version.js');
 
 const htmlPath = path.join(ROOT, 'main.html');
-const cssPath = path.join(ROOT, 'main.css');
+const themeCssPath = path.join(ROOT, 'css', '_variables.css');
+const BOOTSTRAP_CSS_RE = /bootstrap@[\d.]+\/dist\/css\/bootstrap\.min\.css/;
+const THEME_LINK_RE = /<link rel="stylesheet" href="css\/_variables\.css"\s*\/?>/;
 
 const MINIFY_OPTIONS = {
     collapseWhitespace: true,
@@ -94,8 +101,8 @@ function writeVersionFiles(state) {
     function paintMoreHubBuildMeta() {
         const el = document.getElementById('more-hub-build-meta');
         if (!el) return;
-        el.innerHTML = \`<span class="more-hub-build-meta__version">Version \${APP_VERSION}</span>\` +
-            \`<span class="more-hub-build-meta__built">\${APP_BUILT_AT}</span>\`;
+        el.innerHTML = \`<span class="text-muted small">Version \${APP_VERSION}</span>\` +
+            \`<span class="text-muted small">\${APP_BUILT_AT}</span>\`;
     }
 
     if (document.readyState === 'loading') {
@@ -137,9 +144,11 @@ function bundleJs() {
 }
 
 async function build() {
-    for (const file of [htmlPath, cssPath, MANIFEST]) {
+    syncManifest({ quiet: false });
+
+    for (const file of [htmlPath, themeCssPath, MANIFEST]) {
         if (!fs.existsSync(file)) {
-            console.error(`Missing source file: ${path.basename(file)}`);
+            console.error(`Missing source file: ${path.relative(ROOT, file)}`);
             process.exit(1);
         }
     }
@@ -148,13 +157,19 @@ async function build() {
     const versionInfo = prepareVersion({ bump });
 
     let html = fs.readFileSync(htmlPath, 'utf8');
-    const css = fs.readFileSync(cssPath, 'utf8');
+    if (!BOOTSTRAP_CSS_RE.test(html)) {
+        console.error('main.html is missing Bootstrap CSS CDN link');
+        process.exit(1);
+    }
+    if (!THEME_LINK_RE.test(html)) {
+        console.error('main.html is missing <link rel="stylesheet" href="css/_variables.css" />');
+        process.exit(1);
+    }
+
+    const themeCss = fs.readFileSync(themeCssPath, 'utf8');
     const js = bundleJs();
 
-    html = html.replace(
-        /<link rel="stylesheet" href="main\.css"\s*\/?>/,
-        `<style>${css}</style>`
-    );
+    html = html.replace(THEME_LINK_RE, `<style>${themeCss}</style>`);
 
     html = html.replace(
         /<!-- COMPONENT SCRIPTS -->[\s\S]*?<script src="main\.js"><\/script>/,
@@ -178,7 +193,7 @@ async function build() {
     const scriptCount = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts.length;
 
     console.log(`✓ production.html (${sizeKb} KB, minified from ${unminKb} KB, −${saved}%)`);
-    console.log(`  Sources: main.html, main.css, ${scriptCount} JS files (components/manifest.json)`);
+    console.log(`  Sources: main.html, css/_variables.css, ${scriptCount} JS files (scripts/manifest.json), Bootstrap CDN`);
     if (versionInfo.bumped) {
         console.log(`  Version: ${versionInfo.previous.version} → ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
     } else {

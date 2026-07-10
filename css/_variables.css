@@ -1,0 +1,399 @@
+/* ========== Brand tokens (source of truth for app colors) ========== */
+
+:root {
+    /* Background */
+    --whole-bg: #f8f9fa;
+    --gr-bg: #fff;
+    --gr-bg-soft: #f4f5f7;
+    --gr-bg-ticker: #f8f9fb;
+    --gr-input-bg: #f9fafb;
+
+    /* Text */
+    --gr-text: #6b7280;
+    --gr-text1: #1f2937;
+    --gr-text-muted: #4b5563;
+
+    /* Borders — very light grey (soft edge on white cards) */
+    --gray150: #f0f1f3;
+    --gr-border: var(--gray150);
+    --gr-border-strong: #e4e6ea;
+
+    /* Accent / status */
+    --gr-accent: #159b5a;
+    --gr-accent-hover: #08653a;
+    --gr-accent-soft: #e6f5ec;
+    --gr-active-bg: #0a7d44;
+    --gr-danger: #ef4444;
+    --gr-danger-soft: #fce8e6;
+    --gr-pill-down-text: #ef4444;
+    --gr-warning: #ca8a04;
+    --gr-warning-bg: #fff8d6;
+    --gr-row-hover: #ededee;
+    --gr-calc-border: #bbf7d0;
+
+    /* Info (Bootstrap --bs-info) */
+    --blue500: #1e40af;
+    --blue500-soft: #dbeafe;
+
+    /* Radius */
+    --radius-xl: 1.25rem;
+}
+
+/* ========== Bootstrap 5 theme bridge ========== */
+
+:root,
+[data-bs-theme="light"] {
+    --bs-body-bg: var(--whole-bg);
+    --bs-body-color: var(--gr-text1);
+    --bs-secondary-bg: var(--gr-bg-soft);
+    --bs-tertiary-bg: var(--gr-bg-ticker);
+    --bs-border-color: var(--gr-border);
+    --bs-border-color-translucent: var(--gr-border-strong);
+
+    --bs-primary: var(--gr-accent);
+    --bs-primary-rgb: 21, 155, 90;
+    --bs-primary-bg-subtle: var(--gr-accent-soft);
+    --bs-primary-border-subtle: var(--gr-calc-border);
+    --bs-primary-text-emphasis: var(--gr-accent-hover);
+
+    --bs-secondary: var(--gr-text-muted);
+    --bs-secondary-rgb: 75, 85, 99;
+    --bs-secondary-bg-subtle: var(--gr-bg-soft);
+    --bs-secondary-border-subtle: var(--gr-border);
+    --bs-secondary-text-emphasis: var(--gr-text1);
+
+    --bs-success: var(--gr-accent);
+    --bs-success-rgb: 21, 155, 90;
+    --bs-success-bg-subtle: var(--gr-accent-soft);
+    --bs-success-border-subtle: var(--gr-calc-border);
+    --bs-success-text-emphasis: var(--gr-accent-hover);
+
+    --bs-danger: var(--gr-danger);
+    --bs-danger-rgb: 239, 68, 68;
+    --bs-danger-bg-subtle: var(--gr-danger-soft);
+    --bs-danger-border-subtle: var(--gr-danger-soft);
+    --bs-danger-text-emphasis: var(--gr-danger);
+
+    --bs-warning: var(--gr-warning);
+    --bs-warning-rgb: 202, 138, 4;
+    --bs-warning-bg-subtle: var(--gr-warning-bg);
+    --bs-warning-border-subtle: var(--gr-warning-bg);
+    --bs-warning-text-emphasis: var(--gr-warning);
+
+    --bs-info: var(--blue500);
+    --bs-info-rgb: 30, 64, 175;
+    --bs-info-bg-subtle: var(--blue500-soft);
+    --bs-info-border-subtle: var(--blue500-soft);
+    --bs-info-text-emphasis: var(--blue500);
+
+    --bs-light: var(--gr-bg-soft);
+    --bs-light-rgb: 244, 245, 247;
+    --bs-dark: var(--gr-text1);
+    --bs-dark-rgb: 31, 41, 55;
+
+    --bs-link-color: var(--gr-accent);
+    --bs-link-hover-color: var(--gr-accent-hover);
+    --bs-focus-ring-width: 0;
+    --bs-focus-ring-opacity: 0;
+    --bs-focus-ring-color: transparent;
+
+    --bs-body-font-family: Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    --bs-card-bg: #fff;
+    --bs-list-group-bg: #fff;
+    --bs-list-group-action-hover-bg: var(--gr-row-hover);
+    --bs-list-group-action-active-bg: var(--gr-bg-soft);
+}
+
+body {
+    background-color: var(--whole-bg);
+    color: var(--gr-text1);
+    /* Bottom nav + FAB clearance so Done/Edit stay tappable */
+    padding-bottom: calc(9.5rem + env(safe-area-inset-bottom, 0px));
+}
+
+#bottomBar {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+}
+
+#bottomBarFab {
+    right: 0.75rem;
+}
+
+/* Page shells — full width within the mobile column */
+section[id^="page-"] {
+    width: 100%;
+}
+
+section[id^="page-"] > .px-3,
+section[id^="page-"] > [class*="px-"] {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+section[id^="page-"] .card,
+section[id^="page-"] .input-group,
+#tradesFilterBar,
+#pastFilterBar,
+#transactionList,
+#pastTradesList,
+#planTradesList {
+    width: 100%;
+    max-width: 100%;
+}
+
+.btn-primary {
+    --bs-btn-bg: var(--gr-accent);
+    --bs-btn-border-color: var(--gr-accent);
+    --bs-btn-hover-bg: var(--gr-accent-hover);
+    --bs-btn-hover-border-color: var(--gr-accent-hover);
+    --bs-btn-active-bg: var(--gr-active-bg);
+    --bs-btn-active-border-color: var(--gr-active-bg);
+    --bs-btn-disabled-bg: var(--gr-accent);
+    --bs-btn-disabled-border-color: var(--gr-accent);
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--gr-accent);
+    --bs-btn-border-color: var(--gr-accent);
+    --bs-btn-hover-bg: var(--gr-accent);
+    --bs-btn-hover-border-color: var(--gr-accent);
+    --bs-btn-active-bg: var(--gr-active-bg);
+    --bs-btn-active-border-color: var(--gr-active-bg);
+}
+
+.btn-success {
+    --bs-btn-bg: var(--gr-accent);
+    --bs-btn-border-color: var(--gr-accent);
+    --bs-btn-hover-bg: var(--gr-accent-hover);
+    --bs-btn-hover-border-color: var(--gr-accent-hover);
+    --bs-btn-active-bg: var(--gr-active-bg);
+    --bs-btn-active-border-color: var(--gr-active-bg);
+}
+
+.btn-outline-success {
+    --bs-btn-color: var(--gr-accent);
+    --bs-btn-bg: var(--gr-accent-soft);
+    --bs-btn-border-color: var(--gr-calc-border);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--gr-accent);
+    --bs-btn-hover-border-color: var(--gr-accent);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--gr-active-bg);
+    --bs-btn-active-border-color: var(--gr-active-bg);
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--gr-danger);
+    --bs-btn-border-color: var(--gr-danger);
+    --bs-btn-hover-bg: var(--gr-pill-down-text);
+    --bs-btn-hover-border-color: var(--gr-pill-down-text);
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--gr-text-muted);
+    --bs-btn-bg: var(--gr-bg);
+    --bs-btn-border-color: var(--gr-border);
+    --bs-btn-hover-bg: var(--gr-bg-soft);
+    --bs-btn-hover-border-color: var(--gr-border-strong);
+    --bs-btn-hover-color: var(--gr-text1);
+    --bs-btn-active-bg: var(--gr-row-hover);
+    --bs-btn-active-border-color: var(--gr-border-strong);
+    --bs-btn-active-color: var(--gr-text1);
+}
+
+.text-success,
+.text-bg-success {
+    --bs-success-text-emphasis: var(--gr-accent);
+}
+
+.bg-body {
+    background-color: var(--gr-bg) !important;
+}
+
+.bg-light {
+    background-color: var(--gr-bg-soft) !important;
+}
+
+.border,
+.border-bottom,
+.border-top {
+    border-color: var(--gr-border) !important;
+}
+
+/* Solid brand border — Bootstrap hr uses color:inherit + opacity which looks uneven */
+hr {
+    color: var(--gr-border);
+    opacity: 1;
+    border: 0;
+    border-top: 1px solid var(--gr-border);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--gr-input-bg);
+    border-color: var(--gr-border);
+    color: var(--gr-text1);
+}
+
+/* Soft light-green border only — no outer focus glow */
+.form-control:focus,
+.form-control:focus-visible,
+.form-select:focus,
+.form-select:focus-visible {
+    border-color: var(--gr-calc-border);
+    outline: 0;
+    box-shadow: none;
+    background-color: var(--gr-bg);
+}
+
+.form-control:focus::placeholder {
+    color: var(--gr-text);
+}
+
+.input-group > .input-group-text {
+    background-color: var(--gr-input-bg);
+    border-color: var(--gr-border);
+    color: var(--gr-text-muted);
+}
+
+.input-group:focus-within > .form-control,
+.input-group:focus-within > .form-select,
+.input-group:focus-within > .input-group-text {
+    border-color: var(--gr-calc-border);
+    box-shadow: none;
+}
+
+.form-check-input:focus {
+    border-color: var(--gr-calc-border);
+    outline: 0;
+    box-shadow: none;
+}
+
+.navbar,
+.offcanvas,
+.modal-content,
+.dropdown-menu,
+.card,
+.list-group,
+.list-group-item {
+    background-color: #fff;
+    color: var(--gr-text1);
+}
+
+.list-group-item-action:hover,
+.list-group-item-action:focus {
+    background-color: var(--gr-row-hover);
+}
+
+/* Bottom sheets: content-sized, capped at 90vh, centered in the mobile column */
+.offcanvas.offcanvas-bottom {
+    --bs-offcanvas-height: auto;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
+    max-height: 90vh;
+    border-top-left-radius: var(--radius-xl);
+    border-top-right-radius: var(--radius-xl);
+}
+
+/* Trade editor is a long form — use the full sheet height */
+#txModal {
+    --bs-offcanvas-height: 90vh;
+}
+
+.modal-dialog {
+    max-width: min(480px, calc(100% - 1rem));
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#appSheet .offcanvas-header,
+#txModal .offcanvas-header,
+#appSheetFooter,
+#txModalFooter {
+    flex-shrink: 0;
+}
+
+#appSheet .offcanvas-body,
+#txModal .offcanvas-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.offcanvas .dropdown-menu {
+    z-index: 1080;
+}
+
+.offcanvas .dropdown[data-bs-display="static"] .dropdown-menu {
+    position: absolute;
+}
+
+.dropdown-item.active {
+    background-color: var(--gr-accent-soft);
+    color: var(--gr-accent-hover);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--gr-row-hover);
+}
+
+.text-muted,
+.text-body-secondary {
+    color: var(--gr-text) !important;
+}
+
+/* Calendar icons — always brand green */
+.fa-calendar,
+.fa-calendar-alt,
+.fa-calendar-plus,
+.fa-calendar-check,
+.fa-calendar-day,
+.fa-calendar-days,
+.fa-calendar-week,
+.fa-calendar-minus {
+    color: var(--gr-accent) !important;
+}
+
+/* Trade metrics tables — single 1px light border (outer + grid) */
+.trade-metrics-panel {
+    border: 1px solid var(--gr-border);
+    border-radius: var(--bs-border-radius-lg);
+    overflow: hidden;
+    background-color: var(--gr-bg);
+}
+
+.trade-metrics-panel .trade-metrics-table {
+    --bs-table-bg: transparent;
+    --bs-table-color: inherit;
+    --bs-table-border-color: var(--gr-border);
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.trade-metrics-panel .trade-metrics-table > :not(caption) > * > * {
+    background-color: transparent;
+    border: 0;
+    border-right: 1px solid var(--gr-border);
+    border-bottom: 1px solid var(--gr-border);
+    box-shadow: none;
+}
+
+.trade-metrics-panel .trade-metrics-table tr > *:last-child {
+    border-right: 0;
+}
+
+.trade-metrics-panel .trade-metrics-table tr:last-child > * {
+    border-bottom: 0;
+}
+
