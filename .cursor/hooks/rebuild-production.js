@@ -22,12 +22,12 @@ function isSourceFile(filePath) {
 
     return (
         rel === 'main.html' ||
-        rel === 'main.css' ||
         rel === 'main.js' ||
         rel === 'app-version.json' ||
         rel === 'build-production.js' ||
-        rel.startsWith('css/') ||
-        rel.startsWith('components/') ||
+        rel === 'css/_variables.css' ||
+        rel === 'scripts/manifest.json' ||
+        rel.startsWith('lib/') ||
         rel.startsWith('pages/') ||
         rel.startsWith('db/')
     );

@@ -8,7 +8,7 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 const ROOT = path.join(__dirname, '..');
-const MANIFEST = path.join(ROOT, 'components', 'manifest.json');
+const MANIFEST = path.join(ROOT, 'scripts', 'manifest.json');
 
 function walkJsFiles(dir, out = []) {
     if (!fs.existsSync(dir)) return out;
@@ -26,16 +26,31 @@ function rel(file) {
 }
 
 function runIntegrity(report) {
-    // --- Required source files ---
-    const required = ['main.html', 'main.css', 'main.js', 'components/manifest.json'];
+    const required = ['main.html', 'main.js', 'scripts/manifest.json'];
     const missingRequired = required.filter((f) => !fs.existsSync(path.join(ROOT, f)));
     if (missingRequired.length) {
         report.fail('Sources', `missing: ${missingRequired.join(', ')}`);
         return;
     }
-    report.pass('Sources', 'main.html, main.css, main.js, manifest present');
+    const mainHtml = fs.readFileSync(path.join(ROOT, 'main.html'), 'utf8');
+    if (!/bootstrap@[\d.]+\/dist\/css\/bootstrap\.min\.css/.test(mainHtml)) {
+        report.fail('Sources', 'main.html missing Bootstrap CSS CDN link');
+        return;
+    }
+    if (!/bootstrap@[\d.]+\/dist\/js\/bootstrap\.bundle\.min\.js/.test(mainHtml)) {
+        report.fail('Sources', 'main.html missing Bootstrap JS CDN link');
+        return;
+    }
+    if (!fs.existsSync(path.join(ROOT, 'css/_variables.css'))) {
+        report.fail('Sources', 'css/_variables.css missing');
+        return;
+    }
+    if (!/css\/_variables\.css/.test(mainHtml)) {
+        report.fail('Sources', 'main.html missing css/_variables.css link');
+        return;
+    }
+    report.pass('Sources', 'main.html, main.js, manifest, Bootstrap CDN, brand theme present');
 
-    // --- Manifest scripts exist ---
     let scripts;
     try {
         scripts = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts;
@@ -55,14 +70,12 @@ function runIntegrity(report) {
         report.pass('Integrity', `${scripts.length}/${scripts.length} manifest scripts present`);
     }
 
-    // --- Orphans under components/, pages/, and db/ ---
     const manifestSet = new Set(scripts.map((s) => s.split('/').join('/')));
     const discovered = [
-        ...walkJsFiles(path.join(ROOT, 'components')),
+        ...walkJsFiles(path.join(ROOT, 'lib')),
         ...walkJsFiles(path.join(ROOT, 'pages')),
         ...walkJsFiles(path.join(ROOT, 'db'))
     ];
-    // main.js is in manifest; also allow nothing else at root of those trees
     const orphans = discovered
         .map(rel)
         .filter((r) => !manifestSet.has(r) && r !== 'main.js');
@@ -73,14 +86,13 @@ function runIntegrity(report) {
             `${orphans.length} JS file(s) not in manifest: ${orphans.slice(0, 4).join(', ')}${orphans.length > 4 ? '…' : ''}`
         );
     } else {
-        report.pass('Orphans', 'no component/page/db JS files missing from manifest');
+        report.pass('Orphans', 'no lib/page/db JS files missing from manifest');
     }
 
-    // --- Register calls ---
     const registerIssues = [];
     for (const script of scripts) {
         if (script === 'main.js') continue;
-        if (script.endsWith('/_registry.js') || script === 'components/_registry.js' || script === 'db/_registry.js') {
+        if (script.endsWith('/_registry.js') || script === 'lib/_registry.js' || script === 'db/_registry.js') {
             continue;
         }
         const file = path.join(ROOT, script);
@@ -90,19 +102,18 @@ function runIntegrity(report) {
             if (!src.includes('MTFDbRegister')) {
                 registerIssues.push(`${script} (missing MTFDbRegister)`);
             }
-        } else if (script.startsWith('components/') || script.startsWith('pages/')) {
+        } else if (script.startsWith('lib/') || script.startsWith('pages/')) {
             if (!src.includes('MTFRegister')) {
                 registerIssues.push(`${script} (missing MTFRegister)`);
             }
         }
     }
     if (registerIssues.length) {
-        report.fail('Components', registerIssues.slice(0, 3).join('; ') + (registerIssues.length > 3 ? '…' : ''));
+        report.fail('Modules', registerIssues.slice(0, 3).join('; ') + (registerIssues.length > 3 ? '…' : ''));
     } else {
-        report.pass('Components', 'all component/page/db modules register exports');
+        report.pass('Modules', 'all lib/page/db modules register exports');
     }
 
-    // --- Syntax check ---
     const syntaxFails = [];
     for (const script of scripts) {
         const file = path.join(ROOT, script);

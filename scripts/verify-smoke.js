@@ -161,7 +161,7 @@ async function runSmoke(report) {
         }
 
         // --- Money ---
-        await page.locator('#page-more .more-hub-option', { hasText: 'Money' }).click();
+        await page.locator('#page-more .list-group-item', { hasText: 'Money' }).click();
         await page.waitForTimeout(250);
         if (!(await pageVisible(page, 'page-money'))) {
             report.fail('Money', '#page-money not shown');
@@ -173,7 +173,7 @@ async function runSmoke(report) {
         await page.waitForTimeout(200);
 
         // --- Total Transactions ---
-        await page.locator('#page-more .more-hub-option', { hasText: 'Total Transactions' }).click();
+        await page.locator('#page-more .list-group-item', { hasText: 'Total Transactions' }).click();
         await page.waitForTimeout(250);
         if (!(await pageVisible(page, 'page-transactions'))) {
             report.fail('Transactions', '#page-transactions not shown');
@@ -184,7 +184,7 @@ async function runSmoke(report) {
         await page.waitForTimeout(200);
 
         // --- MTF Calculator ---
-        await page.locator('#page-more .more-hub-option', { hasText: 'MTF Calculator' }).click();
+        await page.locator('#page-more .list-group-item', { hasText: 'MTF Calculator' }).click();
         await page.waitForTimeout(250);
         if (!(await pageVisible(page, 'page-mtf-calc'))) {
             report.fail('MTF Calc', '#page-mtf-calc not shown');
@@ -195,7 +195,7 @@ async function runSmoke(report) {
         await page.waitForTimeout(200);
 
         // --- Settings ---
-        await page.locator('#page-more .more-hub-option', { hasText: 'Settings' }).click();
+        await page.locator('#page-more .list-group-item', { hasText: 'Settings' }).click();
         await page.waitForTimeout(250);
         if (!(await pageVisible(page, 'page-settings'))) {
             report.fail('Settings', '#page-settings not shown');
