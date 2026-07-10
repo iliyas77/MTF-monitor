@@ -7,7 +7,8 @@
     "ship": "node build-production.js --bump",
     "verify": "node scripts/verify.js",
     "verify:integrity": "node -e \"const {createReport}=require('./scripts/verify-report');const {runIntegrity}=require('./scripts/verify-integrity');const r=createReport();runIntegrity(r);process.exit(r.print());\"",
-    "all": "npm run repair && npm run build && npm run verify"
+    "all": "npm run repair && npm run build && npm run verify",
+    "save": "node scripts/git-save.js"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
