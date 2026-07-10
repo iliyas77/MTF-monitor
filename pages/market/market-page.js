@@ -120,6 +120,9 @@
         }
 
         listContainer.innerHTML = `<div class="market-quote-list" role="list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
+        if (typeof global.observeQuoteRows === 'function') {
+            global.observeQuoteRows();
+        }
     }
 
     global.MTFRegister({ renderMarketPage });

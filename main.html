@@ -5,14 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual" />
     <title>MTF Profit Tracker</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.css" rel="stylesheet" type="text/css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="main.css" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>tailwind.config = { corePlugins: { preflight: false }, theme: { extend: { fontFamily: { sans: ['Roboto', 'sans-serif'] }, colors: { primary: '#159b5a', success: '#159b5a', error: '#ef4444' } } } };</script>
+    <link rel="stylesheet" href="css/main.css" />
 </head>
 
 <body class="font-sans overflow-x-hidden app-body">
@@ -46,18 +43,20 @@
     <section id="page-plan" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <div class="card summary-outer-card rounded-2xl mb-3" id="planSummaryCard">
-                <div class="card-body flex flex-col items-center gap-2 py-4">
-                    <div class="money-value-block money-value-block--center w-full">
-                        <div id="planSummaryStats" class="w-full"></div>
-                        <div id="planSummaryNetWords"></div>
+                <div class="card-body py-4">
+                    <div class="summary-item summary-item--primary">
+                        <div class="money-value-block money-value-block--center w-full">
+                            <div id="planSummaryStats" class="w-full"></div>
+                            <div id="planSummaryNetWords"></div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="relative mb-3">
-                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="planSearch" placeholder="Search by company name..." oninput="setPlanSearch(this.value)" autocomplete="off" />
-                <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="planSearchClear" onclick="clearPlanSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            <div class="search-bar mb-3">
+                <i class="fas fa-search search-bar__icon"></i>
+                <input type="text" class="search-bar__input" id="planSearch" placeholder="Search by company name..." oninput="setPlanSearch(this.value)" autocomplete="off" />
+                <button class="search-bar__clear hidden" type="button" id="planSearchClear" onclick="clearPlanSearch()" title="Clear"><i class="fas fa-times"></i></button>
             </div>
 
             <div id="planTradesList"></div>
@@ -65,14 +64,16 @@
     </section>
 
     <!-- PAGE: TRADES -->
-    <section id="page-trades" class="page-section">
+    <section id="page-trades" class="page-section hidden">
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <!-- Summary Card — P&L + open trade count -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
-                <div class="card-body flex flex-col items-center gap-2 py-4">
-                    <div class="money-value-block money-value-block--center w-full">
-                        <div id="summaryOpenStats" class="w-full"></div>
-                        <div id="summaryNetWords"></div>
+                <div class="card-body py-4">
+                    <div class="summary-item summary-item--primary">
+                        <div class="money-value-block money-value-block--center w-full">
+                            <div id="summaryOpenStats" class="w-full"></div>
+                            <div id="summaryNetWords"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -95,10 +96,12 @@
         <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
             <!-- Summary Card — P&L + trade count in range -->
             <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
-                <div class="card-body flex flex-col items-center gap-2 py-4">
-                    <div class="money-value-block money-value-block--center w-full">
-                        <div id="pastSummaryStats" class="w-full"></div>
-                        <div id="pastSummaryNetWords"></div>
+                <div class="card-body py-4">
+                    <div class="summary-item summary-item--primary">
+                        <div class="money-value-block money-value-block--center w-full">
+                            <div id="pastSummaryStats" class="w-full"></div>
+                            <div id="pastSummaryNetWords"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -106,12 +109,7 @@
             <!-- Selected range indicator + P&L filter (single row) -->
             <div class="flex items-center gap-2 mb-3">
                 <div class="flex-1 min-w-0" id="pastRangeChipHost"></div>
-                <select id="pastPnlFilter" class="select select-bordered h-10 min-h-10 rounded-xl bg-base-100 focus:outline-none focus:border-primary shrink-0" onchange="setPastPnlFilter(this.value)" aria-label="Filter by profit, loss, or verified">
-                    <option value="all">All</option>
-                    <option value="profit">Profit</option>
-                    <option value="loss">Loss</option>
-                    <option value="verified">Verified</option>
-                </select>
+                <div class="select-dropdown select-dropdown--center" id="pastPnlFilterHost"></div>
             </div>
 
             <div id="pastTradesList"></div>
@@ -147,10 +145,10 @@
             </div>
 
             <div class="market-search-wrap mb-3 relative">
-                <div class="relative">
-                    <i class="fas fa-search absolute left-3.5 top-1/2 -translate-y-1/2 text-base-content/45 pointer-events-none text-sm"></i>
-                    <input type="text" class="input input-bordered w-full rounded-xl pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="marketSearchInput" placeholder="Filter by name or symbol…" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="onMarketSearchInput()" onkeydown="onMarketSearchKeydown(event)" onfocus="onMarketSearchFocus()" onblur="onMarketSearchBlur()" />
-                    <button type="button" class="btn btn-ghost btn-circle btn-xs absolute right-1.5 top-1/2 -translate-y-1/2 hidden" id="marketSearchClear" onclick="clearMarketSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
+                <div class="search-bar">
+                    <i class="fas fa-search search-bar__icon"></i>
+                    <input type="text" class="search-bar__input" id="marketSearchInput" placeholder="Filter by name or symbol…" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="onMarketSearchInput()" onkeydown="onMarketSearchKeydown(event)" onfocus="onMarketSearchFocus()" onblur="onMarketSearchBlur()" />
+                    <button type="button" class="search-bar__clear hidden" id="marketSearchClear" onclick="clearMarketSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl shadow-lg hidden" id="marketAcList" role="listbox" aria-label="Stock suggestions"></div>
             </div>
@@ -167,13 +165,13 @@
     <section id="page-search" class="page-section hidden">
         <div class="search-page__bar sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
             <div class="flex items-center gap-2">
-                <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="closeSearchPage()" aria-label="Back">
-                    <i class="fas fa-arrow-left text-base-content/55"></i>
+                <button type="button" class="app-icon-btn app-icon-btn--sm border shrink-0" onclick="closeSearchPage()" aria-label="Back">
+                    <i class="fas fa-arrow-left"></i>
                 </button>
-                <div class="relative flex-1 min-w-0">
-                    <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-base-content/50 pointer-events-none"></i>
-                    <input type="text" class="input input-bordered w-full rounded-full pl-10 pr-10 h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
-                    <button class="btn btn-ghost btn-circle btn-xs absolute right-1 top-1/2 -translate-y-1/2 hidden" type="button" id="searchPageClear" onclick="clearSearchPage()" title="Clear"><i class="fas fa-times"></i></button>
+                <div class="search-bar flex-1 min-w-0">
+                    <i class="fas fa-search search-bar__icon"></i>
+                    <input type="text" class="search-bar__input" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                    <button class="search-bar__clear hidden" type="button" id="searchPageClear" onclick="clearSearchPage()" title="Clear"><i class="fas fa-times"></i></button>
                 </div>
             </div>
         </div>
@@ -667,14 +665,7 @@
                         <div class="mb-3">
                             <label class="label-text font-normal text-base-content/65">Broker <span class="text-error">*</span></label>
                             <input type="hidden" id="txBroker" value="" />
-                            <div class="dropdown dropdown-end w-full">
-                                <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] w-full max-w-none" id="txBrokerTrigger" tabindex="0" role="button" aria-expanded="false">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="txBrokerIcon"><i class="fas fa-building"></i></span>
-                                    <span class="truncate max-w-[5.5rem]" id="txBrokerLabel">Select Broker</span>
-                                    <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                                </button>
-                                <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 w-full" id="txBrokerMenu"></ul>
-                            </div>
+                            <div id="txBrokerHost" class="w-full"></div>
                         </div>
                         <div class="mb-3" id="txStatusRow">
                             <label class="label-text font-normal text-base-content/65">Trade Status</label>

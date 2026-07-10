@@ -53,7 +53,7 @@
             ? `<button type="button" class="market-quote-row__remove" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist">${global.MTFComponents.renderIcon('fa-times', { size: 'sm' })}</button>`
             : '';
 
-        return `<div class="market-quote-row" data-symbol="${escapeHtml(q.symbol || '')}" role="listitem">
+        return `<div class="market-quote-row" data-quote-symbol="${escapeHtml(q.symbol || '')}" data-symbol="${escapeHtml(q.symbol || '')}" role="listitem">
             <span class="market-quote-row__icon market-quote-row__icon--${tone}" aria-hidden="true">${escapeHtml(symbolInitial(q.symbol))}</span>
             <div class="market-quote-row__left">
                 <div class="market-quote-row__symbol">${escapeHtml(q.symbol || '—')}</div>

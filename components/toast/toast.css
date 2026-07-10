@@ -1,0 +1,28 @@
+/* ========== Toast Component Styles ========== */
+
+.app-toast {
+    position: fixed;
+    top: var(--space-4);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: var(--z-toast);
+    padding: var(--space-3) var(--space-4);
+    background: var(--gr-bg);
+    border: 1px solid var(--gr-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--gr-shadow-lg);
+    min-width: 16rem;
+    max-width: 90vw;
+}
+
+.app-toast--success {
+    background: var(--gr-accent-soft);
+    border-color: var(--gr-accent);
+    color: var(--gr-accent);
+}
+
+.app-toast--error {
+    background: var(--gr-danger-soft);
+    border-color: var(--gr-danger);
+    color: var(--gr-danger);
+}

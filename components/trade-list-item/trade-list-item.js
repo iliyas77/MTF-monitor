@@ -20,6 +20,12 @@
             .replace(/"/g, '"');
     }
 
+    function companyInitial(company) {
+        const s = String(company || '').trim();
+        if (!s) return '•';
+        return s.charAt(0).toUpperCase();
+    }
+
     function getTradeTargetPrice(t) {
         const helpers = (global.MTFAppHelpers || {}).tradePages || {};
         if (helpers.getEffectiveSellPrice) {
@@ -139,6 +145,7 @@
         return `<div class="trade-list-item__row trade-list-item__row--live">
             <div class="trade-list-item__live-grid"
                 data-live-symbol="${escapeHtml(symbol)}"
+                data-quote-symbol="${escapeHtml(symbol)}"
                 data-target-price="${escapeHtml(targetAttr)}"
                 data-trade-id="${tradeId}">
                 <button type="button" class="trade-list-item__live-cell trade-list-item__live-cell--clickable trade-list-item__live-price trade-list-item__live-price--${tone}${loading ? ' trade-list-item__live-price--loading' : ''}"
@@ -207,7 +214,7 @@
                 <div class="trade-list-item__row trade-list-item__row--title">
                     <div class="trade-list-item__title">
                         <span class="trade-list-item__company-group">
-                            ${renderIcon('fa-chart-line', { className: 'trade-list-item__company-icon' })}
+                            <span class="trade-list-item__company-avatar" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
                             <span class="trade-list-item__company-name">${company}</span>
                             ${brokerLabel}
                             ${verifiedLabel}

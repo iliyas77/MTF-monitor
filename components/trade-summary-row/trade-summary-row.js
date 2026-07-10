@@ -24,10 +24,30 @@
         </div>`;
     }
 
-    function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel }) {
+    function renderTwoItemSummaryRow(net, count, countLabel) {
+        const n = Number(net) || 0;
+        const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
+        const pnlToneClass = n >= 0 ? 'text-success' : 'text-error';
+        return `<div class="flex items-center justify-between gap-4 w-full">
+            <div class="flex-1 min-w-0 text-left">
+                <div class="text-xs uppercase tracking-wide font-medium text-base-content/60 mb-1">P&L</div>
+                <div class="text-xl ${pnlToneClass} truncate">${pnlFormatted}</div>
+            </div>
+            <div class="flex-1 min-w-0 text-right">
+                <div class="text-xs uppercase tracking-wide font-medium text-base-content/60 mb-1">${countLabel}</div>
+                <div class="text-xl text-base-content/80 truncate">${count}</div>
+            </div>
+        </div>`;
+    }
+
+    function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel, useTwoItemLayout }) {
         const el = document.getElementById(containerId);
         if (!el) return;
-        el.innerHTML = renderTradeSummaryRow(net, count, countLabel);
+        if (useTwoItemLayout) {
+            el.innerHTML = renderTwoItemSummaryRow(net, count, countLabel);
+        } else {
+            el.innerHTML = renderTradeSummaryRow(net, count, countLabel);
+        }
         if (wordsId) paintMoneyAmountWords(document.getElementById(wordsId), net, 'center');
     }
 
@@ -37,7 +57,8 @@
             wordsId: 'pastSummaryNetWords',
             net,
             count: tradeCount,
-            countLabel: 'Trades'
+            countLabel: 'Trades',
+            useTwoItemLayout: true
         });
     }
 
@@ -47,12 +68,14 @@
             wordsId: 'planSummaryNetWords',
             net,
             count: planCount,
-            countLabel: 'Planned'
+            countLabel: 'Planned',
+            useTwoItemLayout: true
         });
     }
 
     global.MTFRegister({
         renderTradeSummaryRow,
+        renderTwoItemSummaryRow,
         paintTradeRangeSummary,
         paintPastTradeSummary,
         paintPlanTradeSummary

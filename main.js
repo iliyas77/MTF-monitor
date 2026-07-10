@@ -412,8 +412,21 @@
                 const res = await fetch(JINA_PROXY + targetUrl, {
                     headers: { Accept: 'text/plain' }
                 });
-                if (!res.ok) throw new Error('Proxy fetch failed');
+                if (res.status === 429) throw new Error('HTTP 429');
+                if (!res.ok) throw new Error('Proxy fetch failed ' + res.status);
                 return res.text();
+            }
+
+            let lastJinaRequestAt = 0;
+            const JINA_MIN_GAP_MS = 900;
+
+            async function fetchViaJinaThrottled(targetUrl) {
+                const wait = lastJinaRequestAt + JINA_MIN_GAP_MS - Date.now();
+                if (wait > 0) {
+                    await new Promise((resolve) => setTimeout(resolve, wait));
+                }
+                lastJinaRequestAt = Date.now();
+                return fetchViaJina(targetUrl);
             }
 
             async function fetchNseEquityCsvText() {
@@ -471,13 +484,8 @@
 
             async function fetchYahooStockSearch(query) {
                 const url = `${YAHOO_SEARCH_BASE}?q=${encodeURIComponent(query)}&quotesCount=25&newsCount=0&listsCount=0&enableFuzzyQuery=true`;
-                try {
-                    const res = await fetch(url, { headers: { Accept: 'application/json' } });
-                    if (res.ok) {
-                        const data = await res.json();
-                        return extractYahooQuotes(data);
-                    }
-                } catch (_) {}
+                // Always use Jina — direct Yahoo search is blocked by CORS in browsers
+                // and still dumps red console errors even when a catch/fallback exists.
                 const proxied = await fetchViaJina(url);
                 const data = parseJinaJson(proxied);
                 return extractYahooQuotes(data);
@@ -853,7 +861,7 @@
 
             // ---------- MARKET QUOTES (live Yahoo chart via Jina fallback) ----------
             const YAHOO_CHART_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
-            const MARKET_REFRESH_MS = 30000;
+            const MARKET_REFRESH_MS = 60000;
 
             let marketQuoteCache = {};
             let marketUpdatedAt = null;
@@ -1036,18 +1044,9 @@
 
             async function fetchYahooChartJson(yahooSymbol) {
                 const url = `${YAHOO_CHART_BASE}${encodeURIComponent(yahooSymbol)}?range=1d&interval=1d`;
-                // Prefer direct Yahoo when possible; never set forbidden headers (User-Agent)
-                // — Safari/WebView on mobile rejects them and can break the request.
-                try {
-                    const res = await fetch(url, {
-                        headers: { Accept: 'application/json' },
-                        mode: 'cors',
-                        cache: 'no-store'
-                    });
-                    if (res.ok) return await res.json();
-                } catch (_) {}
-                // Mobile / file:// / rate-limit fallback via Jina proxy
-                const proxied = await fetchViaJina(url);
+                // Always use Jina — direct Yahoo chart fetch is blocked by CORS in browsers.
+                // Throttle so we do not trip Jina's 429 rate limit.
+                const proxied = await fetchViaJinaThrottled(url);
                 return parseJinaJson(proxied);
             }
 
@@ -1055,49 +1054,317 @@
                 return !!(quote && quote.symbol && quote.price != null && !isNaN(Number(quote.price)) && !quote.error);
             }
 
-            async function fetchOneMarketQuote(item, opts) {
-                const attempts = Math.max(1, (opts && opts.attempts) || 3);
-                const sym = normalizeMarketSymbol(item.s);
-                const candidates = [yahooSymbolForNse(sym)];
-                if (!String(sym).endsWith('.BO')) candidates.push(sym + '.BO');
+            function isFreshMarketQuote(quote, maxAgeMs) {
+                if (!isValidMarketQuote(quote)) return false;
+                const t = Date.parse(quote.updatedAt || '');
+                if (isNaN(t)) return false;
+                return (Date.now() - t) < (maxAgeMs == null ? QUOTE_FRESH_MS : maxAgeMs);
+            }
 
-                let lastError = null;
-                for (let attempt = 0; attempt < attempts; attempt++) {
-                    for (let c = 0; c < candidates.length; c++) {
-                        try {
-                            const data = await fetchYahooChartJson(candidates[c]);
-                            const quote = parseYahooChartQuote(data, sym, item.n);
-                            if (!quote || quote.price == null || isNaN(Number(quote.price))) {
-                                throw new Error('No quote data');
-                            }
-                            quote.pinned = !!item.pinned;
-                            quote.extra = !!item.extra;
-                            quote.removable = !!item.removable;
-                            quote.error = false;
-                            return quote;
-                        } catch (e) {
-                            lastError = e;
+            function isRateLimitError(errOrMsg) {
+                return /HTTP 429|429|rate.?limit|Proxy fetch failed 429/i.test(String(
+                    (errOrMsg && errOrMsg.message) || errOrMsg || ''
+                ));
+            }
+
+            // ---------- Viewport quote queue (fetch only on-screen symbols) ----------
+            const QUOTE_QUEUE_CONCURRENCY = 1;
+            const QUOTE_FRESH_MS = 60000;
+            const QUOTE_BACKOFF_BASE_MS = 5000;
+            const QUOTE_BACKOFF_MAX_MS = 60000;
+            const QUOTE_ROOT_MARGIN = '120px 0px';
+
+            let quoteQueue = [];
+            let quoteQueuedKeys = new Set();
+            let quoteInFlight = 0;
+            let quoteBackoffUntil = 0;
+            let quoteBackoffMs = QUOTE_BACKOFF_BASE_MS;
+            let quoteDrainTimer = null;
+            let quoteVisibilityObserver = null;
+            const visibleQuoteSymbols = new Set();
+            const observedQuoteEls = new WeakSet();
+            // Remember which Yahoo suffix worked ('.NS' or '.BO') so we do not double-fetch.
+            const yahooSuffixBySymbol = {};
+
+            function getQuoteSymbolFromEl(el) {
+                if (!el || !el.dataset) return '';
+                return normalizeMarketSymbol(
+                    el.dataset.quoteSymbol || el.dataset.liveSymbol || el.dataset.symbol || ''
+                );
+            }
+
+            function resolveQuoteItem(sym) {
+                const key = normalizeMarketSymbol(sym);
+                if (!key) return null;
+                const fromMarket = getMarketUniverse().find((u) => u.s === key);
+                if (fromMarket) return fromMarket;
+                const fromTrade = getVisibleTradeLiveSymbols().find((u) => u.s === key);
+                if (fromTrade) return fromTrade;
+                const meta = findStockMetaForSymbol(key);
+                return { s: key, n: (meta && meta.n) || key };
+            }
+
+            function isQuoteRowOnActivePage(el) {
+                if (!el) return false;
+                const page = el.closest('[id^="page-"]');
+                if (page && page.classList.contains('hidden')) return false;
+                return true;
+            }
+
+            function getDomVisibleQuoteItems() {
+                const items = [];
+                const seen = new Set();
+                const vh = window.innerHeight || document.documentElement.clientHeight || 0;
+                const pad = 200;
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (!isQuoteRowOnActivePage(el)) return;
+                    const sym = getQuoteSymbolFromEl(el);
+                    if (!sym || seen.has(sym)) return;
+                    const rect = el.getBoundingClientRect();
+                    if (rect.bottom < -pad || rect.top > vh + pad) return;
+                    seen.add(sym);
+                    const item = resolveQuoteItem(sym);
+                    if (item) items.push(item);
+                });
+                return items;
+            }
+
+            function getVisibleQuoteItems() {
+                const mounted = new Set();
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (!isQuoteRowOnActivePage(el)) return;
+                    const sym = getQuoteSymbolFromEl(el);
+                    if (sym) mounted.add(sym);
+                });
+
+                const items = [];
+                const seen = new Set();
+                visibleQuoteSymbols.forEach((sym) => {
+                    if (!sym || !mounted.has(sym) || seen.has(sym)) return;
+                    seen.add(sym);
+                    const item = resolveQuoteItem(sym);
+                    if (item) items.push(item);
+                });
+                if (items.length) return items;
+                return getDomVisibleQuoteItems();
+            }
+
+            function paintAfterQuoteUpdate() {
+                if (isMarketPageVisible()) {
+                    try { paintMarketQuotes(); } catch (_) {}
+                }
+                if (isTradeLivePageVisible()) {
+                    try { paintTradeLivePrices(); } catch (_) {}
+                }
+            }
+
+            function paintMarketQuotes() {
+                if (!isMarketPageVisible()) return;
+                const formatChangePct = (window.MTFComponents && window.MTFComponents.formatChangePct) || null;
+                const formatChangeAbs = (window.MTFComponents && window.MTFComponents.formatChangeAbs) || null;
+                document.querySelectorAll('.market-quote-row[data-quote-symbol]').forEach((el) => {
+                    const sym = getQuoteSymbolFromEl(el);
+                    const q = marketQuoteCache[sym];
+                    if (!q) return;
+                    const change = Number(q.change);
+                    const changePct = Number(q.changePct);
+                    const hasChange = !isNaN(change);
+                    const tone = !hasChange ? 'neutral' : change >= 0 ? 'up' : 'down';
+                    const priceEl = el.querySelector('.market-quote-row__price');
+                    const changeEl = el.querySelector('.market-quote-row__change');
+                    const iconEl = el.querySelector('.market-quote-row__icon');
+                    if (priceEl) {
+                        priceEl.textContent = q.price == null || isNaN(Number(q.price))
+                            ? '—'
+                            : '₹' + Number(q.price).toLocaleString('en-IN', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
+                    }
+                    if (changeEl) {
+                        changeEl.textContent = hasChange && formatChangeAbs && formatChangePct
+                            ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
+                            : '—';
+                        changeEl.classList.remove(
+                            'market-quote-row__change--up',
+                            'market-quote-row__change--down',
+                            'market-quote-row__change--neutral'
+                        );
+                        changeEl.classList.add(`market-quote-row__change--${tone}`);
+                    }
+                    if (iconEl) {
+                        iconEl.classList.remove(
+                            'market-quote-row__icon--up',
+                            'market-quote-row__icon--down',
+                            'market-quote-row__icon--neutral'
+                        );
+                        iconEl.classList.add(`market-quote-row__icon--${tone}`);
+                    }
+                });
+                const statusEl = document.getElementById('marketUpdatedAt');
+                if (statusEl && marketUpdatedAt && !marketLoading) {
+                    try {
+                        const d = new Date(marketUpdatedAt);
+                        if (!isNaN(d.getTime())) {
+                            statusEl.textContent = 'Updated ' + d.toLocaleTimeString('en-IN', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                            });
                         }
-                    }
-                    if (attempt < attempts - 1) {
-                        await new Promise((resolve) => setTimeout(resolve, 400 * (attempt + 1)));
-                    }
+                    } catch (_) {}
+                }
+            }
+
+            function enqueueQuoteFetch(item, opts) {
+                const force = !!(opts && opts.force);
+                const sym = normalizeMarketSymbol(item && item.s);
+                if (!sym) return Promise.resolve(null);
+                const cached = marketQuoteCache[sym];
+                if (!force && isFreshMarketQuote(cached)) return Promise.resolve(cached);
+                if (quoteQueuedKeys.has(sym)) return Promise.resolve(cached || null);
+
+                quoteQueuedKeys.add(sym);
+                return new Promise((resolve) => {
+                    quoteQueue.push({
+                        item: Object.assign({}, item, { s: sym }),
+                        force,
+                        resolve
+                    });
+                    drainQuoteQueue();
+                });
+            }
+
+            function drainQuoteQueue() {
+                if (quoteDrainTimer) return;
+                const now = Date.now();
+                if (now < quoteBackoffUntil) {
+                    quoteDrainTimer = setTimeout(() => {
+                        quoteDrainTimer = null;
+                        drainQuoteQueue();
+                    }, quoteBackoffUntil - now);
+                    return;
                 }
 
-                return {
-                    symbol: sym,
-                    name: item.n || sym,
-                    price: null,
-                    previousClose: null,
-                    change: null,
-                    changePct: null,
-                    pinned: !!item.pinned,
-                    extra: !!item.extra,
-                    removable: !!item.removable,
-                    error: true,
-                    updatedAt: new Date().toISOString(),
-                    lastError: lastError ? String(lastError.message || lastError) : ''
-                };
+                while (quoteInFlight < QUOTE_QUEUE_CONCURRENCY && quoteQueue.length) {
+                    const job = quoteQueue.shift();
+                    quoteInFlight += 1;
+                    (async () => {
+                        try {
+                            if (!job.force && isFreshMarketQuote(marketQuoteCache[job.item.s])) {
+                                job.resolve(marketQuoteCache[job.item.s]);
+                                return;
+                            }
+                            const quote = await fetchOneMarketQuote(job.item, { attempts: 1 });
+                            cacheMarketQuote(quote);
+                            if (isValidMarketQuote(quote)) {
+                                quoteBackoffMs = QUOTE_BACKOFF_BASE_MS;
+                            } else if (isRateLimitError(quote && quote.lastError)) {
+                                quoteBackoffMs = Math.min(QUOTE_BACKOFF_MAX_MS, Math.max(QUOTE_BACKOFF_BASE_MS, quoteBackoffMs * 2));
+                                quoteBackoffUntil = Date.now() + quoteBackoffMs;
+                            }
+                            marketUpdatedAt = new Date().toISOString();
+                            paintAfterQuoteUpdate();
+                            job.resolve(quote);
+                        } catch (e) {
+                            if (isRateLimitError(e)) {
+                                quoteBackoffMs = Math.min(QUOTE_BACKOFF_MAX_MS, quoteBackoffMs * 2);
+                                quoteBackoffUntil = Date.now() + quoteBackoffMs;
+                            }
+                            job.resolve(null);
+                        } finally {
+                            quoteQueuedKeys.delete(job.item.s);
+                            quoteInFlight -= 1;
+                            drainQuoteQueue();
+                        }
+                    })();
+                }
+            }
+
+            function ensureQuoteVisibilityObserver() {
+                if (quoteVisibilityObserver) return quoteVisibilityObserver;
+                quoteVisibilityObserver = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        const sym = getQuoteSymbolFromEl(entry.target);
+                        if (!sym) return;
+                        if (entry.isIntersecting && isQuoteRowOnActivePage(entry.target)) {
+                            visibleQuoteSymbols.add(sym);
+                            const item = resolveQuoteItem(sym);
+                            if (item) enqueueQuoteFetch(item, { force: false });
+                        } else {
+                            visibleQuoteSymbols.delete(sym);
+                        }
+                    });
+                }, { root: null, rootMargin: QUOTE_ROOT_MARGIN, threshold: 0.01 });
+                return quoteVisibilityObserver;
+            }
+
+            function observeQuoteRows() {
+                if (typeof IntersectionObserver === 'undefined') {
+                    getDomVisibleQuoteItems().forEach((item) => enqueueQuoteFetch(item, { force: false }));
+                    return;
+                }
+                const obs = ensureQuoteVisibilityObserver();
+                document.querySelectorAll('[data-quote-symbol], [data-live-symbol]').forEach((el) => {
+                    if (observedQuoteEls.has(el)) return;
+                    observedQuoteEls.add(el);
+                    obs.observe(el);
+                });
+            }
+
+            async function fetchOneMarketQuote(item, opts) {
+                const sym = normalizeMarketSymbol(item.s);
+                const remembered = yahooSuffixBySymbol[sym];
+                // Prefer the exchange that worked before. Default to NSE only —
+                // blindly also hitting .BO doubled Jina calls and caused 429s.
+                const primary = remembered ? (sym + remembered) : yahooSymbolForNse(sym);
+
+                async function tryOne(yahooSym) {
+                    const data = await fetchYahooChartJson(yahooSym);
+                    const quote = parseYahooChartQuote(data, sym, item.n);
+                    if (!quote || quote.price == null || isNaN(Number(quote.price))) {
+                        throw new Error('No quote data');
+                    }
+                    yahooSuffixBySymbol[sym] = yahooSym.endsWith('.BO') ? '.BO' : '.NS';
+                    quote.pinned = !!item.pinned;
+                    quote.extra = !!item.extra;
+                    quote.removable = !!item.removable;
+                    quote.error = false;
+                    return quote;
+                }
+
+                function failQuote(err) {
+                    return {
+                        symbol: sym,
+                        name: item.n || sym,
+                        price: null,
+                        previousClose: null,
+                        change: null,
+                        changePct: null,
+                        pinned: !!item.pinned,
+                        extra: !!item.extra,
+                        removable: !!item.removable,
+                        error: true,
+                        updatedAt: new Date().toISOString(),
+                        lastError: err ? String(err.message || err) : ''
+                    };
+                }
+
+                try {
+                    return await tryOne(primary);
+                } catch (e) {
+                    if (isRateLimitError(e)) return failQuote(e);
+                    // BSE fallback only when NSE had no data (not on 429), and only once.
+                    if (!remembered && primary.endsWith('.NS')) {
+                        try {
+                            return await tryOne(sym + '.BO');
+                        } catch (e2) {
+                            return failQuote(e2);
+                        }
+                    }
+                    return failQuote(e);
+                }
             }
 
             function cacheMarketQuote(quote) {
@@ -1137,33 +1404,30 @@
 
             async function refreshMarketQuotes(opts) {
                 const silent = opts && opts.silent;
+                const force = !(opts && opts.silent) || !!(opts && opts.force);
                 if (marketLoading) return;
                 marketLoading = true;
                 marketError = '';
                 if (!silent) {
                     try { renderMarketPage(); } catch (_) {}
+                    observeQuoteRows();
                 }
                 try {
                     loadStockCatalogFromInternet();
-                    const universe = getMarketUniverse();
-                    if (!universe.length) {
-                        marketUpdatedAt = new Date().toISOString();
+                    observeQuoteRows();
+                    const items = getVisibleQuoteItems();
+                    if (!items.length) {
+                        marketUpdatedAt = marketUpdatedAt || new Date().toISOString();
                         marketError = '';
                         return;
                     }
-                    const concurrency = 4;
-                    for (let i = 0; i < universe.length; i += concurrency) {
-                        const batch = universe.slice(i, i + concurrency);
-                        const results = await Promise.all(batch.map((item) => fetchOneMarketQuote(item, { attempts: 2 })));
-                        results.forEach((q) => cacheMarketQuote(q));
-                        try { renderMarketPage(); } catch (_) {}
-                    }
+                    await Promise.all(items.map((item) => enqueueQuoteFetch(item, { force })));
                     marketUpdatedAt = new Date().toISOString();
-                    const failed = universe.filter((u) => {
+                    const failed = items.filter((u) => {
                         const q = marketQuoteCache[u.s];
                         return !q || q.price == null || q.error;
                     }).length;
-                    if (failed === universe.length && universe.length) {
+                    if (failed === items.length && items.length) {
                         marketError = 'Could not reach market data. Check internet and try again.';
                     } else {
                         marketError = '';
@@ -1174,6 +1438,7 @@
                 } finally {
                     marketLoading = false;
                     try { renderMarketPage(); } catch (_) {}
+                    observeQuoteRows();
                 }
             }
 
@@ -1187,6 +1452,8 @@
             function startMarketRefresh() {
                 stopMarketRefresh();
                 syncMarketSubTabUI();
+                try { renderMarketPage(); } catch (_) {}
+                observeQuoteRows();
                 refreshMarketQuotes();
                 marketRefreshTimer = setInterval(() => {
                     const page = document.getElementById('page-market');
@@ -1194,7 +1461,8 @@
                         stopMarketRefresh();
                         return;
                     }
-                    refreshMarketQuotes({ silent: true });
+                    observeQuoteRows();
+                    refreshMarketQuotes({ silent: true, force: false });
                 }, MARKET_REFRESH_MS);
             }
 
@@ -1430,13 +1698,13 @@
             }
 
             async function refreshTradeLivePrices(opts) {
-                const silent = opts && opts.silent;
-                const forceAll = !!(opts && opts.forceAll);
+                const force = !!(opts && opts.force);
                 if (!isTradeLivePageVisible()) return;
                 if (tradeLiveRefreshing) return;
 
-                const universe = getVisibleTradeLiveSymbols();
-                if (!universe.length) {
+                observeQuoteRows();
+                const items = getVisibleQuoteItems();
+                if (!items.length) {
                     tradeLiveRefreshing = false;
                     tradeLiveRetryPending = false;
                     paintTradeLivePrices();
@@ -1447,44 +1715,26 @@
                 tradeLiveRefreshing = true;
                 paintTradeLivePrices();
 
-                const maxRounds = forceAll ? 4 : 3;
-                const concurrency = 3;
                 try {
                     loadStockCatalogFromInternet();
-                    for (let round = 0; round < maxRounds; round++) {
-                        if (seq !== tradeLiveRefreshSeq) return;
-                        if (!isTradeLivePageVisible()) return;
-
-                        const pending = forceAll && round === 0
-                            ? universe.slice()
-                            : getMissingTradeLiveSymbols(universe);
-                        if (!pending.length) break;
-
+                    if (seq !== tradeLiveRefreshSeq) return;
+                    const pending = force
+                        ? items.slice()
+                        : items.filter((item) => !isFreshMarketQuote(marketQuoteCache[item.s]));
+                    if (pending.length) {
                         tradeLiveRetryPending = true;
-                        for (let i = 0; i < pending.length; i += concurrency) {
-                            if (seq !== tradeLiveRefreshSeq) return;
-                            const batch = pending.slice(i, i + concurrency);
-                            const results = await Promise.all(
-                                batch.map((item) => fetchOneMarketQuote(item, { attempts: 3 }))
-                            );
-                            results.forEach((q) => cacheMarketQuote(q));
-                            paintTradeLivePrices();
-                        }
-
-                        if (!getMissingTradeLiveSymbols(universe).length) break;
-                        if (round < maxRounds - 1) {
-                            await new Promise((resolve) => setTimeout(resolve, 700 * (round + 1)));
-                        }
+                        await Promise.all(pending.map((item) => enqueueQuoteFetch(item, { force })));
                     }
                 } catch (e) {
                     console.warn('Trade live price refresh failed', e);
                 } finally {
                     if (seq === tradeLiveRefreshSeq) {
                         tradeLiveRefreshing = false;
-                        const stillMissing = getMissingTradeLiveSymbols(universe);
+                        const stillMissing = items.filter((item) => !isValidMarketQuote(marketQuoteCache[item.s]));
                         tradeLiveRetryPending = stillMissing.length > 0;
                         paintTradeLivePrices();
-                        if (stillMissing.length) scheduleTradeLiveRetry(stillMissing);
+                        observeQuoteRows();
+                        if (stillMissing.length) scheduleTradeLiveRetry();
                         else clearTradeLiveRetry();
                     }
                 }
@@ -1508,8 +1758,8 @@
                         tradeLiveRetryPending = false;
                         return;
                     }
-                    refreshTradeLivePrices({ silent: true });
-                }, 5000);
+                    refreshTradeLivePrices({ silent: true, force: false });
+                }, 15000);
             }
 
             function stopTradeLiveRefresh() {
@@ -1525,13 +1775,15 @@
             function startTradeLiveRefresh() {
                 stopTradeLiveRefresh();
                 if (!isTradeLivePageVisible()) return;
-                refreshTradeLivePrices({ forceAll: true });
+                observeQuoteRows();
+                refreshTradeLivePrices({ force: false });
                 tradeLiveRefreshTimer = setInterval(() => {
                     if (!isTradeLivePageVisible()) {
                         stopTradeLiveRefresh();
                         return;
                     }
-                    refreshTradeLivePrices({ silent: true, forceAll: true });
+                    observeQuoteRows();
+                    refreshTradeLivePrices({ silent: true, force: false });
                 }, MARKET_REFRESH_MS);
             }
 
@@ -1541,7 +1793,8 @@
                 tradeLiveRefreshSeq += 1;
                 tradeLiveRefreshing = false;
                 clearTradeLiveRetry();
-                refreshTradeLivePrices({ forceAll: true });
+                observeQuoteRows();
+                refreshTradeLivePrices({ force: true });
             }
 
             function hideMarketAcList() {
@@ -1740,6 +1993,7 @@
                 try { renderPastTrades(); } catch (_) {}
                 if (isTradeLivePageVisible()) {
                     paintTradeLivePrices();
+                    observeQuoteRows();
                     // Re-kick feed after list re-render (sync / edits) so mobile
                     // does not stay on empty placeholders until a manual tap.
                     if (!tradeLiveRefreshing && !tradeLiveRefreshTimer) {
@@ -2542,18 +2796,27 @@
 
             function setTxBroker(value) {
                 const hidden = document.getElementById('txBroker');
-                if (hidden) {
-                    hidden.value = value || '';
-                    hidden.dispatchEvent(new Event('change', { bubbles: true }));
-                }
-                syncAppSelectDropdown({
-                    options: APP_BROKER_OPTIONS,
-                    selectedValue: value || '',
-                    labelId: 'txBrokerLabel',
-                    iconId: 'txBrokerIcon',
-                    menuId: 'txBrokerMenu',
-                    selectHandler: 'setTxBroker'
-                });
+                if (!hidden) return;
+                hidden.value = value || '';
+                hidden.dispatchEvent(new Event('change', { bubbles: true }));
+                const host = document.getElementById('txBrokerHost');
+                if (!host) return;
+                const { renderDropdownTrigger, renderDropdownMenu, buildAppDropdownItems } = global.MTFComponents;
+                if (!renderDropdownTrigger || !renderDropdownMenu) return;
+                const selected = (APP_BROKER_OPTIONS.find(o => o.value === (value || '')) || APP_BROKER_OPTIONS[0]);
+                host.innerHTML = `<div class="dropdown dropdown-end w-full">` +
+                    renderDropdownTrigger({
+                        id: 'txBrokerTrigger',
+                        labelId: 'txBrokerLabel',
+                        iconId: 'txBrokerIcon',
+                        label: selected.label,
+                        icon: selected.icon,
+                        iconVariant: selected.variant || 'muted',
+                        ariaLabel: 'Select Broker',
+                        fullWidth: true
+                    }) + renderDropdownMenu(buildAppDropdownItems(APP_BROKER_OPTIONS, value || '', 'setTxBroker'), { fullWidth: true }) +
+                    `</div>`;
+                if (typeof updatePreview === 'function') { try { updatePreview(); } catch (_) {} }
             }
 
             function pickMoneyPageTypeFilter(value) {
@@ -2668,7 +2931,8 @@
                     wordsId: 'summaryNetWords',
                     net,
                     count: openCount,
-                    countLabel: 'Open'
+                    countLabel: 'Open',
+                    useTwoItemLayout: true
                 });
             }
 
@@ -2934,8 +3198,8 @@
                 moneyPageTypeFilter = value || 'all';
                 const hiddenType = document.getElementById('moneyPageTypeFilter');
                 if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-                syncMoneyTypeDropdowns();
                 renderMoney();
+                syncMoneyTypeDropdowns();
             }
 
             function clearMoneyPageFilters() {
@@ -3688,11 +3952,7 @@
                 setRangeButtonsActive('#pastRangeButtons', 'this-week');
 
                 if (!restoreNavState()) {
-                    setBottomNavActive('trades');
-                    refreshTradeListViews();
-                    // Default landing is Trades — must start live feed here.
-                    // restoreNavState() → navigateTo() already starts it when a
-                    // saved page is restored; this path previously never did.
+                    navigateTo('trades');
                     startTradeLiveRefresh();
                 }
 
@@ -3944,6 +4204,7 @@
             window.renderMarketPage = renderMarketPage;
             window.refreshMarketQuotes = refreshMarketQuotes;
             window.refreshTradeLivePricesNow = refreshTradeLivePricesNow;
+            window.observeQuoteRows = observeQuoteRows;
             window.setMarketSubTab = setMarketSubTab;
             window.removeMarketWatchlistSymbol = removeMarketWatchlistSymbol;
             window.onMarketSearchInput = onMarketSearchInput;

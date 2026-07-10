@@ -1,0 +1,16 @@
+/* ========== Progress Bar Component Styles ========== */
+
+.app-progress {
+    width: 100%;
+    height: 0.5rem;
+    background: var(--gr-border);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.app-progress__bar {
+    height: 100%;
+    background: var(--gr-accent);
+    border-radius: var(--radius-full);
+    transition: width var(--transition-normal);
+}
