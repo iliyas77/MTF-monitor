@@ -18,14 +18,14 @@
         if (badgeEl) badgeEl.textContent = accounts.length;
         if (!listEl) return;
         if (!accounts.length) {
-            listEl.innerHTML = '<p class="text-sm text-base-content/60 mb-0">No accounts yet. Tap Add Account above to create one.</p>';
+            listEl.innerHTML = '<p class="small text-muted mb-0">No accounts yet. Tap Add Account above to create one.</p>';
             return;
         }
         listEl.innerHTML = accounts.map((a) => {
-            const holder = a.holderName ? `<div class="text-sm text-base-content/60">${a.holderName}</div>` : '';
+            const holder = a.holderName ? `<div class="small text-muted">${a.holderName}</div>` : '';
             return `
-                <button type="button" class="btn btn-ghost border border-base-200 w-full text-start mb-2 rounded-xl" onclick="openMoneyAccountModal('${a.id}')">
-                    <div class="font-semibold">${a.name}</div>
+                <button type="button" class="btn btn-outline-secondary border w-100 text-start mb-2 rounded-3" onclick="openMoneyAccountModal('${a.id}')">
+                    <div class="fw-semibold">${a.name}</div>
                     ${holder}
                 </button>
             `;

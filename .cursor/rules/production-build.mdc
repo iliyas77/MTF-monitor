@@ -12,10 +12,10 @@ This project ships as a single minified `production.html` for mobile.
 Whenever you edit **any** of these, run the production build before finishing:
 
 - `main.html`, `main.js`
-- Any file under `css/` (entry: `css/main.css` and its `@import` modules)
-- Any file under `components/`
+- `css/_variables.css` (brand theme tokens mapped onto Bootstrap)
+- Any file under `lib/`
 - Any file under `pages/`
-- `components/manifest.json`
+- `scripts/manifest.json`
 - `app-version.json` (version + build stamp for More page)
 - `build-production.js`
 
@@ -34,5 +34,7 @@ Do this **voluntarily at the end of your turn** even if the user did not ask. Do
 ## Rules
 
 - Never edit `production.html` by hand.
+- Bootstrap CSS/JS load from CDN (not bundled into production.html).
+- Brand colors live only in `css/_variables.css` (inlined into production.html).
 - If the build fails, fix the error and run `npm run build` again.
 - Report the built file size when you changed source files.

@@ -1,7 +1,0 @@
-/* ========== Divider Component Styles ========== */
-
-.app-divider {
-    height: 1px;
-    background: var(--gr-border);
-    margin: var(--space-4) 0;
-}

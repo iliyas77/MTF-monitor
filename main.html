@@ -1,202 +1,186 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="corporate">
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual" />
     <title>MTF Profit Tracker</title>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="css/_variables.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+</head>
 
-<body class="font-sans overflow-x-hidden app-body">
+<body class="overflow-x-hidden" style="max-width:480px;margin:0 auto">
 
     <!-- ============ TOAST ============ -->
-    <div class="fixed top-3 left-1/2 -translate-x-1/2 z-[2000] w-[min(92vw,420px)]" id="toastContainer"></div>
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header id="appHeader" class="sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
-        <div id="appHeaderDefault" class="flex items-center justify-between gap-2">
-            <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-chart-line text-success mr-2"></i>MTF Profit Tracker</h5>
-            <button type="button" id="appHeaderSearchBtn" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0 hidden" onclick="openSearchPage()" aria-label="Search"><i class="fas fa-search text-base-content/55"></i></button>
+    <header id="appHeader" class="navbar sticky-top border-bottom px-3 py-2 bg-body w-100">
+        <div id="appHeaderDefault" class="d-flex align-items-center justify-content-between gap-2 w-100">
+            <h5 class="fw-medium text-body-secondary mb-0 fs-4 text-truncate min-w-0"><i class="fas fa-chart-line text-success me-2"></i>MTF Profit Tracker</h5>
+            <button type="button" id="appHeaderSearchBtn" class="btn btn-outline-secondary rounded-circle btn-sm border flex-shrink-0 d-none" onclick="openSearchPage()" aria-label="Search"><i class="fas fa-search text-muted"></i></button>
         </div>
-        <div id="appHeaderSettings" class="hidden flex items-center gap-3">
-            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="backFromSettings()" aria-label="Back">
-                <i class="fas fa-arrow-left text-base-content/55"></i>
+        <div id="appHeaderSettings" class="d-none d-flex align-items-center gap-3 w-100">
+            <button type="button" class="btn btn-outline-secondary rounded-circle btn-sm border flex-shrink-0" onclick="backFromSettings()" aria-label="Back">
+                <i class="fas fa-arrow-left text-muted"></i>
             </button>
-            <h5 class="font-medium text-base-content/80 mb-0 text-xl"><i class="fas fa-cog mr-2"></i>Settings</h5>
+            <h5 class="fw-medium text-body-secondary mb-0 fs-4"><i class="fas fa-cog me-2"></i>Settings</h5>
         </div>
-        <div id="appHeaderSubpage" class="hidden flex items-center gap-3 min-w-0">
-            <button type="button" class="btn btn-ghost btn-circle btn-sm border border-base-200 w-10 h-10 min-h-0 shrink-0" onclick="backToMoreHub()" aria-label="Back">
-                <i class="fas fa-arrow-left text-base-content/55"></i>
+        <div id="appHeaderSubpage" class="d-none d-flex align-items-center gap-3 min-w-0 w-100">
+            <button type="button" class="btn btn-outline-secondary rounded-circle btn-sm border flex-shrink-0" onclick="backToMoreHub()" aria-label="Back">
+                <i class="fas fa-arrow-left text-muted"></i>
             </button>
-            <h5 class="font-medium text-base-content/80 mb-0 text-xl truncate" id="appHeaderSubpageTitle"></h5>
+            <h5 class="fw-medium text-body-secondary mb-0 fs-4 text-truncate" id="appHeaderSubpageTitle"></h5>
         </div>
     </header>
 
     <!-- ============ PAGES ============ -->
 
     <!-- PAGE: PLAN -->
-    <section id="page-plan" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="card summary-outer-card rounded-2xl mb-3" id="planSummaryCard">
-                <div class="card-body py-4">
-                    <div class="summary-item summary-item--primary">
-                        <div class="money-value-block money-value-block--center w-full">
-                            <div id="planSummaryStats" class="w-full"></div>
-                            <div id="planSummaryNetWords"></div>
-                        </div>
-                    </div>
+    <section id="page-plan" class="w-100 d-none">
+        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
+            <div class="card w-100 rounded-3" id="planSummaryCard">
+                <div class="card-body py-2 px-3">
+                    <div id="planSummaryStats"></div>
+                    <div id="planSummaryNetWords"></div>
                 </div>
             </div>
 
-            <div class="search-bar mb-3">
-                <i class="fas fa-search search-bar__icon"></i>
-                <input type="text" class="search-bar__input" id="planSearch" placeholder="Search by company name..." oninput="setPlanSearch(this.value)" autocomplete="off" />
-                <button class="search-bar__clear hidden" type="button" id="planSearchClear" onclick="clearPlanSearch()" title="Clear"><i class="fas fa-times"></i></button>
+            <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1 w-100">
+                <span class="text-secondary flex-shrink-0" aria-hidden="true"><i class="fas fa-search"></i></span>
+                <div class="flex-grow-1 min-w-0">
+                    <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="planSearch" placeholder="Search by company name..." oninput="setPlanSearch(this.value)" autocomplete="off" />
+                </div>
+                <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="planSearchClear" onclick="clearPlanSearch()" title="Clear" aria-label="Clear">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
-            <div id="planTradesList"></div>
+            <div id="planTradesList" class="w-100"></div>
         </div>
     </section>
 
     <!-- PAGE: TRADES -->
-    <section id="page-trades" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <!-- Summary Card — P&L + open trade count -->
-            <div class="card summary-outer-card rounded-2xl mb-3" id="summaryCard">
-                <div class="card-body py-4">
-                    <div class="summary-item summary-item--primary">
-                        <div class="money-value-block money-value-block--center w-full">
-                            <div id="summaryOpenStats" class="w-full"></div>
-                            <div id="summaryNetWords"></div>
-                        </div>
-                    </div>
+    <section id="page-trades" class="w-100 d-none">
+        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
+            <div class="card w-100 rounded-3" id="summaryCard">
+                <div class="card-body py-2 px-3">
+                    <div id="summaryOpenStats"></div>
+                    <div id="summaryNetWords"></div>
                 </div>
             </div>
 
-            <!-- Plan / Trade view switch -->
-            <div class="mb-3">
-                <select id="tradesViewMode" class="select select-bordered w-full rounded-full h-10 min-h-10 bg-base-100 focus:outline-none focus:border-primary" onchange="setTradesViewMode(this.value)" aria-label="Switch between Trade and Plan">
-                    <option value="trade">Trade</option>
-                    <option value="plan">Plan</option>
-                </select>
-            </div>
+            <div class="w-100" id="tradesFilterBar"></div>
 
-            <!-- Open trades list -->
-            <div id="transactionList"></div>
+            <div id="transactionList" class="w-100"></div>
         </div>
     </section>
 
     <!-- PAGE: PAST TRADES -->
-    <section id="page-past" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <!-- Summary Card — P&L + trade count in range -->
-            <div class="card summary-outer-card rounded-2xl mb-3" id="pastSummaryCard">
-                <div class="card-body py-4">
-                    <div class="summary-item summary-item--primary">
-                        <div class="money-value-block money-value-block--center w-full">
-                            <div id="pastSummaryStats" class="w-full"></div>
-                            <div id="pastSummaryNetWords"></div>
-                        </div>
-                    </div>
+    <section id="page-past" class="w-100 d-none">
+        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
+            <div class="card w-100 rounded-3" id="pastSummaryCard">
+                <div class="card-body py-2 px-3">
+                    <div id="pastSummaryStats"></div>
+                    <div id="pastSummaryNetWords"></div>
                 </div>
             </div>
 
-            <!-- Selected range indicator + P&L filter (single row) -->
-            <div class="flex items-center gap-2 mb-3">
-                <div class="flex-1 min-w-0" id="pastRangeChipHost"></div>
-                <div class="select-dropdown select-dropdown--center" id="pastPnlFilterHost"></div>
-            </div>
+            <div class="w-100" id="pastFilterBar"></div>
 
-            <div id="pastTradesList"></div>
+            <div id="pastTradesList" class="w-100"></div>
         </div>
     </section>
 
     <!-- PAGE: MARKET -->
-    <section id="page-market" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <p class="text-base-content/60 text-xs uppercase tracking-wide font-medium mb-2" id="marketSectionLabel">Live market</p>
+    <section id="page-market" class="w-100 d-none">
+        <div class="px-3 pt-3">
+            <p class="text-muted small text-uppercase fw-medium mb-2" id="marketSectionLabel">Live market</p>
 
-            <div class="market-subtabs mb-3" role="tablist" aria-label="Market views">
-                <button type="button" class="market-subtabs__btn market-subtabs__btn--active" role="tab" aria-selected="true" data-market-tab="in-trade" onclick="setMarketSubTab('in-trade')">In Trade</button>
-                <button type="button" class="market-subtabs__btn" role="tab" aria-selected="false" data-market-tab="watchlist" onclick="setMarketSubTab('watchlist')">Watchlist</button>
+            <div class="btn-group w-100 mb-3" role="tablist" aria-label="Market views">
+                <button type="button" class="btn btn-outline-primary active" role="tab" aria-selected="true" data-market-tab="in-trade" onclick="setMarketSubTab('in-trade')">In Trade</button>
+                <button type="button" class="btn btn-outline-primary" role="tab" aria-selected="false" data-market-tab="watchlist" onclick="setMarketSubTab('watchlist')">Watchlist</button>
             </div>
 
-            <div class="card bg-base-100 rounded-xl overflow-hidden mb-3">
-                <div class="card-body p-0">
-                    <div class="market-status-row market-status-row--card">
-                        <div class="market-status-row__meta min-w-0">
-                            <span class="market-status-row__icon market-status-row__icon--live" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
-                            <div class="min-w-0">
-                                <div class="market-status-row__title">Live quotes</div>
-                                <div class="text-xs text-base-content/60 min-w-0" id="marketUpdatedAt">Not updated yet</div>
-                            </div>
+            <div class="card bg-body rounded-3 overflow-hidden mb-3">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3 min-w-0">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 text-primary bg-primary-subtle" style="width:2rem;height:2rem" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                        <div class="min-w-0">
+                            <div class="fw-semibold">Live quotes</div>
+                            <div class="small text-muted text-truncate" id="marketUpdatedAt">Not updated yet</div>
                         </div>
-                        <button type="button" class="btn btn-sm btn-ghost border border-base-200 rounded-xl h-9 min-h-0 gap-1.5 shrink-0" id="marketRefreshBtn" onclick="refreshMarketQuotes()" aria-label="Refresh market prices">
-                            <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                            Refresh
-                        </button>
                     </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="marketRefreshBtn" onclick="refreshMarketQuotes()" aria-label="Refresh market prices">
+                        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                        Refresh
+                    </button>
                 </div>
             </div>
 
-            <div class="market-search-wrap mb-3 relative">
-                <div class="search-bar">
-                    <i class="fas fa-search search-bar__icon"></i>
-                    <input type="text" class="search-bar__input" id="marketSearchInput" placeholder="Filter by name or symbol…" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" oninput="onMarketSearchInput()" onkeydown="onMarketSearchKeydown(event)" onfocus="onMarketSearchFocus()" onblur="onMarketSearchBlur()" />
-                    <button type="button" class="search-bar__clear hidden" id="marketSearchClear" onclick="clearMarketSearch()" aria-label="Clear search"><i class="fas fa-times"></i></button>
+            <div class="mb-3 position-relative">
+                <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1">
+                    <span class="text-secondary flex-shrink-0" id="marketSearchAddon" aria-hidden="true"><i class="fas fa-search"></i></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="marketSearchInput" placeholder="Filter by name or symbol…" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-describedby="marketSearchAddon" oninput="onMarketSearchInput()" onkeydown="onMarketSearchKeydown(event)" onfocus="onMarketSearchFocus()" onblur="onMarketSearchBlur()" />
+                    </div>
+                    <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="marketSearchClear" onclick="clearMarketSearch()" aria-label="Clear search">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl shadow-lg hidden" id="marketAcList" role="listbox" aria-label="Stock suggestions"></div>
+                <div class="dropdown-menu w-100 shadow show d-none mt-1 p-0 overflow-auto" id="marketAcList" role="listbox" aria-label="Stock suggestions" style="max-height:16rem;position:absolute;inset:auto 0 auto 0;transform:none"></div>
             </div>
 
-            <div class="card bg-base-100 rounded-xl overflow-hidden">
-                <div class="card-body p-0">
-                    <div id="marketQuotesList"></div>
-                </div>
+            <div class="card shadow-sm border overflow-hidden">
+                <div id="marketQuotesList"></div>
             </div>
         </div>
     </section>
 
     <!-- PAGE: SEARCH (full screen) -->
-    <section id="page-search" class="page-section hidden">
-        <div class="search-page__bar sticky top-0 z-40 app-header border-b px-3 py-3 max-w-[480px] mx-auto w-full">
-            <div class="flex items-center gap-2">
-                <button type="button" class="app-icon-btn app-icon-btn--sm border shrink-0" onclick="closeSearchPage()" aria-label="Back">
-                    <i class="fas fa-arrow-left"></i>
+    <section id="page-search" class="w-100 d-none">
+        <div class="sticky-top bg-body px-3 py-3 shadow-sm">
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-light rounded-circle border-0 flex-shrink-0" onclick="closeSearchPage()" aria-label="Back">
+                    <i class="fas fa-arrow-left text-secondary"></i>
                 </button>
-                <div class="search-bar flex-1 min-w-0">
-                    <i class="fas fa-search search-bar__icon"></i>
-                    <input type="text" class="search-bar__input" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
-                    <button class="search-bar__clear hidden" type="button" id="searchPageClear" onclick="clearSearchPage()" title="Clear"><i class="fas fa-times"></i></button>
+                <div class="flex-fill min-w-0 d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1">
+                    <span class="text-secondary flex-shrink-0" aria-hidden="true"><i class="fas fa-search"></i></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                    </div>
+                    <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="searchPageClear" onclick="clearSearchPage()" title="Clear" aria-label="Clear">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+        <div class="px-3 pt-3">
             <div id="searchPageList"></div>
         </div>
     </section>
 
     <!-- PAGE: MONEY -->
-    <section id="page-money" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
+    <section id="page-money" class="w-100 d-none">
+        <div class="px-3 pt-3">
             <div id="moneyPageDefaultView">
-                <div class="money-summary-block mb-3">
-                    <div class="card money-summary-card rounded-2xl" id="moneySummaryCard">
-                        <div class="card-body flex flex-col items-center gap-3 py-4">
-                            <div class="money-value-block money-value-block--center w-full">
+                <div class="mb-3">
+                    <div class="card rounded-3" id="moneySummaryCard">
+                        <div class="card-body d-flex flex-column align-items-center gap-3 py-4">
+                            <div class="w-100 text-center">
                                 <div id="moneyTotalValueHero"></div>
                                 <div id="moneyTotalValueWords"></div>
                             </div>
-                            <div class="grid grid-cols-2 gap-3 w-full">
-                                <div class="money-value-block money-value-block--center">
+                            <div class="row g-2 gap-3 w-100">
+                                <div class="w-100 text-center">
                                     <div id="moneyTotalDeposited"></div>
                                     <div id="moneyTotalDepositedWords"></div>
                                 </div>
-                                <div class="money-value-block money-value-block--center">
+                                <div class="w-100 text-center">
                                     <div id="moneyTotalWithdrawn"></div>
                                     <div id="moneyTotalWithdrawnWords"></div>
                                 </div>
@@ -204,21 +188,14 @@
                         </div>
                     </div>
                 </div>
-                <div class="card bg-base-100 rounded-2xl" id="moneyAccountsCard">
+                <div class="card bg-body rounded-3" id="moneyAccountsCard">
                     <div class="card-body p-3">
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            <h6 class="font-semibold text-base-content/80 mb-0 text-base shrink-0"><i class="fas fa-university mr-2 text-primary"></i>Accounts</h6>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <div class="dropdown dropdown-end">
-                                    <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none" id="moneyAccountFilterTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter accounts">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyAccountFilterIcon"><i class="fas fa-layer-group"></i></span>
-                                        <span class="truncate max-w-[5.5rem]" id="moneyAccountFilterLabel">All</span>
-                                        <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                                    </button>
-                                    <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyAccountFilterMenu"></ul>
-                                </div>
-                                <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
-                                    <i class="fas fa-filter text-base-content/55"></i>
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                            <h6 class="fw-semibold text-body-secondary mb-0 flex-shrink-0"><i class="fas fa-university me-2 text-primary"></i>Accounts</h6>
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                <div class="flex-shrink-0" id="moneyAccountFilterHost"></div>
+                                <button type="button" class="btn btn-outline-secondary bg-body rounded-3 p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter" style="width:2.5rem;height:2.5rem">
+                                    <i class="fas fa-filter text-muted"></i>
                                 </button>
                             </div>
                         </div>
@@ -227,32 +204,25 @@
                 </div>
             </div>
 
-            <div id="moneyPageFilterView" class="hidden">
-                <div class="flex items-center gap-3 mb-4">
-                    <button type="button" class="btn btn-ghost btn-circle border border-base-200 shrink-0 w-9 h-9 min-h-0" onclick="clearMoneyPageFilters()" aria-label="Back to accounts"><i class="fas fa-arrow-left"></i></button>
-                    <div class="flex-1 min-w-0">
-                        <h6 class="font-semibold text-base-content/80 text-base mb-0" id="moneyPageFilterViewTitle">Filtered</h6>
-                        <div class="text-sm text-base-content/60" id="moneyPageFilterViewMeta"></div>
+            <div id="moneyPageFilterView" class="d-none">
+                <div class="d-flex align-items-center gap-3 mb-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-circle flex-shrink-0" onclick="clearMoneyPageFilters()" aria-label="Back to accounts" style="width:2.25rem;height:2.25rem"><i class="fas fa-arrow-left"></i></button>
+                    <div class="flex-fill min-w-0">
+                        <h6 class="fw-semibold text-body-secondary mb-0" id="moneyPageFilterViewTitle">Filtered</h6>
+                        <div class="small text-muted" id="moneyPageFilterViewMeta"></div>
                         <div class="mt-2" id="moneyPageFilterDateChipHost"></div>
                     </div>
-                    <div class="dropdown dropdown-end">
-                        <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] shrink-0" id="moneyPageFilterTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
-                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyPageFilterTypeIcon"><i class="fas fa-layer-group"></i></span>
-                            <span class="truncate max-w-[5.5rem]" id="moneyPageFilterTypeLabel">All</span>
-                            <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                        </button>
-                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyPageFilterTypeMenu"></ul>
-                    </div>
-                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range">
-                        <i class="fas fa-filter text-base-content/55"></i>
+                    <div class="flex-shrink-0" id="moneyPageFilterTypeHost"></div>
+                    <button type="button" class="btn btn-outline-secondary bg-body rounded-3 flex-shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Date range" aria-label="Date range" style="width:2.5rem;height:2.5rem">
+                        <i class="fas fa-filter text-muted"></i>
                     </button>
                 </div>
-                <div class="money-filter-summary-block mb-3">
-                    <div class="card bg-base-100 rounded-2xl" id="moneyPageFilterSummaryCard">
+                <div class="mb-3">
+                    <div class="card bg-body rounded-3" id="moneyPageFilterSummaryCard">
                         <div class="card-body text-center py-3" id="moneyPageFilterSummary"></div>
                     </div>
                 </div>
-                <div class="card bg-base-100 rounded-2xl">
+                <div class="card bg-body rounded-3">
                     <div class="card-body py-2" id="moneyPageFilterList"></div>
                 </div>
             </div>
@@ -260,71 +230,71 @@
     </section>
 
     <!-- PAGE: SETTINGS -->
-    <section id="page-settings" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="card bg-base-100 rounded-2xl mb-3">
+    <section id="page-settings" class="w-100 d-none">
+        <div class="px-3 pt-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body">
-                    <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-chart-line mr-2"></i>Market Feed</h6>
-                    <p class="text-sm text-base-content/60 mb-2">Check whether live stock prices are reachable from this device.</p>
-                    <div class="flex items-center gap-2 mb-2">
-                        <span class="text-sm text-base-content/60 shrink-0">Status:</span>
-                        <span id="marketFeedStatusBadge" class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80">Not checked</span>
+                    <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-chart-line me-2"></i>Market Feed</h6>
+                    <p class="small text-muted mb-2">Check whether live stock prices are reachable from this device.</p>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <span class="small text-muted flex-shrink-0">Status:</span>
+                        <span id="marketFeedStatusBadge" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary">Not checked</span>
                     </div>
-                    <div id="marketFeedCheckResult" class="text-sm text-base-content/60 mb-2">Tap Check Feed to verify real-time market data.</div>
+                    <div id="marketFeedCheckResult" class="small text-muted mb-2">Tap Check Feed to verify real-time market data.</div>
                     <div id="settingsMarketFeedBtnHost"></div>
                 </div>
             </div>
-            <div class="card bg-base-100 rounded-2xl mb-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body">
-                    <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-cloud mr-2"></i>Cloud Sync</h6>
-                    <div class="flex items-center mb-2">
-                        <span class="mr-2 text-sm text-base-content/60">Status:</span>
-                        <span id="cloudSyncStatus" class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80">Off</span>
+                    <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2 small text-muted">Status:</span>
+                        <span id="cloudSyncStatus" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary">Off</span>
                     </div>
-                    <p class="text-sm text-base-content/60 mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
-                    <div class="join w-full mb-2">
-                        <span class="join-item bg-base-200 px-3 flex items-center"><i class="fas fa-key"></i></span>
-                        <input type="text" class="input input-bordered w-full" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
+                    <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
+                    <div class="input-group mb-2">
+                        <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
+                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
                     </div>
-                    <div class="flex gap-2" id="syncConnectRow"></div>
-                    <div id="cloudSyncHint" class="text-sm text-base-content/60 mt-2"></div>
+                    <div class="d-flex gap-2" id="syncConnectRow"></div>
+                    <div id="cloudSyncHint" class="small text-muted mt-2"></div>
                 </div>
             </div>
-            <div class="card bg-base-100 rounded-2xl mb-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body p-0">
-                    <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
                         <div>
-                            <div class="font-medium text-base-content/75"><i class="fas fa-university mr-2"></i>Money Accounts</div>
-                            <div class="text-sm text-base-content/60" id="settingsMoneyAccountCount">0 accounts</div>
+                            <div class="fw-medium text-body-secondary"><i class="fas fa-university me-2"></i>Money Accounts</div>
+                            <div class="small text-muted" id="settingsMoneyAccountCount">0 accounts</div>
                         </div>
-                        <span class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80" id="settingsMoneyAccountBadge">0</span>
+                        <span class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary" id="settingsMoneyAccountBadge">0</span>
                     </div>
-                    <div class="px-3 py-3 border-b border-base-200" id="addMoneyAccountBtnHost"></div>
+                    <div class="px-3 py-3 border-bottom border" id="addMoneyAccountBtnHost"></div>
                     <div class="px-3 py-3" id="settingsMoneyAccountList"></div>
                 </div>
             </div>
-            <div class="card bg-base-100 rounded-2xl">
+            <div class="card bg-body rounded-3">
                 <div class="card-body p-0">
-                    <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
                         <div>
-                            <div class="font-medium text-base-content/75"><i class="fas fa-database mr-2"></i>Total Transactions</div>
-                            <div class="text-sm text-base-content/60" id="totalTxCount">0 records</div>
+                            <div class="fw-medium text-body-secondary"><i class="fas fa-database me-2"></i>Total Transactions</div>
+                            <div class="small text-muted" id="totalTxCount">0 records</div>
                         </div>
-                        <span class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80" id="totalTxBadge">0</span>
+                        <span class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary" id="totalTxBadge">0</span>
                     </div>
-                    <div class="flex justify-between items-center gap-3 px-3 py-3 border-b border-base-200">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
                         <div>
-                            <div class="font-medium text-base-content/75"><i class="fas fa-clipboard mr-2"></i>Backup as Text</div>
-                            <div class="text-sm text-base-content/60">Copy your data as text, or paste it back to restore</div>
+                            <div class="fw-medium text-body-secondary"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
+                            <div class="small text-muted">Copy your data as text, or paste it back to restore</div>
                         </div>
-                        <div id="settingsBackupBtnHost" class="shrink-0"></div>
+                        <div id="settingsBackupBtnHost" class="flex-shrink-0"></div>
                     </div>
-                    <div class="flex justify-between items-center gap-3 px-3 py-3">
+                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3">
                         <div>
-                            <div class="font-semibold text-error"><i class="fas fa-trash-alt mr-2"></i>Reset All Data</div>
-                            <div class="text-sm text-base-content/60">Permanently delete all transactions</div>
+                            <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
+                            <div class="small text-muted">Permanently delete all transactions</div>
                         </div>
-                        <div id="settingsResetBtnHost" class="shrink-0"></div>
+                        <div id="settingsResetBtnHost" class="flex-shrink-0"></div>
                     </div>
                 </div>
             </div>
@@ -332,146 +302,144 @@
     </section>
 
     <!-- PAGE: MORE HUB -->
-    <section id="page-more" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <p class="text-base-content/60 text-xs uppercase tracking-wide font-medium mb-2">Tools and reports</p>
-            <div class="card bg-base-100 rounded-xl overflow-hidden">
-                <div class="card-body p-0">
-                    <div class="more-hub-table" role="list">
-                        <button type="button" class="more-hub-option" onclick="openMoreFeature('money')">
-                            <span class="more-hub-option__icon more-hub-option__icon--money"><i class="fas fa-coins"></i></span>
-                            <span class="more-hub-option__label">Money</span>
-                            <i class="fas fa-chevron-right more-hub-option__chevron"></i>
-                        </button>
-                        <button type="button" class="more-hub-option" onclick="openMoreFeature('transactions')">
-                            <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-database"></i></span>
-                            <span class="more-hub-option__label">Total Transactions</span>
-                            <i class="fas fa-chevron-right more-hub-option__chevron"></i>
-                        </button>
-                        <button type="button" class="more-hub-option" onclick="openMoreFeature('mtf-calc')">
-                            <span class="more-hub-option__icon more-hub-option__icon--success"><i class="fas fa-calculator"></i></span>
-                            <span class="more-hub-option__label">MTF Calculator</span>
-                            <i class="fas fa-chevron-right more-hub-option__chevron"></i>
-                        </button>
-                        <button type="button" class="more-hub-option" onclick="openSettingsPage()">
-                            <span class="more-hub-option__icon more-hub-option__icon--primary"><i class="fas fa-cog"></i></span>
-                            <span class="more-hub-option__label">Settings</span>
-                            <i class="fas fa-chevron-right more-hub-option__chevron"></i>
-                        </button>
-                    </div>
+    <section id="page-more" class="w-100 d-none">
+        <div class="px-3 pt-3 w-100">
+            <p class="text-muted small text-uppercase fw-medium mb-2">Tools and reports</p>
+            <div class="card bg-body rounded-3 overflow-hidden border">
+                <div class="list-group list-group-flush" role="list">
+                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('money')">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success" style="width:2.25rem;height:2.25rem"><i class="fas fa-coins"></i></span>
+                        <span class="flex-fill fw-semibold text-start">Money</span>
+                        <i class="fas fa-chevron-right text-muted small"></i>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('transactions')">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary-subtle text-primary" style="width:2.25rem;height:2.25rem"><i class="fas fa-database"></i></span>
+                        <span class="flex-fill fw-semibold text-start">Total Transactions</span>
+                        <i class="fas fa-chevron-right text-muted small"></i>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('mtf-calc')">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success" style="width:2.25rem;height:2.25rem"><i class="fas fa-calculator"></i></span>
+                        <span class="flex-fill fw-semibold text-start">MTF Calculator</span>
+                        <i class="fas fa-chevron-right text-muted small"></i>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openSettingsPage()">
+                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-light text-body-secondary" style="width:2.25rem;height:2.25rem"><i class="fas fa-cog"></i></span>
+                        <span class="flex-fill fw-semibold text-start">Settings</span>
+                        <i class="fas fa-chevron-right text-muted small"></i>
+                    </button>
                 </div>
             </div>
-            <p id="more-hub-build-meta" class="more-hub-build-meta" aria-label="App version"></p>
+            <p id="more-hub-build-meta" class="small text-muted text-center mt-3 mb-0 d-flex flex-column gap-1" aria-label="App version"></p>
         </div>
     </section>
 
     <!-- PAGE: TOTAL TRANSACTIONS -->
-    <section id="page-transactions" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="card bg-base-100 rounded-2xl mb-3">
+    <section id="page-transactions" class="w-100 d-none">
+        <div class="px-3 pt-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body text-center py-4">
-                    <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide"><i class="fas fa-coins mr-1"></i>Total Trades</div>
-                    <div class="font-semibold text-2xl text-base-content/85 mb-3" id="txHistTotal">0</div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="small text-uppercase text-muted fw-medium"><i class="fas fa-coins me-1"></i>Total Trades</div>
+                    <div class="fw-semibold fs-2 text-body-secondary mb-3" id="txHistTotal">0</div>
+                    <div class="row g-2 gap-2">
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Open</div>
-                            <div class="font-semibold text-warning" id="txHistOpen">0</div>
+                            <div class="small text-uppercase text-muted fw-medium">Open</div>
+                            <div class="fw-semibold text-warning" id="txHistOpen">0</div>
                         </div>
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Closed</div>
-                            <div class="font-medium text-base-content/80" id="txHistClosed">0</div>
+                            <div class="small text-uppercase text-muted fw-medium">Closed</div>
+                            <div class="fw-medium text-body-secondary" id="txHistClosed">0</div>
                         </div>
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Successful</div>
-                            <div class="inline-flex items-center justify-center rounded-xl px-3 py-1 font-semibold bg-success/15 text-success" id="txHistSuccessful">0</div>
+                            <div class="small text-uppercase text-muted fw-medium">Successful</div>
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-3 px-3 py-1 fw-semibold bg-success-subtle text-success" id="txHistSuccessful">0</div>
                         </div>
                     </div>
-                    <div class="divider my-2"></div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <hr class="my-2" />
+                    <div class="row g-2 gap-2">
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Net</div>
+                            <div class="small text-uppercase text-muted fw-medium">Net</div>
                             <div id="txHistNet"></div>
                         </div>
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Gross</div>
+                            <div class="small text-uppercase text-muted fw-medium">Gross</div>
                             <div id="txHistGross"></div>
                         </div>
                         <div>
-                            <div class="text-xs uppercase text-base-content/50 font-medium tracking-wide">Charges</div>
+                            <div class="small text-uppercase text-muted fw-medium">Charges</div>
                             <div id="txHistCharges"></div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="card bg-base-100 rounded-2xl mb-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body">
-                    <h6 class="font-semibold text-base-content/80 mb-3"><i class="fas fa-building mr-2"></i>By Broker</h6>
+                    <h6 class="fw-semibold text-body-secondary mb-3"><i class="fas fa-building me-2"></i>By Broker</h6>
                     <div id="txHistBrokerBreakdown"></div>
                 </div>
             </div>
-            <h6 class="font-semibold text-base-content/80 mb-2"><i class="fas fa-list mr-2"></i>History</h6>
+            <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-list me-2"></i>History</h6>
             <div id="txHistList"></div>
         </div>
     </section>
 
     <!-- PAGE: MTF CALCULATOR -->
-    <section id="page-mtf-calc" class="page-section hidden">
-        <div class="px-3.5 app-page-pad pt-3 max-w-[480px] mx-auto w-full">
-            <div class="card bg-base-100 rounded-2xl mb-3">
+    <section id="page-mtf-calc" class="w-100 d-none">
+        <div class="px-3 pt-3">
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body">
-                    <div class="grid grid-cols-2 gap-2 mb-2">
-                        <div class="">
-                            <label class="label-text font-normal text-base-content/65">Buy Date</label>
-                            <input type="date" class="input input-bordered w-full calc-date" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                    <div class="row g-2 gap-2 mb-2">
+                        <div>
+                            <label class="form-label text-muted">Buy Date</label>
+                            <input type="date" class="form-control w-100" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
                         </div>
-                        <div class="">
-                            <label class="label-text font-normal text-base-content/65">Sell Date</label>
-                            <input type="date" class="input input-bordered w-full calc-date" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                        <div>
+                            <label class="form-label text-muted">Sell Date</label>
+                            <input type="date" class="form-control w-100" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
                         </div>
                     </div>
-                    <div class="flex flex-wrap gap-1 mb-3">
-                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setCalcSameDay()">Same day (intraday)</button>
-                        <button type="button" class="btn btn-sm btn-outline btn-neutral" onclick="setCalcTodayPair()">Today → Tomorrow</button>
+                    <div class="d-flex flex-wrap gap-1 mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcSameDay()">Same day (intraday)</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcTodayPair()">Today → Tomorrow</button>
                     </div>
-                    <div class="grid grid-cols-3 gap-2 mb-2">
+                    <div class="row g-2 gap-2 mb-2">
                         <div>
-                            <label class="label-text font-normal quantity-label">Qty</label>
-                            <input type="number" class="input input-bordered w-full" id="calcQty" min="1" step="1" placeholder="0" oninput="updateMtfCalculator()" />
+                            <label class="form-label">Qty</label>
+                            <input type="number" class="form-control w-100" id="calcQty" min="1" step="1" placeholder="0" oninput="updateMtfCalculator()" />
                         </div>
                         <div>
-                            <label class="label-text font-normal buy-price-label">Buy Price</label>
-                            <input type="number" class="input input-bordered w-full" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcBuyPriceInput()" />
+                            <label class="form-label">Buy Price</label>
+                            <input type="number" class="form-control w-100" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcBuyPriceInput()" />
                         </div>
                         <div>
-                            <label class="label-text font-normal text-base-content/65">Sell Price</label>
-                            <input type="number" class="input input-bordered w-full" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcSellPriceInput()" />
+                            <label class="form-label text-muted">Sell Price</label>
+                            <input type="number" class="form-control w-100" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcSellPriceInput()" />
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-medium text-sm text-base-content/60 mb-1">Sell target (% on buy price)</label>
-                        <div class="flex flex-wrap gap-1 items-center" id="calcSellPctChips"></div>
-                        <div class="flex gap-1 mt-2">
-                            <input type="number" class="input input-bordered input-sm w-full" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
+                        <label class="form-label fw-medium small text-muted">Sell target (% on buy price)</label>
+                        <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
+                        <div class="d-flex gap-1 mt-2">
+                            <input type="number" class="form-control form-control-sm" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
                             <span id="calcAddPctBtnHost"></span>
                         </div>
-                        <p class="text-base-content/60 text-sm mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
+                        <p class="text-muted small mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
                     </div>
                     <div class="mb-0">
-                        <label class="label-text font-normal text-base-content/65">Leverage (X)</label>
-                        <input type="number" class="input input-bordered w-full" id="calcLeverage" min="1" step="0.1" value="1" oninput="updateMtfCalculator()" />
+                        <label class="form-label text-muted">Leverage (X)</label>
+                        <input type="number" class="form-control w-100" id="calcLeverage" min="1" step="0.1" value="1" oninput="updateMtfCalculator()" />
                     </div>
                 </div>
             </div>
-            <div class="flex justify-center mb-3" id="calcTotalAmountHost"></div>
-            <div class="card bg-base-100 rounded-2xl mb-3">
+            <div class="d-flex justify-content-center mb-3" id="calcTotalAmountHost"></div>
+            <div class="card bg-body rounded-3 mb-3">
                 <div class="card-body">
-                    <div class="flex items-center justify-between flex-wrap gap-2 mb-2">
-                        <h6 class="font-semibold text-base-content/80 mb-0"><i class="fas fa-balance-scale mr-2"></i>Compare All Brokers</h6>
-                        <span id="calcModeBadge" class="inline-flex items-center badge badge-sm rounded-full px-2.5 py-1.5 min-h-0 h-auto text-xs font-medium bg-base-200/30 border border-base-200/60 text-base-content/80 hidden"></span>
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+                        <h6 class="fw-semibold text-body-secondary mb-0"><i class="fas fa-balance-scale me-2"></i>Compare All Brokers</h6>
+                        <span id="calcModeBadge" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary d-none"></span>
                     </div>
-                    <div id="calcIntradayBanner" class="hidden"></div>
+                    <div id="calcIntradayBanner" class="d-none"></div>
                     <div id="calcComparePanel" class="overflow-x-auto">
-                        <p class="text-base-content/60 text-sm mb-0">Fill in all fields to compare brokers.</p>
+                        <p class="text-muted small mb-0">Fill in all fields to compare brokers.</p>
                     </div>
                 </div>
             </div>
@@ -483,296 +451,345 @@
 
 
     <!-- GENERIC BOTTOM SHEET -->
-    <dialog id="appSheet" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
-        <div class="modal-box app-sheet w-full max-w-[480px] !max-w-[480px] p-0 rounded-t-3xl bg-base-100 border border-base-200">
-            <div class="app-sheet__header p-4 border-b border-base-200 relative">
-                <div class="text-center mb-2"><span class="inline-block w-[42px] h-1 rounded-full bg-base-300"></span></div>
-                <div class="flex justify-between items-center pr-8">
-                    <h3 class="font-semibold text-base-content/80 text-lg" id="appSheetTitle"></h3>
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="appSheet" aria-labelledby="appSheetTitle">
+        <div class="offcanvas-header border-bottom flex-column align-items-stretch gap-2 pt-3 pb-2 px-3">
+            <div class="w-100 d-flex align-items-center">
+                <span class="flex-shrink-0" style="width:2.75rem" aria-hidden="true"></span>
+                <div class="flex-grow-1 d-flex justify-content-center">
+                    <span class="d-inline-block bg-secondary-subtle rounded-pill" style="width:2.5rem;height:0.25rem" aria-hidden="true"></span>
                 </div>
-                <form method="dialog" class="absolute right-3 top-4"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
+                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" data-bs-dismiss="offcanvas" aria-label="Close">
+                    <i class="fas fa-times text-muted" aria-hidden="true"></i>
+                </button>
             </div>
-            <div id="appSheetBody" class="app-sheet__body p-4"></div>
-            <div id="appSheetFooter" class="app-sheet__footer p-4 border-t border-base-200 hidden"></div>
+            <h5 class="offcanvas-title fw-semibold w-100 min-w-0 mb-0 px-1 d-flex align-items-center justify-content-center" id="appSheetTitle"></h5>
         </div>
-        <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+        <div class="offcanvas-body" id="appSheetBody"></div>
+        <div class="border-top p-3 bg-body d-none" id="appSheetFooter"></div>
+    </div>
 
     <!-- GENERIC CENTER DIALOG -->
-    <dialog id="appDialog" class="modal">
-        <div class="modal-box max-w-sm">
-            <h3 class="font-semibold text-base-content/80 text-lg" id="appDialogTitle"></h3>
-            <div id="appDialogBody" class="py-3"></div>
-            <div id="appDialogFooter" class="modal-action app-btn-row"></div>
+    <div class="modal fade" id="appDialog" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-semibold" id="appDialogTitle"></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="appDialogBody"></div>
+                <div class="modal-footer" id="appDialogFooter"></div>
+            </div>
         </div>
-        <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+    </div>
 
     <!-- LOADING OVERLAY (blocking spinner during network sync) -->
-    <dialog id="appLoading" class="app-loading" aria-live="polite" aria-busy="true">
-        <div class="app-loading__card">
-            <i class="fas fa-circle-notch fa-spin app-loading__spinner" aria-hidden="true"></i>
-            <span class="app-loading__label">Syncing...</span>
+    <div id="appLoading" class="position-fixed d-flex top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center bg-dark bg-opacity-50" style="z-index:2000" aria-live="polite" aria-busy="true">
+        <div class="bg-body rounded-3 p-4 d-flex flex-column align-items-center gap-2 shadow">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+            <span id="appLoadingLabel" class="text-muted">Syncing...</span>
         </div>
-    </dialog>
+    </div>
 
     <!-- HIDDEN SHEET PANELS (persistent form fields) -->
-    <div id="sheetPanels" class="hidden">
-        <div id="panelMoneyPageFilter"><div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Type</label>
-                        <input type="hidden" id="moneyPageTypeFilter" value="all" />
-                        <div class="dropdown dropdown-end w-full">
-                            <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold min-h-9 max-w-[11rem] w-full max-w-none" id="moneyPageTypeFilterTrigger" tabindex="0" role="button" aria-expanded="false">
-                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyPageTypeFilterIcon"><i class="fas fa-layer-group"></i></span>
-                                <span class="truncate max-w-[5.5rem]" id="moneyPageTypeFilterLabel">All</span>
-                                <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                            </button>
-                            <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 w-full" id="moneyPageTypeFilterMenu"></ul>
-                        </div>
+    <div id="sheetPanels" class="d-none">
+        <div id="panelMoneyPageFilter">
+            <div class="mb-3">
+                <label class="form-label small text-uppercase text-muted fw-medium">Type</label>
+                <input type="hidden" id="moneyPageTypeFilter" value="all" />
+                <div id="moneyPageTypeFilterHost"></div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small text-uppercase text-muted fw-medium">Quick range</label>
+                <div class="d-flex flex-wrap gap-2" id="moneyPageRangeButtons" role="group" aria-label="Quick date range">
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyPageRangeInForm(7)">1W</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyPageRangeInForm(30)">1M</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyPageRangeInForm(90)">3M</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small text-uppercase text-muted fw-medium" for="moneyPageFrom">From</label>
+                <input type="date" class="form-control" id="moneyPageFrom" onchange="onMoneyPageDateInputChange()" />
+            </div>
+            <div class="mb-0">
+                <label class="form-label small text-uppercase text-muted fw-medium" for="moneyPageTo">To</label>
+                <input type="date" class="form-control" id="moneyPageTo" onchange="onMoneyPageDateInputChange()" />
+            </div>
+        </div>
+        <div id="panelMoneyHistoryRange">
+            <div class="mb-3">
+                <label class="form-label small text-uppercase text-muted fw-medium">Quick range</label>
+                <div class="d-flex flex-wrap gap-2" id="moneyHistoryRangeButtons" role="group" aria-label="Quick date range">
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyHistoryRange(7)">1W</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyHistoryRange(30)">1M</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyHistoryRange(90)">3M</button>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label small text-uppercase text-muted fw-medium" for="moneyHistoryFrom">From</label>
+                <input type="date" class="form-control" id="moneyHistoryFrom" />
+            </div>
+            <div class="mb-0">
+                <label class="form-label small text-uppercase text-muted fw-medium" for="moneyHistoryTo">To</label>
+                <input type="date" class="form-control" id="moneyHistoryTo" />
+            </div>
+        </div>
+        <div id="panelPastFilter">
+            <section class="mb-3">
+                <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
+                <div class="row g-2" id="pastRangeButtons" role="group" aria-label="Quick date range">
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="today" onclick="setPastRange('today')" aria-pressed="false">Today</button>
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
-                        <div class="range-quick flex flex-wrap gap-2" id="moneyPageRangeButtons">
-                            <button type="button" class="btn btn-outline btn-primary btn-sm flex-1" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="7" onclick="setMoneyPageRangeInForm(7)">1W</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="30" onclick="setMoneyPageRangeInForm(30)">1M</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="90" onclick="setMoneyPageRangeInForm(90)">3M</button>
-                        </div>
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="yesterday" onclick="setPastRange('yesterday')" aria-pressed="false">Yesterday</button>
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageFrom" onchange="onMoneyPageDateInputChange()" />
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-success w-100 active" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="true">This Week</button>
                     </div>
-                    <div class="mb-0">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="moneyPageTo" onchange="onMoneyPageDateInputChange()" />
-                    </div></div>
-        <div id="panelMoneyHistoryRange"><div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">Quick range</label>
-                        <div class="range-quick flex flex-wrap gap-2" id="moneyHistoryRangeButtons">
-                            <button type="button" class="btn btn-outline btn-primary btn-sm flex-1" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="7" onclick="setMoneyHistoryRange(7)">1W</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="30" onclick="setMoneyHistoryRange(30)">1M</button>
-                            <button type="button" class="btn btn-outline btn-neutral btn-sm flex-1" data-range="90" onclick="setMoneyHistoryRange(90)">3M</button>
-                        </div>
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="last-week" onclick="setPastRange('last-week')" aria-pressed="false">Last week</button>
                     </div>
-                    <div class="mb-3">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">From</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryFrom" />
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-20" onclick="setPastRange('work-20')" aria-pressed="false">20 WD</button>
                     </div>
-                    <div class="mb-0">
-                        <label class="block text-xs uppercase text-base-content/50 font-medium tracking-wide mb-1.5">To</label>
-                        <input type="date" class="input input-bordered w-full rounded-xl" id="moneyHistoryTo" />
-                    </div></div>
-        <div id="panelPastFilter" class="past-filter-panel">
-            <section class="past-filter-section">
-                <h4 class="past-filter-section__label">Quick range</h4>
-                <div class="md-chip-group md-chip-group--filter" id="pastRangeButtons" role="group" aria-label="Quick date range">
-                    <button type="button" class="md-filter-chip" data-range="today" onclick="setPastRange('today')" aria-pressed="false">Today</button>
-                    <button type="button" class="md-filter-chip" data-range="yesterday" onclick="setPastRange('yesterday')" aria-pressed="false">Yesterday</button>
-                    <button type="button" class="md-filter-chip md-filter-chip--selected" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="true">This Week</button>
-                    <button type="button" class="md-filter-chip" data-range="7" onclick="setPastRange(7)" aria-pressed="false">1W</button>
-                    <button type="button" class="md-filter-chip" data-range="10" onclick="setPastRange(10)" aria-pressed="false">10D</button>
-                    <button type="button" class="md-filter-chip" data-range="30" onclick="setPastRange(30)" aria-pressed="false">1M</button>
-                    <button type="button" class="md-filter-chip" data-range="90" onclick="setPastRange(90)" aria-pressed="false">3M</button>
+                    <div class="col-4">
+                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-30" onclick="setPastRange('work-30')" aria-pressed="false">30 WD</button>
+                    </div>
                 </div>
             </section>
-            <section class="past-filter-section">
-                <h4 class="past-filter-section__label">Custom range</h4>
-                <div class="past-filter-dates">
-                    <div class="past-filter-date-field">
-                        <span class="past-filter-date-field__label">From</span>
-                        <input type="date" class="input input-bordered w-full rounded-2xl past-filter-date-input" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
+            <section class="mb-3">
+                <h4 class="small text-muted text-uppercase fw-medium mb-2">Custom range</h4>
+                <div class="d-flex align-items-end gap-2">
+                    <div class="flex-fill">
+                        <label class="form-label small mb-1" for="pastFrom">From</label>
+                        <input type="date" class="form-control" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
                     </div>
-                    <div class="past-filter-dates__sep" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
-                    <div class="past-filter-date-field">
-                        <span class="past-filter-date-field__label">To</span>
-                        <input type="date" class="input input-bordered w-full rounded-2xl past-filter-date-input" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
+                    <div class="pb-2 text-muted" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flex-fill">
+                        <label class="form-label small mb-1" for="pastTo">To</label>
+                        <input type="date" class="form-control" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
+                    </div>
+                </div>
+            </section>
+        </div>
+        <div id="panelTradeFilter">
+            <section class="mb-3">
+                <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
+                <div class="d-flex flex-wrap gap-2" id="tradeRangeButtons" role="group" aria-label="Quick date range">
+                    <button type="button" class="btn btn-sm btn-outline-primary active" data-range="all" onclick="setTradeRange('all')" aria-pressed="true">All</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="today" onclick="setTradeRange('today')" aria-pressed="false">Today</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="yesterday" onclick="setTradeRange('yesterday')" aria-pressed="false">Yesterday</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="this-week" onclick="setTradeRange('this-week')" aria-pressed="false">This Week</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="7" onclick="setTradeRange(7)" aria-pressed="false">1W</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="30" onclick="setTradeRange(30)" aria-pressed="false">1M</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-range="90" onclick="setTradeRange(90)" aria-pressed="false">3M</button>
+                </div>
+            </section>
+            <section class="mb-3">
+                <h4 class="small text-muted text-uppercase fw-medium mb-2">Custom range</h4>
+                <div class="d-flex align-items-end gap-2">
+                    <div class="flex-fill">
+                        <label class="form-label small mb-1" for="tradeFrom">From</label>
+                        <input type="date" class="form-control" id="tradeFrom" aria-label="From date" onchange="onTradeFilterDateChange()" />
+                    </div>
+                    <div class="pb-2 text-muted" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
+                    <div class="flex-fill">
+                        <label class="form-label small mb-1" for="tradeTo">To</label>
+                        <input type="date" class="form-control" id="tradeTo" aria-label="To date" onchange="onTradeFilterDateChange()" />
                     </div>
                 </div>
             </section>
         </div>
         <div id="panelMoneyHistory">
-            <div class="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-base-200">
-                <div class="min-w-0 flex-1">
-                    <div class="text-sm text-base-content/60" id="moneyHistoryMeta">All time</div>
+            <div class="d-flex align-items-center justify-content-between gap-2 mb-3 pb-3 border-bottom border">
+                <div class="min-w-0 flex-fill">
+                    <div class="small text-muted" id="moneyHistoryMeta">All time</div>
                     <div class="mt-2" id="moneyHistoryDateChipHost"></div>
                 </div>
-                <div class="flex items-center gap-2 shrink-0">
-                    <div class="dropdown dropdown-end">
-                        <button type="button" class="btn btn-ghost border border-base-200 inline-flex items-center gap-2 rounded-xl px-2 py-1 text-xs font-semibold h-10 min-h-10 max-w-[11rem] bg-base-100 focus:outline-none" id="moneyHistoryTypeTrigger" tabindex="0" role="button" aria-expanded="false" aria-label="Filter type">
-                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-xs shrink-0 bg-base-200 text-base-content/55" id="moneyHistoryTypeIcon"><i class="fas fa-layer-group"></i></span>
-                            <span class="truncate max-w-[5.5rem]" id="moneyHistoryTypeLabel">All</span>
-                            <i class="fas fa-chevron-down text-[0.6rem] opacity-50 ml-auto"></i>
-                        </button>
-                        <ul class="dropdown-content menu app-dropdown-menu bg-base-100 border border-base-200 rounded-box z-50 p-2 min-w-[11.5rem]" id="moneyHistoryTypeMenu"></ul>
-                    </div>
-                    <button type="button" class="btn btn-ghost border border-base-200 h-10 w-10 min-h-0 bg-base-100 rounded-xl focus:outline-none p-0" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
-                        <i class="fas fa-filter text-base-content/55"></i>
+                <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                    <div class="flex-shrink-0" id="moneyHistoryTypeHost"></div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
+                        <i class="fas fa-filter"></i>
                     </button>
                 </div>
             </div>
-            <div class="money-history-summary-block mb-3">
-                <div class="card bg-base-100 rounded-2xl">
+            <div class="mb-3">
+                <div class="card bg-body rounded-3">
                     <div class="card-body py-3" id="moneyHistorySheetSummary"></div>
                 </div>
             </div>
-            <div id="moneyHistorySheetList" class="money-history-list"></div>
+            <div id="moneyHistorySheetList" class="list-group"></div>
         </div>
         <div id="panelMoneyAccount"><input type="hidden" id="moneyAccountEditId" value="" />
                     <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65">Account Name <span class="text-error">*</span></label>
-                        <input type="text" class="input input-bordered w-full" id="moneyAccountName" placeholder="e.g. Zerodha MTF" />
+                        <label class="form-label text-muted">Account Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control w-100" id="moneyAccountName" placeholder="e.g. Zerodha MTF" />
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65">Account Holder Name</label>
-                        <input type="text" class="input input-bordered w-full" id="moneyAccountHolderName" placeholder="e.g. Iliyas" />
-                        <div class="label-text-alt">Helps identify whose account this is.</div>
+                        <label class="form-label text-muted">Account Holder Name</label>
+                        <input type="text" class="form-control w-100" id="moneyAccountHolderName" placeholder="e.g. Iliyas" />
+                        <div class="form-text">Helps identify whose account this is.</div>
                     </div>
                     <div class="mb-3">
-                        <label class="label-text font-normal text-base-content/65">Opening Balance</label>
-                        <input type="number" class="input input-bordered w-full" id="moneyAccountOpeningBalance" min="0" step="1" placeholder="0" oninput="updateMoneyAccountOpeningPreview()" />
-                        <div class="label-text-alt">Starting amount already in this account before tracked deposits.</div>
-                        <div class="hidden mt-2" id="moneyAccountOpeningPreview"></div>
+                        <label class="form-label text-muted">Opening Balance</label>
+                        <input type="number" class="form-control w-100" id="moneyAccountOpeningBalance" min="0" step="1" placeholder="0" oninput="updateMoneyAccountOpeningPreview()" />
+                        <div class="form-text">Starting amount already in this account before tracked deposits.</div>
+                        <div class="d-none mt-2" id="moneyAccountOpeningPreview"></div>
                     </div></div>
-        <div id="panelBackup"><p class="text-sm text-base-content/60 mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
-                    <textarea class="input input-bordered w-full font-mono text-xs whitespace-pre" id="backupTextArea" rows="10" spellcheck="false"></textarea></div>
+        <div id="panelBackup"><p class="small text-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
+                    <textarea class="form-control w-100 font-monospace small" id="backupTextArea" rows="10" spellcheck="false"></textarea></div>
     </div>
 
     <!-- MODAL: ADD/EDIT -->
-    <dialog id="txModal" class="modal modal-bottom justify-items-center items-end fixed inset-0 w-full max-w-none h-full m-0 p-0">
-        <div class="modal-box w-full max-w-[480px] !max-w-[480px] max-h-[92vh] p-0 rounded-t-3xl bg-base-100 border border-base-200 flex flex-col overflow-hidden">
-                <div class="shrink-0 flex items-center px-3 pt-3 pb-1">
-                    <button type="button" class="btn btn-sm btn-circle btn-ghost hidden" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" title="View trade">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <form method="dialog" class="ml-auto"><button type="submit" class="btn btn-sm btn-circle btn-ghost" aria-label="Close">✕</button></form>
-                </div>
-                <div class="flex-1 min-h-0 overflow-y-auto px-4 pb-2">
-                    <form id="txForm" novalidate>
-                        <input type="hidden" id="txEditId" value="" />
-                        <div class="mb-3">
-                            <label class="label-text font-normal text-base-content/65">Company Name <span class="text-error">*</span></label>
-                            <div class="relative">
-                                <input type="text" class="input input-bordered w-full" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" autocorrect="off" autocapitalize="words" spellcheck="false" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
-                                <div class="absolute left-0 right-0 top-full z-50 mt-1 max-h-64 overflow-y-auto bg-base-100 border border-base-200 rounded-xl hidden" id="txCompanyAcList" role="listbox" aria-label="Stock suggestions"></div>
-                            </div>
-                            <div id="txCompanyMeta" class="text-xs text-base-content/60 mt-1 hidden"></div>
-                            <div id="txCompanyCatalogStatus" class="text-xs text-base-content/60 mt-1"></div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="label-text font-normal text-base-content/65">Broker <span class="text-error">*</span></label>
-                            <input type="hidden" id="txBroker" value="" />
-                            <div id="txBrokerHost" class="w-full"></div>
-                        </div>
-                        <div class="mb-3" id="txStatusRow">
-                            <label class="label-text font-normal text-base-content/65">Trade Status</label>
-                            <div class="flex gap-4">
-                                <div class="flex items-center">
-                                    <input class="radio radio-primary" type="radio" name="status" id="statusOpen" value="open" onchange="onTxStatusChange()">
-                                    <label class="label-text ml-2" for="statusOpen">Open</label>
-                                </div>
-                                <div class="flex items-center">
-                                    <input class="radio radio-primary" type="radio" name="status" id="statusClosed" value="closed" checked onchange="onTxStatusChange()">
-                                    <label class="label-text ml-2" for="statusClosed">Closed</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 mb-3">
-                            <div class="">
-                                <label class="label-text font-normal text-base-content/65">Buy Date <span class="text-error">*</span></label>
-                                <input type="date" class="input input-bordered w-full" id="txBuyDate" required />
-                            </div>
-                            <div class="">
-                                <label class="label-text font-normal text-base-content/65">Sell Date <span class="text-error">*</span></label>
-                                <input type="date" class="input input-bordered w-full" id="txSellDate" required />
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 mb-3">
-                            <div>
-                                <label class="label-text font-normal quantity-label">Qty <span class="text-error">*</span></label>
-                                <input type="number" class="input input-bordered w-full" id="txQty" placeholder="0" required min="1" step="1" />
-                            </div>
-                            <div class="">
-                                <label class="label-text font-normal buy-price-label">Buy Price <span class="text-error">*</span></label>
-                                <input type="number" class="input input-bordered w-full" id="txBuyPrice" placeholder="0.00" required min="0.01" step="0.01" />
-                            </div>
-                            <div class="">
-                                <label class="label-text font-normal text-base-content/65">Sell Price <span class="text-error" id="txSellPriceRequired">*</span></label>
-                                <input type="number" class="input input-bordered w-full" id="txSellPrice" placeholder="0.00" min="0.01" step="0.01" />
-                                <p class="label-text-alt mt-1 hidden" id="txSellPriceHint">Optional for open trades — defaults to buy price. Set a target later.</p>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="label-text font-normal text-base-content/65">Leverage (X) <span class="text-sm text-base-content/60">(e.g., 3, 4, 5)</span></label>
-                            <input type="number" class="input input-bordered w-full" id="txLeverage" placeholder="1" min="1" step="0.1" value="1" />
-                            <div class="label-text-alt">Your own margin = Total Investment / Leverage. Broker funds the rest.</div>
-                            <div id="leverageBreakdown" class="mt-2 text-sm text-base-content/60">
-                                Total Investment: <span id="previewTotalInv">₹0</span> &nbsp;|&nbsp; 
-                                Your Margin: <span id="previewOwnMargin">₹0</span> &nbsp;|&nbsp; 
-                                Broker Funded: <span id="previewMtfAmt">₹0</span>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="label-text font-normal text-base-content/65">Notes (optional)</label>
-                            <textarea class="input input-bordered w-full" id="txNotes" rows="2" placeholder="Any notes..."></textarea>
-                        </div>
-                        <div class="bg-base-200 border rounded-xl p-3" id="calcPreview">
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Holding Days</span><span class="font-semibold" id="previewDays">0</span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Gross Profit</span><span id="previewGross"></span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">MTF Interest</span><span id="previewInterest"></span></div>
-                            <div class="flex justify-between mb-1"><span class="text-base-content/60">Total Charges</span><span id="previewCharges"></span></div>
-                            <hr class="my-2" />
-                            <div class="flex justify-between font-medium text-base-content/80 items-center"><span>Net Profit</span><span id="previewNet"></span></div>
-                        </div>
-                    </form>
-                </div>
-                <div class="shrink-0 px-4 py-3 border-t border-base-200/80 bg-base-50/80" id="txModalFooter"></div>
-            </div>
-        <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="txModal" aria-labelledby="txModalTitle">
+        <div class="offcanvas-header border-bottom align-items-center gap-2 px-3 py-3">
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" style="width:2.5rem;height:2.5rem"><i class="fas fa-eye"></i></button>
+            <h5 class="offcanvas-title flex-grow-1 text-center mb-0" id="txModalTitle">Trade</h5>
+            <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" data-bs-dismiss="offcanvas" aria-label="Close">
+                <i class="fas fa-times text-muted" aria-hidden="true"></i>
+            </button>
+        </div>
+        <div class="offcanvas-body">
+            <form id="txForm" class="d-flex flex-column gap-3" novalidate>
+                <input type="hidden" id="txEditId" value="" />
 
-    <!-- MONEY ENTRY MODAL -->
-    <dialog id="moneyEntryModal" class="modal">
-        <div class="modal-box p-0 overflow-hidden">
-            <div class="p-4 deposit-entry-header relative" id="moneyEntryHeader">
-                <div class="flex items-start justify-between gap-3 pr-8">
-                    <h5 class="font-semibold text-base-content/80 text-lg flex-1 min-w-0" id="moneyEntryAccountTitle">Account</h5>
-                    <label class="label cursor-pointer gap-1 shrink-0 p-0" aria-label="Toggle deposit or withdraw">
-                        <span class="label-text text-xs opacity-90">Dep</span>
-                        <input type="checkbox" class="toggle toggle-sm toggle-success" id="moneyEntryTypeToggle" onchange="onMoneyEntryTypeToggle(this.checked)" />
-                        <span class="label-text text-xs opacity-90">Wdr</span>
-                    </label>
+                <div>
+                    <label class="form-label" for="txCompany">Company Name <span class="text-danger">*</span></label>
+                    <div class="position-relative">
+                        <input type="text" class="form-control" id="txCompany" placeholder="Type symbol or name — e.g. RE, MARICO" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
+                        <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
+                    </div>
+                    <div id="txCompanyMeta" class="form-text d-none"></div>
+                    <div id="txCompanyCatalogStatus" class="form-text"></div>
                 </div>
-                <div class="flex items-start gap-2 mt-2">
-                    <div class="flex-1 min-w-0">
-                        <div id="moneyEntryDateTimeRow" class="app-datetime-row"><span class="text-sm opacity-90" id="moneyEntryDateTimeDisplay">—</span></div>
-                        <div class="hidden flex gap-2 mt-1" id="moneyEntryDateTimeFields">
-                            <input type="date" class="input input-bordered input-sm flex-1" id="moneyEntryDate" onchange="onMoneyEntryDateTimeChange()" />
-                            <input type="time" class="input input-bordered input-sm flex-1" id="moneyEntryTime" onchange="onMoneyEntryDateTimeChange()" />
+
+                <div class="row g-3">
+                    <div class="col-6" id="txBrokerCol">
+                        <label class="form-label mb-1" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
+                        <input type="hidden" id="txBroker" value="" />
+                        <div id="txBrokerHost" class="w-100"></div>
+                    </div>
+                    <div class="col-6" id="txStatusRow">
+                        <label class="form-label mb-1">Trade Status</label>
+                        <div class="d-flex align-items-center flex-wrap gap-3 form-control border-0 bg-transparent shadow-none px-0">
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="status" id="statusOpen" value="open" onchange="onTxStatusChange()">
+                                <label class="form-check-label" for="statusOpen">Open</label>
+                            </div>
+                            <div class="form-check mb-0">
+                                <input class="form-check-input" type="radio" name="status" id="statusClosed" value="closed" checked onchange="onTxStatusChange()">
+                                <label class="form-check-label" for="statusClosed">Closed</label>
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-ghost btn-circle btn-xs shrink-0 opacity-90" id="moneyEntryDateTimeEditBtn" onclick="toggleMoneyEntryDateTimeEdit()" title="Edit date &amp; time"><i class="fas fa-pen"></i></button>
                 </div>
-                <form method="dialog" class="absolute right-3 top-3"><button class="btn btn-sm btn-circle btn-ghost">✕</button></form>
-            </div>
-            <div class="p-4">
-                <input type="hidden" id="moneyEntryEditId" value="" />
-                <input type="hidden" id="moneyEntryAccountId" value="" />
-                <input type="hidden" id="moneyEntryType" value="deposit" />
-                <label class="label-text font-normal text-base-content/65">Amount <span class="text-error">*</span></label>
-                <input type="number" class="input input-bordered input-lg w-full rounded-xl mt-1" id="moneyEntryAmount" min="1" step="1" placeholder="0" oninput="updateMoneyEntryAmountPreview()" />
-                <div class="hidden mt-2" id="moneyEntryAmountPreview"></div>
-            </div>
-            <div class="p-4 pt-0" id="moneyEntryFooter"></div>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label" for="txBuyDate">Buy Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txBuyDate" required />
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label" for="txSellDate">Sell Date <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="txSellDate" required />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-4">
+                        <label class="form-label text-nowrap" for="txQty">Qty <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="txQty" required min="1" step="1" />
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label text-nowrap" for="txBuyPrice">Buy <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="txBuyPrice" required min="0.01" step="0.01" />
+                            <button type="button" class="btn btn-outline-secondary" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
+                                <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <label class="form-label text-nowrap" for="txSellPrice">Sell <span class="text-danger" id="txSellPriceRequired">*</span></label>
+                        <input type="number" class="form-control" id="txSellPrice" min="0.01" step="0.01" />
+                        <div class="form-text d-none" id="txSellPriceHint">Optional for open trades.</div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label" for="txLeverage">Leverage (X)</label>
+                    <input type="number" class="form-control" id="txLeverage" min="1" step="0.1" value="1" />
+                    <div class="form-text">Your own margin = Total Investment / Leverage.</div>
+                    <div id="leverageBreakdown" class="mt-2 small text-muted">
+                        <div class="d-flex justify-content-between gap-2"><span>Total Investment</span><span id="previewTotalInv">₹0</span></div>
+                        <div class="d-flex justify-content-between gap-2"><span>Your Margin</span><span id="previewOwnMargin">₹0</span></div>
+                        <div class="d-flex justify-content-between gap-2"><span>Broker Funded</span><span id="previewMtfAmt">₹0</span></div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label" for="txNotes">Notes (optional)</label>
+                    <textarea class="form-control" id="txNotes" rows="2"></textarea>
+                </div>
+
+                <div class="card bg-light border">
+                    <div class="card-body p-3" id="calcPreview">
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Holding Days</span><span class="fw-semibold" id="previewDays">0</span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Gross Profit</span><span id="previewGross"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">MTF Interest</span><span id="previewInterest"></span></div>
+                        <div class="d-flex justify-content-between mb-2"><span class="text-muted">Total Charges</span><span id="previewCharges"></span></div>
+                        <hr class="my-2" />
+                        <div class="d-flex justify-content-between fw-semibold align-items-center"><span>Net Profit</span><span id="previewNet"></span></div>
+                    </div>
+                </div>
+            </form>
         </div>
-        <form method="dialog" class="modal-backdrop"><button>close</button></form>
-    </dialog>
+        <div class="border-top p-3 bg-body" id="txModalFooter"></div>
+    </div>
+
+    <!-- MONEY ENTRY MODAL -->
+    <div class="modal fade" id="moneyEntryModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content overflow-hidden">
+                <div class="p-4 bg-success-subtle text-success border-bottom border-success position-relative" id="moneyEntryHeader">
+                    <div class="d-flex align-items-start justify-content-between gap-3 pe-4">
+                        <h5 class="fw-semibold fs-5 flex-fill" id="moneyEntryAccountTitle">Account</h5>
+                        <div class="form-check form-switch">
+                            <label class="form-check-label small" for="moneyEntryTypeToggle">Wdr</label>
+                            <input type="checkbox" class="form-check-input" id="moneyEntryTypeToggle" onchange="onMoneyEntryTypeToggle(this.checked)" />
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start gap-2 mt-2">
+                        <div class="flex-fill">
+                            <div id="moneyEntryDateTimeRow"><span class="small opacity-75" id="moneyEntryDateTimeDisplay">—</span></div>
+                            <div class="d-none gap-2 mt-1" id="moneyEntryDateTimeFields">
+                                <input type="date" class="form-control form-control-sm flex-fill" id="moneyEntryDate" onchange="onMoneyEntryDateTimeChange()" />
+                                <input type="time" class="form-control form-control-sm flex-fill" id="moneyEntryTime" onchange="onMoneyEntryDateTimeChange()" />
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" id="moneyEntryDateTimeEditBtn" onclick="toggleMoneyEntryDateTimeEdit()"><i class="fas fa-pen"></i></button>
+                    </div>
+                    <button type="button" class="btn-close position-absolute top-0 end-0 m-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="p-4">
+                    <input type="hidden" id="moneyEntryEditId" value="" />
+                    <input type="hidden" id="moneyEntryAccountId" value="" />
+                    <input type="hidden" id="moneyEntryType" value="deposit" />
+                    <label class="form-label">Amount <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control form-control-lg" id="moneyEntryAmount" min="1" step="1" oninput="updateMoneyEntryAmountPreview()" />
+                    <div class="d-none mt-2" id="moneyEntryAmountPreview"></div>
+                </div>
+                <div class="p-4 pt-0" id="moneyEntryFooter"></div>
+            </div>
+        </div>
+    </div>
 
     <!-- CONFIRM DIALOG (hidden elements used by confirmAction) -->
-    <div id="confirmDialogHidden" class="hidden">
+    <div id="confirmDialogHidden" class="d-none">
         <span id="confirmModalTitle"></span>
         <span id="confirmModalMessage"></span>
         <button type="button" id="confirmModalConfirmBtn"></button>
@@ -785,67 +802,43 @@
     <!-- Bootstrap JS (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <!-- COMPONENT SCRIPTS -->
-    <script src="components/_registry.js"></script>
-    <script src="components/format-helpers/format-helpers.js"></script>
-    <script src="components/tag/tag.js"></script>
-    <script src="components/amount/amount.js"></script>
-    <script src="components/date-chip/date-chip.js"></script>
-    <script src="components/date-field/date-field.js"></script>
-    <script src="components/button/button.js"></script>
-    <script src="components/button-row/button-row.js"></script>
-    <script src="components/label/label.js"></script>
-    <script src="components/icon/icon.js"></script>
-    <script src="components/icon-button/icon-button.js"></script>
-    <script src="components/filter-chip/filter-chip.js"></script>
-    <script src="components/range-quick-button/range-quick-button.js"></script>
-    <script src="components/toast/toast.js"></script>
-    <script src="components/empty-state/empty-state.js"></script>
-    <script src="components/search-bar/search-bar.js"></script>
-    <script src="components/dropdown/dropdown.js"></script>
-    <script src="components/money-value-block/money-value-block.js"></script>
-    <script src="components/trade-summary-row/trade-summary-row.js"></script>
-    <script src="components/trade-detail-row/trade-detail-row.js"></script>
-    <script src="components/form-field/form-field.js"></script>
-    <script src="components/trade-list-meta/trade-list-meta.js"></script>
-    <script src="components/trade-list-detail-values/trade-list-detail-values.js"></script>
-    <script src="components/trade-list-details/trade-list-details.js"></script>
-    <script src="components/trade-list-actions/trade-list-actions.js"></script>
-    <script src="components/page-empty-state/page-empty-state.js"></script>
-    <script src="components/trade-sheet-meta/trade-sheet-meta.js"></script>
-    <script src="components/charges-table/charges-table.js"></script>
-    <script src="components/trade-view-details/trade-view-details.js"></script>
-    <script src="components/trade-list-item/trade-list-item.js"></script>
-    <script src="components/trade-list/trade-list.js"></script>
-    <script src="components/bottom-bar/bottom-bar.js"></script>
-    <script src="components/app-header/app-header.js"></script>
-    <script src="components/bottom-sheet/sheet.js"></script>
-    <script src="components/app-dialog/dialog.js"></script>
-    <script src="components/loading-overlay/loading.js"></script>
-    <script src="pages/more/more-hub-option.js"></script>
-    <script src="pages/more/app-version.js"></script>
-    <script src="pages/more/more-hub.js"></script>
-    <script src="pages/plan/plan-page.js"></script>
+    <script src="lib/_registry.js"></script>
+    <script src="lib/format.js"></script>
+    <script src="lib/bootstrap.js"></script>
+    <script src="pages/common/bottom-bar.js"></script>
+    <script src="pages/common/sheet.js"></script>
+    <script src="pages/common/dialog.js"></script>
+    <script src="pages/common/trade-list-meta.js"></script>
+    <script src="pages/common/trade-list-detail-values.js"></script>
+    <script src="pages/common/trade-list-details.js"></script>
+    <script src="pages/common/trade-list-actions.js"></script>
+    <script src="pages/common/trade-list-item.js"></script>
+    <script src="pages/common/trade-list.js"></script>
+    <script src="pages/common/trade-summary-row.js"></script>
+    <script src="pages/common/trade-detail-row.js"></script>
+    <script src="pages/common/trade-view-details.js"></script>
+    <script src="pages/common/trade-sheet-meta.js"></script>
+    <script src="pages/common/charges-table.js"></script>
+    <script src="pages/common/trade-view-sheet.js"></script>
+    <script src="pages/common/trade-charges-sheet.js"></script>
+    <script src="pages/common/trade-interest-sheet.js"></script>
+    <script src="pages/common/trade-target-sell-sheet.js"></script>
+    <script src="pages/common/trade-buy-price-sheet.js"></script>
+    <script src="pages/common/trade-leverage-sheet.js"></script>
+    <script src="pages/common/trade-hold-sheet.js"></script>
+    <script src="pages/common/trade-modal.js"></script>
+    <script src="pages/common/app-header.js"></script>
+    <script src="pages/common/app-version.js"></script>
     <script src="pages/trades/trades-page.js"></script>
-    <script src="pages/past/past-page.js"></script>
-    <script src="pages/market/market-quote-row.js"></script>
     <script src="pages/market/market-page.js"></script>
-    <script src="pages/search/search-page.js"></script>
-    <script src="pages/transactions/transactions-page.js"></script>
-    <script src="pages/settings/settings-page.js"></script>
-    <script src="pages/money/money-entry-time.js"></script>
-    <script src="pages/money/money-filter-list-item.js"></script>
-    <script src="pages/money/money-account-card.js"></script>
     <script src="pages/money/money-page.js"></script>
+    <script src="pages/more/more-page.js"></script>
     <script src="pages/mtf-calculator/mtf-calculator-page.js"></script>
-    <script src="components/trade-view-sheet/trade-view-sheet.js"></script>
-    <script src="components/trade-charges-sheet/trade-charges-sheet.js"></script>
-    <script src="components/trade-interest-sheet/trade-interest-sheet.js"></script>
-    <script src="components/trade-target-sell-sheet/trade-target-sell-sheet.js"></script>
-    <script src="components/trade-buy-price-sheet/trade-buy-price-sheet.js"></script>
-    <script src="components/trade-leverage-sheet/trade-leverage-sheet.js"></script>
-    <script src="components/trade-hold-sheet/trade-hold-sheet.js"></script>
-    <script src="components/trade-modal/trade-modal.js"></script>
-    <script src="pages/money/money-entry-modal.js"></script>
+    <script src="pages/past/past-page.js"></script>
+    <script src="pages/plan/plan-page.js"></script>
+    <script src="pages/search/search-page.js"></script>
+    <script src="pages/settings/settings-page.js"></script>
+    <script src="pages/transactions/transactions-page.js"></script>
     <!-- DB / SERVICE LAYER -->
     <script src="db/_registry.js"></script>
     <script src="db/firebase-config.js"></script>

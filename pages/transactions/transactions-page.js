@@ -32,11 +32,11 @@
         const chips = Object.entries(counts).map(([b, n]) => appTag(`${b} ${n}`)).join('');
         return `
             <div class="mb-2">
-                <div class="flex justify-between items-center">
-                    ${dateKey === 'unknown' ? `<span class="font-semibold text-base-content">${label}</span>` : renderDateChip(label, { size: 'sm' })}
+                <div class="d-flex justify-content-between align-items-center">
+                    ${dateKey === 'unknown' ? `<span class="fw-semibold text-body">${label}</span>` : renderDateChip(label, { size: 'sm' })}
                     ${appTag(tradeLabel)}
                 </div>
-                ${chips ? `<div class="flex flex-wrap gap-1.5 mt-1">${chips}</div>` : ''}
+                ${chips ? `<div class="d-flex flex-wrap gap-2 mt-1">${chips}</div>` : ''}
             </div>
         `;
     }
@@ -57,21 +57,21 @@
             const s = byBroker[b];
             if (!s || s.total === 0) return '';
             return `
-                <div class="bg-base-200 rounded-xl p-3 mb-2">
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="font-semibold">${b}</span>
+                <div class="bg-light rounded-3 p-3 mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold">${b}</span>
                         ${appTag(`${s.total} trades`)}
                     </div>
-                    <div class="grid grid-cols-4 gap-1 text-center">
-                        <div><div class="${tradeStatLabel}">Open</div><div class="font-semibold text-warning">${s.open}</div></div>
-                        <div><div class="${tradeStatLabel}">Closed</div><div class="font-semibold">${s.closed}</div></div>
-                        <div><div class="${tradeStatLabel}">Success</div><div class="inline-flex items-center justify-center rounded-lg px-1.5 py-0.5 font-semibold bg-success/15 text-success">${s.successful}</div></div>
-                        <div><div class="${tradeStatLabel}">Net</div>${renderAmount(s.net, { size: 'sm', compact: true, align: 'center' })}</div>
+                    <div class="row row-cols-4 g-1 text-center">
+                        <div class="col"><div class="${tradeStatLabel}">Open</div><div class="fw-semibold text-warning">${s.open}</div></div>
+                        <div class="col"><div class="${tradeStatLabel}">Closed</div><div class="fw-semibold">${s.closed}</div></div>
+                        <div class="col"><div class="${tradeStatLabel}">Success</div><div class="d-inline-flex align-items-center justify-content-center rounded px-2 py-1 fw-semibold bg-success-subtle text-success">${s.successful}</div></div>
+                        <div class="col"><div class="${tradeStatLabel}">Net</div>${renderAmount(s.net, { size: 'sm', compact: true, align: 'center' })}</div>
                     </div>
                 </div>
             `;
         }).join('');
-        return html || '<p class="text-base-content/60 text-sm mb-0">No trades yet.</p>';
+        return html || '<p class="text-muted small mb-0">No trades yet.</p>';
     }
 
     function renderTransactions() {

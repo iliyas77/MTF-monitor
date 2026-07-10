@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
- * Bundles and minifies main.html + css/main.css (and its @imports) +
- * component/page scripts + main.js into production.html.
+ * Bundles and minifies main.html + brand theme CSS + component/page scripts + main.js
+ * into production.html. Bootstrap CSS/JS stay as external CDN links.
  * Run: npm run build   (or: node build-production.js)
  * Ship (bump version + stamp date/time): npm run ship
  *
- * Always repairs components/manifest.json + main.html script tags first
+ * Always repairs scripts/manifest.json + main.html script tags first
  * (same as `npm run repair`).
  */
 'use strict';
@@ -17,13 +17,14 @@ const { syncManifest } = require('./scripts/sync-manifest');
 
 const ROOT = __dirname;
 const OUT_FILE = path.join(ROOT, 'production.html');
-const MANIFEST = path.join(ROOT, 'components', 'manifest.json');
+const MANIFEST = path.join(ROOT, 'scripts', 'manifest.json');
 const VERSION_JSON = path.join(ROOT, 'app-version.json');
-const VERSION_JS = path.join(ROOT, 'pages', 'more', 'app-version.js');
+const VERSION_JS = path.join(ROOT, 'pages', 'common', 'app-version.js');
 
 const htmlPath = path.join(ROOT, 'main.html');
-const cssEntryPath = path.join(ROOT, 'css', 'main.css');
-const CSS_LINK_RE = /<link rel="stylesheet" href="css\/main\.css"\s*\/?>/;
+const themeCssPath = path.join(ROOT, 'css', '_variables.css');
+const BOOTSTRAP_CSS_RE = /bootstrap@[\d.]+\/dist\/css\/bootstrap\.min\.css/;
+const THEME_LINK_RE = /<link rel="stylesheet" href="css\/_variables\.css"\s*\/?>/;
 
 const MINIFY_OPTIONS = {
     collapseWhitespace: true,
@@ -100,8 +101,8 @@ function writeVersionFiles(state) {
     function paintMoreHubBuildMeta() {
         const el = document.getElementById('more-hub-build-meta');
         if (!el) return;
-        el.innerHTML = \`<span class="more-hub-build-meta__version">Version \${APP_VERSION}</span>\` +
-            \`<span class="more-hub-build-meta__built">\${APP_BUILT_AT}</span>\`;
+        el.innerHTML = \`<span class="text-muted small">Version \${APP_VERSION}</span>\` +
+            \`<span class="text-muted small">\${APP_BUILT_AT}</span>\`;
     }
 
     if (document.readyState === 'loading') {
@@ -142,38 +143,10 @@ function bundleJs() {
     }).join('\n');
 }
 
-/**
- * Resolve local @import "…" / @import '…' / @import url("…") into one CSS string.
- * External URLs are left as-is. Detects circular imports.
- */
-function bundleCss(entryPath, stack = []) {
-    const abs = path.resolve(entryPath);
-    if (stack.includes(abs)) {
-        console.error(`Circular CSS import: ${path.relative(ROOT, abs)}`);
-        process.exit(1);
-    }
-    if (!fs.existsSync(abs)) {
-        console.error(`Missing CSS file: ${path.relative(ROOT, abs)}`);
-        process.exit(1);
-    }
-
-    const dir = path.dirname(abs);
-    const source = fs.readFileSync(abs, 'utf8');
-    const importRe = /@import\s+(?:url\()?['"]([^'"]+)['"]\)?\s*;?/g;
-
-    return source.replace(importRe, (full, importPath) => {
-        if (/^(https?:|data:|\/\/)/i.test(importPath)) {
-            return full;
-        }
-        const resolved = path.resolve(dir, importPath);
-        return `/* === ${path.relative(ROOT, resolved)} === */\n${bundleCss(resolved, stack.concat(abs))}\n`;
-    });
-}
-
 async function build() {
     syncManifest({ quiet: false });
 
-    for (const file of [htmlPath, cssEntryPath, MANIFEST]) {
+    for (const file of [htmlPath, themeCssPath, MANIFEST]) {
         if (!fs.existsSync(file)) {
             console.error(`Missing source file: ${path.relative(ROOT, file)}`);
             process.exit(1);
@@ -184,15 +157,19 @@ async function build() {
     const versionInfo = prepareVersion({ bump });
 
     let html = fs.readFileSync(htmlPath, 'utf8');
-    if (!CSS_LINK_RE.test(html)) {
-        console.error('main.html is missing <link rel="stylesheet" href="css/main.css" />');
+    if (!BOOTSTRAP_CSS_RE.test(html)) {
+        console.error('main.html is missing Bootstrap CSS CDN link');
+        process.exit(1);
+    }
+    if (!THEME_LINK_RE.test(html)) {
+        console.error('main.html is missing <link rel="stylesheet" href="css/_variables.css" />');
         process.exit(1);
     }
 
-    const css = bundleCss(cssEntryPath);
+    const themeCss = fs.readFileSync(themeCssPath, 'utf8');
     const js = bundleJs();
 
-    html = html.replace(CSS_LINK_RE, `<style>${css}</style>`);
+    html = html.replace(THEME_LINK_RE, `<style>${themeCss}</style>`);
 
     html = html.replace(
         /<!-- COMPONENT SCRIPTS -->[\s\S]*?<script src="main\.js"><\/script>/,
@@ -216,7 +193,7 @@ async function build() {
     const scriptCount = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts.length;
 
     console.log(`✓ production.html (${sizeKb} KB, minified from ${unminKb} KB, −${saved}%)`);
-    console.log(`  Sources: main.html, css/main.css (+imports), ${scriptCount} JS files (components/manifest.json)`);
+    console.log(`  Sources: main.html, css/_variables.css, ${scriptCount} JS files (scripts/manifest.json), Bootstrap CDN`);
     if (versionInfo.bumped) {
         console.log(`  Version: ${versionInfo.previous.version} → ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
     } else {
