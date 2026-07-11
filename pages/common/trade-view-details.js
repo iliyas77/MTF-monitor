@@ -25,7 +25,7 @@
             { label: 'Buy', amount: tx.buyPrice, tone: 'secondary', decimals: true },
             { label: 'Sell', amount: tx.sellPrice, tone: 'positive', decimals: true },
             { label: 'Qty', amount: tx.quantity, quantity: true },
-            { label: 'Broker', amount: tx.broker || '—', tag: 'default' },
+            { label: 'Broker', amount: tx.broker || '—', tag: 'broker' },
             { label: 'Leverage', amount: levDisplay, tag: 'accent' },
             { label: 'Hold', amount: `${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1 opacity-75' })}${daysHeld}d`, tag: 'default' },
             { label: 'Total Investment', amount: totalInv, tone: 'neutral', compact: true },

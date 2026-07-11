@@ -23,7 +23,7 @@
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
         buyPriceModalTradeId = id;
         const bp = Number(tx.buyPrice) || 0;
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-tag', { className: 'me-2 text-primary' })}${tx.company} Buy`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-primary flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Buy</span>`, `
             <p class="small text-muted mb-3">Update buy price. Margin, charges, and P&L will recalculate.</p>
             <div class="mb-3">
                 <label class="form-label small text-primary mb-1">Buy Price</label>

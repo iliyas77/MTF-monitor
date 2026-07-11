@@ -8,7 +8,8 @@
         renderTradeCardPnl,
         renderTradeListItemLeverageMeta,
         renderTradeListItemDetails,
-        renderTradeListItemActions
+        renderTradeListItemActions,
+        appTag
     } = global.MTFComponents;
 
     function escapeHtml(str) {
@@ -151,7 +152,7 @@
                         ${renderIcon(icon, { className: iconClass, size: 'xs' })}
                         ${label}
                     </span>
-                    <span class="small fw-normal d-block mt-1 text-break" data-live-value>${valueHtml}</span>
+                    <span class="fs-6 fw-normal d-block mt-1 text-break" data-live-value>${valueHtml}</span>
                 </button>
             </td>`;
 
@@ -177,7 +178,7 @@
         const qty = Number(t.quantity) || 0;
         const company = t.company || 'trade';
         const brokerLabel = (variant === 'past' || variant === 'plan') && t.broker
-            ? `<span class="badge rounded-pill text-bg-light border">${t.broker}</span>`
+            ? appTag(t.broker, 'broker')
             : '';
         const verifiedLabel = variant === 'past' && t.verified
             ? `<span class="badge rounded-pill text-bg-success">Verified</span>`
@@ -192,7 +193,7 @@
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <span class="d-inline-flex align-items-center gap-1">
                                 <span class="small text-muted text-uppercase">Qty</span>
-                                <span class="small fw-semibold text-info">${qty}</span>
+                                <span class="fs-6 fw-semibold text-info">${qty}</span>
                             </span>
                         </div>
                         <div>${renderTradeCardPnl(metrics.netProfit)}</div>

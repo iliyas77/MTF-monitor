@@ -64,13 +64,13 @@
         const body = rows.map(([l, b, s]) => `
             <tr>
                 <td class="text-muted">${l}</td>
-                <td class="text-end text-primary">${fmtDec(b)}</td>
-                <td class="text-end">${fmtDec(s)}</td>
-                <td class="text-end fw-semibold">${fmtDec(b + s)}</td>
+                <td class="text-end text-primary fs-6">${fmtDec(b)}</td>
+                <td class="text-end fs-6">${fmtDec(s)}</td>
+                <td class="text-end fw-semibold fs-6">${fmtDec(b + s)}</td>
             </tr>`).join('');
         return `
             <div class="table-responsive">
-                <table class="table table-sm w-100">
+                <table class="table w-100">
                     <thead class="table-light">
                         <tr>
                             <th>Charge</th>
@@ -80,18 +80,18 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="small">
+                        <tr>
                             <td class="text-muted">Order Value</td>
-                            <td class="text-end text-primary">${fmtDec(buy.orderValue)}</td>
-                            <td class="text-end">${fmtDec(sell.orderValue)}</td>
-                            <td class="text-end fw-semibold">${fmtDec(buy.orderValue + sell.orderValue)}</td>
+                            <td class="text-end text-primary fs-6">${fmtDec(buy.orderValue)}</td>
+                            <td class="text-end fs-6">${fmtDec(sell.orderValue)}</td>
+                            <td class="text-end fw-semibold fs-6">${fmtDec(buy.orderValue + sell.orderValue)}</td>
                         </tr>
                         ${body}
                         <tr class="fw-medium text-body-secondary border-top">
                             <td>Total Charges</td>
-                            <td class="text-end text-primary">${fmtDec(buy.total)}</td>
-                            <td class="text-end">${fmtDec(sell.total)}</td>
-                            <td class="text-end text-muted">${fmtDec(buy.total + sell.total)}</td>
+                            <td class="text-end text-primary fs-6">${fmtDec(buy.total)}</td>
+                            <td class="text-end fs-6">${fmtDec(sell.total)}</td>
+                            <td class="text-end text-muted fs-6">${fmtDec(buy.total + sell.total)}</td>
                         </tr>
                     </tbody>
                 </table>

@@ -44,7 +44,7 @@
             const body = Sheet.bodyEl();
             const footer = Sheet.footerEl();
             if (Sheet.titleEl()) {
-                Sheet.titleEl().innerHTML = `<span class="text-truncate">${title}</span>`;
+                Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${title || ''}</span>`;
             }
             if (Sheet._activePanel) {
                 Sheet._home()?.appendChild(Sheet._activePanel);

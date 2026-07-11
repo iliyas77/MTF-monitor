@@ -197,9 +197,9 @@
                 actionBtnSm: 'btn btn-sm rounded-3 p-0 d-flex align-items-center justify-content-center',
                 tradeStatBox: 'flex-fill bg-light border rounded-3 p-2 text-center min-w-0',
                 tradeStatLabel: LABEL_CLASSES.tradeStat,
-                tradeStatValue: 'fw-normal text-body text-nowrap mt-1',
-                tradeStatValueSuccess: 'fw-normal text-success text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-success-subtle',
-                tradeStatValueError: 'fw-normal text-danger text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-danger-subtle',
+                tradeStatValue: 'fs-6 fw-normal text-body text-nowrap mt-1',
+                tradeStatValueSuccess: 'fs-6 fw-normal text-success text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-success-subtle',
+                tradeStatValueError: 'fs-6 fw-normal text-danger text-nowrap mt-1 d-inline-block rounded-3 px-2 py-1 bg-danger-subtle',
                 moneyTonePositive: 'bg-success-subtle text-success',
                 moneyToneNegative: 'bg-danger-subtle text-danger',
                 moneyActionDeposit: 'bg-success-subtle text-success border-0',
@@ -671,7 +671,10 @@
             /** Same-day target +1%; overnight / multi-day target +1.3%. */
             const TX_SELL_PCT_SAME_DAY = 0.01;
             const TX_SELL_PCT_OVERNIGHT = 0.013;
+            /** Default investment budget used to suggest quantity (~₹1 lakh). */
+            const TX_DEFAULT_BUDGET = 100000;
             let txSellPriceAuto = false;
+            let txQtyAuto = false;
             let txLivePriceSeq = 0;
 
             function roundTradePrice(n) {
@@ -691,12 +694,23 @@
                 return roundTradePrice(buy * (1 + pct));
             }
 
+            function suggestedQtyFromBuyPrice(buyPrice) {
+                const buy = Number(buyPrice);
+                if (!buy || isNaN(buy) || buy <= 0) return '';
+                return String(Math.max(1, Math.floor(TX_DEFAULT_BUDGET / buy)));
+            }
+
             function markTxSellPriceManual() {
                 txSellPriceAuto = false;
             }
 
+            function markTxQtyManual() {
+                txQtyAuto = false;
+            }
+
             function resetTxPriceAutoFlags() {
                 txSellPriceAuto = false;
+                txQtyAuto = false;
             }
 
             function applySuggestedSellPrice(opts) {
@@ -715,6 +729,19 @@
                 if (suggested === '') return false;
                 sellEl.value = suggested;
                 txSellPriceAuto = true;
+                return true;
+            }
+
+            function applySuggestedQty(opts) {
+                const force = !!(opts && opts.force);
+                if (!force && !txQtyAuto) return false;
+                const qtyEl = document.getElementById('txQty');
+                const buyEl = document.getElementById('txBuyPrice');
+                if (!qtyEl || !buyEl) return false;
+                const qty = suggestedQtyFromBuyPrice(buyEl.value);
+                if (qty === '') return false;
+                qtyEl.value = qty;
+                txQtyAuto = true;
                 return true;
             }
 
@@ -771,13 +798,16 @@
                 const buyEl = document.getElementById('txBuyPrice');
                 if (buyEl) buyEl.value = buy;
                 applySuggestedSellPrice({ force: true });
+                applySuggestedQty({ force: true });
 
                 const buyDate = document.getElementById('txBuyDate')?.value;
                 const sellDate = document.getElementById('txSellDate')?.value;
                 const pctLabel = isSameDayTradeDates(buyDate, sellDate) ? '+1% same-day' : '+1.3% overnight';
                 const sellVal = document.getElementById('txSellPrice')?.value;
-                setTxLivePriceStatus(`Live ₹${Number(buy).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Sell ${pctLabel} ₹${sellVal}`, false);
-                showToast(`Buy ₹${buy} · Sell target ${pctLabel}`, 'success');
+                const qtyVal = document.getElementById('txQty')?.value;
+                const invApprox = (Number(buy) * Number(qtyVal)) || 0;
+                setTxLivePriceStatus(`Live ₹${Number(buy).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Qty ${qtyVal} (~₹${Math.round(invApprox).toLocaleString('en-IN')}) · Sell ${pctLabel} ₹${sellVal}`, false);
+                showToast(`Buy ₹${buy} · Qty ${qtyVal} (~₹1L) · Sell ${pctLabel}`, 'success');
 
                 try {
                     if (typeof updatePreview === 'function') updatePreview();
@@ -790,8 +820,17 @@
             }
 
             function onTxBuyPriceInputForSuggest() {
-                if (!txSellPriceAuto) return;
-                applySuggestedSellPrice();
+                if (txSellPriceAuto) applySuggestedSellPrice();
+                const qtyEl = document.getElementById('txQty');
+                if (txQtyAuto) {
+                    applySuggestedQty();
+                } else if (qtyEl && !String(qtyEl.value || '').trim()) {
+                    applySuggestedQty({ force: true });
+                }
+            }
+
+            function onTxQtyInputManual() {
+                markTxQtyManual();
             }
 
             function onTxSellPriceInputManual() {
@@ -1763,6 +1802,7 @@
             }
 
             function isPastPageVisible() {
+                if (isTradesPageVisible() && tradesViewMode === 'past') return true;
                 const page = document.getElementById('page-past');
                 return !!(page && !page.classList.contains('d-none'));
             }
@@ -2611,8 +2651,9 @@
 
             // ---------- FILTER SHEET ----------
             function openFilterSheet() {
-                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filter Past Trades', 'panelPastFilter',
+                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filter Trades', 'panelPastFilter',
                     renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyPastRangeFilter()', actionIcon: 'fa-check' }));
+                ensureSharedTradeRange();
                 setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
                 if (pastRangeDays != null && pastRangeDays !== '') {
@@ -2645,8 +2686,11 @@
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
                 if (id === 'page-search') return { page: searchContext === 'past' ? 'past' : 'trades', moreFeature: null };
-                // Plan is an in-page switch on Trades — nav always treats it as trades.
-                if (id === 'page-plan' || id === 'page-trades') return { page: 'trades', moreFeature: null };
+                // Plan/Past are in-page switches on Trades — bottom nav stays on trades.
+                if (id === 'page-plan' || id === 'page-trades') {
+                    if (tradesViewMode === 'past') return { page: 'past', moreFeature: null };
+                    return { page: 'trades', moreFeature: null };
+                }
                 if (id === 'page-past') return { page: 'past', moreFeature: null };
                 if (id === 'page-market') return { page: 'market', moreFeature: null };
                 if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
@@ -2772,7 +2816,8 @@
             }
 
             function updateFabVisibility(page) {
-                BottomBar.setFabVisible(page === 'plan' || page === 'trades' || page === 'past');
+                const showFab = page === 'plan' || (page === 'trades' && tradesViewMode !== 'past');
+                BottomBar.setFabVisible(showFab);
             }
 
             function navigateTo(page) {
@@ -2800,13 +2845,20 @@
                     startMarketRefresh();
                 } else if (page === 'trades') {
                     stopMarketRefresh();
-                    // Trades tab always opens current open trades (not Plan).
+                    // Trades tab always opens current open trades (not Plan/Past).
                     setTradesViewMode('trade');
                     startTradeLiveRefresh();
                 } else if (page === 'past') {
+                    // Past lives under Trades dropdown — no separate bottom tab.
                     stopMarketRefresh();
-                    renderPastTrades();
+                    activeMoreFeature = null;
+                    showPage(pageMap['trades']);
+                    setBottomNavActive('trades');
+                    setTradesViewMode('past');
+                    updateFabVisibility('trades');
                     startTradeLiveRefresh();
+                    saveNavState();
+                    return;
                 } else {
                     stopMarketRefresh();
                     stopTradeLiveRefresh();
@@ -2974,7 +3026,8 @@
                     selectHandler: 'setTxBroker',
                     ariaLabel: 'Select Broker',
                     fullWidth: true,
-                    size: ''
+                    size: '',
+                    className: 'w-100 text-start d-flex align-items-center justify-content-between tx-broker-trigger'
                 });
                 if (typeof updatePreview === 'function') { try { updatePreview(); } catch (_) {} }
                 try { global.MTFComponents.hideOpenDropdowns?.(document.getElementById('txModal')); } catch (_) {}
@@ -3088,7 +3141,11 @@
                 setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
                 setRangeButtonsActive('#pastRangeButtons', daysOrKey);
-                renderPastTrades();
+                if (isTradesPageVisible()) {
+                    renderCurrentView();
+                } else {
+                    renderPastTrades();
+                }
                 if (isPastPageVisible()) startTradeLiveRefresh();
                 closeFilterSheet();
             }
@@ -3107,13 +3164,22 @@
                 pastTo = to;
                 pastRangeDays = null;
                 clearRangeButtonsActive('#pastRangeButtons');
-                renderPastTrades();
+                if (isTradesPageVisible()) {
+                    renderCurrentView();
+                } else {
+                    renderPastTrades();
+                }
                 if (isPastPageVisible()) startTradeLiveRefresh();
                 closeFilterSheet();
                 showToast('Range applied.', 'success');
             }
 
             function resetTradeFilters() {
+                if (tradesViewMode === 'past') {
+                    setPastRange('this-week');
+                    showToast('Filters reset.', 'success');
+                    return;
+                }
                 setTradeRange('all');
                 clearTradeSearch();
                 showToast('Filters reset.', 'success');
@@ -3140,6 +3206,18 @@
                     const range = getThisWeekMonFriRange();
                     tradeFrom = range.from;
                     tradeTo = range.to;
+                } else if (daysOrKey === 'last-week') {
+                    const range = getLastWeekMonFriRange();
+                    tradeFrom = range.from;
+                    tradeTo = range.to;
+                } else if (daysOrKey === 'work-20') {
+                    const range = getWorkingDayRange(20);
+                    tradeFrom = range.from;
+                    tradeTo = range.to;
+                } else if (daysOrKey === 'work-30') {
+                    const range = getWorkingDayRange(30);
+                    tradeFrom = range.from;
+                    tradeTo = range.to;
                 } else {
                     const range = getDateRange(daysOrKey);
                     tradeFrom = range.from;
@@ -3149,7 +3227,7 @@
                     setDateInputValue(document.getElementById('tradeFrom'), tradeFrom);
                     setDateInputValue(document.getElementById('tradeTo'), tradeTo);
                 }
-                setRangeButtonsActive('#tradeRangeButtons', daysOrKey);
+                setRangeButtonsActive('#tradeRangeButtons', daysOrKey === 'all' ? '' : daysOrKey);
                 renderCurrentView();
                 if (isTradesPageVisible()) startTradeLiveRefresh();
                 closeFilterSheet();
@@ -3241,7 +3319,7 @@
                     return;
                 }
                 stopTradeLiveRefresh();
-                searchContext = current === 'past' ? 'past' : 'trades';
+                searchContext = current === 'past' || tradesViewMode === 'past' ? 'past' : 'trades';
                 searchQuery = '';
                 showPage('page-search');
                 BottomBar.setBarVisible(false);
@@ -3284,10 +3362,12 @@
 
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
-                tradesViewMode = mode === 'plan' ? 'plan' : 'trade';
+                tradesViewMode = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
                 renderCurrentView();
                 const tradesPage = document.getElementById('page-trades');
                 if (tradesPage && !tradesPage.classList.contains('d-none')) {
+                    updateAppHeader('page-trades');
+                    updateFabVisibility('trades');
                     startTradeLiveRefresh();
                 }
             }
@@ -3295,8 +3375,7 @@
             // renderCurrentView → pages/trades/trades-page.js
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
-            function getPastFiltered() {
-                const txs = getTransactions();
+            function ensureSharedTradeRange() {
                 if (!pastFrom || !pastTo) {
                     const range = getThisWeekMonFriRange();
                     pastFrom = range.from;
@@ -3305,6 +3384,11 @@
                     setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                     setDateInputValue(document.getElementById('pastTo'), pastTo);
                 }
+            }
+
+            function getPastFiltered() {
+                const txs = getTransactions();
+                ensureSharedTradeRange();
                 const fromDate = new Date(pastFrom);
                 const toDate = new Date(pastTo);
                 toDate.setHours(23, 59, 59, 999);
@@ -3338,7 +3422,11 @@
 
             function setPastPnlFilter(value) {
                 pastPnlFilter = (value === 'profit' || value === 'loss' || value === 'verified') ? value : 'all';
-                renderPastTrades();
+                if (isTradesPageVisible()) {
+                    renderCurrentView();
+                } else {
+                    renderPastTrades();
+                }
                 if (isPastPageVisible()) startTradeLiveRefresh();
             }
 
@@ -4203,7 +4291,7 @@
                 tradeTo = null;
                 setDateInputValue(document.getElementById('tradeFrom'), '');
                 setDateInputValue(document.getElementById('tradeTo'), '');
-                setRangeButtonsActive('#tradeRangeButtons', 'all');
+                clearRangeButtonsActive('#tradeRangeButtons');
 
                 if (!restoreNavState()) {
                     navigateTo('trades');
@@ -4286,6 +4374,7 @@
                     sortTradesByHoldDays,
                     resolveTradeMetrics,
                     getPastFiltered,
+                    ensureSharedTradeRange,
                     getTransactionStats,
                     getPlanSearchQuery: () => planSearchQuery,
                     getTradeSearchQuery: () => tradeSearchQuery,
@@ -4390,9 +4479,11 @@
                     getTomorrowDateKey,
                     resetTxPriceAutoFlags,
                     applySuggestedSellPrice,
+                    applySuggestedQty,
                     fillTradeFormFromLivePrice,
                     onTxBuyPriceInputForSuggest,
                     onTxSellPriceInputManual,
+                    onTxQtyInputManual,
                     onTxTradeDatesChangeForSuggest,
                     getSyncNote: () => (isSyncConnected() ? ' and synced' : ''),
                     refreshTradeListViews,

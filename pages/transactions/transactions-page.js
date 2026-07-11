@@ -29,7 +29,7 @@
             const b = t.broker || 'Other';
             counts[b] = (counts[b] || 0) + 1;
         });
-        const chips = Object.entries(counts).map(([b, n]) => appTag(`${b} ${n}`)).join('');
+        const chips = Object.entries(counts).map(([b, n]) => appTag(`${b} ${n}`, 'broker')).join('');
         return `
             <div class="mb-2">
                 <div class="d-flex justify-content-between align-items-center">
@@ -59,7 +59,7 @@
             return `
                 <div class="bg-light rounded-3 p-3 mb-2">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-semibold">${b}</span>
+                        ${appTag(b, 'broker')}
                         ${appTag(`${s.total} trades`)}
                     </div>
                     <div class="row row-cols-4 g-1 text-center">

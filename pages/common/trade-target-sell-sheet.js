@@ -107,8 +107,8 @@
         const sellLabel = isOpen ? 'Target sell' : 'Sell';
         const gainPlaceholder = isOpen ? 'Set a target sell price' : 'Set a sell price';
         const sheetTitle = isOpen
-            ? `${global.MTFComponents.renderIcon('fa-bullseye', { className: 'me-2 text-danger' })}${tx.company}`
-            : `${global.MTFComponents.renderIcon('fa-tag', { className: 'me-2 text-danger' })}${tx.company} Sell`;
+            ? `${global.MTFComponents.renderIcon('fa-bullseye', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>`
+            : `${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Sell</span>`;
         const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
         Sheet.open(sheetTitle, `
             <div class="d-flex flex-column gap-3">
