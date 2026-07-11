@@ -43,12 +43,54 @@
         return data;
     }
 
+    function smokeTradesAllowed() {
+        try {
+            if (global.__MTF_ALLOW_SMOKE_TRADES__) return true;
+            return localStorage.getItem('mtf_allow_smoke_trades') === '1';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function isSmokeTrade(t) {
+        if (!t || typeof t !== 'object') return false;
+        if (String(t.id || '').startsWith('smoke-')) return true;
+        if (/^Smoke\s+(Open|Plan|Win|Loss)\s+Ltd$/i.test(String(t.company || '').trim())) return true;
+        if (/^SMOKE[OPWL]$/i.test(String(t.symbol || '').trim())) return true;
+        return false;
+    }
+
+    function withoutSmokeTrades(transactions) {
+        return (Array.isArray(transactions) ? transactions : []).filter((t) => !isSmokeTrade(t));
+    }
+
+    function stripSmokeTradesFromData(data) {
+        if (!data || typeof data !== 'object') return data;
+        if (!Array.isArray(data.transactions)) return data;
+        if (smokeTradesAllowed()) return data;
+        const cleaned = withoutSmokeTrades(data.transactions);
+        if (cleaned.length !== data.transactions.length) {
+            data.transactions = cleaned;
+        }
+        return data;
+    }
+
     function getStorage() {
         try {
             const raw = localStorage.getItem('mtf_tracker_data');
             if (raw) {
-                const data = JSON.parse(raw);
-                if (Array.isArray(data.transactions)) return ensureMoneyData(data);
+                const data = ensureMoneyData(JSON.parse(raw));
+                if (Array.isArray(data.transactions)) {
+                    if (!smokeTradesAllowed()) {
+                        const before = data.transactions.length;
+                        stripSmokeTradesFromData(data);
+                        // Persist the purge so smoke demo rows do not keep coming back.
+                        if (data.transactions.length !== before) {
+                            localStorage.setItem('mtf_tracker_data', JSON.stringify(data));
+                        }
+                    }
+                    return data;
+                }
             }
         } catch (_) { /* ignore */ }
         return ensureMoneyData({ transactions: [] });
@@ -56,12 +98,15 @@
 
     // Write only to the local cache (used by the cloud listener to avoid echo loops).
     function saveStorageLocal(data) {
-        localStorage.setItem('mtf_tracker_data', JSON.stringify(ensureMoneyData(data)));
+        const payload = ensureMoneyData(data || { transactions: [] });
+        stripSmokeTradesFromData(payload);
+        localStorage.setItem('mtf_tracker_data', JSON.stringify(payload));
     }
 
     // Persist locally AND sync to Firestore when Cloud Sync is connected.
     function saveStorage(data) {
-        const payload = ensureMoneyData(data);
+        const payload = ensureMoneyData(data || { transactions: [] });
+        stripSmokeTradesFromData(payload);
         saveStorageLocal(payload);
         const db = global.MTFDb;
         if (db && typeof db.bumpLocalVersionAndPush === 'function') {
@@ -75,7 +120,9 @@
         if (db && typeof db.applyRemoteVersion === 'function') {
             db.applyRemoteVersion(remoteVersion);
         }
-        saveStorageLocal(ensureMoneyData({ transactions: [], ...remoteData }));
+        const payload = ensureMoneyData({ transactions: [], ...remoteData });
+        stripSmokeTradesFromData(payload);
+        saveStorageLocal(payload);
         if (db && db.hooks && typeof db.hooks.onRemoteApplied === 'function') {
             try { db.hooks.onRemoteApplied(); } catch (_) {}
         }
@@ -160,6 +207,9 @@
         normalizeMoneyAccount,
         normalizeMoneyEntry,
         ensureMoneyData,
+        smokeTradesAllowed,
+        isSmokeTrade,
+        withoutSmokeTrades,
         getStorage,
         saveStorageLocal,
         saveStorage,

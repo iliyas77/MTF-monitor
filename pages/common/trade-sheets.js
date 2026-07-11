@@ -256,6 +256,10 @@
     }
 
     function openViewModal(id) {
+        if (typeof global.openTradeDetail === 'function') {
+            global.openTradeDetail(id);
+            return;
+        }
         const { getTransaction, resolveTradeForDisplay } = tradeSheets();
         const raw = getTransaction ? getTransaction(id) : null;
         if (!raw) { showToast('Transaction not found.', 'danger'); return; }

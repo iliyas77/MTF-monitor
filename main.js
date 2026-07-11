@@ -87,6 +87,8 @@
                 renderPastTrades,
                 renderMarketPage,
                 renderSearchResults,
+                renderTradeDetailPage,
+                TradeDetailSheet,
                 renderTransactions,
                 renderSettings,
                 renderSettingsMoneyAccounts,
@@ -104,7 +106,6 @@
                 setCalcSameDay,
                 setCalcTodayPair,
                 openCalcBreakdownSheet,
-                openViewModal,
                 openChargesModal,
                 openInterestModal,
                 openTargetModal,
@@ -1338,7 +1339,8 @@
                 if (isMarketPageVisible()) {
                     try { paintMarketQuotes(); } catch (_) {}
                 }
-                if (isTradeLivePageVisible()) {
+                if (isTradeLivePageVisible() && tradeDisplayedDirty) {
+                    tradeDisplayedDirty = false;
                     try { paintTradeLivePrices(); } catch (_) {}
                 }
             }
@@ -1559,12 +1561,13 @@
             }
 
             function cacheMarketQuote(quote) {
-                if (!quote || !quote.symbol) return;
+                if (!quote || !quote.symbol) return false;
                 const key = normalizeMarketSymbol(quote.symbol);
                 const existing = marketQuoteCache[key];
                 // Never replace a good cached price with a failed/empty result.
-                if (!isValidMarketQuote(quote) && isValidMarketQuote(existing)) return;
+                if (!isValidMarketQuote(quote) && isValidMarketQuote(existing)) return false;
                 marketQuoteCache[key] = quote;
+                return adoptDisplayedTradeQuote(quote);
             }
 
             function getMarketQuotes() {
@@ -1662,6 +1665,75 @@
             let tradeLiveRefreshing = false;
             let tradeLiveRetryPending = false;
             let tradeLiveRefreshSeq = 0;
+            const DISPLAYED_CMP_KEY = 'mtf_displayed_cmp';
+            let tradeDisplayedQuotes = {};
+            let tradeDisplayedDirty = false;
+
+            function loadDisplayedTradeQuotes() {
+                try {
+                    const raw = JSON.parse(localStorage.getItem(DISPLAYED_CMP_KEY));
+                    tradeDisplayedQuotes = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+                } catch (_) {
+                    tradeDisplayedQuotes = {};
+                }
+            }
+
+            function saveDisplayedTradeQuotes() {
+                try {
+                    localStorage.setItem(DISPLAYED_CMP_KEY, JSON.stringify(tradeDisplayedQuotes));
+                } catch (_) { /* ignore quota / private mode */ }
+            }
+
+            function quoteDisplayFingerprint(quote) {
+                if (!isValidMarketQuote(quote)) return '';
+                const price = Number(quote.price).toFixed(2);
+                const change = quote.change == null || isNaN(Number(quote.change))
+                    ? ''
+                    : Number(quote.change).toFixed(2);
+                const changePct = quote.changePct == null || isNaN(Number(quote.changePct))
+                    ? ''
+                    : Number(quote.changePct).toFixed(2);
+                return `${price}|${change}|${changePct}`;
+            }
+
+            /** Keep a stable on-screen CMP per symbol; only replace when the value actually changes. */
+            function adoptDisplayedTradeQuote(quote) {
+                if (!isValidMarketQuote(quote)) return false;
+                const key = normalizeMarketSymbol(quote.symbol);
+                if (!key) return false;
+                const next = {
+                    symbol: key,
+                    name: quote.name || key,
+                    price: Number(quote.price),
+                    change: quote.change == null || isNaN(Number(quote.change)) ? null : Number(quote.change),
+                    changePct: quote.changePct == null || isNaN(Number(quote.changePct)) ? null : Number(quote.changePct),
+                    previousClose: quote.previousClose == null || isNaN(Number(quote.previousClose))
+                        ? null
+                        : Number(quote.previousClose),
+                    updatedAt: quote.updatedAt || new Date().toISOString()
+                };
+                const prev = tradeDisplayedQuotes[key];
+                if (prev && quoteDisplayFingerprint(prev) === quoteDisplayFingerprint(next)) {
+                    return false;
+                }
+                tradeDisplayedQuotes[key] = next;
+                tradeDisplayedDirty = true;
+                saveDisplayedTradeQuotes();
+                return true;
+            }
+
+            function syncDisplayedQuotesFromMarket(symbols) {
+                let changed = false;
+                const keys = Array.isArray(symbols) && symbols.length
+                    ? symbols.map((s) => normalizeMarketSymbol(typeof s === 'string' ? s : s.s)).filter(Boolean)
+                    : Object.keys(marketQuoteCache);
+                keys.forEach((key) => {
+                    if (adoptDisplayedTradeQuote(marketQuoteCache[key])) changed = true;
+                });
+                return changed;
+            }
+
+            loadDisplayedTradeQuotes();
 
             function resolveTradeLiveSymbol(tradeOrCompany) {
                 if (tradeOrCompany && typeof tradeOrCompany === 'object') {
@@ -1681,13 +1753,23 @@
                 return '';
             }
 
+            /** Prefer the last committed on-screen CMP so the card stays stable between fetches. */
             function getTradeLiveQuote(symbol) {
                 const key = normalizeMarketSymbol(symbol);
-                return key ? (marketQuoteCache[key] || null) : null;
+                if (!key) return null;
+                return tradeDisplayedQuotes[key] || marketQuoteCache[key] || null;
             }
 
             function isTradeLiveRefreshing() {
-                return !!(tradeLiveRefreshing || tradeLiveRetryPending);
+                if (!(tradeLiveRefreshing || tradeLiveRetryPending)) return false;
+                // Only show loading when we have no local CMP to display yet.
+                try {
+                    const items = getVisibleQuoteItems();
+                    if (!items.length) return true;
+                    return items.some((item) => !isValidMarketQuote(tradeDisplayedQuotes[item.s]));
+                } catch (_) {
+                    return true;
+                }
             }
 
             function formatTradeLivePriceText(quote) {
@@ -1734,23 +1816,73 @@
                     if (tone === 'down') return 'text-danger';
                     return 'text-body-secondary';
                 };
-                const setBtnTone = (btn, tone) => {
-                    if (!btn) return;
-                    btn.classList.remove('text-success', 'text-danger', 'text-body-secondary');
-                    btn.classList.add(toneText(tone));
+                const setToneClasses = (el, tone) => {
+                    if (!el) return;
+                    el.classList.remove('text-success', 'text-danger', 'text-body-secondary', 'text-progress-mid');
+                    el.classList.add(toneText(tone));
+                };
+                const progressBand = (pct) => {
+                    if (pct == null || isNaN(Number(pct))) return 'neutral';
+                    const n = Number(pct);
+                    if (n < 0) return 'neg';
+                    if (n > 60) return 'high';
+                    if (n >= 30) return 'mid';
+                    return 'low';
+                };
+                const progressBandTextClass = (band) => {
+                    if (band === 'high') return 'text-success';
+                    if (band === 'mid') return 'text-progress-mid';
+                    if (band === 'neg' || band === 'low') return 'text-danger';
+                    return 'text-body-secondary';
+                };
+                const progressBandBarClass = (band) => {
+                    if (band === 'high') return 'bg-success';
+                    if (band === 'mid') return 'bg-progress-mid';
+                    if (band === 'neg' || band === 'low') return 'bg-danger';
+                    return 'bg-secondary';
+                };
+                const clampProgressFill = (pct) => {
+                    if (pct == null || isNaN(pct)) return 0;
+                    const n = Number(pct);
+                    if (n < 0) return Math.min(100, Math.abs(n));
+                    return Math.max(0, Math.min(100, n));
                 };
                 const spinnerHtml = '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
+                const formatDayChange = (quote, hasPrice) => {
+                    if (!hasPrice) return '—';
+                    const change = Number(quote.change);
+                    const changePct = Number(quote.changePct);
+                    if (isNaN(change)) return '—';
+                    const pctText = !isNaN(changePct)
+                        ? `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`
+                        : '';
+                    const abs = Math.abs(change).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    const absText = `${change >= 0 ? '+₹' : '-₹'}${abs}`;
+                    return pctText ? `${pctText} (${absText})` : absText;
+                };
+                const targetProgressPct = (livePrice, targetPrice, buyPrice) => {
+                    const live = Number(livePrice);
+                    const target = Number(targetPrice);
+                    const buy = Number(buyPrice);
+                    if (!(live > 0) || !(target > 0) || !(buy > 0)) return null;
+                    // (Current − Buy) / (Target − Buy) × 100
+                    const span = target - buy;
+                    if (Math.abs(span) < 1e-9) return live >= target ? 100 : 0;
+                    return ((live - buy) / span) * 100;
+                };
 
                 document.querySelectorAll('[data-live-symbol]').forEach((el) => {
                     const symbol = el.dataset.liveSymbol || '';
                     const tradeId = el.dataset.tradeId || '';
                     const quote = getTradeLiveQuote(symbol);
                     const priceBtn = el.querySelector('[data-live-field="price"]');
-                    const targetBtn = el.querySelector('[data-live-field="target"]');
-                    const returnBtn = el.querySelector('[data-live-field="return"]');
+                    const changeEl = el.querySelector('[data-live-change]');
+                    const progressPctEl = el.querySelector('[data-live-progress-pct]');
+                    const progressBar = el.querySelector('[data-live-progress-bar]');
                     const valueEl = priceBtn && priceBtn.querySelector('[data-live-value]');
-                    const targetValueEl = targetBtn && targetBtn.querySelector('[data-live-value]');
-                    const returnValueEl = returnBtn && returnBtn.querySelector('[data-live-value]');
                     const loadingSlot = el.querySelector('[data-live-loading]');
                     const hasPrice = isValidMarketQuote(quote);
                     const livePrice = hasPrice ? Number(quote.price) : null;
@@ -1759,40 +1891,63 @@
                         ? 'neutral'
                         : change >= 0 ? 'up' : 'down';
                     const targetPrice = Number(el.dataset.targetPrice);
-                    const hasTarget = targetPrice > 0;
-                    let gapTone = 'neutral';
-                    let gapHtml = '—';
-                    if (hasPrice && hasTarget) {
-                        const signedDiff = targetPrice - livePrice;
-                        const signedPct = (signedDiff / livePrice) * 100;
-                        const diff = Math.abs(signedDiff);
-                        const pct = Math.abs(signedPct);
-                        const diffText = diff.toLocaleString('en-IN', {
-                            minimumFractionDigits: diff % 1 === 0 ? 0 : 2,
-                            maximumFractionDigits: 2
-                        });
-                        const overshootSign = signedDiff < -0.005 ? '+' : '';
-                        gapHtml = `${pct.toFixed(2)}% <span class="text-muted" aria-hidden="true">|</span> <span class="badge rounded-pill border bg-transparent text-body-secondary">${overshootSign}₹${diffText}</span>`;
-                        if (Math.abs(signedPct) >= 0.005) gapTone = signedPct > 0 ? 'down' : 'up';
-                    }
-
+                    const buyPrice = Number(el.dataset.buyPrice);
+                    const progress = hasPrice ? targetProgressPct(livePrice, targetPrice, buyPrice) : null;
+                    const fill = clampProgressFill(progress);
+                    const band = progressBand(progress);
                     const tx = tradeId ? getTransaction(tradeId) : null;
+                    const variant = el.dataset.tradeVariant || '';
                     const liveReturn = hasPrice && tx ? estimateLiveSellReturn(tx, livePrice) : null;
-                    let returnTone = 'neutral';
-                    if (liveReturn != null && !isNaN(Number(liveReturn)) && Math.abs(Number(liveReturn)) >= 0.005) {
-                        returnTone = Number(liveReturn) >= 0 ? 'up' : 'down';
+                    // Spinner only when this symbol has no local CMP yet.
+                    const showSpinner = !hasPrice && !!(tradeLiveRefreshing || tradeLiveRetryPending);
+
+                    const priceText = formatTradeLivePriceText(quote);
+                    const changeText = formatDayChange(quote, hasPrice);
+                    const progressText = progress == null || isNaN(progress)
+                        ? '—'
+                        : `${Math.round(progress)}%`;
+
+                    setToneClasses(priceBtn, tone);
+                    setToneClasses(changeEl, tone);
+                    if (loadingSlot) loadingSlot.innerHTML = showSpinner ? spinnerHtml : '';
+                    if (valueEl && valueEl.textContent !== priceText) valueEl.textContent = priceText;
+                    if (changeEl && changeEl.textContent !== changeText) changeEl.textContent = changeText;
+
+                    if (progressPctEl) {
+                        if (progressPctEl.textContent !== progressText) progressPctEl.textContent = progressText;
+                        progressPctEl.classList.remove('text-success', 'text-danger', 'text-body-secondary', 'text-progress-mid');
+                        progressPctEl.classList.add(progressBandTextClass(band));
                     }
-                    const returnText = formatTradeLiveReturnText(liveReturn);
-                    const refreshing = !!(tradeLiveRefreshing || tradeLiveRetryPending);
+                    if (progressBar) {
+                        const width = `${fill}%`;
+                        if (progressBar.style.width !== width) progressBar.style.width = width;
+                        progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary', 'bg-progress-mid');
+                        progressBar.classList.add(progressBandBarClass(band));
+                        const track = progressBar.closest('[role="progressbar"]')
+                            || el.querySelector('[data-live-progress-track]');
+                        if (track) {
+                            track.classList.toggle('trade-position-progress--neg', band === 'neg');
+                            track.setAttribute(
+                                'aria-valuenow',
+                                String(Math.round(progress == null || isNaN(progress) ? 0 : progress))
+                            );
+                        }
+                    }
 
-                    setBtnTone(priceBtn, tone);
-                    setBtnTone(targetBtn, gapTone);
-                    setBtnTone(returnBtn, returnTone);
-                    if (loadingSlot) loadingSlot.innerHTML = refreshing ? spinnerHtml : '';
-
-                    if (valueEl) valueEl.textContent = formatTradeLivePriceText(quote);
-                    if (targetValueEl) targetValueEl.innerHTML = hasPrice ? gapHtml : '—';
-                    if (returnValueEl) returnValueEl.textContent = hasPrice ? returnText : '—';
+                    if (variant !== 'past' && liveReturn != null && tradeId) {
+                        const card = el.closest('[data-trade-card]');
+                        const pnlHost = card && card.querySelector('[data-trade-card-pnl]');
+                        if (pnlHost && global.MTFComponents && global.MTFComponents.renderAmount) {
+                            const nextPnl = global.MTFComponents.renderAmount(liveReturn, {
+                                size: 'sm',
+                                compact: true,
+                                showSign: true,
+                                align: 'right',
+                                pill: false
+                            });
+                            if (pnlHost.innerHTML !== nextPnl) pnlHost.innerHTML = nextPnl;
+                        }
+                    }
                 });
             }
 
@@ -1863,13 +2018,14 @@
                 if (!items.length) {
                     tradeLiveRefreshing = false;
                     tradeLiveRetryPending = false;
-                    paintTradeLivePrices();
                     return;
                 }
 
                 const seq = ++tradeLiveRefreshSeq;
                 tradeLiveRefreshing = true;
-                paintTradeLivePrices();
+                tradeDisplayedDirty = false;
+                // Paint only when some symbols still have no local CMP (first load).
+                if (isTradeLiveRefreshing()) paintTradeLivePrices();
 
                 try {
                     loadStockCatalogFromInternet();
@@ -1880,6 +2036,9 @@
                     if (pending.length) {
                         tradeLiveRetryPending = true;
                         await Promise.all(pending.map((item) => enqueueQuoteFetch(item, { force })));
+                    } else {
+                        // Fresh network cache may still need to seed the displayed store.
+                        syncDisplayedQuotesFromMarket(items);
                     }
                 } catch (e) {
                     console.warn('Trade live price refresh failed', e);
@@ -1888,7 +2047,17 @@
                         tradeLiveRefreshing = false;
                         const stillMissing = items.filter((item) => !isValidMarketQuote(marketQuoteCache[item.s]));
                         tradeLiveRetryPending = stillMissing.length > 0;
-                        paintTradeLivePrices();
+                        syncDisplayedQuotesFromMarket(items);
+                        // Update the screen only when a committed CMP value changed (or first paint needed).
+                        if (tradeDisplayedDirty || stillMissing.some((item) => !isValidMarketQuote(tradeDisplayedQuotes[item.s]))) {
+                            tradeDisplayedDirty = false;
+                            paintTradeLivePrices();
+                        } else {
+                            // Clear any leftover spinner without rewriting prices.
+                            document.querySelectorAll('[data-live-loading]').forEach((slot) => {
+                                if (slot.innerHTML) slot.innerHTML = '';
+                            });
+                        }
                         observeQuoteRows();
                         if (stillMissing.length) scheduleTradeLiveRetry();
                         else clearTradeLiveRetry();
@@ -1907,7 +2076,7 @@
             function scheduleTradeLiveRetry() {
                 clearTradeLiveRetry();
                 tradeLiveRetryPending = true;
-                paintTradeLivePrices();
+                if (isTradeLiveRefreshing()) paintTradeLivePrices();
                 tradeLiveRetryTimer = setTimeout(() => {
                     tradeLiveRetryTimer = null;
                     if (!isTradeLivePageVisible()) {
@@ -1957,14 +2126,24 @@
                     if (item) {
                         const seq = ++tradeLiveRefreshSeq;
                         tradeLiveRefreshing = true;
-                        paintTradeLivePrices();
+                        tradeDisplayedDirty = false;
+                        // Spinner only if this symbol has no local CMP yet.
+                        if (!isValidMarketQuote(tradeDisplayedQuotes[key])) paintTradeLivePrices();
                         // Drop any stale queue lock so a manual tap always re-fetches.
                         quoteQueuedKeys.delete(key);
                         enqueueQuoteFetch(item, { force: true }).finally(() => {
                             if (seq !== tradeLiveRefreshSeq) return;
                             tradeLiveRefreshing = false;
                             tradeLiveRetryPending = !isValidMarketQuote(marketQuoteCache[key]);
-                            paintTradeLivePrices();
+                            syncDisplayedQuotesFromMarket([key]);
+                            if (tradeDisplayedDirty || !isValidMarketQuote(tradeDisplayedQuotes[key])) {
+                                tradeDisplayedDirty = false;
+                                paintTradeLivePrices();
+                            } else {
+                                document.querySelectorAll('[data-live-loading]').forEach((slot) => {
+                                    if (slot.innerHTML) slot.innerHTML = '';
+                                });
+                            }
                             if (tradeLiveRetryPending) scheduleTradeLiveRetry();
                         });
                         return;
@@ -2173,6 +2352,7 @@
                 try { renderPlanTrades(); } catch (_) {}
                 try { renderCurrentView(); } catch (_) {}
                 try { renderPastTrades(); } catch (_) {}
+                try { refreshTradeDetailIfVisible(); } catch (_) {}
                 if (isTradeLivePageVisible()) {
                     paintTradeLivePrices();
                     observeQuoteRows();
@@ -2181,6 +2361,12 @@
                     if (!tradeLiveRefreshing && !tradeLiveRefreshTimer) {
                         startTradeLiveRefresh();
                     }
+                }
+            }
+
+            function refreshTradeDetailIfVisible() {
+                if (tradeDetailId && TradeDetailSheet && TradeDetailSheet.isOpen()) {
+                    renderTradeDetailPage();
                 }
             }
 
@@ -2650,15 +2836,61 @@
             }
 
             // ---------- FILTER SHEET ----------
-            function openFilterSheet() {
-                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filter Trades', 'panelPastFilter',
-                    renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeSheet()', actionOnClick: 'applyPastRangeFilter()', actionIcon: 'fa-check' }));
+            function statusFromViewMode(mode) {
+                if (mode === 'plan') return 'plan';
+                if (mode === 'past') return tradeCancelledOnly ? 'cancelled' : 'closed';
+                if (mode === 'all') return 'all';
+                return 'open';
+            }
+
+            function viewModeFromStatus(status) {
+                if (status === 'plan') return 'plan';
+                if (status === 'closed' || status === 'cancelled') return 'past';
+                if (status === 'all') return 'all';
+                return 'trade';
+            }
+
+            function syncTradeFilterSheetControls() {
                 ensureSharedTradeRange();
+                const status = statusFromViewMode(tradesViewMode);
+                const statusInput = document.querySelector(`input[name="tradeFilterStatus"][value="${status}"]`);
+                if (statusInput) statusInput.checked = true;
+
+                const holdInput = document.querySelector(`input[name="tradeFilterHoldDays"][value="${tradeHoldDaysFilter}"]`);
+                if (holdInput) holdInput.checked = true;
+
+                const sortInput = document.querySelector(`input[name="tradeFilterSort"][value="${tradeSortBy}"]`);
+                if (sortInput) sortInput.checked = true;
+
+                const idMap = {
+                    profit: 'tradeFilterPerf-profit',
+                    loss: 'tradeFilterPerf-loss',
+                    near_target: 'tradeFilterPerf-near',
+                    target_hit: 'tradeFilterPerf-hit',
+                    verified: 'tradeFilterPerf-verified'
+                };
+                Object.keys(idMap).forEach((key) => {
+                    const el = document.getElementById(idMap[key]);
+                    if (el) el.checked = tradePerfFilters.has(key);
+                });
+
                 setDateInputValue(document.getElementById('pastFrom'), pastFrom);
                 setDateInputValue(document.getElementById('pastTo'), pastTo);
                 if (pastRangeDays != null && pastRangeDays !== '') {
                     setRangeButtonsActive('#pastRangeButtons', pastRangeDays);
+                } else {
+                    clearRangeButtonsActive('#pastRangeButtons');
                 }
+            }
+
+            function openFilterSheet() {
+                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filters', 'panelPastFilter',
+                    renderAppButtonRow('Reset', 'Apply', {
+                        cancelOnClick: 'resetTradeFilterSheet()',
+                        actionOnClick: 'applyTradeFilters()',
+                        actionIcon: 'fa-check'
+                    }));
+                syncTradeFilterSheetControls();
             }
 
             function openTradeFilterSheet() {
@@ -2677,6 +2909,7 @@
 
             let settingsReturnPage = 'trades';
             let settingsReturnMoreFeature = null;
+            let tradeDetailId = null;
 
             function getCurrentAppPage() {
                 // Pages use Bootstrap `d-none` (not legacy `.hidden`).
@@ -2799,6 +3032,34 @@
                 }
             }
 
+            function openTradeDetail(id) {
+                const tradeId = String(id || '');
+                if (!tradeId) return;
+                tradeDetailId = tradeId;
+                stopMarketRefresh();
+                renderTradeDetailPage();
+                if (TradeDetailSheet) TradeDetailSheet.present();
+                BottomBar.setFabVisible(false);
+            }
+
+            function backFromTradeDetail(opts = {}) {
+                const { fromPane = false } = opts || {};
+                tradeDetailId = null;
+                if (!fromPane && TradeDetailSheet && TradeDetailSheet.isOpen()) {
+                    TradeDetailSheet.close({ quiet: true });
+                }
+                const searchPage = document.getElementById('page-search');
+                const onSearch = searchPage && !searchPage.classList.contains('d-none');
+                if (onSearch) {
+                    BottomBar.setBarVisible(false);
+                    BottomBar.setFabVisible(false);
+                    return;
+                }
+                BottomBar.setBarVisible(true);
+                const current = getCurrentAppPage();
+                updateFabVisibility(current.page === 'past' ? 'trades' : current.page);
+            }
+
             // ---------- NAVIGATION ----------
             const pageMap = { plan: 'page-plan', trades: 'page-trades', past: 'page-past', market: 'page-market', more: 'page-more' };
             const moreFeatureMap = { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
@@ -2903,6 +3164,10 @@
             let planSearchQuery = '';
             let tradesViewMode = 'trade';
             let pastPnlFilter = 'all';
+            let tradeHoldDaysFilter = 'all';
+            let tradeSortBy = 'holding';
+            let tradePerfFilters = new Set();
+            let tradeCancelledOnly = false;
             /** Per Trade / Plan / Past date-range memory (shared filter sheet). */
             let tradeListRanges = {
                 trade: { key: 'all', from: null, to: null },
@@ -3152,43 +3417,45 @@
                 syncPastRangeInputs();
             }
 
-            function setPastRange(daysOrKey) {
-                pastRangeDays = daysOrKey;
+            function computePastRangeValues(daysOrKey) {
                 if (daysOrKey === 'all') {
-                    pastFrom = null;
-                    pastTo = null;
-                } else if (daysOrKey === 'today') {
+                    return { from: null, to: null };
+                }
+                if (daysOrKey === 'today') {
                     const date = localDateStr(new Date());
-                    pastFrom = date;
-                    pastTo = date;
-                } else if (daysOrKey === 'yesterday') {
+                    return { from: date, to: date };
+                }
+                if (daysOrKey === 'yesterday') {
                     const y = new Date();
                     y.setDate(y.getDate() - 1);
                     const date = localDateStr(y);
-                    pastFrom = date;
-                    pastTo = date;
-                } else if (daysOrKey === 'this-week') {
-                    const range = getThisWeekMonFriRange();
-                    pastFrom = range.from;
-                    pastTo = range.to;
-                } else if (daysOrKey === 'last-week') {
-                    const range = getLastWeekMonFriRange();
-                    pastFrom = range.from;
-                    pastTo = range.to;
-                } else if (daysOrKey === 'work-20') {
-                    const range = getWorkingDayRange(20);
-                    pastFrom = range.from;
-                    pastTo = range.to;
-                } else if (daysOrKey === 'work-30') {
-                    const range = getWorkingDayRange(30);
-                    pastFrom = range.from;
-                    pastTo = range.to;
-                } else {
-                    const range = getDateRange(daysOrKey);
-                    pastFrom = range.from;
-                    pastTo = range.to;
+                    return { from: date, to: date };
                 }
+                if (daysOrKey === 'this-week') {
+                    return getThisWeekMonFriRange();
+                }
+                if (daysOrKey === 'last-week') {
+                    return getLastWeekMonFriRange();
+                }
+                if (daysOrKey === 'work-20') {
+                    return getWorkingDayRange(20);
+                }
+                if (daysOrKey === 'work-30') {
+                    return getWorkingDayRange(30);
+                }
+                return getDateRange(daysOrKey);
+            }
+
+            function draftPastRange(daysOrKey) {
+                pastRangeDays = daysOrKey;
+                const range = computePastRangeValues(daysOrKey);
+                pastFrom = range.from;
+                pastTo = range.to;
                 syncPastRangeInputs();
+            }
+
+            function setPastRange(daysOrKey) {
+                draftPastRange(daysOrKey);
                 saveTradeListRangeForMode(tradesViewMode);
                 if (isTradesPageVisible()) {
                     renderCurrentView();
@@ -3204,27 +3471,106 @@
                 clearRangeButtonsActive('#pastRangeButtons');
             }
 
-            function applyPastRangeFilter() {
-                const from = document.getElementById('pastFrom').value;
-                const to = document.getElementById('pastTo').value;
-                if (!from || !to) { showToast('Please select both dates.', 'warning'); return; }
-                if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
-                pastFrom = from;
-                pastTo = to;
-                pastRangeDays = null;
-                clearRangeButtonsActive('#pastRangeButtons');
+            function readTradeFilterSheetDraft() {
+                const statusEl = document.querySelector('input[name="tradeFilterStatus"]:checked');
+                const holdEl = document.querySelector('input[name="tradeFilterHoldDays"]:checked');
+                const sortEl = document.querySelector('input[name="tradeFilterSort"]:checked');
+                const perf = new Set();
+                document.querySelectorAll('#panelPastFilter .trade-filters-checks input[type="checkbox"]:checked').forEach((el) => {
+                    if (el.value) perf.add(el.value);
+                });
+                return {
+                    status: statusEl ? statusEl.value : 'open',
+                    holdDays: holdEl ? holdEl.value : 'all',
+                    sortBy: sortEl ? sortEl.value : 'holding',
+                    perf
+                };
+            }
+
+            function applyTradeFilters() {
+                const fromEl = document.getElementById('pastFrom');
+                const toEl = document.getElementById('pastTo');
+                const from = fromEl ? fromEl.value : '';
+                const to = toEl ? toEl.value : '';
+                if (from && to) {
+                    if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
+                    pastFrom = from;
+                    pastTo = to;
+                    if (pastRangeDays == null || pastRangeDays === '') {
+                        clearRangeButtonsActive('#pastRangeButtons');
+                    }
+                } else if (!from && !to) {
+                    pastFrom = null;
+                    pastTo = null;
+                    pastRangeDays = 'all';
+                    setRangeButtonsActive('#pastRangeButtons', 'all');
+                } else {
+                    showToast('Please select both dates.', 'warning');
+                    return;
+                }
+
+                const draft = readTradeFilterSheetDraft();
+                tradeHoldDaysFilter = draft.holdDays;
+                tradeSortBy = draft.sortBy;
+                tradePerfFilters = draft.perf;
+                tradeCancelledOnly = draft.status === 'cancelled';
+
+                if (draft.perf.has('verified') && draft.perf.size === 1) {
+                    pastPnlFilter = 'verified';
+                } else if (draft.perf.has('profit') && !draft.perf.has('loss') && draft.perf.size === 1) {
+                    pastPnlFilter = 'profit';
+                } else if (draft.perf.has('loss') && !draft.perf.has('profit') && draft.perf.size === 1) {
+                    pastPnlFilter = 'loss';
+                } else if (draft.perf.size === 0) {
+                    pastPnlFilter = 'all';
+                } else {
+                    pastPnlFilter = 'custom';
+                }
+
+                const nextMode = viewModeFromStatus(draft.status);
+                if (nextMode !== tradesViewMode) {
+                    saveTradeListRangeForMode(tradesViewMode);
+                    tradesViewMode = nextMode;
+                }
                 saveTradeListRangeForMode(tradesViewMode);
+
                 if (isTradesPageVisible()) {
                     renderCurrentView();
+                    updateAppHeader('page-trades');
+                    updateFabVisibility('trades');
+                    startTradeLiveRefresh();
                 } else {
                     renderPastTrades();
+                    if (isPastPageVisible()) startTradeLiveRefresh();
                 }
-                if (isPastPageVisible()) startTradeLiveRefresh();
                 closeFilterSheet();
-                showToast('Range applied.', 'success');
+                showToast('Filters applied.', 'success');
+            }
+
+            function applyPastRangeFilter() {
+                applyTradeFilters();
+            }
+
+            function resetTradeFilterSheet() {
+                const statusVal = tradesViewMode === 'plan' ? 'plan' : (tradesViewMode === 'past' ? 'closed' : 'open');
+                const st = document.querySelector(`input[name="tradeFilterStatus"][value="${statusVal}"]`);
+                if (st) st.checked = true;
+                const holdAll = document.getElementById('tradeFilterHold-all');
+                if (holdAll) holdAll.checked = true;
+                const sortHolding = document.getElementById('tradeFilterSort-holding');
+                if (sortHolding) sortHolding.checked = true;
+                document.querySelectorAll('#panelPastFilter .trade-filters-checks input[type="checkbox"]').forEach((el) => {
+                    el.checked = false;
+                });
+                draftPastRange(tradesViewMode === 'past' ? 'this-week' : 'all');
             }
 
             function resetTradeFilters() {
+                tradeHoldDaysFilter = 'all';
+                tradeSortBy = 'holding';
+                tradePerfFilters = new Set();
+                tradeCancelledOnly = false;
+                pastPnlFilter = 'all';
                 if (tradesViewMode === 'past') {
                     setPastRange('this-week');
                 } else {
@@ -3317,24 +3663,109 @@
                 return t.holdingDays || 0;
             }
 
-            function sortTradesByHoldDays(trades) {
-                return [...trades].sort((a, b) => {
-                    const dayDiff = getDaysHeld(a) - getDaysHeld(b);
-                    if (dayDiff !== 0) return dayDiff;
-                    return a.id < b.id ? 1 : -1;
+            function matchesHoldDaysFilter(t, holdFilter = tradeHoldDaysFilter) {
+                if (!holdFilter || holdFilter === 'all') return true;
+                const days = getDaysHeld(t);
+                if (holdFilter === '1-3') return days >= 1 && days <= 3;
+                if (holdFilter === '4-7') return days >= 4 && days <= 7;
+                if (holdFilter === '8+') return days >= 8;
+                return true;
+            }
+
+            function tradeTargetPrice(t) {
+                const n = Number(t && t.targetPrice);
+                return n > 0 ? n : null;
+            }
+
+            function tradeProgressPct(t) {
+                const target = tradeTargetPrice(t);
+                const buy = Number(t && t.buyPrice);
+                if (!(target > 0) || !(buy > 0)) return null;
+                let live = null;
+                if ((t.status || 'closed') === 'closed') {
+                    live = Number(t.sellPrice);
+                } else {
+                    const sym = resolveTradeLiveSymbol(t);
+                    const quote = sym ? getTradeLiveQuote(sym) : null;
+                    live = quote && Number(quote.price) > 0 ? Number(quote.price) : null;
+                }
+                if (!(live > 0)) return null;
+                const span = target - buy;
+                if (Math.abs(span) < 1e-9) return live >= target ? 100 : 0;
+                return ((live - buy) / span) * 100;
+            }
+
+            function tradeCurrentReturn(t) {
+                if ((t.status || 'closed') === 'closed') {
+                    return resolveTradeMetrics(t).netProfit;
+                }
+                const sym = resolveTradeLiveSymbol(t);
+                const quote = sym ? getTradeLiveQuote(sym) : null;
+                const live = quote && Number(quote.price) > 0 ? Number(quote.price) : null;
+                if (live == null) return resolveTradeMetrics(t).netProfit;
+                const est = estimateLiveSellReturn(t, live);
+                return est != null ? est : resolveTradeMetrics(t).netProfit;
+            }
+
+            function matchesPerfFilters(t, perfSet = tradePerfFilters) {
+                if (!perfSet || perfSet.size === 0) {
+                    if (pastPnlFilter === 'profit') return resolveTradeMetrics(t).netProfit >= 0;
+                    if (pastPnlFilter === 'loss') return resolveTradeMetrics(t).netProfit < 0;
+                    if (pastPnlFilter === 'verified') return !!t.verified;
+                    return true;
+                }
+                const pnl = tradeCurrentReturn(t);
+                const progress = tradeProgressPct(t);
+                return [...perfSet].some((key) => {
+                    if (key === 'profit') return pnl >= 0;
+                    if (key === 'loss') return pnl < 0;
+                    if (key === 'verified') return !!t.verified;
+                    if (key === 'near_target') return progress != null && progress >= 70 && progress < 100;
+                    if (key === 'target_hit') return progress != null && progress >= 100;
+                    return false;
                 });
             }
 
-            function paintOpenTradeSummary(net, openCount, profitCount, lossCount) {
+            function sortTradesList(trades, sortBy = tradeSortBy) {
+                const list = [...trades];
+                const cmpId = (a, b) => (a.id < b.id ? 1 : -1);
+                list.sort((a, b) => {
+                    if (sortBy === 'company') {
+                        const c = String(a.company || '').localeCompare(String(b.company || ''), undefined, { sensitivity: 'base' });
+                        return c !== 0 ? c : cmpId(a, b);
+                    }
+                    if (sortBy === 'buyDate') {
+                        const ak = parseDateKey(a.buyDate) || '';
+                        const bk = parseDateKey(b.buyDate) || '';
+                        if (ak !== bk) return ak < bk ? 1 : -1;
+                        return cmpId(a, b);
+                    }
+                    if (sortBy === 'pnl' || sortBy === 'return') {
+                        const av = tradeCurrentReturn(a);
+                        const bv = tradeCurrentReturn(b);
+                        if (av !== bv) return bv - av;
+                        return cmpId(a, b);
+                    }
+                    const dayDiff = getDaysHeld(a) - getDaysHeld(b);
+                    if (dayDiff !== 0) return dayDiff;
+                    return cmpId(a, b);
+                });
+                return list;
+            }
+
+            function sortTradesByHoldDays(trades) {
+                return sortTradesList(trades, 'holding');
+            }
+
+            function paintOpenTradeSummary(net, openCount, profitCount, lossCount, invested, mtfUsed) {
                 paintTradeRangeSummary({
                     containerId: 'summaryOpenStats',
                     wordsId: 'summaryNetWords',
                     net,
-                    count: openCount,
-                    countLabel: 'Open',
-                    useTwoItemLayout: true,
-                    profitCount,
-                    lossCount
+                    invested: invested != null ? invested : 0,
+                    holdings: openCount,
+                    mtfUsed: mtfUsed != null ? mtfUsed : 0,
+                    usePortfolioLayout: true
                 });
             }
 
@@ -3413,13 +3844,28 @@
 
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
-                const next = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
-                if (next !== tradesViewMode) {
-                    saveTradeListRangeForMode(tradesViewMode);
-                    tradesViewMode = next;
-                    loadTradeListRangeForMode(tradesViewMode);
+                const next = mode === 'plan' ? 'plan'
+                    : (mode === 'past' ? 'past'
+                        : (mode === 'all' ? 'all'
+                            : (mode === 'cancelled' ? 'cancelled' : 'trade')));
+                if (next === 'cancelled') {
+                    tradeCancelledOnly = true;
+                    if (tradesViewMode !== 'past') {
+                        saveTradeListRangeForMode(tradesViewMode);
+                        tradesViewMode = 'past';
+                        loadTradeListRangeForMode(tradesViewMode);
+                    } else {
+                        tradesViewMode = 'past';
+                    }
                 } else {
-                    tradesViewMode = next;
+                    tradeCancelledOnly = false;
+                    if (next !== tradesViewMode) {
+                        saveTradeListRangeForMode(tradesViewMode);
+                        tradesViewMode = next;
+                        loadTradeListRangeForMode(tradesViewMode);
+                    } else {
+                        tradesViewMode = next;
+                    }
                 }
                 renderCurrentView();
                 const tradesPage = document.getElementById('page-trades');
@@ -3449,9 +3895,10 @@
                 const txs = getTransactions();
                 ensureSharedTradeRange();
 
-                let filtered = txs
-                    .filter(t => (t.status || 'closed') === 'closed')
-                    .filter(t => t.executed !== false);
+                let filtered = txs.filter((t) => {
+                    if (tradeCancelledOnly) return (t.status || '') === 'cancelled';
+                    return (t.status || 'closed') === 'closed' && t.executed !== false;
+                });
 
                 if (pastFrom && pastTo) {
                     const fromDate = new Date(pastFrom);
@@ -3470,20 +3917,20 @@
                     filtered = filtered.filter(t => (t.company || '').toLowerCase().includes(pastQuery));
                 }
 
-                if (pastPnlFilter === 'profit') {
-                    filtered = filtered.filter(t => resolveTradeMetrics(t).netProfit >= 0);
-                } else if (pastPnlFilter === 'loss') {
-                    filtered = filtered.filter(t => resolveTradeMetrics(t).netProfit < 0);
-                } else if (pastPnlFilter === 'verified') {
-                    filtered = filtered.filter(t => !!t.verified);
-                }
-
-                filtered = sortTradesByHoldDays(filtered);
+                filtered = filtered.filter((t) => matchesHoldDaysFilter(t));
+                filtered = filtered.filter((t) => matchesPerfFilters(t));
+                filtered = sortTradesList(filtered);
                 return filtered;
             }
 
             function setPastPnlFilter(value) {
-                pastPnlFilter = (value === 'profit' || value === 'loss' || value === 'verified') ? value : 'all';
+                if (value === 'profit' || value === 'loss' || value === 'verified') {
+                    pastPnlFilter = value;
+                    tradePerfFilters = new Set([value]);
+                } else {
+                    pastPnlFilter = 'all';
+                    tradePerfFilters = new Set();
+                }
                 if (isTradesPageVisible()) {
                     renderCurrentView();
                 } else {
@@ -4063,6 +4510,9 @@
                     onConfirm: async () => {
                         await deleteTransaction(id);
                         closeTradeModal();
+                        if (tradeDetailId && String(tradeDetailId) === String(id)) {
+                            backFromTradeDetail();
+                        }
                         refreshTradeListViews();
                         renderMoney();
                         refreshActiveMoreView();
@@ -4426,9 +4876,9 @@
                 appHeader: {
                     moreFeatureMap: { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' },
                     moreFeatureTitles: {
-                        money: '<i class="fas fa-coins me-2"></i>Money',
-                        transactions: '<i class="fas fa-database me-2"></i>Total Transactions',
-                        'mtf-calc': '<i class="fas fa-calculator me-2"></i>MTF Calculator'
+                        money: 'Money',
+                        transactions: 'Total Transactions',
+                        'mtf-calc': 'MTF Calculator'
                     }
                 },
                 tradePages: {
@@ -4436,6 +4886,9 @@
                     isPlannedTrade,
                     isActiveOpenTrade,
                     sortTradesByHoldDays,
+                    sortTradesList,
+                    matchesHoldDaysFilter,
+                    matchesPerfFilters,
                     resolveTradeMetrics,
                     getPastFiltered,
                     ensureSharedTradeRange,
@@ -4445,6 +4898,9 @@
                     getPastSearchQuery: () => pastSearchQuery,
                     getSearchQuery: () => searchQuery,
                     getSearchContext: () => searchContext,
+                    getTradeDetailId: () => tradeDetailId,
+                    getTransaction,
+                    resolveTradeForDisplay,
                     getTradesViewMode: () => tradesViewMode,
                     getTradeFrom: () => tradeFrom,
                     getTradeTo: () => tradeTo,
@@ -4573,6 +5029,8 @@
             window.closeDialog = closeDialog;
 
             window.navigateTo = navigateTo;
+            window.openTradeDetail = openTradeDetail;
+            window.backFromTradeDetail = backFromTradeDetail;
             window.openMoreFeature = openMoreFeature;
             window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
@@ -4584,7 +5042,7 @@
             window.selectStockSymbol = selectStockSymbol;
             window.fillTradeFormFromLivePrice = fillTradeFormFromLivePrice;
             window.openEditModal = openEditModal;
-            window.openViewModal = openViewModal;
+            window.openViewModal = openTradeDetail;
             window.openViewFromEditor = openViewFromEditor;
             window.copyTransaction = copyTransaction;
             window.confirmCopy = confirmCopy;
@@ -4658,6 +5116,9 @@
             window.setPlanSearch = setPlanSearch;
             window.clearPlanSearch = clearPlanSearch;
             window.applyPastRangeFilter = applyPastRangeFilter;
+            window.applyTradeFilters = applyTradeFilters;
+            window.draftPastRange = draftPastRange;
+            window.resetTradeFilterSheet = resetTradeFilterSheet;
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;
@@ -4673,7 +5134,7 @@
             window.renderMoney = renderMoney;
             window.toggleMoneyAccountExpand = toggleMoneyAccountExpand;
             window.toggleTradeDateGroupExpand = toggleTradeDateGroupExpand;
-            window.toggleAllTradeCardsCollapse = window.MTFComponents.toggleAllTradeCardsCollapse;
+            window.toggleTradeCardCollapse = window.MTFComponents.toggleTradeCardCollapse;
             window.setMoneyAccountFilter = setMoneyAccountFilter;
             window.openAccountHistorySheet = openAccountHistorySheet;
             window.setMoneyHistoryTypeFilter = setMoneyHistoryTypeFilter;

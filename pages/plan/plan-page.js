@@ -6,7 +6,7 @@
 
     const {
         paintPlanTradeSummary,
-        countTradePnlBuckets,
+        aggregatePortfolioSummary,
         renderFlatTradesList,
         renderPlanTradeListItem,
         renderPageEmptyCard
@@ -35,15 +35,10 @@
 
         if (sortTradesByHoldDays) filtered = sortTradesByHoldDays(filtered);
 
-        let net = 0;
-        filtered.forEach((t) => {
-            net += resolveTradeMetrics ? resolveTradeMetrics(t).netProfit : 0;
-        });
-
-        const buckets = countTradePnlBuckets
-            ? countTradePnlBuckets(filtered, resolveTradeMetrics)
-            : { profit: 0, loss: 0 };
-        paintPlanTradeSummary(net, filtered.length, buckets.profit, buckets.loss);
+        const summary = aggregatePortfolioSummary
+            ? aggregatePortfolioSummary(filtered, resolveTradeMetrics)
+            : { net: 0, invested: 0, holdings: filtered.length, mtfUsed: 0 };
+        paintPlanTradeSummary(summary);
 
         const container = document.getElementById('planTradesList');
         if (!container) return;

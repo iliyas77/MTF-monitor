@@ -9,6 +9,7 @@
     "pages/common/trade-modal.js",
     "pages/common/app-version.js",
     "pages/trades/trades-page.js",
+    "pages/trades/trade-detail-page.js",
     "pages/market/market-page.js",
     "pages/money/money-page.js",
     "pages/more/more-page.js",
