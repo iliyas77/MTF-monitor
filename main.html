@@ -38,6 +38,9 @@
                 <button type="button" id="appHeaderRefreshBtn" class="app-header-icon-btn d-none" onclick="onMarketRefreshClick()" aria-label="Refresh watchlist prices">
                     <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </button>
+                <button type="button" id="appHeaderReportBtn" class="app-header-icon-btn d-none" onclick="openCalendarMonthReport()" aria-label="Monthly report">
+                    <i class="fas fa-file-alt" aria-hidden="true"></i>
+                </button>
                 <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none" onclick="openFilterSheet()" aria-label="Filter">
                     <i class="fas fa-filter" aria-hidden="true"></i>
                 </button>
@@ -103,58 +106,68 @@
         <div class="px-3 pt-3 pb-3">
             <div class="card cal-month-card bg-body border rounded-3 overflow-hidden">
                 <div class="card-body p-3">
-                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
-                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle flex-shrink-0" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarMonth(-1)" aria-label="Previous month">
+                    <div class="cal-toolbar">
+                        <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(-1)" aria-label="Previous month">
                             <i class="fas fa-chevron-left" aria-hidden="true"></i>
                         </button>
-                        <div class="text-center min-w-0 flex-grow-1">
+                        <div class="cal-toolbar-center min-w-0">
                             <button type="button" class="cal-month-jump-btn" id="calendarMonthJumpBtn" onclick="openCalendarMonthPicker()" aria-haspopup="dialog" aria-label="Jump to month">
                                 <span class="cal-month-jump-title" id="calendarMonthTitle">—</span>
-                                <i class="fas fa-caret-down cal-month-jump-caret" aria-hidden="true"></i>
+                                <i class="fas fa-chevron-down cal-month-jump-caret" aria-hidden="true"></i>
                             </button>
-                            <p class="small text-muted mb-0">Daily net P&amp;L (closed trades)</p>
+                            <p class="cal-toolbar-sub mb-0">
+                                Daily net P&amp;L (closed trades)
+                                <i class="fas fa-info-circle" title="P&amp;L is calculated for closed trades only" aria-hidden="true"></i>
+                            </p>
                         </div>
-                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle flex-shrink-0" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarMonth(1)" aria-label="Next month">
-                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
-                        </button>
+                        <div class="cal-toolbar-right flex-shrink-0">
+                            <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(1)" aria-label="Next month">
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="cal-today-btn" onclick="jumpCalendarToTodayMonth()" aria-label="Go to today">Today</button>
+                        </div>
                     </div>
+
+                    <div class="cal-pl-cards" aria-label="Month profit and loss">
+                        <div class="cal-pl-card cal-pl-card--profit">
+                            <span class="cal-pl-card-icon" aria-hidden="true"><i class="fas fa-arrow-trend-up"></i></span>
+                            <div class="cal-pl-card-body min-w-0">
+                                <div class="cal-pl-card-value" id="calTotalProfit">—</div>
+                                <div class="cal-pl-card-label">Total Profit</div>
+                            </div>
+                        </div>
+                        <div class="cal-pl-card cal-pl-card--loss">
+                            <span class="cal-pl-card-icon" aria-hidden="true"><i class="fas fa-arrow-trend-down"></i></span>
+                            <div class="cal-pl-card-body min-w-0">
+                                <div class="cal-pl-card-value" id="calTotalLoss">—</div>
+                                <div class="cal-pl-card-label">Total Loss</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cal-net-bar" id="calNetBar" aria-label="Net P&amp;L split">
+                        <div class="cal-net-bar-track">
+                            <div class="cal-net-bar-profit" id="calNetBarProfit"></div>
+                            <div class="cal-net-bar-loss" id="calNetBarLoss"></div>
+                            <div class="cal-net-bar-label" id="calNetBarLabel">—</div>
+                        </div>
+                    </div>
+
                     <div class="cal-weekday-row" aria-hidden="true">
                         <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
                     </div>
                     <div id="calendarGrid" class="cal-grid" role="grid" aria-label="Month calendar"></div>
-                    <div class="cal-legend mt-3 mb-0" aria-label="Legend">
-                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--pos"></span> Profit</span>
-                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--neg"></span> Loss</span>
-                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--flat"></span> No trades</span>
-                    </div>
-                </div>
-            </div>
-            <div class="card cal-month-summary-card bg-body border rounded-3 overflow-hidden mt-3">
-                <div class="card-body p-3">
-                    <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
-                        <div class="min-w-0">
-                            <p class="small text-uppercase text-muted fw-medium mb-1" id="calendarMonthSummaryLabel">Month summary</p>
-                            <div class="cal-summary-net" id="calSummaryPnl">—</div>
-                            <p class="small text-muted mb-0">Net P&amp;L (closed)</p>
+
+                    <div class="cal-footer">
+                        <div class="cal-legend" aria-label="Legend">
+                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--pos"></span> Profit</span>
+                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--neg"></span> Loss</span>
+                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--flat"></span> No trades</span>
                         </div>
-                    </div>
-                    <div class="cal-summary-metrics" aria-label="Month metrics">
-                        <div class="cal-summary-metric">
-                            <div class="cal-summary-metric-value" id="calSummaryTrades">0</div>
-                            <div class="cal-summary-metric-label">Trades</div>
-                        </div>
-                        <div class="cal-summary-metric">
-                            <div class="cal-summary-metric-value" id="calSummaryWinLoss">0 / 0</div>
-                            <div class="cal-summary-metric-label">Win / Loss</div>
-                        </div>
-                        <div class="cal-summary-metric">
-                            <div class="cal-summary-metric-value" id="calSummaryDays">0</div>
-                            <div class="cal-summary-metric-label">Active days</div>
-                        </div>
-                    </div>
-                    <div class="cal-summary-brokers mt-3">
-                        <p class="small text-uppercase text-muted fw-medium mb-2">By broker</p>
-                        <div id="calSummaryBrokerList" class="cal-summary-broker-list"></div>
+                        <p class="cal-footer-note mb-0">
+                            <i class="fas fa-info-circle" aria-hidden="true"></i>
+                            P&amp;L is calculated for closed trades only
+                        </p>
                     </div>
                 </div>
             </div>
@@ -330,100 +343,154 @@
 
     <!-- PAGE: MTF CALCULATOR -->
     <section id="page-mtf-calc" class="w-100 d-none">
-        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3 pb-3">
-            <div class="w-100" id="calcSummaryCard">
-                <div id="calcSummaryStats" class="portfolio-summary-cards" role="group" aria-label="Calculator summary">
-                    <div class="portfolio-stat-card">
-                        <div class="portfolio-stat-label">Net P&amp;L</div>
-                        <div class="portfolio-stat-value text-body" id="calcSummaryPnl">—</div>
-                    </div>
-                    <div class="portfolio-stat-card">
-                        <div class="portfolio-stat-label">Invested</div>
-                        <div class="portfolio-stat-value text-body" id="calcSummaryInvested">—</div>
-                    </div>
-                    <div class="portfolio-stat-card">
-                        <div class="portfolio-stat-label">Your Margin</div>
-                        <div class="portfolio-stat-value text-body" id="calcSummaryMargin">—</div>
+        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3 pb-3 calc-page">
+            <button type="button" class="calc-company-pick" onclick="openCompanySearchSheet('calc')" aria-label="Search and select a stock">
+                <div class="calc-company-pick-main min-w-0">
+                    <span class="calc-company-avatar trade-position-avatar trade-position-avatar--0 flex-shrink-0" id="calcCompanyAvatar" aria-hidden="true"><i class="fas fa-search"></i></span>
+                    <div class="min-w-0 text-start">
+                        <div class="calc-company-title text-truncate" id="calcCompanyTitle">Search and select a stock</div>
+                        <div class="calc-company-sub text-truncate" id="calcCompanySub">NSE · Live fill qty, buy &amp; target</div>
                     </div>
                 </div>
-                <div id="calcSummaryWords" class="small text-muted text-center mt-1"></div>
+                <div class="calc-company-live text-end flex-shrink-0">
+                    <div class="calc-company-live-price" id="calcLivePrice">—</div>
+                    <div class="calc-company-live-chg" id="calcLiveChange">—</div>
+                </div>
+                <input type="text" class="visually-hidden" id="calcCompany" readonly tabindex="-1" aria-hidden="true" />
+            </button>
+            <p class="small text-muted mb-0 d-none" id="calcCompanyLiveNote"></p>
+
+            <div class="calc-quick-grid" aria-label="Quick stats">
+                <div class="calc-quick-card">
+                    <div class="calc-quick-label">Live Price</div>
+                    <div class="calc-quick-value calc-quick-value--live" id="calcQuickLive">—</div>
+                    <div class="calc-quick-meta">NSE · Live</div>
+                </div>
+                <div class="calc-quick-card">
+                    <div class="calc-quick-label">Max Quantity</div>
+                    <div class="calc-quick-value" id="calcQuickMaxQty">—</div>
+                    <div class="calc-quick-meta">₹1,00,000 max</div>
+                </div>
+                <div class="calc-quick-card">
+                    <div class="calc-quick-label">Default Target</div>
+                    <div class="calc-quick-value calc-quick-value--up">+1.35%</div>
+                    <div class="calc-quick-meta">Recommended</div>
+                </div>
+                <div class="calc-quick-card">
+                    <div class="calc-quick-label">1 Lot Size</div>
+                    <div class="calc-quick-value">1</div>
+                    <div class="calc-quick-meta">Share</div>
+                </div>
             </div>
 
-            <article class="card bg-body border rounded w-100 trade-position-card calc-form-card">
-                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
-                    <div class="position-relative">
-                        <label class="form-label small text-muted mb-1" for="calcCompany">Company</label>
-                        <div class="position-relative">
-                            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" aria-hidden="true"></i>
-                            <input type="text" class="form-control w-100 ps-5" id="calcCompany" placeholder="Search company name or symbol" autocomplete="off" readonly inputmode="none" spellcheck="false" onclick="openCompanySearchSheet('calc')" aria-label="Company" aria-haspopup="dialog" />
-                        </div>
-                        <p class="small text-muted mb-0 mt-1" id="calcCompanyLiveNote">Search a stock to fill qty (₹1L), buy (live), and sell (+1.35%).</p>
-                    </div>
-
-                    <div class="calc-date-row">
-                        <div>
-                            <label class="form-label small text-muted mb-1" for="calcBuyDate">Buy Date</label>
-                            <input type="date" class="form-control w-100" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
-                        </div>
-                        <div>
-                            <label class="form-label small text-muted mb-1" for="calcSellDate">Sell Date</label>
-                            <input type="date" class="form-control w-100" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
-                        </div>
-                    </div>
-                    <div class="d-flex flex-wrap gap-1">
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setCalcSameDay()">Same day</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setCalcTodayPair()">Today → Tomorrow</button>
-                        <span id="calcModeBadge" class="d-none align-self-center"></span>
-                    </div>
-                    <div id="calcIntradayBanner" class="d-none"></div>
-
-                    <div class="trade-detail-prices calc-form-prices">
-                        <label class="trade-detail-price-cell" for="calcQty">
-                            <span class="trade-detail-price-label">Quantity</span>
-                            <span class="trade-detail-price-row">
-                                <input type="number" class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty" id="calcQty" min="1" step="1" placeholder="0" value="" inputmode="numeric" oninput="updateMtfCalculator()" />
-                            </span>
-                        </label>
-                        <label class="trade-detail-price-cell" for="calcBuyPrice">
-                            <span class="trade-detail-price-label">Buy Price</span>
-                            <span class="trade-detail-price-row">
-                                <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
-                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                    <input type="number" class="tx-form-price-input" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcBuyPriceInput()" />
-                                </span>
-                            </span>
-                        </label>
-                        <label class="trade-detail-price-cell" for="calcSellPrice">
-                            <span class="trade-detail-price-label">Sell Price</span>
-                            <span class="trade-detail-price-row">
-                                <span class="tx-form-price-value-wrap trade-detail-price-value--target">
-                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                    <input type="number" class="tx-form-price-input" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcSellPriceInput()" />
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-
-                    <div>
-                        <label class="form-label small text-muted mb-1">Sell target (% on buy)</label>
-                        <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
-                        <div class="d-flex gap-2 mt-2">
-                            <input type="number" class="form-control" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.35" />
-                            <span id="calcAddPctBtnHost" class="flex-shrink-0"></span>
-                        </div>
-                    </div>
-
-                    <div class="calc-leverage-row">
-                        <label class="form-label small text-muted mb-0" for="calcLeverage">
-                            <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>Leverage
-                        </label>
-                        <div class="tx-leverage-field calc-leverage-field">
-                            <input type="number" class="form-control tx-leverage-input" id="calcLeverage" min="1" step="0.1" value="1" inputmode="decimal" oninput="updateMtfCalculator()" />
-                            <span class="tx-leverage-suffix" aria-hidden="true">x</span>
-                        </div>
-                    </div>
+            <div class="calc-section-card">
+                <div class="calc-section-head">
+                    <span class="calc-section-title">Trade timeline</span>
+                    <span id="calcModeBadge" class="d-none"></span>
                 </div>
-            </article>
+                <div class="calc-date-row">
+                    <label class="calc-date-field" for="calcBuyDate">
+                        <span class="calc-date-label">Buy Date</span>
+                        <span class="calc-date-value-row">
+                            <i class="far fa-calendar" aria-hidden="true"></i>
+                            <input type="date" class="calc-date-input" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                        </span>
+                    </label>
+                    <label class="calc-date-field" for="calcSellDate">
+                        <span class="calc-date-label">Sell Date (Target)</span>
+                        <span class="calc-date-value-row">
+                            <i class="far fa-calendar" aria-hidden="true"></i>
+                            <input type="date" class="calc-date-input" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                        </span>
+                    </label>
+                </div>
+                <div class="calc-date-actions">
+                    <button type="button" class="calc-chip-btn" onclick="setCalcSameDay()">Same day</button>
+                    <button type="button" class="calc-chip-btn calc-chip-btn--accent" onclick="setCalcTodayPair()">Today → Tomorrow</button>
+                </div>
+                <div id="calcIntradayBanner" class="d-none"></div>
+            </div>
+
+            <div class="calc-summary-strip" aria-label="Trade summary">
+                <label class="calc-summary-cell" for="calcQty">
+                    <span class="calc-summary-label">Quantity</span>
+                    <input type="number" class="calc-summary-input" id="calcQty" min="1" step="1" placeholder="0" value="" inputmode="numeric" oninput="updateMtfCalculator()" />
+                    <span class="calc-summary-meta">Shares</span>
+                </label>
+                <label class="calc-summary-cell" for="calcBuyPrice">
+                    <span class="calc-summary-label">Buy Price</span>
+                    <span class="calc-summary-input-wrap">
+                        <span aria-hidden="true">₹</span>
+                        <input type="number" class="calc-summary-input" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcBuyPriceInput()" />
+                    </span>
+                    <span class="calc-summary-meta">Per share</span>
+                </label>
+                <label class="calc-summary-cell" for="calcSellPrice">
+                    <span class="calc-summary-label">Target Sell</span>
+                    <span class="calc-summary-input-wrap calc-summary-input-wrap--up">
+                        <span aria-hidden="true">₹</span>
+                        <input type="number" class="calc-summary-input calc-summary-input--up" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcSellPriceInput()" />
+                    </span>
+                    <span class="calc-summary-meta">Per share</span>
+                </label>
+                <div class="calc-summary-cell">
+                    <span class="calc-summary-label">Expected Gain</span>
+                    <div class="calc-summary-static calc-summary-static--up" id="calcExpectedGain">—</div>
+                    <span class="calc-summary-meta" id="calcExpectedGainMeta">Per share</span>
+                </div>
+            </div>
+
+            <div class="calc-section-card">
+                <div class="calc-section-title mb-2">Sell target (% on buy)</div>
+                <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
+                <div class="d-flex gap-2 mt-2">
+                    <input type="number" class="form-control" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom %" />
+                    <span id="calcAddPctBtnHost" class="flex-shrink-0"></span>
+                </div>
+            </div>
+
+            <div class="calc-section-card">
+                <div class="calc-section-title mb-2">Leverage (MTF)</div>
+                <div class="calc-leverage-cards" id="calcLeverageCards" role="listbox" aria-label="Leverage"></div>
+                <div class="calc-leverage-slider-row">
+                    <input type="range" class="calc-leverage-slider" id="calcLeverage" min="1" max="5" step="1" value="1" oninput="onCalcLeverageInput()" aria-label="Leverage slider" />
+                    <div class="calc-leverage-selected" id="calcLeverageSelected">1x Selected</div>
+                </div>
+            </div>
+
+            <div class="calc-overview-grid" id="calcOverviewGrid" aria-label="Investment overview">
+                <div class="calc-overview-card">
+                    <div class="calc-overview-label">Total Investment</div>
+                    <div class="calc-overview-value" id="calcOvInvested">—</div>
+                </div>
+                <div class="calc-overview-card">
+                    <div class="calc-overview-label">Your Margin</div>
+                    <div class="calc-overview-value calc-overview-value--margin" id="calcOvMargin">—</div>
+                </div>
+                <div class="calc-overview-card">
+                    <div class="calc-overview-label">Broker Funded</div>
+                    <div class="calc-overview-value calc-overview-value--broker" id="calcOvBroker">—</div>
+                </div>
+                <div class="calc-overview-card">
+                    <div class="calc-overview-label">Est. Charges</div>
+                    <div class="calc-overview-value" id="calcOvCharges">—</div>
+                </div>
+                <div class="calc-overview-card">
+                    <div class="calc-overview-label">Est. Interest</div>
+                    <div class="calc-overview-value" id="calcOvInterest">—</div>
+                </div>
+                <div class="calc-overview-card calc-overview-card--profit">
+                    <div class="calc-overview-label">Est. Net Profit</div>
+                    <div class="calc-overview-value" id="calcOvProfit">—</div>
+                </div>
+            </div>
+
+            <div class="calc-footer-bar">
+                <div class="min-w-0">
+                    <div class="calc-footer-label">Expected Net Profit</div>
+                    <div class="calc-footer-value" id="calcFooterProfit">—</div>
+                </div>
+            </div>
 
             <div>
                 <p class="text-muted small text-uppercase fw-medium mb-2">Compare brokers</p>
@@ -431,8 +498,13 @@
                     <p class="small text-muted mb-0 px-1">Fill in all fields to compare brokers.</p>
                 </div>
             </div>
-            <!-- Keep host for older callers; summary lives in calcSummaryStats now -->
             <div id="calcTotalAmountHost" class="d-none" aria-hidden="true"></div>
+            <div id="calcSummaryStats" class="d-none" aria-hidden="true">
+                <div id="calcSummaryPnl"></div>
+                <div id="calcSummaryInvested"></div>
+                <div id="calcSummaryMargin"></div>
+            </div>
+            <div id="calcSummaryWords" class="d-none" aria-hidden="true"></div>
         </div>
     </section>
 
