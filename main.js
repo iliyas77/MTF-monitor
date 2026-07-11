@@ -1176,7 +1176,7 @@
             }
 
             function syncMarketSubTabUI() {
-                document.querySelectorAll('[data-market-tab]').forEach((btn) => {
+                document.querySelectorAll('#marketSubTabList [data-market-tab]').forEach((btn) => {
                     const active = btn.dataset.marketTab === marketSubTab;
                     btn.classList.toggle('active', active);
                     btn.setAttribute('aria-selected', active ? 'true' : 'false');
@@ -2947,13 +2947,9 @@
             }
 
             function setRangeButtonsActive(containerSelector, activeRange) {
-                document.querySelectorAll(`${containerSelector} [data-range]`).forEach(b => {
-                    const on = activeRange != null && activeRange !== '' && b.dataset.range === String(activeRange);
-                    b.classList.remove('btn-primary', 'btn-outline-primary', 'btn-outline-secondary', 'btn-success', 'btn-outline-success');
-                    b.classList.add('btn', 'btn-sm');
-                    b.classList.toggle('active', on);
-                    b.classList.add(on ? 'btn-success' : 'btn-outline-success');
-                    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+                const key = activeRange != null && activeRange !== '' ? String(activeRange) : '';
+                document.querySelectorAll(`${containerSelector} .btn-check[data-range]`).forEach((input) => {
+                    input.checked = key !== '' && input.dataset.range === key;
                 });
             }
 

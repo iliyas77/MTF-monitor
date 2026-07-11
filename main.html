@@ -101,10 +101,14 @@
         <div class="px-3 pt-3">
             <p class="text-muted small text-uppercase fw-medium mb-2" id="marketSectionLabel">Live market</p>
 
-            <div class="btn-group w-100 mb-3" role="tablist" aria-label="Market views">
-                <button type="button" class="btn btn-outline-primary active" role="tab" aria-selected="true" data-market-tab="in-trade" onclick="setMarketSubTab('in-trade')">In Trade</button>
-                <button type="button" class="btn btn-outline-primary" role="tab" aria-selected="false" data-market-tab="watchlist" onclick="setMarketSubTab('watchlist')">Watchlist</button>
-            </div>
+            <ul class="nav nav-pills nav-fill mb-3" id="marketSubTabList" role="tablist" aria-label="Market views">
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link active" id="market-tab-in-trade" data-market-tab="in-trade" role="tab" aria-selected="true" onclick="setMarketSubTab('in-trade')">In Trade</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link" id="market-tab-watchlist" data-market-tab="watchlist" role="tab" aria-selected="false" onclick="setMarketSubTab('watchlist')">Watchlist</button>
+                </li>
+            </ul>
 
             <div class="card bg-body rounded-3 overflow-hidden mb-3">
                 <div class="card-body p-3 d-flex align-items-center justify-content-between gap-3">
@@ -493,11 +497,16 @@
             <div class="mb-3">
                 <label class="form-label small text-uppercase text-muted fw-medium">Quick range</label>
                 <div class="d-flex flex-wrap gap-2" id="moneyPageRangeButtons" role="group" aria-label="Quick date range">
-                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-range="all" onclick="setMoneyPageRangeInForm('all')">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyPageRangeInForm('yesterday')">Yesterday</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyPageRangeInForm(7)">1W</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyPageRangeInForm(30)">1M</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyPageRangeInForm(90)">3M</button>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('all')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-all">All</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('yesterday')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-yesterday">Yesterday</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-7" data-range="7" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm(7)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-7">1W</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-30" data-range="30" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm(30)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-30">1M</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-90" data-range="90" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm(90)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-90">3M</label>
                 </div>
             </div>
             <div class="mb-3">
@@ -513,11 +522,16 @@
             <div class="mb-3">
                 <label class="form-label small text-uppercase text-muted fw-medium">Quick range</label>
                 <div class="d-flex flex-wrap gap-2" id="moneyHistoryRangeButtons" role="group" aria-label="Quick date range">
-                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill" data-range="all" onclick="setMoneyHistoryRange('all')">All</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="yesterday" onclick="setMoneyHistoryRange('yesterday')">Yesterday</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="7" onclick="setMoneyHistoryRange(7)">1W</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="30" onclick="setMoneyHistoryRange(30)">1M</button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-range="90" onclick="setMoneyHistoryRange(90)">3M</button>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange('all')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-all">All</label>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange('yesterday')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-yesterday">Yesterday</label>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-7" data-range="7" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(7)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-7">1W</label>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-30" data-range="30" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(30)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-30">1M</label>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-90" data-range="90" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(90)">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-90">3M</label>
                 </div>
             </div>
             <div class="mb-3">
@@ -534,22 +548,28 @@
                 <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
                 <div class="row g-2" id="pastRangeButtons" role="group" aria-label="Quick date range">
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="today" onclick="setPastRange('today')" aria-pressed="false">Today</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)setPastRange('today')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-today">Today</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="yesterday" onclick="setPastRange('yesterday')" aria-pressed="false">Yesterday</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setPastRange('yesterday')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-yesterday">Yesterday</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-success w-100 active" data-range="this-week" onclick="setPastRange('this-week')" aria-pressed="true">This Week</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)setPastRange('this-week')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-this-week">This Week</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="last-week" onclick="setPastRange('last-week')" aria-pressed="false">Last week</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)setPastRange('last-week')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-last-week">Last week</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-20" onclick="setPastRange('work-20')" aria-pressed="false">20 WD</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)setPastRange('work-20')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-20">20 WD</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-30" onclick="setPastRange('work-30')" aria-pressed="false">30 WD</button>
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)setPastRange('work-30')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-30">30 WD</label>
                     </div>
                 </div>
             </section>
@@ -573,22 +593,28 @@
                 <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
                 <div class="row g-2" id="tradeRangeButtons" role="group" aria-label="Quick date range">
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="today" onclick="setTradeRange('today')" aria-pressed="false">Today</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)setTradeRange('today')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-today">Today</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="yesterday" onclick="setTradeRange('yesterday')" aria-pressed="false">Yesterday</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setTradeRange('yesterday')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-yesterday">Yesterday</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="this-week" onclick="setTradeRange('this-week')" aria-pressed="false">This Week</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-this-week" data-range="this-week" autocomplete="off" onchange="if(this.checked)setTradeRange('this-week')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-this-week">This Week</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="last-week" onclick="setTradeRange('last-week')" aria-pressed="false">Last week</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)setTradeRange('last-week')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-last-week">Last week</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-20" onclick="setTradeRange('work-20')" aria-pressed="false">20 WD</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)setTradeRange('work-20')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-work-20">20 WD</label>
                     </div>
                     <div class="col-4">
-                        <button type="button" class="btn btn-sm btn-outline-success w-100" data-range="work-30" onclick="setTradeRange('work-30')" aria-pressed="false">30 WD</button>
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)setTradeRange('work-30')">
+                        <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-work-30">30 WD</label>
                     </div>
                 </div>
             </section>
@@ -760,13 +786,6 @@
                 <div class="p-4 pt-0" id="moneyEntryFooter"></div>
             </div>
         </div>
-    </div>
-
-    <!-- CONFIRM DIALOG (hidden elements used by confirmAction) -->
-    <div id="confirmDialogHidden" class="d-none">
-        <span id="confirmModalTitle"></span>
-        <span id="confirmModalMessage"></span>
-        <button type="button" id="confirmModalConfirmBtn"></button>
     </div>
 
     <!-- ============ SCRIPTS ============ -->
