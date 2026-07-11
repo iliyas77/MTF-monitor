@@ -25,7 +25,7 @@ async function run() {
             const lastEdit = Number(fs.readFileSync(SCHEDULE_FILE, 'utf8'));
             if (Date.now() - lastEdit < DEBOUNCE_MS) continue;
 
-            const output = execSync('npm run build', {
+            const output = execSync('npm run build:nobump', {
                 cwd: ROOT,
                 encoding: 'utf8',
                 stdio: ['ignore', 'pipe', 'pipe']
