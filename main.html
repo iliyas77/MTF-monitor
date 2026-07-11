@@ -551,102 +551,148 @@
                 <input type="date" class="form-control" id="moneyHistoryTo" />
             </div>
         </div>
-        <div id="panelPastFilter" class="trade-filters">
-            <section class="trade-filters-section">
-                <h4 class="trade-filters-title">Status</h4>
-                <div class="trade-filters-radios" role="radiogroup" aria-label="Trade status">
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="all" id="tradeFilterStatus-all"><span>All</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="open" id="tradeFilterStatus-open" checked><span>Open</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="plan" id="tradeFilterStatus-plan"><span>Planned</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="closed" id="tradeFilterStatus-closed"><span>Closed</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="cancelled" id="tradeFilterStatus-cancelled"><span>Cancelled</span></label>
+        <!-- Trade filters sheet (full-height Cupertino Pane) -->
+        <div id="tradeFilterSheet" aria-label="Trade filters">
+            <div class="trade-filter-header">
+                <div class="trade-filter-header-text">
+                    <h5 class="trade-filter-title mb-0">Filters</h5>
+                    <p class="trade-filter-summary mb-0" id="tradeFilterSummary">Choose what to show</p>
                 </div>
-            </section>
+                <button type="button" class="trade-filter-close" onclick="closeFilterSheet()" aria-label="Close">
+                    <i class="fas fa-times" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="tradeFilterContent" class="trade-filter-scroll" overflow-y>
+                <div id="panelPastFilter" class="trade-filters">
+                    <section class="trade-filters-card">
+                        <div class="trade-filters-card-head">
+                            <span class="trade-filters-card-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                            <div>
+                                <h4 class="trade-filters-title">Status</h4>
+                                <p class="trade-filters-hint">Which trades to list</p>
+                            </div>
+                        </div>
+                        <div class="trade-filters-pills" role="radiogroup" aria-label="Trade status">
+                            <input type="radio" class="btn-check" name="tradeFilterStatus" value="all" id="tradeFilterStatus-all" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterStatus-all">All</label>
+                            <input type="radio" class="btn-check" name="tradeFilterStatus" value="open" id="tradeFilterStatus-open" checked onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterStatus-open">Open</label>
+                            <input type="radio" class="btn-check" name="tradeFilterStatus" value="plan" id="tradeFilterStatus-plan" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterStatus-plan">Planned</label>
+                            <input type="radio" class="btn-check" name="tradeFilterStatus" value="closed" id="tradeFilterStatus-closed" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterStatus-closed">Closed</label>
+                            <input type="radio" class="btn-check" name="tradeFilterStatus" value="cancelled" id="tradeFilterStatus-cancelled" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterStatus-cancelled">Cancelled</label>
+                        </div>
+                    </section>
 
-            <section class="trade-filters-section">
-                <h4 class="trade-filters-title">Holding Days</h4>
-                <div class="trade-filters-chips" role="group" aria-label="Holding days">
-                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-all" value="all" checked>
-                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-all">All</label>
-                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-1-3" value="1-3">
-                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-1-3">1–3</label>
-                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-4-7" value="4-7">
-                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-4-7">4–7</label>
-                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-8" value="8+">
-                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-8">8+</label>
-                </div>
-            </section>
+                    <section class="trade-filters-card">
+                        <div class="trade-filters-card-head">
+                            <span class="trade-filters-card-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
+                            <div>
+                                <h4 class="trade-filters-title">Holding days</h4>
+                                <p class="trade-filters-hint">How long the position is held</p>
+                            </div>
+                        </div>
+                        <div class="trade-filters-pills" role="group" aria-label="Holding days">
+                            <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-all" value="all" checked onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterHold-all">All</label>
+                            <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-1-3" value="1-3" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterHold-1-3">1–3</label>
+                            <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-4-7" value="4-7" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterHold-4-7">4–7</label>
+                            <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-8" value="8+" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterHold-8">8+</label>
+                        </div>
+                    </section>
 
-            <section class="trade-filters-section">
-                <h4 class="trade-filters-title">Performance</h4>
-                <div class="trade-filters-checks" role="group" aria-label="Performance">
-                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-profit" value="profit"><span>Profit</span></label>
-                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-loss" value="loss"><span>Loss</span></label>
-                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-near" value="near_target"><span>Near Target</span></label>
-                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-hit" value="target_hit"><span>Target Hit</span></label>
-                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-verified" value="verified"><span>Verified</span></label>
-                </div>
-            </section>
+                    <section class="trade-filters-card">
+                        <div class="trade-filters-card-head">
+                            <span class="trade-filters-card-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                            <div>
+                                <h4 class="trade-filters-title">Performance</h4>
+                                <p class="trade-filters-hint">Match any selected — leave empty for all</p>
+                            </div>
+                        </div>
+                        <div class="trade-filters-pills trade-filters-checks" role="group" aria-label="Performance">
+                            <input type="checkbox" class="btn-check" id="tradeFilterPerf-profit" value="profit" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterPerf-profit">Profit</label>
+                            <input type="checkbox" class="btn-check" id="tradeFilterPerf-loss" value="loss" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterPerf-loss">Loss</label>
+                            <input type="checkbox" class="btn-check" id="tradeFilterPerf-near" value="near_target" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterPerf-near">Near target</label>
+                            <input type="checkbox" class="btn-check" id="tradeFilterPerf-hit" value="target_hit" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterPerf-hit">Target hit</label>
+                            <input type="checkbox" class="btn-check" id="tradeFilterPerf-verified" value="verified" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterPerf-verified">Verified</label>
+                        </div>
+                    </section>
 
-            <section class="trade-filters-section">
-                <h4 class="trade-filters-title">Sort By</h4>
-                <div class="trade-filters-radios" role="radiogroup" aria-label="Sort by">
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="company" id="tradeFilterSort-company"><span>Company</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="holding" id="tradeFilterSort-holding" checked><span>Holding Days</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="buyDate" id="tradeFilterSort-buyDate"><span>Buy Date</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="pnl" id="tradeFilterSort-pnl"><span>P&amp;L</span></label>
-                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="return" id="tradeFilterSort-return"><span>Current Return</span></label>
-                </div>
-            </section>
+                    <section class="trade-filters-card">
+                        <div class="trade-filters-card-head">
+                            <span class="trade-filters-card-icon" aria-hidden="true"><i class="fas fa-arrow-down-wide-short"></i></span>
+                            <div>
+                                <h4 class="trade-filters-title">Sort by</h4>
+                                <p class="trade-filters-hint">Order of the trade list</p>
+                            </div>
+                        </div>
+                        <div class="trade-filters-pills trade-filters-pills--wrap" role="radiogroup" aria-label="Sort by">
+                            <input type="radio" class="btn-check" name="tradeFilterSort" value="company" id="tradeFilterSort-company" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterSort-company">Company</label>
+                            <input type="radio" class="btn-check" name="tradeFilterSort" value="holding" id="tradeFilterSort-holding" checked onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterSort-holding">Holding days</label>
+                            <input type="radio" class="btn-check" name="tradeFilterSort" value="buyDate" id="tradeFilterSort-buyDate" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterSort-buyDate">Buy date</label>
+                            <input type="radio" class="btn-check" name="tradeFilterSort" value="pnl" id="tradeFilterSort-pnl" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterSort-pnl">P&amp;L</label>
+                            <input type="radio" class="btn-check" name="tradeFilterSort" value="return" id="tradeFilterSort-return" onchange="updateTradeFilterSummary()">
+                            <label class="trade-filters-pill" for="tradeFilterSort-return">Current return</label>
+                        </div>
+                    </section>
 
-            <section class="trade-filters-section">
-                <h4 class="trade-filters-title">Quick range</h4>
-                <div class="row g-2" id="pastRangeButtons" role="group" aria-label="Quick date range">
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)draftPastRange('all')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-all">All</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)draftPastRange('today')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-today">Today</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)draftPastRange('yesterday')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-yesterday">Yesterday</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)draftPastRange('this-week')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-this-week">This Week</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)draftPastRange('last-week')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-last-week">Last week</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)draftPastRange('work-20')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-20">20 WD</label>
-                    </div>
-                    <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)draftPastRange('work-30')">
-                        <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-30">30 WD</label>
-                    </div>
+                    <section class="trade-filters-card trade-filters-card--last">
+                        <div class="trade-filters-card-head">
+                            <span class="trade-filters-card-icon" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                            <div>
+                                <h4 class="trade-filters-title">Date range</h4>
+                                <p class="trade-filters-hint">Quick picks or a custom from–to</p>
+                            </div>
+                        </div>
+                        <div class="trade-filters-pills trade-filters-pills--wrap" id="pastRangeButtons" role="group" aria-label="Quick date range">
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)draftPastRange('all')">
+                            <label class="trade-filters-pill" for="pastRange-all">All</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)draftPastRange('today')">
+                            <label class="trade-filters-pill" for="pastRange-today">Today</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)draftPastRange('yesterday')">
+                            <label class="trade-filters-pill" for="pastRange-yesterday">Yesterday</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)draftPastRange('this-week')">
+                            <label class="trade-filters-pill" for="pastRange-this-week">This week</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)draftPastRange('last-week')">
+                            <label class="trade-filters-pill" for="pastRange-last-week">Last week</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)draftPastRange('work-20')">
+                            <label class="trade-filters-pill" for="pastRange-work-20">20 WD</label>
+                            <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)draftPastRange('work-30')">
+                            <label class="trade-filters-pill" for="pastRange-work-30">30 WD</label>
+                        </div>
+                        <div class="trade-filters-dates">
+                            <div class="trade-filters-date-field">
+                                <label class="trade-filters-date-label" for="pastFrom">From</label>
+                                <input type="date" class="form-control trade-filters-date-input" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
+                            </div>
+                            <div class="trade-filters-date-field">
+                                <label class="trade-filters-date-label" for="pastTo">To</label>
+                                <input type="date" class="form-control trade-filters-date-input" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
+                            </div>
+                        </div>
+                    </section>
                 </div>
-            </section>
-
-            <section class="trade-filters-section trade-filters-section--last">
-                <h4 class="trade-filters-title">Custom range</h4>
-                <div class="d-flex align-items-end gap-2">
-                    <div class="flex-fill">
-                        <label class="form-label small mb-1" for="pastFrom">From</label>
-                        <input type="date" class="form-control" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
-                    </div>
-                    <div class="pb-2 text-muted" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
-                    <div class="flex-fill">
-                        <label class="form-label small mb-1" for="pastTo">To</label>
-                        <input type="date" class="form-control" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
-                    </div>
-                </div>
-            </section>
+            </div>
+            <div class="trade-filter-footer">
+                <button type="button" class="btn btn-outline-secondary trade-filter-footer-btn" onclick="resetTradeFilterSheet()">Reset</button>
+                <button type="button" class="btn btn-success trade-filter-footer-btn trade-filter-footer-btn--apply" onclick="applyTradeFilters()">
+                    <i class="fas fa-check me-2" aria-hidden="true"></i>Apply
+                </button>
+            </div>
         </div>
         <div id="panelTradeFilter">
             <section class="mb-3">
@@ -742,78 +788,206 @@
         </div>
 
         <!-- Trade add/edit sheet shell (Cupertino Pane) -->
-        <div id="txModal" aria-labelledby="txModalTitle">
-            <div class="border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" style="width:2.75rem;height:2.75rem"><i class="fas fa-eye"></i></button>
-                <h5 class="fw-semibold flex-grow-1 min-w-0 mb-0 text-truncate" id="txModalTitle">Trade</h5>
-                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeTradeModal()" aria-label="Close">
-                    <i class="fas fa-times text-muted" aria-hidden="true"></i>
-                </button>
-            </div>
+        <div id="txModal" aria-label="Trade form">
             <div class="px-3 py-3" id="txModalBody">
-                <form id="txForm" class="d-flex flex-column gap-4" novalidate>
+                <form id="txForm" class="tx-form d-flex flex-column" novalidate>
                     <input type="hidden" id="txEditId" value="" />
-
-                    <div class="row g-3 align-items-end">
-                        <div class="col-6">
-                            <label class="form-label text-nowrap" for="txCompany">Company <span class="text-danger">*</span></label>
-                            <div class="position-relative">
-                                <input type="text" class="form-control" id="txCompany" placeholder="Symbol or name" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
-                                <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
-                            </div>
-                        </div>
-                        <div class="col-6" id="txBrokerCol">
-                            <label class="form-label text-nowrap" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
-                            <input type="hidden" id="txBroker" value="" />
-                            <div id="txBrokerHost" class="w-100"></div>
-                        </div>
-                    </div>
-                    <div id="txCompanyMeta" class="form-text d-none"></div>
-                    <div id="txCompanyCatalogStatus" class="form-text"></div>
                     <input type="hidden" id="txStatus" value="open" />
+                    <input type="hidden" id="txBuyDate" value="" />
+                    <input type="hidden" id="txSellDate" value="" />
+                    <input type="hidden" id="txModalTitle" value="New Trade" />
 
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <label class="form-label text-nowrap text-info" for="txBuyDate">Buy Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="txBuyDate" required />
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label text-nowrap text-danger" for="txSellDate">Sell Date <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" id="txSellDate" required />
-                        </div>
-                    </div>
-
-                    <div class="row g-3">
-                        <div class="col-4">
-                            <label class="form-label text-nowrap" for="txQty">Qty <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="txQty" required min="1" step="1" />
-                        </div>
-                        <div class="col-4">
-                            <label class="form-label text-nowrap text-info" for="txBuyPrice">Buy <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="number" class="form-control" id="txBuyPrice" required min="0.01" step="0.01" />
-                                <button type="button" class="btn btn-outline-secondary px-2" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
-                                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                                </button>
+                    <div class="tx-modal-top d-flex align-items-start gap-2">
+                        <div class="position-relative flex-grow-1 min-w-0">
+                            <i class="fas fa-search tx-company-search-icon" aria-hidden="true"></i>
+                            <input type="text" class="form-control tx-company-input" id="txCompany" placeholder="Search company name or symbol" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" aria-label="Company" />
+                            <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
+                            <div class="tx-company-selected d-none" id="txCompanySelected">
+                                <span class="tx-company-selected-symbol" id="txCompanySelectedSymbol"></span>
                             </div>
                         </div>
-                        <div class="col-4">
-                            <label class="form-label text-nowrap text-danger" for="txSellPrice">Sell <span class="text-danger" id="txSellPriceRequired">*</span></label>
-                            <input type="number" class="form-control" id="txSellPrice" min="0.01" step="0.01" />
-                            <div class="form-text d-none" id="txSellPriceHint">Optional for open trades.</div>
-                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" style="width:2.75rem;height:2.75rem"><i class="fas fa-eye"></i></button>
+                        <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeTradeModal()" aria-label="Close">
+                            <i class="fas fa-times text-muted" aria-hidden="true"></i>
+                        </button>
                     </div>
 
-                    <div>
-                        <label class="form-label" for="txLeverage">Leverage (X)</label>
-                        <input type="number" class="form-control" id="txLeverage" min="1" step="0.1" value="1" />
-                        <div class="form-text">Your own margin = Total Investment / Leverage.</div>
-                        <div id="leverageBreakdown" class="mt-2 small text-muted">
-                            <div class="d-flex justify-content-between gap-2"><span>Total Investment</span><span id="previewTotalInv">₹0</span></div>
-                            <div class="d-flex justify-content-between gap-2"><span>Your Margin</span><span id="previewOwnMargin">₹0</span></div>
-                            <div class="d-flex justify-content-between gap-2"><span>Broker Funded</span><span id="previewMtfAmt">₹0</span></div>
+                    <section class="tx-section" data-tx-section="status">
+                        <div class="tx-status-group" role="radiogroup" aria-label="Trade status">
+                            <button type="button" class="tx-status-option is-active" data-status="open" onclick="setTxFormStatus('open')" aria-pressed="true">
+                                <span class="tx-status-option-label">Open</span>
+                                <i class="fas fa-check-circle tx-status-option-icon" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="tx-status-option" data-status="closed" onclick="setTxFormStatus('closed')" aria-pressed="false">
+                                <span class="tx-status-option-label">Closed</span>
+                                <i class="far fa-circle tx-status-option-icon" aria-hidden="true"></i>
+                            </button>
+                            <button type="button" class="tx-status-option" data-status="planned" onclick="setTxFormStatus('planned')" aria-pressed="false">
+                                <span class="tx-status-option-label">Planned</span>
+                                <i class="far fa-circle tx-status-option-icon" aria-hidden="true"></i>
+                            </button>
                         </div>
-                    </div>
+                    </section>
+
+                    <section class="tx-section tx-section--detail" data-tx-section="detail">
+                        <section class="trade-detail-market tx-form-broker-market">
+                            <div class="trade-detail-market-col">
+                                <div class="trade-detail-section-label">
+                                    <i class="fas fa-chart-line text-success me-1" aria-hidden="true"></i>
+                                    Current Market
+                                </div>
+                                <div class="trade-detail-cmp text-body" id="txLivePrice">—</div>
+                                <div class="small text-muted mt-1" id="txLivePriceNote"></div>
+                            </div>
+                            <div class="trade-detail-market-divider" aria-hidden="true"></div>
+                            <div class="trade-detail-market-col" id="txBrokerCol">
+                                <div class="trade-detail-section-label mb-1">Broker <span class="text-danger">*</span></div>
+                                <input type="hidden" id="txBroker" value="" />
+                                <div id="txBrokerHost" class="w-100"></div>
+                            </div>
+                        </section>
+
+                        <div class="trade-detail-prices tx-form-prices mt-3">
+                            <label class="trade-detail-price-cell" for="txQty">
+                                <span class="trade-detail-price-label">Quantity</span>
+                                <span class="trade-detail-price-row">
+                                    <input type="number" class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty" id="txQty" required min="1" step="1" placeholder="0" value="0" inputmode="numeric" />
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--qty" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                </span>
+                            </label>
+                            <label class="trade-detail-price-cell" for="txBuyPrice">
+                                <span class="trade-detail-price-label">Buy Price</span>
+                                <span class="trade-detail-price-row">
+                                    <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
+                                        <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                        <input type="number" class="tx-form-price-input" id="txBuyPrice" required min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                    </span>
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--buy" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                </span>
+                            </label>
+                            <label class="trade-detail-price-cell" for="txSellPrice">
+                                <span class="trade-detail-price-label">Target Price</span>
+                                <span class="trade-detail-price-row">
+                                    <span class="tx-form-price-value-wrap trade-detail-price-value--target">
+                                        <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                        <input type="number" class="tx-form-price-input" id="txSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                    </span>
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--target" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                </span>
+                            </label>
+                            <button type="button" class="trade-detail-price-target-icon" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
+                                <i class="fas fa-sync-alt trade-detail-bullseye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <span class="d-none" id="txSellPriceRequired" aria-hidden="true"></span>
+                        <span class="d-none" id="txSellPriceHint" aria-hidden="true"></span>
+
+                        <div class="tx-leverage-row mt-3">
+                            <label class="form-label mb-0 text-nowrap" for="txLeverage">
+                                <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>
+                                Leverage <span class="text-danger">*</span>
+                            </label>
+                            <div class="tx-leverage-field">
+                                <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1" step="0.1" value="1" inputmode="decimal" aria-label="Leverage value" oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
+                                <span class="tx-leverage-suffix" aria-hidden="true">x</span>
+                            </div>
+                        </div>
+
+                        <section class="trade-detail-ifsold mt-3">
+                            <div class="trade-detail-ifsold-title">
+                                <span class="trade-detail-ifsold-title-icon-wrap"><i class="fas fa-chart-line trade-detail-ifsold-title-icon" aria-hidden="true"></i></span>
+                                <span class="trade-detail-ifsold-title-text" id="txIfSoldTitle">If Sold Now</span>
+                                <span class="trade-detail-ifsold-title-sub" id="txIfSoldSub">(At Current Market Price)</span>
+                            </div>
+                            <div class="trade-detail-ifsold-grid">
+                                <div class="trade-detail-ifsold-col">
+                                    <span class="trade-detail-ifsold-label">Sell Value</span>
+                                    <span class="trade-detail-ifsold-value" id="txIfSoldSellValue">₹0.00</span>
+                                </div>
+                                <span class="trade-detail-ifsold-op" aria-hidden="true">−</span>
+                                <div class="trade-detail-ifsold-col">
+                                    <span class="trade-detail-ifsold-label">Total Cost</span>
+                                    <span class="trade-detail-ifsold-value text-danger" id="txIfSoldTotalCost">₹0.00</span>
+                                </div>
+                                <span class="trade-detail-ifsold-op" aria-hidden="true">=</span>
+                                <div class="trade-detail-ifsold-col">
+                                    <span class="trade-detail-ifsold-label">Net P&amp;L</span>
+                                    <span class="trade-detail-ifsold-value text-body-secondary" id="txIfSoldNet">₹0.00</span>
+                                </div>
+                                <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
+                                <div class="trade-detail-ifsold-col trade-detail-ifsold-col--pct">
+                                    <span class="trade-detail-ifsold-label">Net P&amp;L %</span>
+                                    <span class="trade-detail-ifsold-value text-body-secondary" id="txIfSoldNetPct">0%</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="trade-detail-costs mt-3">
+                            <div class="trade-detail-cost-card trade-detail-cost-card--interest" role="group" aria-label="Interest">
+                                <span class="trade-detail-cost-head">
+                                    <i class="fas fa-bullseye trade-detail-cost-icon" aria-hidden="true"></i>
+                                    <span class="trade-detail-cost-label">Interest</span>
+                                </span>
+                                <span class="trade-detail-cost-value" id="txCostInterest">₹0.00</span>
+                                <span class="trade-detail-cost-meta" id="txCostInterestMeta">0D</span>
+                            </div>
+                            <div class="trade-detail-cost-card trade-detail-cost-card--charges" role="group" aria-label="Charges">
+                                <span class="trade-detail-cost-head">
+                                    <i class="fas fa-receipt trade-detail-cost-icon" aria-hidden="true"></i>
+                                    <span class="trade-detail-cost-label">Charges</span>
+                                </span>
+                                <span class="trade-detail-cost-value" id="txCostCharges">₹0.00</span>
+                                <span class="trade-detail-cost-meta">One-time</span>
+                            </div>
+                            <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost">
+                                <span class="trade-detail-cost-head">
+                                    <i class="fas fa-wallet trade-detail-cost-icon" aria-hidden="true"></i>
+                                    <span class="trade-detail-cost-label">Total</span>
+                                </span>
+                                <span class="trade-detail-cost-value" id="txCostTotal">₹0.00</span>
+                                <span class="trade-detail-cost-meta">Interest + Charges</span>
+                            </div>
+                        </section>
+
+                        <section class="trade-detail-timeline-wrap mt-3">
+                            <div class="trade-detail-timeline">
+                                <div class="trade-detail-timeline-step">
+                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-calendar-plus trade-detail-timeline-icon trade-detail-timeline-icon--buy" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-copy">
+                                        <span class="trade-detail-timeline-label">Bought On</span>
+                                        <span class="trade-detail-timeline-value" id="txTimelineBuy">—</span>
+                                    </span>
+                                </div>
+                                <span class="trade-detail-timeline-sep" aria-hidden="true">
+                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-vline"></span>
+                                </span>
+                                <div class="trade-detail-timeline-step">
+                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-hourglass-half trade-detail-timeline-icon trade-detail-timeline-icon--hold" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-copy">
+                                        <span class="trade-detail-timeline-label">Holding</span>
+                                        <span class="badge rounded-pill trade-detail-hold-badge" id="txTimelineHold">0 Days</span>
+                                    </span>
+                                </div>
+                                <span class="trade-detail-timeline-sep" aria-hidden="true">
+                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-vline"></span>
+                                </span>
+                                <div class="trade-detail-timeline-step">
+                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-calendar-check trade-detail-timeline-icon trade-detail-timeline-icon--exit" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-copy">
+                                        <span class="trade-detail-timeline-label">Expected Exit</span>
+                                        <span class="trade-detail-timeline-value" id="txTimelineExit">—</span>
+                                    </span>
+                                </div>
+                            </div>
+                            <p class="trade-detail-timeline-hint mb-0">Dates default to today · Hold 0 days</p>
+                        </section>
+
+                        <span class="d-none" id="previewTotalInv" aria-hidden="true"></span>
+                        <span class="d-none" id="previewOwnMargin" aria-hidden="true"></span>
+                        <span class="d-none" id="previewMtfAmt" aria-hidden="true"></span>
+                    </section>
                 </form>
             </div>
             <div class="border-top p-3 bg-body" id="txModalFooter"></div>

@@ -131,6 +131,9 @@
                 openViewFromEditor,
                 deleteTradeFromEditor,
                 onTxStatusChange,
+                setTxFormStatus,
+                syncTxLeverageDisplay,
+                onTxLeverageInput,
                 updatePreview,
                 openAddModal,
                 openEditModal,
@@ -406,7 +409,7 @@
                 stockSymbols = symbols;
                 stockCatalogLoaded = true;
                 saveStockCatalogCache(symbols, source);
-                setStockCatalogStatus(`${symbols.length.toLocaleString()} NSE stocks loaded live — type to search`);
+                setStockCatalogStatus(`${symbols.length.toLocaleString()} NSE stocks loaded live`);
                 return true;
             }
 
@@ -655,18 +658,66 @@
                     .replace(/"/g, '&quot;');
             }
 
+            function formatTxLivePrice(n) {
+                const v = Number(n);
+                if (!isFinite(v) || v <= 0) return '—';
+                return '₹' + v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function setTxCompanyLiveCardVisible(show) {
+                /* Company header is always visible in the detail-style form. */
+            }
+
             function setTxCompanyMeta(meta) {
                 selectedStockMeta = meta;
-                const el = document.getElementById('txCompanyMeta');
-                if (!el) return;
+                const selectedWrap = document.getElementById('txCompanySelected');
+                const selectedSymbol = document.getElementById('txCompanySelectedSymbol');
+                const liveEl = document.getElementById('txLivePrice');
+                const noteEl = document.getElementById('txLivePriceNote');
                 if (!meta) {
-                    el.classList.add('d-none');
-                    el.textContent = '';
+                    if (selectedWrap) selectedWrap.classList.add('d-none');
+                    if (selectedSymbol) selectedSymbol.textContent = '';
+                    if (liveEl) {
+                        liveEl.textContent = '—';
+                        delete liveEl.dataset.hasQuote;
+                        delete liveEl.dataset.price;
+                    }
+                    if (noteEl) {
+                        noteEl.textContent = '';
+                        noteEl.className = 'small text-muted mt-1';
+                    }
+                    if (typeof global.updatePreview === 'function') {
+                        try { global.updatePreview(); } catch (_) {}
+                    }
                     return;
                 }
-                el.classList.remove('d-none');
-                const extra = meta.sector ? ` · ${meta.sector}` : (meta.i ? ` · ${meta.i}` : '');
-                el.textContent = `${meta.s} · ${meta.e || 'NSE'}${extra}`;
+                const symbol = meta.s || '';
+                const exchange = meta.e || 'NSE';
+                if (selectedWrap) selectedWrap.classList.remove('d-none');
+                if (selectedSymbol) selectedSymbol.textContent = symbol ? `${symbol} · ${exchange}` : exchange;
+                if (typeof global.updatePreview === 'function') {
+                    try { global.updatePreview(); } catch (_) {}
+                }
+            }
+
+            function setTxLivePriceStatus(msg, isError) {
+                const noteEl = document.getElementById('txLivePriceNote');
+                if (!noteEl) return;
+                noteEl.className = isError ? 'small text-danger mt-1' : 'small text-muted mt-1';
+                noteEl.innerHTML = msg || '';
+            }
+
+            function setTxLivePriceValue(price) {
+                const liveEl = document.getElementById('txLivePrice');
+                if (!liveEl) return;
+                liveEl.textContent = formatTxLivePrice(price);
+                if (price != null && Number(price) > 0) {
+                    liveEl.dataset.hasQuote = '1';
+                    liveEl.dataset.price = String(Number(price));
+                } else {
+                    delete liveEl.dataset.hasQuote;
+                    delete liveEl.dataset.price;
+                }
             }
 
             /** Same-day target +1%; overnight / multi-day target +1.3%. */
@@ -746,23 +797,13 @@
                 return true;
             }
 
-            function setTxLivePriceStatus(msg, isError) {
-                const el = document.getElementById('txCompanyMeta');
-                if (!el || !selectedStockMeta) return;
-                const base = `${selectedStockMeta.s} · ${selectedStockMeta.e || 'NSE'}${selectedStockMeta.sector ? ` · ${selectedStockMeta.sector}` : (selectedStockMeta.i ? ` · ${selectedStockMeta.i}` : '')}`;
-                el.classList.remove('d-none');
-                el.innerHTML = msg
-                    ? `${escapeHtml(base)} · <span class="${isError ? 'text-danger' : 'text-muted'}">${msg}</span>`
-                    : escapeHtml(base);
-            }
-
             function setTxLivePriceBtnBusy(busy) {
                 const btn = document.getElementById('txBuyPriceLiveBtn');
                 if (!btn) return;
                 btn.disabled = !!busy;
                 btn.innerHTML = busy
                     ? '<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>'
-                    : '<i class="fas fa-sync-alt" aria-hidden="true"></i>';
+                    : '<i class="fas fa-sync-alt trade-detail-bullseye" aria-hidden="true"></i>';
             }
 
             async function fillTradeFormFromLivePrice(itemOrNull) {
@@ -790,6 +831,7 @@
                 setTxLivePriceBtnBusy(false);
 
                 if (!isValidMarketQuote(quote)) {
+                    setTxLivePriceValue(null);
                     setTxLivePriceStatus('Live price unavailable — enter buy manually', true);
                     showToast('Could not fetch live price. Enter buy price manually.', 'warning');
                     return null;
@@ -806,9 +848,9 @@
                 const pctLabel = isSameDayTradeDates(buyDate, sellDate) ? '+1% same-day' : '+1.3% overnight';
                 const sellVal = document.getElementById('txSellPrice')?.value;
                 const qtyVal = document.getElementById('txQty')?.value;
-                const invApprox = (Number(buy) * Number(qtyVal)) || 0;
-                setTxLivePriceStatus(`Live ₹${Number(buy).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · Qty ${qtyVal} (~₹${Math.round(invApprox).toLocaleString('en-IN')}) · Sell ${pctLabel} ₹${sellVal}`, false);
-                showToast(`Buy ₹${buy} · Qty ${qtyVal} (~₹1L) · Sell ${pctLabel}`, 'success');
+                setTxLivePriceValue(buy);
+                setTxLivePriceStatus(`Qty ${qtyVal} · Target ${pctLabel} ₹${sellVal}`, false);
+                showToast(`Buy ₹${buy} · Qty ${qtyVal} · Sell ${pctLabel}`, 'success');
 
                 try {
                     if (typeof updatePreview === 'function') updatePreview();
@@ -863,6 +905,8 @@
 
             function onTxCompanyInput() {
                 setTxCompanyMeta(null);
+                const liveEl = document.getElementById('txLivePrice');
+                if (liveEl) delete liveEl.dataset.hasQuote;
                 const q = (document.getElementById('txCompany').value || '').trim();
                 if (q.length < 1) {
                     hideCompanyAcList();
@@ -2836,6 +2880,17 @@
             }
 
             // ---------- FILTER SHEET ----------
+            let tradeFilterPane = null;
+
+            function getTradeFilterPane() {
+                if (!tradeFilterPane) {
+                    const createPane = window.MTFComponents?.createAppPane;
+                    if (typeof createPane !== 'function') return null;
+                    tradeFilterPane = createPane('#tradeFilterSheet', { fullHeight: true });
+                }
+                return tradeFilterPane;
+            }
+
             function statusFromViewMode(mode) {
                 if (mode === 'plan') return 'plan';
                 if (mode === 'past') return tradeCancelledOnly ? 'cancelled' : 'closed';
@@ -2848,6 +2903,52 @@
                 if (status === 'closed' || status === 'cancelled') return 'past';
                 if (status === 'all') return 'all';
                 return 'trade';
+            }
+
+            function formatFilterRangeSummary() {
+                const fromEl = document.getElementById('pastFrom');
+                const toEl = document.getElementById('pastTo');
+                const from = fromEl?.value || pastFrom;
+                const to = toEl?.value || pastTo;
+                if (!from && !to) return 'All dates';
+                if (from && to) {
+                    try {
+                        return `${fmtDateShort(from)} – ${fmtDateShort(to)}`;
+                    } catch (_) {
+                        return `${from} – ${to}`;
+                    }
+                }
+                return 'Custom dates';
+            }
+
+            function updateTradeFilterSummary() {
+                const el = document.getElementById('tradeFilterSummary');
+                if (!el) return;
+                const draft = readTradeFilterSheetDraft();
+                const statusLabel = {
+                    all: 'All',
+                    open: 'Open',
+                    plan: 'Planned',
+                    closed: 'Closed',
+                    cancelled: 'Cancelled'
+                }[draft.status] || 'Open';
+                const holdLabel = draft.holdDays === 'all' ? null : `${draft.holdDays} days`;
+                const sortLabel = {
+                    company: 'Company',
+                    holding: 'Holding days',
+                    buyDate: 'Buy date',
+                    pnl: 'P&L',
+                    return: 'Return'
+                }[draft.sortBy] || 'Holding days';
+                const perfCount = draft.perf.size;
+                const parts = [
+                    statusLabel,
+                    formatFilterRangeSummary(),
+                    holdLabel,
+                    perfCount ? `${perfCount} perf.` : null,
+                    `Sort · ${sortLabel}`
+                ].filter(Boolean);
+                el.textContent = parts.join(' · ');
             }
 
             function syncTradeFilterSheetControls() {
@@ -2881,16 +2982,23 @@
                 } else {
                     clearRangeButtonsActive('#pastRangeButtons');
                 }
+                updateTradeFilterSummary();
             }
 
             function openFilterSheet() {
-                Sheet.mountPanel('<i class="fas fa-tune me-2 text-primary"></i>Filters', 'panelPastFilter',
-                    renderAppButtonRow('Reset', 'Apply', {
-                        cancelOnClick: 'resetTradeFilterSheet()',
-                        actionOnClick: 'applyTradeFilters()',
-                        actionIcon: 'fa-check'
-                    }));
+                if (Sheet?.isOpen?.()) Sheet.close();
+                if (TradeDetailSheet?.isOpen?.()) TradeDetailSheet.close({ quiet: true });
+                if (window.MTFComponents?.TradeSheet?.isOpen?.()) {
+                    window.MTFComponents.TradeSheet.close();
+                }
                 syncTradeFilterSheetControls();
+                const body = document.getElementById('tradeFilterContent');
+                if (body) {
+                    body.setAttribute('overflow-y', '');
+                    body.scrollTop = 0;
+                }
+                const pane = getTradeFilterPane();
+                if (pane) pane.present();
             }
 
             function openTradeFilterSheet() {
@@ -2905,7 +3013,11 @@
                 }
             }
 
-            function closeFilterSheet() { Sheet.close(); }
+            function closeFilterSheet() {
+                const pane = getTradeFilterPane();
+                if (pane?.isOpen?.()) pane.close();
+                if (Sheet?.isOpen?.()) Sheet.close();
+            }
 
             let settingsReturnPage = 'trades';
             let settingsReturnMoreFeature = null;
@@ -3452,6 +3564,7 @@
                 pastFrom = range.from;
                 pastTo = range.to;
                 syncPastRangeInputs();
+                updateTradeFilterSummary();
             }
 
             function setPastRange(daysOrKey) {
@@ -3469,6 +3582,7 @@
             function onPastFilterDateChange() {
                 pastRangeDays = null;
                 clearRangeButtonsActive('#pastRangeButtons');
+                updateTradeFilterSummary();
             }
 
             function readTradeFilterSheetDraft() {
@@ -3563,6 +3677,7 @@
                     el.checked = false;
                 });
                 draftPastRange(tradesViewMode === 'past' ? 'this-week' : 'all');
+                updateTradeFilterSummary();
             }
 
             function resetTradeFilters() {
@@ -5035,6 +5150,9 @@
             window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
             window.onTxStatusChange = onTxStatusChange;
+            window.setTxFormStatus = setTxFormStatus;
+            window.onTxLeverageInput = onTxLeverageInput;
+            window.syncTxLeverageDisplay = syncTxLeverageDisplay;
             window.onTxCompanyInput = onTxCompanyInput;
             window.onTxCompanyKeydown = onTxCompanyKeydown;
             window.onTxCompanyFocus = onTxCompanyFocus;
@@ -5119,6 +5237,7 @@
             window.applyTradeFilters = applyTradeFilters;
             window.draftPastRange = draftPastRange;
             window.resetTradeFilterSheet = resetTradeFilterSheet;
+            window.updateTradeFilterSummary = updateTradeFilterSummary;
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;

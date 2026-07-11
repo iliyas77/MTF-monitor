@@ -488,25 +488,28 @@ async function runSmoke(report) {
             const statusOpen = document.getElementById('tradeFilterStatus-open');
             const holdAll = document.getElementById('tradeFilterHold-all');
             const sortHolding = document.getElementById('tradeFilterSort-holding');
-            const sheet = document.getElementById('appSheet');
-            const bodyText = document.getElementById('appSheetBody')?.textContent || '';
+            const filterShell = document.getElementById('tradeFilterSheet');
+            const bodyText = document.getElementById('tradeFilterContent')?.textContent
+                || document.getElementById('panelPastFilter')?.textContent
+                || '';
             return {
                 hasAll: !!(allBtn && allLabel && /all/i.test(allLabel.textContent || '')),
                 hasStatus: !!(statusOpen && /Status/i.test(bodyText)),
-                hasHolding: !!(holdAll && /Holding Days/i.test(bodyText)),
+                hasHolding: !!(holdAll && /Holding/i.test(bodyText)),
                 hasPerf: /Performance/i.test(bodyText),
-                hasSort: !!(sortHolding && /Sort By/i.test(bodyText)),
-                sheetOpen: !!(sheet && !sheet.classList.contains('d-none'))
+                hasSort: !!(sortHolding && /Sort/i.test(bodyText)),
+                fullHeight: !!filterShell,
+                sheetOpen: !!(filterShell && document.querySelector('.cupertino-pane-wrapper #tradeFilterSheet'))
                     || !!(document.querySelector('.pane') || document.querySelector('[class*="cupertino"]'))
                     || !!allBtn
             };
         });
-        if (filterSheet.hasAll && filterSheet.hasStatus && filterSheet.hasHolding && filterSheet.hasPerf && filterSheet.hasSort) {
-            report.pass('Filter sheet', 'Status, Holding, Performance, Sort, and date All range present');
+        if (filterSheet.hasAll && filterSheet.hasStatus && filterSheet.hasHolding && filterSheet.hasPerf && filterSheet.hasSort && filterSheet.fullHeight) {
+            report.pass('Filter sheet', 'Full-height filters with Status, Holding, Performance, Sort, date All');
         } else {
             report.fail(
                 'Filter sheet',
-                `all=${filterSheet.hasAll} status=${filterSheet.hasStatus} hold=${filterSheet.hasHolding} perf=${filterSheet.hasPerf} sort=${filterSheet.hasSort}`
+                `all=${filterSheet.hasAll} status=${filterSheet.hasStatus} hold=${filterSheet.hasHolding} perf=${filterSheet.hasPerf} sort=${filterSheet.hasSort} full=${filterSheet.fullHeight}`
             );
         }
         await page.evaluate(() => {

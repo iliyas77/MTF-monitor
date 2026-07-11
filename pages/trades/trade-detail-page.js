@@ -482,45 +482,48 @@
         const id = escapeHtml(tx.id || '');
 
         return `
-            <section class="trade-detail-timeline">
-                <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                    onclick="openHoldModal('${id}')" aria-label="Edit bought date">
-                    <span class="trade-detail-timeline-icon-wrap">
-                        ${renderIcon('fa-calendar-plus', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--buy' })}
+            <section class="trade-detail-timeline-wrap">
+                <div class="trade-detail-timeline">
+                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
+                        onclick="openHoldModal('${id}')" aria-label="Edit bought date">
+                        <span class="trade-detail-timeline-icon-wrap">
+                            ${renderIcon('fa-calendar-plus', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--buy' })}
+                        </span>
+                        <span class="trade-detail-timeline-copy">
+                            <span class="trade-detail-timeline-label">Bought On</span>
+                            <span class="trade-detail-timeline-value">${escapeHtml(buyDate)}</span>
+                        </span>
+                    </button>
+                    <span class="trade-detail-timeline-sep" aria-hidden="true">
+                        <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
+                        <span class="trade-detail-timeline-vline"></span>
                     </span>
-                    <span class="trade-detail-timeline-copy">
-                        <span class="trade-detail-timeline-label">Bought On</span>
-                        <span class="trade-detail-timeline-value">${escapeHtml(buyDate)}</span>
+                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
+                        onclick="openHoldModal('${id}')" aria-label="Edit holding period">
+                        <span class="trade-detail-timeline-icon-wrap">
+                            ${renderIcon('fa-hourglass-half', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--hold' })}
+                        </span>
+                        <span class="trade-detail-timeline-copy">
+                            <span class="trade-detail-timeline-label">Holding</span>
+                            <span class="badge rounded-pill trade-detail-hold-badge">${escapeHtml(holdLabel)}</span>
+                        </span>
+                    </button>
+                    <span class="trade-detail-timeline-sep" aria-hidden="true">
+                        <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
+                        <span class="trade-detail-timeline-vline"></span>
                     </span>
-                </button>
-                <span class="trade-detail-timeline-sep" aria-hidden="true">
-                    <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
-                    <span class="trade-detail-timeline-vline"></span>
-                </span>
-                <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                    onclick="openHoldModal('${id}')" aria-label="Edit holding period">
-                    <span class="trade-detail-timeline-icon-wrap">
-                        ${renderIcon('fa-hourglass-half', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--hold' })}
-                    </span>
-                    <span class="trade-detail-timeline-copy">
-                        <span class="trade-detail-timeline-label">Holding</span>
-                        <span class="badge rounded-pill trade-detail-hold-badge">${escapeHtml(holdLabel)}</span>
-                    </span>
-                </button>
-                <span class="trade-detail-timeline-sep" aria-hidden="true">
-                    <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
-                    <span class="trade-detail-timeline-vline"></span>
-                </span>
-                <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                    onclick="openHoldModal('${id}')" aria-label="Edit exit date">
-                    <span class="trade-detail-timeline-icon-wrap">
-                        ${renderIcon('fa-calendar-check', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--exit' })}
-                    </span>
-                    <span class="trade-detail-timeline-copy">
-                        <span class="trade-detail-timeline-label">${escapeHtml(exitLabel)}</span>
-                        <span class="trade-detail-timeline-value">${escapeHtml(exitDate)}</span>
-                    </span>
-                </button>
+                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
+                        onclick="openHoldModal('${id}')" aria-label="Edit exit date">
+                        <span class="trade-detail-timeline-icon-wrap">
+                            ${renderIcon('fa-calendar-check', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--exit' })}
+                        </span>
+                        <span class="trade-detail-timeline-copy">
+                            <span class="trade-detail-timeline-label">${escapeHtml(exitLabel)}</span>
+                            <span class="trade-detail-timeline-value">${escapeHtml(exitDate)}</span>
+                        </span>
+                    </button>
+                </div>
+                <p class="trade-detail-timeline-hint mb-0">Tap dates to update buy or sell</p>
             </section>
         `;
     }
