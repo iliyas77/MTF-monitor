@@ -50,7 +50,7 @@
             </div>
         `;
 
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-eye', { className: 'me-2' })}${tx.company}`, html, '');
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-eye', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>`, html, '');
     }
 
     global.MTFRegister({ openViewModal });

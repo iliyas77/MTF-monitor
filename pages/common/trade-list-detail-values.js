@@ -52,7 +52,7 @@
         const iconHtml = icon
             ? `${renderIcon(icon, { className: iconClass, size: 'xs' })}`
             : '';
-        const sizeClass = /\bfs-/.test(valueClass) ? '' : 'small';
+        const sizeClass = /\bfs-/.test(valueClass) ? '' : 'fs-6';
         const content = `
             <span class="small text-muted text-uppercase d-inline-flex align-items-center gap-1">${iconHtml}${label}</span>
             <span class="${sizeClass} fw-normal ${valueClass} d-block mt-1">${value}</span>

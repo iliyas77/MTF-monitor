@@ -7,6 +7,7 @@
     const {
         fmtDec,
         interestSheetRow,
+        appTag,
         showToast,
         Sheet
     } = global.MTFComponents;
@@ -31,7 +32,7 @@
             ? '<p class="small text-muted mb-0">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
             : '';
 
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'me-2 text-info' })}<span class="fw-semibold">${tx.company}</span><span class="small text-muted ms-2">${broker}</span>`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'text-info flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>${appTag(broker, 'broker')}`, `
             <div>
                 <div class="trade-metrics-panel mb-3">
                     <table class="table table-sm trade-metrics-table">

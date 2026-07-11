@@ -25,9 +25,9 @@
         const ownMargin = lev > 1 ? totalInv / lev : totalInv;
         const mtfAmt = lev > 1 ? totalInv * (1 - 1 / lev) : 0;
         return `
-            <div>Total investment: ${fmtDec(totalInv)}</div>
-            <div>Your margin: ${fmtDec(ownMargin)}</div>
-            <div>Broker funded: ${fmtDec(mtfAmt)}</div>
+            <div class="fs-6">Total investment: ${fmtDec(totalInv)}</div>
+            <div class="fs-6">Your margin: ${fmtDec(ownMargin)}</div>
+            <div class="fs-6">Broker funded: ${fmtDec(mtfAmt)}</div>
         `;
     }
 
@@ -46,7 +46,7 @@
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
         leverageModalTradeId = id;
         const lev = Number(tx.leverage) || 1;
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'me-2' })}${tx.company} Leverage`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Leverage</span>`, `
             <p class="small text-muted mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
             <div class="mb-3">
                 <label class="form-label small text-muted mb-1">Leverage (X)</label>

@@ -19,7 +19,7 @@
             : (getDaysHeld ? getDaysHeld(tx) : 0);
         const holdLabel = daysHeld === 1 ? '1d hold' : `${daysHeld}d hold`;
         const tags = [
-            appTag(tx.broker || '—'),
+            appTag(tx.broker || '—', 'broker'),
             appTag(levDisplay, 'accent'),
             appTag(`<i class="far fa-clock me-1 opacity-75"></i>${holdLabel}`)
         ].concat(extras);
@@ -33,7 +33,7 @@
                     <span class="small text-muted fw-normal">${label}</span>
                 </td>
                 <td class="p-2 align-middle text-end">
-                    <span class="fw-normal ${valueClass}">${value}</span>
+                    <span class="fs-6 fw-normal ${valueClass}">${value}</span>
                 </td>
             </tr>
         `;
