@@ -7,7 +7,6 @@
     const {
         renderFlatTradesList,
         renderPastTradeListItem,
-        renderPlanTradeListItem,
         renderOpenTradeListItem,
         renderPageEmptyCard
     } = global.MTFComponents;
@@ -19,11 +18,9 @@
     function renderSearchResults() {
         const {
             getSearchContext = () => 'trades',
-            getTradesViewMode = () => 'trade',
             getSearchQuery = () => '',
             getPastFiltered,
             getTransactions,
-            isPlannedTrade,
             isActiveOpenTrade,
             sortTradesByHoldDays
         } = tradePages();
@@ -33,13 +30,10 @@
 
         const searchContext = getSearchContext();
         const isPast = searchContext === 'past';
-        const isPlan = !isPast && getTradesViewMode() === 'plan';
 
         let dataset;
         if (isPast) {
             dataset = getPastFiltered ? getPastFiltered() : [];
-        } else if (isPlan) {
-            dataset = (getTransactions ? getTransactions() : []).filter(isPlannedTrade || (() => false));
         } else {
             dataset = (getTransactions ? getTransactions() : []).filter(isActiveOpenTrade || (() => false));
         }
@@ -50,17 +44,17 @@
             : dataset;
         if (sortTradesByHoldDays) filtered = sortTradesByHoldDays(filtered);
 
-        const renderer = isPast ? renderPastTradeListItem : (isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
+        const renderer = isPast ? renderPastTradeListItem : renderOpenTradeListItem;
 
         if (filtered.length === 0) {
-            const noun = isPast ? 'past trades' : (isPlan ? 'planned trades' : 'open trades');
+            const noun = isPast ? 'past trades' : 'open trades';
             container.innerHTML = q
                 ? renderPageEmptyCard('fa-search', `No ${noun} match "${getSearchQuery().trim()}"`, 'Try a different company name.')
                 : renderPageEmptyCard('fa-keyboard', `Search ${noun}`, 'Start typing a company name.');
             return;
         }
 
-        container.innerHTML = renderFlatTradesList(filtered, renderer, isPast ? 'past' : (isPlan ? 'plan' : 'open'));
+        container.innerHTML = renderFlatTradesList(filtered, renderer, isPast ? 'past' : 'open');
     }
 
     global.MTFRegister({ renderSearchResults });

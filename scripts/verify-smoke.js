@@ -103,21 +103,6 @@ async function seedSmokeTrades(page) {
                 netProfit: 80
             },
             {
-                id: 'smoke-plan-1',
-                company: 'Smoke Plan Ltd',
-                symbol: 'SMOKEP',
-                broker: 'Dhan',
-                quantity: 5,
-                buyPrice: 200,
-                sellPrice: 220,
-                buyDate: ago(0),
-                sellDate: ago(-1),
-                leverage: 1,
-                status: 'open',
-                executed: false,
-                netProfit: 50
-            },
-            {
                 id: 'smoke-closed-win',
                 company: 'Smoke Win Ltd',
                 symbol: 'SMOKEW',
@@ -348,39 +333,6 @@ async function runSmoke(report) {
             report.fail('List Open', 'seeded open trade not found in list');
         }
 
-        // --- Plan view ---
-        await page.evaluate(() => window.setTradesViewMode('plan'));
-        await page.waitForTimeout(200);
-        const planView = await page.evaluate(() => {
-            const mode = window.MTFAppHelpers?.tradePages?.getTradesViewMode?.() || '';
-            const from = window.MTFAppHelpers?.tradePages?.getPastFrom?.();
-            const to = window.MTFAppHelpers?.tradePages?.getPastTo?.();
-            const header = document.getElementById('appHeaderDefaultTitle');
-            const summary = document.getElementById('summaryOpenStats');
-            return {
-                modeOk: mode === 'plan',
-                headerOk: /My Positions/i.test(header?.textContent || ''),
-                rangeAll: !from && !to,
-                hasHoldings: /Total Holdings/i.test(summary?.textContent || ''),
-                listHasTrade: /Smoke Plan/i.test(document.getElementById('transactionList')?.textContent || '')
-            };
-        });
-        if (planView.modeOk && planView.headerOk) {
-            report.pass('View Plan', 'Plan view mode active');
-        } else {
-            report.fail('View Plan', `mode=${planView.modeOk} header=${planView.headerOk}`);
-        }
-        if (planView.rangeAll) {
-            report.pass('Range Plan default', 'Plan view defaults to All dates');
-        } else {
-            report.fail('Range Plan default', 'Plan view did not keep/show All');
-        }
-        if (planView.listHasTrade && planView.hasHoldings) {
-            report.pass('List Plan', 'seeded plan trade + portfolio summary');
-        } else {
-            report.fail('List Plan', `list=${planView.listHasTrade} summary=${planView.hasHoldings}`);
-        }
-
         // --- Closed view ---
         await page.evaluate(() => window.setTradesViewMode('past'));
         await page.waitForTimeout(250);
@@ -489,6 +441,7 @@ async function runSmoke(report) {
             const holdAll = document.getElementById('tradeFilterHold-all');
             const sortHolding = document.getElementById('tradeFilterSort-holding');
             const filterShell = document.getElementById('tradeFilterSheet');
+            const applyBtn = document.getElementById('tradeFilterApplyBtn');
             const bodyText = document.getElementById('tradeFilterContent')?.textContent
                 || document.getElementById('panelPastFilter')?.textContent
                 || '';
@@ -498,22 +451,34 @@ async function runSmoke(report) {
                 hasHolding: !!(holdAll && /Holding/i.test(bodyText)),
                 hasPerf: /Performance/i.test(bodyText),
                 hasSort: !!(sortHolding && /Sort/i.test(bodyText)),
+                hasSidebar: !!document.querySelector('#panelPastFilter .trade-filter-nav'),
+                hasApply: !!(applyBtn && /Apply filters/i.test(applyBtn.textContent || '')),
                 fullHeight: !!filterShell,
+                footerVisible: (() => {
+                    const footer = document.querySelector('#tradeFilterSheet .trade-filter-footer');
+                    const cancel = footer?.querySelector('button');
+                    if (!footer || !cancel) return false;
+                    const fr = footer.getBoundingClientRect();
+                    const cr = cancel.getBoundingClientRect();
+                    const vh = window.innerHeight || 0;
+                    return fr.bottom <= vh + 1 && cr.height > 24 && cr.top < vh && cr.bottom > 0;
+                })(),
                 sheetOpen: !!(filterShell && document.querySelector('.cupertino-pane-wrapper #tradeFilterSheet'))
                     || !!(document.querySelector('.pane') || document.querySelector('[class*="cupertino"]'))
                     || !!allBtn
             };
         });
-        if (filterSheet.hasAll && filterSheet.hasStatus && filterSheet.hasHolding && filterSheet.hasPerf && filterSheet.hasSort && filterSheet.fullHeight) {
-            report.pass('Filter sheet', 'Full-height filters with Status, Holding, Performance, Sort, date All');
+        if (filterSheet.hasAll && filterSheet.hasStatus && filterSheet.hasHolding && filterSheet.hasPerf && filterSheet.hasSort && filterSheet.hasSidebar && filterSheet.hasApply && filterSheet.fullHeight && filterSheet.footerVisible) {
+            report.pass('Filter sheet', 'Sidebar filters with visible Cancel / Apply footer');
         } else {
             report.fail(
                 'Filter sheet',
-                `all=${filterSheet.hasAll} status=${filterSheet.hasStatus} hold=${filterSheet.hasHolding} perf=${filterSheet.hasPerf} sort=${filterSheet.hasSort} full=${filterSheet.fullHeight}`
+                `all=${filterSheet.hasAll} status=${filterSheet.hasStatus} hold=${filterSheet.hasHolding} perf=${filterSheet.hasPerf} sort=${filterSheet.hasSort} sidebar=${filterSheet.hasSidebar} apply=${filterSheet.hasApply} footer=${filterSheet.footerVisible} full=${filterSheet.fullHeight}`
             );
         }
         await page.evaluate(() => {
-            if (window.MTFComponents?.Sheet?.close) window.MTFComponents.Sheet.close();
+            if (typeof window.closeFilterSheet === 'function') window.closeFilterSheet();
+            else if (window.MTFComponents?.Sheet?.close) window.MTFComponents.Sheet.close();
             else if (typeof window.closeSheet === 'function') window.closeSheet();
         });
         await page.waitForTimeout(200);
@@ -731,24 +696,75 @@ async function runSmoke(report) {
         });
         await page.waitForTimeout(200);
 
-        // --- Navigation: Market ---
+        // --- Navigation: Watchlist ---
         await page.click('#bottomBarNav [data-page="market"]');
         await page.waitForTimeout(300);
         if (!(await pageVisible(page, 'page-market'))) {
-            report.fail('Nav Market', '#page-market not shown');
+            report.fail('Nav Watchlist', '#page-market not shown');
         } else {
-            report.pass('Nav Market', 'Market page shown');
+            report.pass('Nav Watchlist', 'Watchlist page shown');
         }
-        const marketTabs = await page.evaluate(() => {
-            const inTrade = document.querySelector('#marketSubTabs [data-bs-target="#marketInTradePane"], #marketInTradeTab, [data-market-tab="in-trade"]');
-            const watch = document.querySelector('#marketSubTabs [data-bs-target="#marketWatchlistPane"], #marketWatchlistTab, [data-market-tab="watchlist"]');
-            const anyTab = document.querySelector('#page-market .nav-pills, #page-market [role="tablist"]');
-            return !!(inTrade || watch || anyTab);
+        const watchlistChrome = await page.evaluate(() => {
+            const search = document.getElementById('marketSearchInput');
+            const headerSearch = document.getElementById('appHeaderSearchBtn');
+            const list = document.getElementById('marketQuotesList');
+            const refresh = document.getElementById('marketRefreshBtn');
+            const inTradeTab = document.querySelector('[data-market-tab="in-trade"], #market-tab-in-trade');
+            return {
+                noInlineSearch: !search,
+                hasHeaderSearch: !!headerSearch,
+                hasList: !!list,
+                hasRefresh: !!refresh,
+                noInTrade: !inTradeTab
+            };
         });
-        if (marketTabs) {
-            report.pass('Market tabs', 'Market In Trade / Watchlist chrome present');
+        if (watchlistChrome.noInlineSearch && watchlistChrome.hasHeaderSearch && watchlistChrome.hasList && watchlistChrome.hasRefresh && watchlistChrome.noInTrade) {
+            report.pass('Watchlist chrome', 'header search + refresh; no inline search / In Trade');
         } else {
-            report.warn('Market tabs', 'market tab chrome not found (layout may differ)');
+            report.warn('Watchlist chrome', `inlineSearch=${!watchlistChrome.noInlineSearch} headerSearch=${watchlistChrome.hasHeaderSearch} list=${watchlistChrome.hasList} refresh=${watchlistChrome.hasRefresh} noInTrade=${watchlistChrome.noInTrade}`);
+        }
+
+        // --- Market Buy opens trade form ---
+        const marketBuy = await page.evaluate(async () => {
+            const hasApi = typeof window.openBuyTradeFromMarket === 'function';
+            const buyBtn = document.querySelector('#marketQuotesList .market-buy-btn');
+            if (buyBtn) {
+                buyBtn.click();
+            } else if (hasApi) {
+                await window.openBuyTradeFromMarket('RELIANCE', 'Reliance Industries');
+            } else {
+                return { ok: false, reason: 'no Buy button or API' };
+            }
+            await new Promise((r) => setTimeout(r, 450));
+            const modal = document.getElementById('txModal');
+            const locked = document.getElementById('txCompanyLocked');
+            const search = document.getElementById('txCompanySearchWrap');
+            const company = document.getElementById('txCompany');
+            const qty = document.getElementById('txQty');
+            const sheetOpen = !!(modal && (
+                company?.offsetParent !== null
+                || locked?.offsetParent !== null
+                || modal.querySelector('.pane-wrapper, .cupertino-pane-wrapper')
+                || modal.getAttribute('aria-hidden') === 'false'
+            ));
+            const lockedVisible = !!(locked && !locked.classList.contains('d-none'));
+            const searchHidden = !!(search && search.classList.contains('d-none'));
+            if (typeof window.closeTradeModal === 'function') window.closeTradeModal();
+            else if (window.MTFComponents?.TradeSheet?.close) window.MTFComponents.TradeSheet.close();
+            return {
+                ok: hasApi && sheetOpen && lockedVisible && searchHidden && !!qty,
+                hasApi,
+                sheetOpen,
+                lockedVisible,
+                searchHidden,
+                usedButton: !!buyBtn
+            };
+        });
+        await page.waitForTimeout(200);
+        if (marketBuy.ok) {
+            report.pass('Market Buy', 'Buy opens trade form with company locked');
+        } else {
+            report.warn('Market Buy', `api=${marketBuy.hasApi} sheet=${marketBuy.sheetOpen} locked=${marketBuy.lockedVisible} searchHidden=${marketBuy.searchHidden}`);
         }
 
         // --- Navigation: More ---
