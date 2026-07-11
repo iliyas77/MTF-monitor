@@ -60,7 +60,7 @@
             return;
         }
 
-        container.innerHTML = renderFlatTradesList(filtered, renderer);
+        container.innerHTML = renderFlatTradesList(filtered, renderer, isPast ? 'past' : (isPlan ? 'plan' : 'open'));
     }
 
     global.MTFRegister({ renderSearchResults });

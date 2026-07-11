@@ -133,7 +133,7 @@ async function runSmoke(report) {
             report.fail('UI shells', 'Trades list container missing');
         }
 
-        // --- Navigation: Past (under Trades dropdown) ---
+        // --- Navigation: Closed / Past (under Trades dropdown) ---
         await page.click('#bottomBarNav [data-page="trades"]');
         await page.waitForTimeout(200);
         const pastViaDropdown = await page.evaluate(() => {
@@ -147,12 +147,12 @@ async function runSmoke(report) {
         const pastOk = await page.evaluate(() => {
             const trades = document.getElementById('page-trades');
             const modeBtn = document.getElementById('tradesViewMode');
-            return !!(trades && !trades.classList.contains('d-none') && modeBtn && /past/i.test(modeBtn.textContent || ''));
+            return !!(trades && !trades.classList.contains('d-none') && modeBtn && /closed/i.test(modeBtn.textContent || ''));
         });
         if (!pastViaDropdown || !pastOk) {
-            report.fail('Nav Past', 'Past view not shown under Trades');
+            report.fail('Nav Past', 'Closed view not shown under Trades');
         } else {
-            report.pass('Nav Past', 'Past trades shown via Trades dropdown');
+            report.pass('Nav Past', 'Closed trades shown via Trades dropdown');
         }
 
         // --- Navigation: Market ---

@@ -28,6 +28,7 @@
     --gr-pill-down-text: #ef4444;
     --gr-warning: #ca8a04;
     --gr-warning-bg: #fff8d6;
+    --gr-orange: #ea580c;
     --gr-row-hover: #ededee;
     --gr-calc-border: #bbf7d0;
 
@@ -394,6 +395,11 @@ hr {
     color: var(--gr-accent) !important;
 }
 
+/* Trade view-mode label colors (Open / Plan / Closed) */
+.text-trades-plan {
+    color: var(--gr-orange) !important;
+}
+
 /* Trade metrics tables — single 1px light border (outer + grid) */
 .trade-metrics-panel {
     border: 1px solid var(--gr-border);
@@ -425,5 +431,62 @@ hr {
 
 .trade-metrics-panel .trade-metrics-table tr:last-child > * {
     border-bottom: 0;
+}
+
+/* Compact trade list — outer border on wrapper (overflow:hidden clips cleanly to radius) */
+[data-trades-compact-table] {
+    border: 1px solid var(--gr-border-strong, var(--bs-border-color));
+    border-radius: var(--bs-border-radius);
+    overflow: hidden;
+    background-color: var(--gr-bg);
+}
+
+.trades-compact-table {
+    --bs-table-bg: transparent;
+    --bs-table-border-color: var(--gr-border-strong, var(--bs-border-color));
+    font-size: 0.8125rem;
+    table-layout: fixed;
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.trades-compact-table thead th {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--bs-secondary-color);
+    white-space: nowrap;
+}
+
+.trades-compact-table td,
+.trades-compact-table th {
+    padding: 0.55rem 0.6rem;
+    vertical-align: middle;
+    border: 0;
+    border-right: 1px solid var(--gr-border-strong, var(--bs-border-color));
+    border-bottom: 1px solid var(--gr-border-strong, var(--bs-border-color));
+    box-shadow: none;
+}
+
+.trades-compact-table tr > *:last-child {
+    border-right: 0;
+}
+
+.trades-compact-table tr:last-child > * {
+    border-bottom: 0;
+}
+
+.trades-compact-table .trades-compact-company {
+    width: 48%;
+}
+
+.trades-compact-table .trades-compact-prices {
+    width: 32%;
+}
+
+.trades-compact-table .trades-compact-pnl {
+    width: 20%;
 }
 

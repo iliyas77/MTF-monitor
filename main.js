@@ -2892,7 +2892,7 @@
             }
 
             // ---------- STATE ----------
-            let pastRangeDays = 'this-week';
+            let pastRangeDays = 'all';
             let pastFrom = null;
             let pastTo = null;
             let tradeRangeDays = 'all';
@@ -2903,6 +2903,12 @@
             let planSearchQuery = '';
             let tradesViewMode = 'trade';
             let pastPnlFilter = 'all';
+            /** Per Trade / Plan / Past date-range memory (shared filter sheet). */
+            let tradeListRanges = {
+                trade: { key: 'all', from: null, to: null },
+                plan: { key: 'all', from: null, to: null },
+                past: { key: 'this-week', from: null, to: null }
+            };
             let searchContext = 'trades';
             let searchQuery = '';
             let txModalContext = 'trades';
@@ -3101,9 +3107,57 @@
                 return { from: localDateStr(from), to: localDateStr(to) };
             }
 
+            function defaultTradeListRange(mode) {
+                if (mode === 'past') {
+                    const range = getThisWeekMonFriRange();
+                    return { key: 'this-week', from: range.from, to: range.to };
+                }
+                return { key: 'all', from: null, to: null };
+            }
+
+            function syncPastRangeInputs() {
+                setDateInputValue(document.getElementById('pastFrom'), pastFrom || '');
+                setDateInputValue(document.getElementById('pastTo'), pastTo || '');
+                if (pastRangeDays != null && pastRangeDays !== '') {
+                    setRangeButtonsActive('#pastRangeButtons', pastRangeDays);
+                } else {
+                    clearRangeButtonsActive('#pastRangeButtons');
+                }
+            }
+
+            function saveTradeListRangeForMode(mode) {
+                const key = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
+                tradeListRanges[key] = {
+                    key: pastRangeDays,
+                    from: pastFrom,
+                    to: pastTo
+                };
+            }
+
+            function loadTradeListRangeForMode(mode) {
+                const key = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
+                let state = tradeListRanges[key];
+                if (!state || (state.key !== 'all' && (!state.from || !state.to))) {
+                    state = defaultTradeListRange(key);
+                    tradeListRanges[key] = state;
+                } else if (state.key === 'this-week') {
+                    // Keep "this week" current when revisiting Past
+                    const range = getThisWeekMonFriRange();
+                    state = { key: 'this-week', from: range.from, to: range.to };
+                    tradeListRanges[key] = state;
+                }
+                pastRangeDays = state.key;
+                pastFrom = state.from;
+                pastTo = state.to;
+                syncPastRangeInputs();
+            }
+
             function setPastRange(daysOrKey) {
                 pastRangeDays = daysOrKey;
-                if (daysOrKey === 'today') {
+                if (daysOrKey === 'all') {
+                    pastFrom = null;
+                    pastTo = null;
+                } else if (daysOrKey === 'today') {
                     const date = localDateStr(new Date());
                     pastFrom = date;
                     pastTo = date;
@@ -3134,9 +3188,8 @@
                     pastFrom = range.from;
                     pastTo = range.to;
                 }
-                setDateInputValue(document.getElementById('pastFrom'), pastFrom);
-                setDateInputValue(document.getElementById('pastTo'), pastTo);
-                setRangeButtonsActive('#pastRangeButtons', daysOrKey);
+                syncPastRangeInputs();
+                saveTradeListRangeForMode(tradesViewMode);
                 if (isTradesPageVisible()) {
                     renderCurrentView();
                 } else {
@@ -3160,6 +3213,7 @@
                 pastTo = to;
                 pastRangeDays = null;
                 clearRangeButtonsActive('#pastRangeButtons');
+                saveTradeListRangeForMode(tradesViewMode);
                 if (isTradesPageVisible()) {
                     renderCurrentView();
                 } else {
@@ -3173,11 +3227,10 @@
             function resetTradeFilters() {
                 if (tradesViewMode === 'past') {
                     setPastRange('this-week');
-                    showToast('Filters reset.', 'success');
-                    return;
+                } else {
+                    setPastRange('all');
+                    clearTradeSearch();
                 }
-                setTradeRange('all');
-                clearTradeSearch();
                 showToast('Filters reset.', 'success');
             }
 
@@ -3223,7 +3276,7 @@
                     setDateInputValue(document.getElementById('tradeFrom'), tradeFrom);
                     setDateInputValue(document.getElementById('tradeTo'), tradeTo);
                 }
-                setRangeButtonsActive('#tradeRangeButtons', daysOrKey === 'all' ? '' : daysOrKey);
+                setRangeButtonsActive('#tradeRangeButtons', daysOrKey);
                 renderCurrentView();
                 if (isTradesPageVisible()) startTradeLiveRefresh();
                 closeFilterSheet();
@@ -3272,14 +3325,16 @@
                 });
             }
 
-            function paintOpenTradeSummary(net, openCount) {
+            function paintOpenTradeSummary(net, openCount, profitCount, lossCount) {
                 paintTradeRangeSummary({
                     containerId: 'summaryOpenStats',
                     wordsId: 'summaryNetWords',
                     net,
                     count: openCount,
                     countLabel: 'Open',
-                    useTwoItemLayout: true
+                    useTwoItemLayout: true,
+                    profitCount,
+                    lossCount
                 });
             }
 
@@ -3358,7 +3413,14 @@
 
             // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
             function setTradesViewMode(mode) {
-                tradesViewMode = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
+                const next = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
+                if (next !== tradesViewMode) {
+                    saveTradeListRangeForMode(tradesViewMode);
+                    tradesViewMode = next;
+                    loadTradeListRangeForMode(tradesViewMode);
+                } else {
+                    tradesViewMode = next;
+                }
                 renderCurrentView();
                 const tradesPage = document.getElementById('page-trades');
                 if (tradesPage && !tradesPage.classList.contains('d-none')) {
@@ -3372,32 +3434,36 @@
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
             function ensureSharedTradeRange() {
+                if (pastRangeDays === 'all') return;
                 if (!pastFrom || !pastTo) {
-                    const range = getThisWeekMonFriRange();
-                    pastFrom = range.from;
-                    pastTo = range.to;
-                    pastRangeDays = 'this-week';
-                    setDateInputValue(document.getElementById('pastFrom'), pastFrom);
-                    setDateInputValue(document.getElementById('pastTo'), pastTo);
+                    const state = defaultTradeListRange(tradesViewMode);
+                    pastRangeDays = state.key;
+                    pastFrom = state.from;
+                    pastTo = state.to;
+                    tradeListRanges[tradesViewMode === 'plan' ? 'plan' : (tradesViewMode === 'past' ? 'past' : 'trade')] = state;
+                    syncPastRangeInputs();
                 }
             }
 
             function getPastFiltered() {
                 const txs = getTransactions();
                 ensureSharedTradeRange();
-                const fromDate = new Date(pastFrom);
-                const toDate = new Date(pastTo);
-                toDate.setHours(23, 59, 59, 999);
 
                 let filtered = txs
                     .filter(t => (t.status || 'closed') === 'closed')
-                    .filter(t => t.executed !== false)
-                    .filter(t => {
+                    .filter(t => t.executed !== false);
+
+                if (pastFrom && pastTo) {
+                    const fromDate = new Date(pastFrom);
+                    const toDate = new Date(pastTo);
+                    toDate.setHours(23, 59, 59, 999);
+                    filtered = filtered.filter(t => {
                         const key = parseDateKey(t.sellDate) || parseDateKey(t.buyDate);
                         if (!key) return false;
                         const d = new Date(key + 'T12:00:00');
                         return d >= fromDate && d <= toDate;
                     });
+                }
 
                 const pastQuery = pastSearchQuery.trim().toLowerCase();
                 if (pastQuery) {
@@ -4274,13 +4340,15 @@
                 migrateTradeCompanySymbols();
                 initDateFields();
 
-                const range = getThisWeekMonFriRange();
-                pastRangeDays = 'this-week';
-                pastFrom = range.from;
-                pastTo = range.to;
-                setDateInputValue(document.getElementById('pastFrom'), pastFrom);
-                setDateInputValue(document.getElementById('pastTo'), pastTo);
-                setRangeButtonsActive('#pastRangeButtons', 'this-week');
+                const pastDefault = defaultTradeListRange('past');
+                tradeListRanges = {
+                    trade: { key: 'all', from: null, to: null },
+                    plan: { key: 'all', from: null, to: null },
+                    past: pastDefault
+                };
+                // Trades tab opens on Trade view — default range is All
+                tradesViewMode = 'trade';
+                loadTradeListRangeForMode('trade');
 
                 tradeRangeDays = 'all';
                 tradeFrom = null;
@@ -4605,6 +4673,7 @@
             window.renderMoney = renderMoney;
             window.toggleMoneyAccountExpand = toggleMoneyAccountExpand;
             window.toggleTradeDateGroupExpand = toggleTradeDateGroupExpand;
+            window.toggleAllTradeCardsCollapse = window.MTFComponents.toggleAllTradeCardsCollapse;
             window.setMoneyAccountFilter = setMoneyAccountFilter;
             window.openAccountHistorySheet = openAccountHistorySheet;
             window.setMoneyHistoryTypeFilter = setMoneyHistoryTypeFilter;
