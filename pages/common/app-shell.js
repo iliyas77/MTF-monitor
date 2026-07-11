@@ -122,13 +122,14 @@
     /**
      * Shared Cupertino Pane controller for a persistent DOM shell.
      * @param {string} selector
-     * @param {{ cssClass?: string, homeId?: string, maxFitRatio?: number, onDismiss?: Function }} opts
+     * @param {{ cssClass?: string, homeId?: string, maxFitRatio?: number, fullHeight?: boolean, onDismiss?: Function }} opts
      */
     function createAppPane(selector, opts = {}) {
         const {
             cssClass = 'app-sheet-pane',
             homeId = 'sheetPanels',
             maxFitRatio = 0.9,
+            fullHeight = false,
             onDismiss = null
         } = opts;
 
@@ -154,20 +155,17 @@
                     console.error('CupertinoPane is not loaded');
                     return null;
                 }
-                return new CupertinoPane(selector, {
+                const vh = window.innerHeight;
+                const base = {
                     parentElement: 'body',
                     cssClass,
-                    fitHeight: true,
-                    maxFitHeight: Math.round(window.innerHeight * maxFitRatio),
-                    fitScreenHeight: true,
-                    initialBreak: 'top',
                     backdrop: true,
                     backdropOpacity: 0.45,
                     bottomClose: true,
                     fastSwipeClose: true,
                     buttonDestroy: false,
                     showDraggable: true,
-                    draggableOver: true,
+                    initialBreak: 'top',
                     events: {
                         onDidPresent: () => {
                             host._open = true;
@@ -181,6 +179,30 @@
                         },
                         onBackdropTap: () => host.close()
                     }
+                };
+                if (fullHeight) {
+                    // Drag only from the top grip so inner content can scroll.
+                    return new CupertinoPane(selector, {
+                        ...base,
+                        fitHeight: false,
+                        fitScreenHeight: false,
+                        draggableOver: false,
+                        dragBy: ['.draggable'],
+                        topperOverflow: true,
+                        topperOverflowOffset: 24,
+                        breaks: {
+                            top: { enabled: true, height: vh },
+                            middle: { enabled: false },
+                            bottom: { enabled: false }
+                        }
+                    });
+                }
+                return new CupertinoPane(selector, {
+                    ...base,
+                    fitHeight: true,
+                    maxFitHeight: Math.round(vh * maxFitRatio),
+                    fitScreenHeight: true,
+                    draggableOver: true
                 });
             },
 
@@ -197,9 +219,12 @@
                     return;
                 }
                 host._closing = false;
+                host._open = true;
                 pane.present({ animate: true }).then(() => {
-                    pane.calcFitHeight?.(true);
-                }).catch(() => {});
+                    if (!fullHeight) pane.calcFitHeight?.(true);
+                }).catch(() => {
+                    host._open = false;
+                });
             },
 
             close() {
@@ -209,9 +234,13 @@
                     return;
                 }
                 host._closing = true;
-                pane.destroy({ animate: true }).catch(() => {
+                host._open = false;
+                pane.destroy({ animate: true }).then(() => {
+                    host._pane = null;
+                }).catch(() => {
                     host._closing = false;
                     host._open = false;
+                    host._pane = null;
                     if (typeof onDismiss === 'function') onDismiss();
                     host._park();
                 });
@@ -407,19 +436,25 @@
     const { renderIcon } = global.MTFComponents;
 
     const DEFAULT_MORE_FEATURE_TITLES = {
-        money: `${renderIcon('fa-coins', { className: 'me-2' })}Money`,
-        transactions: `${renderIcon('fa-database', { className: 'me-2' })}Total Transactions`,
-        'mtf-calc': `${renderIcon('fa-calculator', { className: 'me-2' })}MTF Calculator`
+        money: 'Money',
+        transactions: 'Total Transactions',
+        'mtf-calc': 'MTF Calculator'
     };
 
     const PAGE_TITLES = {
-        trades: { icon: 'fa-folder-open', label: 'Open', colorClass: 'text-info' },
-        trade: { icon: 'fa-folder-open', label: 'Open', colorClass: 'text-info' },
-        plan: { icon: 'fa-clipboard-list', label: 'Plan', colorClass: 'text-trades-plan' },
-        past: { icon: 'fa-lock', label: 'Closed', colorClass: 'text-danger' },
-        market: { icon: 'fa-chart-line', label: 'Market', colorClass: 'text-success' },
-        more: { icon: 'fa-ellipsis-h', label: 'More', colorClass: 'text-success' }
+        trades: 'My Positions',
+        trade: 'My Positions',
+        plan: 'My Positions',
+        past: 'My Positions',
+        market: 'Market',
+        more: 'More'
     };
+
+    const TRADES_MORE_OPTIONS = [
+        { value: 'trade', label: 'Open', icon: 'fa-folder-open', colorClass: 'text-info' },
+        { value: 'plan', label: 'Plan', icon: 'fa-clipboard-list', colorClass: 'text-trades-plan' },
+        { value: 'past', label: 'Closed', icon: 'fa-lock', colorClass: 'text-danger' }
+    ];
 
     function getHeaderConfig() {
         return (global.MTFAppHelpers || {}).appHeader || {};
@@ -430,20 +465,35 @@
         return typeof helpers.getTradesViewMode === 'function' ? helpers.getTradesViewMode() : 'trade';
     }
 
+    function escapeHtml(str) {
+        return String(str || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     function renderDefaultTitle(pageId) {
         let key = 'trades';
         if (pageId === 'page-market') key = 'market';
         else if (pageId === 'page-more') key = 'more';
         else if (pageId === 'page-trades' || pageId === 'page-plan' || pageId === 'page-past') {
-            const mode = getTradesViewMode();
-            key = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
+            key = 'trades';
         }
-        const meta = PAGE_TITLES[key] || PAGE_TITLES.trades;
-        const color = meta.colorClass || 'text-success';
-        return `${renderIcon(meta.icon, { className: `me-2 ${color}` })}<span class="${color}">${meta.label}</span>`;
+        return PAGE_TITLES[key] || PAGE_TITLES.trades;
+    }
+
+    function renderHeaderMoreMenu() {
+        const mode = getTradesViewMode();
+        return TRADES_MORE_OPTIONS.map((o) => {
+            const active = o.value === mode ? ' active' : '';
+            const icon = renderIcon(o.icon, { className: `me-2 ${o.colorClass}` });
+            return `<li><button type="button" class="dropdown-item d-flex align-items-center${active}" onclick="setTradesViewMode('${o.value}')">${icon}<span class="${o.colorClass}">${escapeHtml(o.label)}</span></button></li>`;
+        }).join('');
     }
 
     function updateAppHeader(pageId) {
+        const appHeader = document.getElementById('appHeader');
         const def = document.getElementById('appHeaderDefault');
         const settings = document.getElementById('appHeaderSettings');
         const subpage = document.getElementById('appHeaderSubpage');
@@ -456,22 +506,33 @@
         const onSearch = pageId === 'page-search';
         const moreFeature = Object.entries(moreFeatureMap).find(([, id]) => id === pageId)?.[0];
         const onSubpage = !!moreFeature;
+        const onTrades = pageId === 'page-trades' || pageId === 'page-past' || pageId === 'page-plan';
+        const onMarket = pageId === 'page-market';
+        const hideDefault = onSettings || onSubpage || onSearch;
 
-        def.classList.toggle('d-none', onSettings || onSubpage || onSearch);
+        if (appHeader) appHeader.classList.remove('d-none');
+
+        def.classList.toggle('d-none', hideDefault);
         settings.classList.toggle('d-none', !onSettings || onSearch);
         if (subpage) subpage.classList.toggle('d-none', !onSubpage || onSearch);
         if (subpageTitle && moreFeature) {
-            subpageTitle.innerHTML = moreFeatureTitles[moreFeature] || '';
+            subpageTitle.textContent = moreFeatureTitles[moreFeature] || '';
         }
-        if (defaultTitle && !onSettings && !onSubpage && !onSearch) {
-            defaultTitle.innerHTML = renderDefaultTitle(pageId);
+        if (defaultTitle && !hideDefault) {
+            defaultTitle.textContent = renderDefaultTitle(pageId);
         }
 
         const searchBtn = document.getElementById('appHeaderSearchBtn');
-        if (searchBtn) {
-            const showSearch = pageId === 'page-trades' || pageId === 'page-past' || pageId === 'page-plan' || pageId === 'page-market';
-            searchBtn.classList.toggle('d-none', !showSearch);
-        }
+        const filterBtn = document.getElementById('appHeaderFilterBtn');
+        const moreBtn = document.getElementById('appHeaderMoreBtn');
+        const moreMenu = document.getElementById('appHeaderMoreMenu');
+        const menuBtn = document.getElementById('appHeaderMenuBtn');
+
+        if (searchBtn) searchBtn.classList.toggle('d-none', !(onTrades || onMarket));
+        if (filterBtn) filterBtn.classList.toggle('d-none', !onTrades);
+        if (moreBtn) moreBtn.classList.toggle('d-none', !onTrades);
+        if (moreMenu && onTrades) moreMenu.innerHTML = renderHeaderMoreMenu();
+        if (menuBtn) menuBtn.classList.toggle('d-none', hideDefault);
     }
 
     global.MTFRegister({

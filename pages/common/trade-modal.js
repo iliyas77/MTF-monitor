@@ -75,9 +75,14 @@
     }
 
     function openViewFromEditor() {
-        const { openViewModal } = global.MTFComponents;
         const id = document.getElementById('txEditId')?.value;
         if (!id) return;
+        closeTradeModal();
+        if (typeof global.openTradeDetail === 'function') {
+            global.openTradeDetail(id);
+            return;
+        }
+        const { openViewModal } = global.MTFComponents;
         if (openViewModal) openViewModal(id);
     }
 
