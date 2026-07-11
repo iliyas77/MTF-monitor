@@ -87,8 +87,8 @@
                             </div>
                         </div>
                         <div class="trade-position-pnl flex-shrink-0 text-end">
-                            <div class="fw-semibold text-nowrap" data-quote-price>${priceText}</div>
-                            <div class="small text-truncate ${changeToneClass}" data-quote-change title="${escapeHtml(changeCombo)}">${escapeHtml(changeCombo)}</div>
+                            <div class="text-nowrap fw-normal" data-quote-price>${priceText}</div>
+                            <div class="small text-truncate fw-normal ${changeToneClass}" data-quote-change title="${escapeHtml(changeCombo)}">${escapeHtml(changeCombo)}</div>
                         </div>
                     </div>
                     <div class="trade-position-metrics">

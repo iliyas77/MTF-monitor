@@ -92,6 +92,7 @@
                 jumpCalendarMonth,
                 jumpCalendarToTodayMonth,
                 openCalendarDaySheet,
+                openCalendarMonthReport,
                 renderSearchResults,
                 renderTradeDetailPage,
                 TradeDetailSheet,
@@ -103,6 +104,8 @@
                 renderMtfCalculator,
                 updateMtfCalculator,
                 setCalcSellPct,
+                setCalcLeverage,
+                onCalcLeverageInput,
                 onCalcBuyPriceInput,
                 onCalcSellPriceInput,
                 addCalcSellPctPreset,
@@ -1196,9 +1199,17 @@
                 if (calcStockAcBlurTimer) clearTimeout(calcStockAcBlurTimer);
                 calcSelectedMeta = item;
                 const input = document.getElementById('calcCompany');
-                if (input) input.value = item.n || item.s || '';
+                if (input) {
+                    input.value = item.n || item.s || '';
+                    input.dataset.symbol = item.s || '';
+                }
+                const pick = document.querySelector('#page-mtf-calc .calc-company-pick');
+                if (pick) pick.dataset.symbol = item.s || '';
                 hideCalcCompanyAcList();
-                await fillCalcFromLivePrice(item);
+                const quote = await fillCalcFromLivePrice(item);
+                if (typeof paintCalcCompanyHeader === 'function') paintCalcCompanyHeader();
+                if (typeof paintCalcLiveQuote === 'function') paintCalcLiveQuote(quote);
+                if (typeof updateMtfCalculator === 'function') updateMtfCalculator();
             }
 
             function onCalcCompanyInput() {
@@ -5992,6 +6003,7 @@
             window.jumpCalendarMonth = jumpCalendarMonth;
             window.jumpCalendarToTodayMonth = jumpCalendarToTodayMonth;
             window.openCalendarDaySheet = openCalendarDaySheet;
+            window.openCalendarMonthReport = openCalendarMonthReport;
             window.refreshMarketQuotes = refreshMarketQuotes;
             window.onMarketRefreshClick = onMarketRefreshClick;
             window.refreshTradeLivePricesNow = refreshTradeLivePricesNow;
@@ -6010,6 +6022,8 @@
             window.setCalcSameDay = setCalcSameDay;
             window.setCalcTodayPair = setCalcTodayPair;
             window.setCalcSellPct = setCalcSellPct;
+            window.setCalcLeverage = setCalcLeverage;
+            window.onCalcLeverageInput = onCalcLeverageInput;
             window.onCalcBuyPriceInput = onCalcBuyPriceInput;
             window.onCalcSellPriceInput = onCalcSellPriceInput;
             window.addCalcSellPctPreset = addCalcSellPctPreset;

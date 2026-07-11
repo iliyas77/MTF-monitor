@@ -47,8 +47,164 @@
         const presets = getCalcSellPctPresets();
         wrap.innerHTML = presets.map((p) => {
             const active = calcActiveSellPct != null && Math.abs(calcActiveSellPct - p) < 0.0001;
-            return `<button type="button" class="btn btn-sm ${active ? 'btn-outline-primary' : 'btn-outline-secondary'} rounded-pill px-3" onclick="setCalcSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
+            return `<button type="button" class="calc-pct-chip${active ? ' is-active' : ''}" onclick="setCalcSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
         }).join('');
+    }
+
+    function onCalcLeverageInput() {
+        paintCalcLeverageCards();
+        updateMtfCalculator();
+    }
+
+    function setCalcLeverage(lev) {
+        const el = document.getElementById('calcLeverage');
+        if (el) el.value = String(Math.max(1, Math.min(5, Math.round(Number(lev) || 1))));
+        paintCalcLeverageCards();
+        updateMtfCalculator();
+    }
+
+    function paintCalcLeverageCards() {
+        const host = document.getElementById('calcLeverageCards');
+        const selectedEl = document.getElementById('calcLeverageSelected');
+        const levEl = document.getElementById('calcLeverage');
+        if (!host) return;
+        const selected = Math.max(1, Math.min(5, Math.round(Number(levEl && levEl.value) || 1)));
+        if (levEl) levEl.value = String(selected);
+        if (selectedEl) selectedEl.textContent = `${selected}x Selected`;
+
+        const buy = parseFloat(document.getElementById('calcBuyPrice')?.value) || 0;
+        const qty = parseFloat(document.getElementById('calcQty')?.value) || 0;
+        const investment = buy > 0 && qty > 0 ? buy * qty : 0;
+
+        host.innerHTML = [1, 2, 3, 4, 5].map((n) => {
+            const own = investment > 0 ? investment / n : 0;
+            const broker = investment > 0 ? investment - own : 0;
+            const active = n === selected ? ' is-active' : '';
+            const title = n === 1 ? '1x · No leverage' : `${n}x`;
+            return `
+                <button type="button" class="calc-lev-card${active}" role="option" aria-selected="${n === selected}" onclick="setCalcLeverage(${n})">
+                    <div class="calc-lev-card-title">${title}</div>
+                    <div class="calc-lev-card-row"><span>Own Margin</span><strong>${investment ? fmtINR(own) : '—'}</strong></div>
+                    <div class="calc-lev-card-row"><span>Broker Funds</span><strong>${investment ? fmtINR(broker) : '—'}</strong></div>
+                </button>
+            `;
+        }).join('');
+    }
+
+    function paintCalcCompanyHeader() {
+        const titleEl = document.getElementById('calcCompanyTitle');
+        const subEl = document.getElementById('calcCompanySub');
+        const avatarEl = document.getElementById('calcCompanyAvatar');
+        const companyInput = document.getElementById('calcCompany');
+        const company = (companyInput?.value || '').trim();
+        const symbol = (companyInput?.dataset?.symbol || document.querySelector('#page-mtf-calc .calc-company-pick')?.dataset?.symbol || '').trim();
+        const name = company;
+        if (titleEl) {
+            if (symbol && name && name.toUpperCase() !== symbol.toUpperCase()) {
+                titleEl.textContent = `${symbol} · ${name}`;
+            } else {
+                titleEl.textContent = symbol || name || 'Search and select a stock';
+            }
+        }
+        if (subEl) {
+            subEl.textContent = symbol || name
+                ? 'NSE · Tap to change stock'
+                : 'NSE · Live fill qty, buy & target';
+        }
+        if (avatarEl) {
+            const initial = (symbol || name || '?').charAt(0).toUpperCase();
+            if (symbol || name) {
+                avatarEl.textContent = initial;
+                avatarEl.className = 'calc-company-avatar trade-position-avatar trade-position-avatar--0 flex-shrink-0';
+            } else {
+                avatarEl.innerHTML = '<i class="fas fa-search"></i>';
+                avatarEl.className = 'calc-company-avatar calc-company-avatar--search flex-shrink-0';
+            }
+        }
+    }
+
+    function paintCalcLiveQuote(quote) {
+        const priceEl = document.getElementById('calcLivePrice');
+        const chgEl = document.getElementById('calcLiveChange');
+        const quickLive = document.getElementById('calcQuickLive');
+        const quickMax = document.getElementById('calcQuickMaxQty');
+        const buy = parseFloat(document.getElementById('calcBuyPrice')?.value) || 0;
+        const live = quote && quote.price != null && !isNaN(Number(quote.price)) ? Number(quote.price) : buy;
+        if (priceEl) priceEl.textContent = live > 0 ? fmtINR(live) : '—';
+        if (quickLive) quickLive.textContent = live > 0 ? fmtINR(live) : '—';
+        if (quickMax) {
+            quickMax.textContent = live > 0 ? String(Math.max(1, Math.floor(100000 / live))) : '—';
+        }
+        if (chgEl) {
+            if (quote && quote.change != null && !isNaN(Number(quote.change))) {
+                const ch = Number(quote.change);
+                const pct = Number(quote.changePct);
+                const up = ch >= 0;
+                chgEl.className = `calc-company-live-chg ${up ? 'is-up' : 'is-down'}`;
+                const pctText = !isNaN(pct) ? `${up ? '+' : ''}${pct.toFixed(2)}%` : '';
+                const absText = `${up ? '+' : '−'}₹${Math.abs(ch).toFixed(2)}`;
+                chgEl.textContent = pctText ? `${up ? '▲' : '▼'} ${pctText} (${absText.replace(/^[+−]/, '')})` : absText;
+            } else {
+                chgEl.className = 'calc-company-live-chg';
+                chgEl.textContent = live > 0 ? 'Live' : '—';
+            }
+        }
+    }
+
+    function paintCalcExpectedGain(inp) {
+        const el = document.getElementById('calcExpectedGain');
+        const meta = document.getElementById('calcExpectedGainMeta');
+        if (!el) return;
+        if (!inp || !(inp.buyPrice > 0) || !(inp.sellPrice > 0)) {
+            el.textContent = '—';
+            if (meta) meta.textContent = 'Per share';
+            return;
+        }
+        const perShare = inp.sellPrice - inp.buyPrice;
+        const pct = (perShare / inp.buyPrice) * 100;
+        const up = perShare >= 0;
+        el.className = `calc-summary-static ${up ? 'calc-summary-static--up' : 'calc-summary-static--down'}`;
+        el.textContent = `${up ? '+' : '−'}${Math.abs(pct).toFixed(2)}%`;
+        if (meta) {
+            meta.textContent = `${up ? '+' : '−'}₹${Math.abs(perShare).toFixed(2)} / share`;
+        }
+    }
+
+    function paintCalcOverview(preview) {
+        const set = (id, text, cls) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = text;
+            if (cls) el.className = cls;
+        };
+        if (!preview) {
+            set('calcOvInvested', '—');
+            set('calcOvMargin', '—', 'calc-overview-value calc-overview-value--margin');
+            set('calcOvBroker', '—', 'calc-overview-value calc-overview-value--broker');
+            set('calcOvCharges', '—');
+            set('calcOvInterest', '—');
+            set('calcOvProfit', '—', 'calc-overview-value');
+            set('calcFooterProfit', '—', 'calc-footer-value');
+            return;
+        }
+        const net = Number(preview.netProfit) || 0;
+        const invested = Number(preview.totalInvestment) || 0;
+        const roi = invested > 0 ? (net / invested) * 100 : 0;
+        set('calcOvInvested', fmtINR(invested));
+        set('calcOvMargin', fmtINR(preview.ownMargin), 'calc-overview-value calc-overview-value--margin');
+        set('calcOvBroker', fmtINR(preview.mtfAmount), 'calc-overview-value calc-overview-value--broker');
+        set('calcOvCharges', fmtINR(preview.totalCharges));
+        set('calcOvInterest', fmtINR(preview.interest));
+        set(
+            'calcOvProfit',
+            (net > 0 ? '+' : '') + fmtINR(net),
+            `calc-overview-value ${net > 0 ? 'text-success' : (net < 0 ? 'text-danger' : '')}`
+        );
+        const footer = document.getElementById('calcFooterProfit');
+        if (footer) {
+            footer.textContent = `${net > 0 ? '+' : ''}${fmtINR(net)} (${roi >= 0 ? '+' : ''}${roi.toFixed(2)}%)`;
+            footer.className = `calc-footer-value ${net > 0 ? 'is-up' : (net < 0 ? 'is-down' : '')}`;
+        }
     }
 
     function setCalcSellPct(pct) {
@@ -166,6 +322,10 @@
             setDateInputValue(sellEl, today);
         }
         renderCalcSellPctChips();
+        paintCalcLeverageCards();
+        paintCalcCompanyHeader();
+        paintCalcLiveQuote(null);
+        updateMtfCalculator();
     }
 
     function onCalcDateInput() {
@@ -287,6 +447,7 @@
         const invEl = document.getElementById('calcSummaryInvested');
         const marEl = document.getElementById('calcSummaryMargin');
         const wordsEl = document.getElementById('calcSummaryWords');
+        paintCalcOverview(preview);
         if (!preview) {
             if (pnlEl) {
                 pnlEl.textContent = '—';
@@ -366,6 +527,17 @@
         const comparePanel = document.getElementById('calcComparePanel');
         const totalHost = document.getElementById('calcTotalAmountHost');
         renderCalcChargeMode(inp);
+        paintCalcCompanyHeader();
+        paintCalcLeverageCards();
+        paintCalcExpectedGain(inp);
+        let quote = null;
+        try {
+            const sym = (document.getElementById('calcCompany')?.dataset?.symbol
+                || document.querySelector('#page-mtf-calc .calc-company-pick')?.dataset?.symbol || '').trim();
+            const getQuote = (global.MTFAppHelpers || {}).tradePages?.getTradeLiveQuote;
+            if (sym && typeof getQuote === 'function') quote = getQuote(sym);
+        } catch (_) {}
+        paintCalcLiveQuote(quote);
 
         if (!calcInputsValid(inp)) {
             paintCalcSummary(null);
@@ -405,12 +577,16 @@
         updateMtfCalculator,
         renderCalcSellPctChips,
         setCalcSellPct,
+        setCalcLeverage,
+        onCalcLeverageInput,
         onCalcBuyPriceInput,
         onCalcSellPriceInput,
         addCalcSellPctPreset,
         onCalcDateInput,
         setCalcSameDay,
         setCalcTodayPair,
-        openCalcBreakdownSheet
+        openCalcBreakdownSheet,
+        paintCalcCompanyHeader,
+        paintCalcLiveQuote
     });
 })(typeof window !== 'undefined' ? window : globalThis);
