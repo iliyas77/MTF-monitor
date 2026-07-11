@@ -147,7 +147,7 @@
                             </div>
                         </div>
                     </div>
-                    <div data-money-account-details class="d-none px-4 pb-4">
+                    <div data-money-account-details class="collapse px-4 pb-4">
                         ${row('Deposited', stats.deposited, '', 'deposit')}
                         ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
                         ${row('<span class="fw-medium text-body-secondary">Total Value</span>', stats.totalValue, 'border-bottom-0 pt-2 mt-1', 'positive')}
