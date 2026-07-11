@@ -134,14 +134,55 @@
         return Object.keys(byId).map(k => byId[k]);
     }
 
+    function mergeMarketWatchlist(localList, remoteList) {
+        const bySym = Object.create(null);
+        function ingest(list) {
+            (Array.isArray(list) ? list : []).forEach((item) => {
+                if (!item) return;
+                const s = String(item.s || item.symbol || '').trim().toUpperCase().replace(/\.(NS|BO)$/i, '');
+                if (!s) return;
+                const prev = bySym[s];
+                const n = String(item.n || item.name || (prev && prev.n) || s).trim() || s;
+                const next = { s, n };
+                const price = Number(item.price);
+                if (isFinite(price) && price > 0) {
+                    next.price = price;
+                    const pClose = Number(item.previousClose);
+                    const change = Number(item.change);
+                    const changePct = Number(item.changePct);
+                    if (isFinite(pClose)) next.previousClose = pClose;
+                    if (isFinite(change)) next.change = change;
+                    if (isFinite(changePct)) next.changePct = changePct;
+                    if (item.updatedAt) next.updatedAt = String(item.updatedAt);
+                } else if (prev && prev.price != null) {
+                    next.price = prev.price;
+                    if (prev.previousClose != null) next.previousClose = prev.previousClose;
+                    if (prev.change != null) next.change = prev.change;
+                    if (prev.changePct != null) next.changePct = prev.changePct;
+                    if (prev.updatedAt) next.updatedAt = prev.updatedAt;
+                }
+                if (prev && prev.updatedAt && next.updatedAt) {
+                    const prevT = Date.parse(prev.updatedAt);
+                    const nextT = Date.parse(next.updatedAt);
+                    if (!isNaN(prevT) && !isNaN(nextT) && prevT > nextT && prev.price != null) {
+                        bySym[s] = { ...next, ...prev, s, n: next.n || prev.n };
+                        return;
+                    }
+                }
+                bySym[s] = next;
+            });
+        }
+        ingest(localList);
+        ingest(remoteList);
+        return Object.keys(bySym).map((k) => bySym[k]);
+    }
+
     function mergeStorageData(local, remote) {
         return {
             transactions: mergeTransactions(local.transactions, remote.transactions),
             moneyAccounts: mergeMoneyAccounts(local.moneyAccounts, remote.moneyAccounts),
             moneyEntries: mergeMoneyEntries(local.moneyEntries, remote.moneyEntries),
-            marketWatchlist: Array.isArray(remote.marketWatchlist)
-                ? remote.marketWatchlist
-                : (Array.isArray(local.marketWatchlist) ? local.marketWatchlist : [])
+            marketWatchlist: mergeMarketWatchlist(local.marketWatchlist, remote.marketWatchlist)
         };
     }
 

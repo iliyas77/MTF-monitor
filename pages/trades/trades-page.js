@@ -1,5 +1,5 @@
 /**
- * O14 — Trades page render organism (open / planned / past view).
+ * O14 — Trades page render organism (open / past view).
  */
 (function (global) {
     'use strict';
@@ -8,7 +8,6 @@
         paintTradeRangeSummary,
         aggregatePortfolioSummary,
         renderFlatTradesList,
-        renderPlanTradeListItem,
         renderOpenTradeListItem,
         renderPastTradeListItem,
         renderPageEmptyCard
@@ -36,8 +35,6 @@
 
     function renderCurrentView() {
         const {
-            getTransactions,
-            isPlannedTrade,
             isActiveOpenTrade,
             sortTradesByHoldDays,
             sortTradesList,
@@ -51,13 +48,13 @@
             getPastFrom = () => null,
             getPastTo = () => null,
             getPastPnlFilter = () => 'all',
-            parseDateKey
+            parseDateKey,
+            getTransactions
         } = tradePages();
 
         if (ensureSharedTradeRange) ensureSharedTradeRange();
 
         const tradesViewMode = getTradesViewMode();
-        const isPlan = tradesViewMode === 'plan';
         const isPast = tradesViewMode === 'past';
         const isAll = tradesViewMode === 'all';
         const container = document.getElementById('transactionList');
@@ -94,7 +91,7 @@
         if (isAll) {
             filtered = txs.filter((t) => (t.status || '') !== 'cancelled');
         } else {
-            filtered = txs.filter(isPlan ? isPlannedTrade : isActiveOpenTrade);
+            filtered = txs.filter(isActiveOpenTrade || (() => false));
         }
 
         if (pastFrom && pastTo) {
@@ -134,7 +131,7 @@
 
         if (filtered.length === 0) {
             if (tradeQuery) {
-                const label = isAll ? 'trades' : (isPlan ? 'planned trades' : 'open trades');
+                const label = isAll ? 'trades' : 'open trades';
                 container.innerHTML = renderPageEmptyCard(
                     'fa-search',
                     `No ${label} match "${getTradeSearchQuery().trim()}"`,
@@ -143,27 +140,20 @@
                 return;
             }
             container.innerHTML = isAll
-                ? renderPageEmptyCard('fa-inbox', 'No trades in this range.', 'Try another date range, or tap + to add a trade.')
-                : (isPlan
-                    ? renderPageEmptyCard('fa-clipboard-list', 'No planned trades in this range.', 'Try another date range, or tap + to plan a trade.')
-                    : renderPageEmptyCard('fa-inbox', 'No open trades in this range.', 'Try another date range, or tap + to add a trade.'));
+                ? renderPageEmptyCard('fa-inbox', 'No trades in this range.', 'Try another date range, or add a trade from Watchlist.')
+                : renderPageEmptyCard('fa-inbox', 'No open trades in this range.', 'Try another date range, or add a trade from Watchlist.');
             return;
         }
 
         if (isAll) {
             container.innerHTML = filtered.map((t, i) => {
-                if (isPlannedTrade && isPlannedTrade(t)) return renderPlanTradeListItem(t, i + 1);
                 if (isActiveOpenTrade && isActiveOpenTrade(t)) return renderOpenTradeListItem(t, i + 1);
                 return renderPastTradeListItem(t, i + 1);
             }).join('');
             return;
         }
 
-        container.innerHTML = renderFlatTradesList(
-            filtered,
-            isPlan ? renderPlanTradeListItem : renderOpenTradeListItem,
-            isPlan ? 'plan' : 'open'
-        );
+        container.innerHTML = renderFlatTradesList(filtered, renderOpenTradeListItem, 'open');
     }
 
     global.MTFRegister({ renderCurrentView });

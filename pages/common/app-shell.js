@@ -11,8 +11,8 @@
     'use strict';
 
     const BOTTOM_BAR_ITEMS = [
-        { id: 'trades', label: 'Trades', icon: 'fa-list-ul' },
-        { id: 'market', label: 'Market', icon: 'fa-chart-line' },
+        { id: 'trades', label: 'Positions', icon: 'fa-briefcase' },
+        { id: 'market', label: 'Watchlist', icon: 'fa-star' },
         { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
     ];
 
@@ -130,6 +130,8 @@
             homeId = 'sheetPanels',
             maxFitRatio = 0.9,
             fullHeight = false,
+            topperOverflow = true,
+            topperOverflowOffset = 24,
             onDismiss = null
         } = opts;
 
@@ -182,14 +184,17 @@
                 };
                 if (fullHeight) {
                     // Drag only from the top grip so inner content can scroll.
+                    // Sheets with a pinned footer should pass topperOverflow: false
+                    // and scroll via CSS flex (otherwise Cupertino sizes the middle
+                    // to nearly full viewport and clips Cancel / Apply).
                     return new CupertinoPane(selector, {
                         ...base,
                         fitHeight: false,
                         fitScreenHeight: false,
                         draggableOver: false,
                         dragBy: ['.draggable'],
-                        topperOverflow: true,
-                        topperOverflowOffset: 24,
+                        topperOverflow,
+                        topperOverflowOffset,
                         breaks: {
                             top: { enabled: true, height: vh },
                             middle: { enabled: false },
@@ -446,13 +451,12 @@
         trade: 'My Positions',
         plan: 'My Positions',
         past: 'My Positions',
-        market: 'Market',
+        market: 'Watchlist',
         more: 'More'
     };
 
     const TRADES_MORE_OPTIONS = [
         { value: 'trade', label: 'Open', icon: 'fa-folder-open', colorClass: 'text-info' },
-        { value: 'plan', label: 'Plan', icon: 'fa-clipboard-list', colorClass: 'text-trades-plan' },
         { value: 'past', label: 'Closed', icon: 'fa-lock', colorClass: 'text-danger' }
     ];
 
@@ -533,6 +537,12 @@
         if (moreBtn) moreBtn.classList.toggle('d-none', !onTrades);
         if (moreMenu && onTrades) moreMenu.innerHTML = renderHeaderMoreMenu();
         if (menuBtn) menuBtn.classList.toggle('d-none', hideDefault);
+
+        try {
+            if (typeof global.MTFComponents?.placeSyncIndicator === 'function') {
+                global.MTFComponents.placeSyncIndicator();
+            }
+        } catch (_) {}
     }
 
     global.MTFRegister({
