@@ -7,19 +7,21 @@
     const {
         fmtDateShort,
         paintTradeRangeSummary,
+        countTradePnlBuckets,
         renderFlatTradesList,
         renderPlanTradeListItem,
         renderOpenTradeListItem,
         renderPastTradeListItem,
         renderPageEmptyCard,
         renderIcon,
-        PAST_PNL_OPTIONS
+        PAST_PNL_OPTIONS,
+        syncTradeCardsCollapseAllButton
     } = global.MTFComponents;
 
     const TRADES_VIEW_OPTIONS = [
-        { value: 'trade', label: 'Trade' },
-        { value: 'plan', label: 'Plan' },
-        { value: 'past', label: 'Past' }
+        { value: 'trade', label: 'Open', icon: 'fa-folder-open', colorClass: 'text-info' },
+        { value: 'plan', label: 'Plan', icon: 'fa-clipboard-list', colorClass: 'text-trades-plan' },
+        { value: 'past', label: 'Closed', icon: 'fa-lock', colorClass: 'text-danger' }
     ];
 
     const PNL_OPTIONS = PAST_PNL_OPTIONS || [
@@ -41,12 +43,17 @@
             .replace(/"/g, '&quot;');
     }
 
+    function renderTradesViewModeLabel(opt) {
+        if (!opt) return '';
+        return `${renderIcon(opt.icon, { className: `me-1 ${opt.colorClass}` })}<span class="${opt.colorClass}">${escapeHtml(opt.label)}</span>`;
+    }
+
     function renderTradesFilterBar(from, to, viewMode, pnlFilter) {
-        const rangeLabel = `${fmtDateShort(from)} – ${fmtDateShort(to)}`;
+        const rangeLabel = (from && to) ? `${fmtDateShort(from)} – ${fmtDateShort(to)}` : 'All';
         const selected = TRADES_VIEW_OPTIONS.find((o) => o.value === viewMode) || TRADES_VIEW_OPTIONS[0];
         const items = TRADES_VIEW_OPTIONS.map((o) => {
             const active = o.value === selected.value ? ' active' : '';
-            return `<li><button type="button" class="dropdown-item${active}" onclick="setTradesViewMode('${o.value}');event.stopPropagation();">${escapeHtml(o.label)}</button></li>`;
+            return `<li><button type="button" class="dropdown-item d-flex align-items-center${active}" onclick="setTradesViewMode('${o.value}');event.stopPropagation();">${renderTradesViewModeLabel(o)}</button></li>`;
         }).join('');
 
         const pnlSelected = PNL_OPTIONS.find((o) => o.value === pnlFilter) || PNL_OPTIONS[0];
@@ -75,12 +82,21 @@
             <div class="dropdown flex-shrink-0">
                 <button type="button"
                     id="tradesViewMode"
-                    class="btn btn-outline-secondary dropdown-toggle"
+                    class="btn btn-outline-secondary dropdown-toggle d-inline-flex align-items-center"
                     data-bs-toggle="dropdown"
                     aria-expanded="false"
-                    aria-label="Switch between Trade, Plan, and Past">${escapeHtml(selected.label)}</button>
+                    aria-label="Switch between Open, Plan, and Closed">${renderTradesViewModeLabel(selected)}</button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" id="tradesViewModeMenu">${items}</ul>
             </div>
+            <button type="button"
+                id="tradesCollapseAllBtn"
+                class="btn btn-outline-secondary flex-shrink-0 d-inline-flex align-items-center justify-content-center px-2"
+                onclick="toggleAllTradeCardsCollapse()"
+                aria-pressed="false"
+                title="Collapse all cards"
+                aria-label="Collapse all cards">
+                ${renderIcon('fa-compress-alt')}
+            </button>
         </div>`;
     }
 
@@ -136,14 +152,19 @@
             filtered.forEach((t) => {
                 net += resolveTradeMetrics ? resolveTradeMetrics(t).netProfit : (t.netProfit || 0);
             });
+            const buckets = countTradePnlBuckets
+                ? countTradePnlBuckets(filtered, resolveTradeMetrics)
+                : { profit: 0, loss: 0 };
 
             paintTradeRangeSummary({
                 containerId: 'summaryOpenStats',
                 wordsId: 'summaryNetWords',
                 net,
                 count: filtered.length,
-                countLabel: 'Past',
-                useTwoItemLayout: true
+                countLabel: 'Closed',
+                useTwoItemLayout: true,
+                profitCount: buckets.profit,
+                lossCount: buckets.loss
             });
 
             if (!container) return;
@@ -151,7 +172,8 @@
                 container.innerHTML = renderPageEmptyCard('fa-history', 'No past trades in this period', 'Try another date range.');
                 return;
             }
-            container.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem);
+            container.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem, 'past');
+            if (typeof syncTradeCardsCollapseAllButton === 'function') syncTradeCardsCollapseAllButton();
             return;
         }
 
@@ -181,14 +203,19 @@
         filtered.forEach((t) => {
             net += resolveTradeMetrics ? resolveTradeMetrics(t).netProfit : 0;
         });
+        const buckets = countTradePnlBuckets
+            ? countTradePnlBuckets(filtered, resolveTradeMetrics)
+            : { profit: 0, loss: 0 };
 
         paintTradeRangeSummary({
             containerId: 'summaryOpenStats',
             wordsId: 'summaryNetWords',
             net,
             count: filtered.length,
-            countLabel: isPlan ? 'Planned' : 'Open',
-            useTwoItemLayout: true
+            countLabel: isPlan ? 'Plan' : 'Open',
+            useTwoItemLayout: true,
+            profitCount: buckets.profit,
+            lossCount: buckets.loss
         });
 
         if (!container) return;
@@ -204,12 +231,17 @@
                 return;
             }
             container.innerHTML = isPlan
-                ? renderPageEmptyCard('fa-clipboard-list', 'No trades planned in this range.', 'Try another date range, or tap + to plan a trade.')
+                ? renderPageEmptyCard('fa-clipboard-list', 'No planned trades in this range.', 'Try another date range, or tap + to plan a trade.')
                 : renderPageEmptyCard('fa-inbox', 'No open trades in this range.', 'Try another date range, or tap + to add a trade.');
             return;
         }
 
-        container.innerHTML = renderFlatTradesList(filtered, isPlan ? renderPlanTradeListItem : renderOpenTradeListItem);
+        container.innerHTML = renderFlatTradesList(
+            filtered,
+            isPlan ? renderPlanTradeListItem : renderOpenTradeListItem,
+            isPlan ? 'plan' : 'open'
+        );
+        if (typeof syncTradeCardsCollapseAllButton === 'function') syncTradeCardsCollapseAllButton();
     }
 
     global.MTFRegister({ renderCurrentView, TRADES_VIEW_OPTIONS });

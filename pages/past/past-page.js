@@ -7,6 +7,7 @@
     const {
         fmtDateShort,
         paintPastTradeSummary,
+        countTradePnlBuckets,
         renderFlatTradesList,
         renderPastTradeListItem,
         renderPageEmptyCard,
@@ -33,7 +34,7 @@
     }
 
     function renderPastFilterBar(from, to, pnlFilter) {
-        const rangeLabel = `${fmtDateShort(from)} – ${fmtDateShort(to)}`;
+        const rangeLabel = (from && to) ? `${fmtDateShort(from)} – ${fmtDateShort(to)}` : 'All';
         const selected = PAST_PNL_OPTIONS.find((o) => o.value === pnlFilter) || PAST_PNL_OPTIONS[0];
         const items = PAST_PNL_OPTIONS.map((o) => {
             const active = o.value === selected.value ? ' active' : '';
@@ -80,7 +81,8 @@
 
         let net = 0;
         filtered.forEach((t) => { net += t.netProfit || 0; });
-        paintPastTradeSummary(net, filtered.length);
+        const buckets = countTradePnlBuckets ? countTradePnlBuckets(filtered) : { profit: 0, loss: 0 };
+        paintPastTradeSummary(net, filtered.length, buckets.profit, buckets.loss);
 
         if (!listContainer) return;
 
@@ -91,7 +93,7 @@
             return;
         }
 
-        listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem);
+        listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem, 'past');
     }
 
     global.MTFRegister({ renderPastTrades, PAST_PNL_OPTIONS });

@@ -413,12 +413,12 @@
     };
 
     const PAGE_TITLES = {
-        trades: { icon: 'fa-list-ul', label: 'Trades' },
-        trade: { icon: 'fa-list-ul', label: 'Trades' },
-        plan: { icon: 'fa-clipboard-list', label: 'Plan' },
-        past: { icon: 'fa-history', label: 'Past Trades' },
-        market: { icon: 'fa-chart-line', label: 'Market' },
-        more: { icon: 'fa-ellipsis-h', label: 'More' }
+        trades: { icon: 'fa-folder-open', label: 'Open', colorClass: 'text-info' },
+        trade: { icon: 'fa-folder-open', label: 'Open', colorClass: 'text-info' },
+        plan: { icon: 'fa-clipboard-list', label: 'Plan', colorClass: 'text-trades-plan' },
+        past: { icon: 'fa-lock', label: 'Closed', colorClass: 'text-danger' },
+        market: { icon: 'fa-chart-line', label: 'Market', colorClass: 'text-success' },
+        more: { icon: 'fa-ellipsis-h', label: 'More', colorClass: 'text-success' }
     };
 
     function getHeaderConfig() {
@@ -439,7 +439,8 @@
             key = mode === 'plan' ? 'plan' : (mode === 'past' ? 'past' : 'trade');
         }
         const meta = PAGE_TITLES[key] || PAGE_TITLES.trades;
-        return `${renderIcon(meta.icon, { className: 'me-2 text-success' })}${meta.label}`;
+        const color = meta.colorClass || 'text-success';
+        return `${renderIcon(meta.icon, { className: `me-2 ${color}` })}<span class="${color}">${meta.label}</span>`;
     }
 
     function updateAppHeader(pageId) {
