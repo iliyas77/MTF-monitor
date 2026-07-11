@@ -1,0 +1,29 @@
+{
+  "scripts": [
+    "shared/lib/_registry.js",
+    "shared/lib/format.js",
+    "shared/lib/bootstrap.js",
+    "features/common/app-shell.js",
+    "features/common/trade-list.js",
+    "features/common/trade-sheets.js",
+    "features/common/trade-modal.js",
+    "features/common/search-page.js",
+    "features/positions/trades-page.js",
+    "features/positions/trade-detail-page.js",
+    "features/positions/past-page.js",
+    "features/watchlist/watchlist-page.js",
+    "features/calendar/calendar-page.js",
+    "features/more/more-page.js",
+    "features/more/app-version.js",
+    "features/more/money-page.js",
+    "features/more/mtf-calculator-page.js",
+    "features/more/settings-page.js",
+    "features/more/json-visualizer.js",
+    "shared/db/_registry.js",
+    "shared/db/db-call-log.js",
+    "shared/db/firebase-config.js",
+    "shared/db/storage-service.js",
+    "shared/db/sync-service.js",
+    "main.js"
+  ]
+}

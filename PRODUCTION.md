@@ -7,14 +7,14 @@ For mobile deployment you need **one self-contained HTML file** — no separate 
 | Source (edit these) | Inlined into |
 |---------------------|--------------|
 | `main.html`         | structure + app logic |
-| `css/_variables.css` | brand theme tokens + Bootstrap color bridge (`<style>`) |
-| `lib/**/*.js` + `pages/**/*.js` + `main.js` | single bundled `<script>` (order from `scripts/manifest.json`) |
+| `shared/css/_variables.css` | brand theme tokens + Bootstrap color bridge (`<style>`) |
+| `shared/lib/**/*.js` + `features/**/*.js` + `shared/db/**/*.js` + `main.js` | single bundled `<script>` (order from `shared/scripts/manifest.json`) |
 
 CDN assets (Bootstrap, Font Awesome, Google Fonts, Firebase) stay as network links — the app still needs internet for those on first load.
 
-Brand colors come only from `css/_variables.css` (mapped onto Bootstrap `--bs-*` variables).
+Brand colors come only from `shared/css/_variables.css` (mapped onto Bootstrap `--bs-*` variables).
 
-Shared helpers live in `lib/` (`_registry.js`, `format.js`, `bootstrap.js`). Cross-page UI (shell, trade list, sheets, modal) lives in `pages/common/`. Each route keeps a single `*-page.js` under its folder (e.g. `pages/trades/trades-page.js`).
+Shared helpers live in `shared/lib/` (`_registry.js`, `format.js`, `bootstrap.js`). Data/sync lives in `shared/db/`. Build/verify tooling lives in `shared/scripts/`. Cross-feature UI (shell, trade list, sheets, modal) lives in `features/common/`. Each tab keeps its feature scripts under its folder (e.g. `features/positions/trades-page.js`).
 
 ## One-time setup
 
@@ -24,13 +24,13 @@ npm install
 
 ## Build the production file
 
-After any change to `main.html`, `css/_variables.css`, `main.js`, or files under `lib/` / `pages/` / `db/`, run:
+After any change to `main.html`, `shared/css/_variables.css`, `main.js`, or files under `shared/lib/` / `features/` / `shared/db/`, run:
 
 ```bash
 npm run build
 ```
 
-The build **first repairs** `scripts/manifest.json` and the matching `<script>` tags in `main.html` (same as `npm run repair`), then **bundles** JS into one HTML file and **minifies** HTML and JavaScript. This **overwrites** `production.html`.
+The build **first repairs** `shared/scripts/manifest.json` and the matching `<script>` tags in `main.html` (same as `npm run repair`), then **bundles** JS into one HTML file and **minifies** HTML and JavaScript. This **overwrites** `production.html`.
 
 ### Repair manifest only
 
@@ -38,13 +38,15 @@ The build **first repairs** `scripts/manifest.json` and the matching `<script>` 
 npm run repair
 ```
 
-Updates `scripts/manifest.json` and the `<!-- COMPONENT SCRIPTS -->` block in `main.html`.
+Updates `shared/scripts/manifest.json` and the `<!-- COMPONENT SCRIPTS -->` block in `main.html`.
 
 ## Deploy to mobile
 
-1. Run `npm run build` (or `npm run ship` to bump version).
+1. Run `npm run build` (always bumps the patch version + stamps date/time).
 2. Copy **`production.html`** to your phone.
 3. Open it in the mobile browser.
+
+`npm run save` also bumps + builds first, then commits and pushes so the version is never stale on push.
 
 ## Verify
 

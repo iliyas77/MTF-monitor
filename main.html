@@ -6,14 +6,14 @@
     <title>MTF Profit Tracker</title>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous" />
-    <link rel="stylesheet" href="css/_variables.css" />
+    <link rel="stylesheet" href="shared/css/_variables.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
 </head>
 
-<body class="overflow-x-hidden" style="max-width:480px;margin:0 auto">
+<body class="overflow-x-hidden app-shell">
 
     <!-- ============ TOAST ============ -->
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" id="toastContainer"></div>
@@ -34,6 +34,9 @@
                 </div>
                 <button type="button" id="appHeaderSearchBtn" class="app-header-icon-btn d-none" onclick="openSearchPage()" aria-label="Search">
                     <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="appHeaderRefreshBtn" class="app-header-icon-btn d-none" onclick="onMarketRefreshClick()" aria-label="Refresh watchlist prices">
+                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </button>
                 <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none" onclick="openFilterSheet()" aria-label="Filter">
                     <i class="fas fa-filter" aria-hidden="true"></i>
@@ -90,42 +93,71 @@
 
     <!-- PAGE: WATCHLIST (Market) -->
     <section id="page-market" class="w-100 d-none">
-        <div class="px-3 pt-3">
-            <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
-                <p class="text-muted small text-uppercase fw-medium mb-0" id="marketSectionLabel">Watchlist</p>
-                <button type="button" class="btn btn-sm btn-outline-secondary flex-shrink-0" id="marketRefreshBtn" onclick="onMarketRefreshClick()" aria-label="Refresh watchlist prices">
-                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                    Refresh
-                </button>
-            </div>
-            <div class="small text-muted mb-3 d-none" id="marketUpdatedAt" aria-live="polite"></div>
-
-            <div class="card shadow-sm border overflow-hidden">
-                <div id="marketQuotesList"></div>
-            </div>
+        <div class="px-3 pt-3 w-100">
+            <div id="marketQuotesList" class="w-100"></div>
         </div>
     </section>
 
-    <!-- PAGE: SEARCH (full screen) -->
-    <section id="page-search" class="w-100 d-none">
-        <div class="sticky-top bg-body px-3 py-3 shadow-sm">
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-light rounded-circle border-0 flex-shrink-0" onclick="closeSearchPage()" aria-label="Back">
-                    <i class="fas fa-arrow-left text-secondary"></i>
-                </button>
-                <div class="flex-fill min-w-0 d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1">
-                    <span class="text-secondary flex-shrink-0" aria-hidden="true"><i class="fas fa-search"></i></span>
-                    <div class="flex-grow-1 min-w-0">
-                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+    <!-- PAGE: CALENDAR -->
+    <section id="page-calendar" class="w-100 d-none">
+        <div class="px-3 pt-3 pb-3">
+            <div class="card cal-month-card bg-body border rounded-3 overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle flex-shrink-0" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarMonth(-1)" aria-label="Previous month">
+                            <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                        </button>
+                        <div class="text-center min-w-0 flex-grow-1">
+                            <button type="button" class="cal-month-jump-btn" id="calendarMonthJumpBtn" onclick="openCalendarMonthPicker()" aria-haspopup="dialog" aria-label="Jump to month">
+                                <span class="cal-month-jump-title" id="calendarMonthTitle">—</span>
+                                <i class="fas fa-caret-down cal-month-jump-caret" aria-hidden="true"></i>
+                            </button>
+                            <p class="small text-muted mb-0">Daily net P&amp;L (closed trades)</p>
+                        </div>
+                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle flex-shrink-0" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarMonth(1)" aria-label="Next month">
+                            <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                        </button>
                     </div>
-                    <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="searchPageClear" onclick="clearSearchPage()" title="Clear" aria-label="Clear">
-                        <i class="fas fa-times"></i>
-                    </button>
+                    <div class="cal-weekday-row" aria-hidden="true">
+                        <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                    </div>
+                    <div id="calendarGrid" class="cal-grid" role="grid" aria-label="Month calendar"></div>
+                    <div class="cal-legend mt-3 mb-0" aria-label="Legend">
+                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--pos"></span> Profit</span>
+                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--neg"></span> Loss</span>
+                        <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--flat"></span> No trades</span>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="px-3 pt-3">
-            <div id="searchPageList"></div>
+            <div class="card cal-month-summary-card bg-body border rounded-3 overflow-hidden mt-3">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-start justify-content-between gap-2 mb-3">
+                        <div class="min-w-0">
+                            <p class="small text-uppercase text-muted fw-medium mb-1" id="calendarMonthSummaryLabel">Month summary</p>
+                            <div class="cal-summary-net" id="calSummaryPnl">—</div>
+                            <p class="small text-muted mb-0">Net P&amp;L (closed)</p>
+                        </div>
+                    </div>
+                    <div class="cal-summary-metrics" aria-label="Month metrics">
+                        <div class="cal-summary-metric">
+                            <div class="cal-summary-metric-value" id="calSummaryTrades">0</div>
+                            <div class="cal-summary-metric-label">Trades</div>
+                        </div>
+                        <div class="cal-summary-metric">
+                            <div class="cal-summary-metric-value" id="calSummaryWinLoss">0 / 0</div>
+                            <div class="cal-summary-metric-label">Win / Loss</div>
+                        </div>
+                        <div class="cal-summary-metric">
+                            <div class="cal-summary-metric-value" id="calSummaryDays">0</div>
+                            <div class="cal-summary-metric-label">Active days</div>
+                        </div>
+                    </div>
+                    <div class="cal-summary-brokers mt-3">
+                        <p class="small text-uppercase text-muted fw-medium mb-2">By broker</p>
+                        <div id="calSummaryBrokerList" class="cal-summary-broker-list"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 
@@ -158,6 +190,7 @@
                         <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
                             <h6 class="fw-semibold text-body-secondary mb-0 flex-shrink-0"><i class="fas fa-university me-2 text-primary"></i>Accounts</h6>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                <div class="flex-shrink-0" id="moneyAddAccountBtnHost"></div>
                                 <div class="flex-shrink-0" id="moneyAccountFilterHost"></div>
                                 <button type="button" class="btn btn-outline-secondary bg-body rounded-3 p-0" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter" style="width:2.5rem;height:2.5rem">
                                     <i class="fas fa-filter text-muted"></i>
@@ -196,67 +229,69 @@
 
     <!-- PAGE: SETTINGS -->
     <section id="page-settings" class="w-100 d-none">
-        <div class="px-3 pt-3">
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body">
-                    <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-chart-line me-2"></i>Market Feed</h6>
-                    <p class="small text-muted mb-2">Check whether live stock prices are reachable from this device.</p>
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="small text-muted flex-shrink-0">Status:</span>
-                        <span id="marketFeedStatusBadge" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary">Not checked</span>
+        <div class="settings-page px-3 pt-3 pb-4">
+            <p class="settings-section-label">Connectivity</p>
+            <div class="card settings-card bg-body rounded-3 border mb-3 overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <span class="settings-icon settings-icon--feed" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <h6 class="settings-card-title mb-0">Market Feed</h6>
+                                <span id="marketFeedStatusBadge" class="badge rounded-pill text-bg-light border">Not checked</span>
+                            </div>
+                            <p class="small text-muted mb-0 mt-1">Verify live stock prices from this device.</p>
+                        </div>
                     </div>
-                    <div id="marketFeedCheckResult" class="small text-muted mb-2">Tap Check Feed to verify real-time market data.</div>
+                    <div id="marketFeedCheckResult" class="settings-hint mb-3">Tap Check Feed to verify real-time market data.</div>
                     <div id="settingsMarketFeedBtnHost"></div>
                 </div>
             </div>
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body">
-                    <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-cloud me-2"></i>Cloud Sync</h6>
-                    <div class="d-flex align-items-center mb-2">
-                        <span class="me-2 small text-muted">Status:</span>
-                        <span id="cloudSyncStatus" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary">Off</span>
+            <div class="card settings-card bg-body rounded-3 border mb-3 overflow-hidden">
+                <div class="card-body p-3">
+                    <div class="d-flex align-items-start gap-3 mb-3">
+                        <span class="settings-icon settings-icon--sync" aria-hidden="true"><i class="fas fa-cloud"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="d-flex align-items-center justify-content-between gap-2">
+                                <h6 class="settings-card-title mb-0">Cloud Sync</h6>
+                                <span id="cloudSyncStatus" class="badge rounded-pill text-bg-light border">Off</span>
+                            </div>
+                            <p class="small text-muted mb-0 mt-1">Same secret code on phone and web keeps trades in sync.</p>
+                        </div>
                     </div>
-                    <p class="small text-muted mb-2">Enter the same sync code on your phone and web to keep trades and money accounts in sync. Choose a long, secret code (like a password).</p>
-                    <div class="input-group mb-2">
-                        <span class="input-group-text bg-light"><i class="fas fa-key"></i></span>
+                    <label class="form-label small text-muted mb-1" for="syncCodeInput">Sync code</label>
+                    <div class="input-group settings-sync-input mb-3">
+                        <span class="input-group-text"><i class="fas fa-key" aria-hidden="true"></i></span>
                         <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
                     </div>
                     <div class="d-flex gap-2" id="syncConnectRow"></div>
-                    <div id="cloudSyncHint" class="small text-muted mt-2"></div>
+                    <div id="cloudSyncHint" class="settings-hint mt-3 mb-0"></div>
                 </div>
             </div>
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body p-0">
-                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
-                        <div>
-                            <div class="fw-medium text-body-secondary"><i class="fas fa-university me-2"></i>Money Accounts</div>
-                            <div class="small text-muted" id="settingsMoneyAccountCount">0 accounts</div>
-                        </div>
-                        <span class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary" id="settingsMoneyAccountBadge">0</span>
-                    </div>
-                    <div class="px-3 py-3 border-bottom border" id="addMoneyAccountBtnHost"></div>
-                    <div class="px-3 py-3" id="settingsMoneyAccountList"></div>
-                </div>
-            </div>
-            <div class="card bg-body rounded-3">
-                <div class="card-body p-0">
-                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
-                        <div>
-                            <div class="fw-medium text-body-secondary"><i class="fas fa-database me-2"></i>Total Transactions</div>
+
+            <p class="settings-section-label">Data</p>
+            <div class="card settings-card bg-body rounded-3 border overflow-hidden">
+                <div class="list-group list-group-flush settings-data-list">
+                    <div class="list-group-item settings-data-row">
+                        <span class="settings-icon settings-icon--data" aria-hidden="true"><i class="fas fa-database"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="settings-card-title">Total Transactions</div>
                             <div class="small text-muted" id="totalTxCount">0 records</div>
                         </div>
-                        <span class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary" id="totalTxBadge">0</span>
+                        <span class="badge rounded-pill text-bg-light border" id="totalTxBadge">0</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3 border-bottom border">
-                        <div>
-                            <div class="fw-medium text-body-secondary"><i class="fas fa-clipboard me-2"></i>Backup as Text</div>
-                            <div class="small text-muted">Copy your data as text, or paste it back to restore</div>
+                    <div class="list-group-item settings-data-row">
+                        <span class="settings-icon settings-icon--backup" aria-hidden="true"><i class="fas fa-clipboard"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="settings-card-title">Backup &amp; JSON</div>
+                            <div class="small text-muted">Copy, paste, restore, or visualize data</div>
                         </div>
                         <div id="settingsBackupBtnHost" class="flex-shrink-0"></div>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center gap-3 px-3 py-3">
-                        <div>
-                            <div class="fw-semibold text-danger"><i class="fas fa-trash-alt me-2"></i>Reset All Data</div>
+                    <div class="list-group-item settings-data-row settings-data-row--danger">
+                        <span class="settings-icon settings-icon--danger" aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="settings-card-title text-danger">Reset All Data</div>
                             <div class="small text-muted">Permanently delete all transactions</div>
                         </div>
                         <div id="settingsResetBtnHost" class="flex-shrink-0"></div>
@@ -277,11 +312,6 @@
                         <span class="flex-fill fw-semibold text-start">Money</span>
                         <i class="fas fa-chevron-right text-muted small"></i>
                     </button>
-                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('transactions')">
-                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary-subtle text-primary" style="width:2.25rem;height:2.25rem"><i class="fas fa-database"></i></span>
-                        <span class="flex-fill fw-semibold text-start">Total Transactions</span>
-                        <i class="fas fa-chevron-right text-muted small"></i>
-                    </button>
                     <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('mtf-calc')">
                         <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success" style="width:2.25rem;height:2.25rem"><i class="fas fa-calculator"></i></span>
                         <span class="flex-fill fw-semibold text-start">MTF Calculator</span>
@@ -298,116 +328,111 @@
         </div>
     </section>
 
-    <!-- PAGE: TOTAL TRANSACTIONS -->
-    <section id="page-transactions" class="w-100 d-none">
-        <div class="px-3 pt-3">
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body text-center py-4">
-                    <div class="small text-uppercase text-muted fw-medium"><i class="fas fa-coins me-1"></i>Total Trades</div>
-                    <div class="fw-semibold fs-2 text-body-secondary mb-3" id="txHistTotal">0</div>
-                    <div class="row g-2 gap-2">
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Open</div>
-                            <div class="fw-semibold text-warning" id="txHistOpen">0</div>
-                        </div>
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Closed</div>
-                            <div class="fw-medium text-body-secondary" id="txHistClosed">0</div>
-                        </div>
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Successful</div>
-                            <div class="d-inline-flex align-items-center justify-content-center rounded-3 px-3 py-1 fw-semibold bg-success-subtle text-success" id="txHistSuccessful">0</div>
-                        </div>
-                    </div>
-                    <hr class="my-2" />
-                    <div class="row g-2 gap-2">
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Net</div>
-                            <div id="txHistNet"></div>
-                        </div>
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Gross</div>
-                            <div id="txHistGross"></div>
-                        </div>
-                        <div>
-                            <div class="small text-uppercase text-muted fw-medium">Charges</div>
-                            <div id="txHistCharges"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body">
-                    <h6 class="fw-semibold text-body-secondary mb-3"><i class="fas fa-building me-2"></i>By Broker</h6>
-                    <div id="txHistBrokerBreakdown"></div>
-                </div>
-            </div>
-            <h6 class="fw-semibold text-body-secondary mb-2"><i class="fas fa-list me-2"></i>History</h6>
-            <div id="txHistList"></div>
-        </div>
-    </section>
-
     <!-- PAGE: MTF CALCULATOR -->
     <section id="page-mtf-calc" class="w-100 d-none">
-        <div class="px-3 pt-3">
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body">
-                    <div class="row g-2 gap-2 mb-2">
+        <div class="px-3 pt-3 w-100 d-flex flex-column gap-3 pb-3">
+            <div class="w-100" id="calcSummaryCard">
+                <div id="calcSummaryStats" class="portfolio-summary-cards" role="group" aria-label="Calculator summary">
+                    <div class="portfolio-stat-card">
+                        <div class="portfolio-stat-label">Net P&amp;L</div>
+                        <div class="portfolio-stat-value text-body" id="calcSummaryPnl">—</div>
+                    </div>
+                    <div class="portfolio-stat-card">
+                        <div class="portfolio-stat-label">Invested</div>
+                        <div class="portfolio-stat-value text-body" id="calcSummaryInvested">—</div>
+                    </div>
+                    <div class="portfolio-stat-card">
+                        <div class="portfolio-stat-label">Your Margin</div>
+                        <div class="portfolio-stat-value text-body" id="calcSummaryMargin">—</div>
+                    </div>
+                </div>
+                <div id="calcSummaryWords" class="small text-muted text-center mt-1"></div>
+            </div>
+
+            <article class="card bg-body border rounded w-100 trade-position-card calc-form-card">
+                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
+                    <div class="position-relative">
+                        <label class="form-label small text-muted mb-1" for="calcCompany">Company</label>
+                        <div class="position-relative">
+                            <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted" aria-hidden="true"></i>
+                            <input type="text" class="form-control w-100 ps-5" id="calcCompany" placeholder="Search company name or symbol" autocomplete="off" readonly inputmode="none" spellcheck="false" onclick="openCompanySearchSheet('calc')" aria-label="Company" aria-haspopup="dialog" />
+                        </div>
+                        <p class="small text-muted mb-0 mt-1" id="calcCompanyLiveNote">Search a stock to fill qty (₹1L), buy (live), and sell (+1.35%).</p>
+                    </div>
+
+                    <div class="calc-date-row">
                         <div>
-                            <label class="form-label text-muted">Buy Date</label>
+                            <label class="form-label small text-muted mb-1" for="calcBuyDate">Buy Date</label>
                             <input type="date" class="form-control w-100" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
                         </div>
                         <div>
-                            <label class="form-label text-muted">Sell Date</label>
+                            <label class="form-label small text-muted mb-1" for="calcSellDate">Sell Date</label>
                             <input type="date" class="form-control w-100" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
                         </div>
                     </div>
-                    <div class="d-flex flex-wrap gap-1 mb-3">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcSameDay()">Same day (intraday)</button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setCalcTodayPair()">Today → Tomorrow</button>
-                    </div>
-                    <div class="row g-2 gap-2 mb-2">
-                        <div>
-                            <label class="form-label">Qty</label>
-                            <input type="number" class="form-control w-100" id="calcQty" min="1" step="1" placeholder="0" oninput="updateMtfCalculator()" />
-                        </div>
-                        <div>
-                            <label class="form-label">Buy Price</label>
-                            <input type="number" class="form-control w-100" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcBuyPriceInput()" />
-                        </div>
-                        <div>
-                            <label class="form-label text-muted">Sell Price</label>
-                            <input type="number" class="form-control w-100" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" oninput="onCalcSellPriceInput()" />
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-medium small text-muted">Sell target (% on buy price)</label>
-                        <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
-                        <div class="d-flex gap-1 mt-2">
-                            <input type="number" class="form-control form-control-sm" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" />
-                            <span id="calcAddPctBtnHost"></span>
-                        </div>
-                        <p class="text-muted small mb-0 mt-1">Tap a % to auto-set sell price, or type sell price manually.</p>
-                    </div>
-                    <div class="mb-0">
-                        <label class="form-label text-muted">Leverage (X)</label>
-                        <input type="number" class="form-control w-100" id="calcLeverage" min="1" step="0.1" value="1" oninput="updateMtfCalculator()" />
-                    </div>
-                </div>
-            </div>
-            <div class="d-flex justify-content-center mb-3" id="calcTotalAmountHost"></div>
-            <div class="card bg-body rounded-3 mb-3">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
-                        <h6 class="fw-semibold text-body-secondary mb-0"><i class="fas fa-balance-scale me-2"></i>Compare All Brokers</h6>
-                        <span id="calcModeBadge" class="d-inline-flex align-items-center badge rounded-pill px-2 py-1 h-auto small fw-medium bg-light border text-body-secondary d-none"></span>
+                    <div class="d-flex flex-wrap gap-1">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setCalcSameDay()">Same day</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="setCalcTodayPair()">Today → Tomorrow</button>
+                        <span id="calcModeBadge" class="d-none align-self-center"></span>
                     </div>
                     <div id="calcIntradayBanner" class="d-none"></div>
-                    <div id="calcComparePanel" class="overflow-x-auto">
-                        <p class="text-muted small mb-0">Fill in all fields to compare brokers.</p>
+
+                    <div class="trade-detail-prices calc-form-prices">
+                        <label class="trade-detail-price-cell" for="calcQty">
+                            <span class="trade-detail-price-label">Quantity</span>
+                            <span class="trade-detail-price-row">
+                                <input type="number" class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty" id="calcQty" min="1" step="1" placeholder="0" value="" inputmode="numeric" oninput="updateMtfCalculator()" />
+                            </span>
+                        </label>
+                        <label class="trade-detail-price-cell" for="calcBuyPrice">
+                            <span class="trade-detail-price-label">Buy Price</span>
+                            <span class="trade-detail-price-row">
+                                <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
+                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                    <input type="number" class="tx-form-price-input" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcBuyPriceInput()" />
+                                </span>
+                            </span>
+                        </label>
+                        <label class="trade-detail-price-cell" for="calcSellPrice">
+                            <span class="trade-detail-price-label">Sell Price</span>
+                            <span class="trade-detail-price-row">
+                                <span class="tx-form-price-value-wrap trade-detail-price-value--target">
+                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                    <input type="number" class="tx-form-price-input" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcSellPriceInput()" />
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div>
+                        <label class="form-label small text-muted mb-1">Sell target (% on buy)</label>
+                        <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
+                        <div class="d-flex gap-2 mt-2">
+                            <input type="number" class="form-control" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.35" />
+                            <span id="calcAddPctBtnHost" class="flex-shrink-0"></span>
+                        </div>
+                    </div>
+
+                    <div class="calc-leverage-row">
+                        <label class="form-label small text-muted mb-0" for="calcLeverage">
+                            <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>Leverage
+                        </label>
+                        <div class="tx-leverage-field calc-leverage-field">
+                            <input type="number" class="form-control tx-leverage-input" id="calcLeverage" min="1" step="0.1" value="1" inputmode="decimal" oninput="updateMtfCalculator()" />
+                            <span class="tx-leverage-suffix" aria-hidden="true">x</span>
+                        </div>
                     </div>
                 </div>
+            </article>
+
+            <div>
+                <p class="text-muted small text-uppercase fw-medium mb-2">Compare brokers</p>
+                <div id="calcComparePanel" class="trade-cards-stack d-flex flex-column w-100">
+                    <p class="small text-muted mb-0 px-1">Fill in all fields to compare brokers.</p>
+                </div>
             </div>
+            <!-- Keep host for older callers; summary lives in calcSummaryStats now -->
+            <div id="calcTotalAmountHost" class="d-none" aria-hidden="true"></div>
         </div>
     </section>
 
@@ -433,15 +458,15 @@
 
     <!-- HIDDEN SHEET PANELS (persistent form fields) + app sheet shell -->
     <div id="sheetPanels" class="d-none">
-        <div id="appSheet" aria-labelledby="appSheetTitle">
-            <div class="border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
+        <div id="appSheet" class="app-sheet-layout" aria-labelledby="appSheetTitle">
+            <div class="app-sheet-header border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
                 <h5 class="fw-semibold flex-grow-1 min-w-0 mb-0 overflow-hidden" id="appSheetTitle"></h5>
                 <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeSheet()" aria-label="Close">
                     <i class="fas fa-times text-muted" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="px-3 py-3" id="appSheetBody"></div>
-            <div class="border-top p-3 bg-body d-none" id="appSheetFooter"></div>
+            <div class="app-sheet-body px-3 py-3" id="appSheetBody"></div>
+            <div class="app-sheet-footer border-top p-3 bg-body d-none" id="appSheetFooter"></div>
         </div>
         <div id="panelMoneyPageFilter">
             <div class="mb-3">
@@ -499,8 +524,8 @@
             </div>
         </div>
         <!-- Trade filters sheet (full-height Cupertino Pane) -->
-        <div id="tradeFilterSheet" aria-label="Trade filters">
-            <div class="trade-filter-header">
+        <div id="tradeFilterSheet" class="app-sheet-layout" aria-label="Trade filters">
+            <div class="trade-filter-header app-sheet-header">
                 <div class="trade-filter-header-row">
                     <h5 class="trade-filter-title mb-0">Filters</h5>
                     <div class="trade-filter-header-actions">
@@ -515,7 +540,7 @@
                     <button type="button" class="trade-filter-clear-all d-none" id="tradeFilterClearAll" onclick="clearAllTradeFilterChips()">Clear all</button>
                 </div>
             </div>
-            <div id="tradeFilterContent" class="trade-filter-scroll">
+            <div id="tradeFilterContent" class="trade-filter-scroll app-sheet-body">
                 <div id="panelPastFilter" class="trade-filters-split">
                     <nav class="trade-filter-nav" aria-label="Filter categories">
                         <button type="button" class="trade-filter-nav-item is-active" data-filter-cat="status" onclick="setTradeFilterCategory('status')">
@@ -681,7 +706,7 @@
                     </div>
                 </div>
             </div>
-            <div class="trade-filter-footer">
+            <div class="trade-filter-footer app-sheet-footer">
                 <button type="button" class="btn btn-outline-secondary trade-filter-footer-btn" onclick="closeFilterSheet()">Cancel</button>
                 <button type="button" class="btn btn-success trade-filter-footer-btn trade-filter-footer-btn--apply" id="tradeFilterApplyBtn" onclick="applyTradeFilters()">
                     Apply filters
@@ -773,29 +798,62 @@
                         <div class="form-text">Starting amount already in this account before tracked deposits.</div>
                         <div class="d-none mt-2" id="moneyAccountOpeningPreview"></div>
                     </div></div>
-        <div id="panelBackup"><p class="small text-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
-                    <textarea class="form-control w-100 font-monospace small" id="backupTextArea" rows="10" spellcheck="false"></textarea></div>
+        <div id="panelBackup">
+            <p class="small text-muted mb-2">Copy this JSON backup anywhere (notes, email, chat). Paste to restore, or explore counts and structure below.</p>
+            <div id="backupVizSummary"></div>
+            <div class="json-viz-block mb-3">
+                <details class="json-viz-section" open>
+                    <summary class="json-viz-section-title">Structure</summary>
+                    <div id="backupVizTree" class="json-viz-tree-host mt-2"></div>
+                </details>
+            </div>
+            <div class="json-viz-block mb-0">
+                <details class="json-viz-section" open>
+                    <summary class="json-viz-section-title">Raw JSON</summary>
+                    <textarea class="form-control w-100 font-monospace small mt-2" id="backupTextArea" rows="10" spellcheck="false" oninput="onBackupTextInput()"></textarea>
+                    <p class="small text-muted mb-0 mt-2" id="backupVizParseHint" aria-live="polite"></p>
+                </details>
+            </div>
+        </div>
 
-        <!-- Trade detail sheet (full-height Cupertino Pane) -->
-        <div id="tradeDetailSheet" aria-label="Trade details">
-            <div id="tradeDetailContent" class="trade-detail-scroll px-3 pt-1 pb-5 w-100" overflow-y></div>
+        <!-- Search sheet (Cupertino Pane) — trades, watchlist, company pickers -->
+        <div id="searchSheet" class="app-sheet-layout" aria-label="Search">
+            <div class="app-sheet-header search-sheet-header border-bottom px-3 pt-2 pb-3">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
+                    <h5 class="fw-semibold mb-0" id="searchSheetTitle">Search</h5>
+                    <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeSearchPage()" aria-label="Close">
+                        <i class="fas fa-times text-muted" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1">
+                    <span class="text-secondary flex-shrink-0" aria-hidden="true"><i class="fas fa-search"></i></span>
+                    <div class="flex-grow-1 min-w-0">
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                    </div>
+                    <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="searchPageClear" onclick="clearSearchPage()" title="Clear" aria-label="Clear">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="app-sheet-body search-sheet-body px-0 py-0" id="searchSheetBody">
+                <div id="searchPageList"></div>
+            </div>
+        </div>
+
+        <!-- Trade detail sheet (Cupertino Pane) -->
+        <div id="tradeDetailSheet" class="app-sheet-layout" aria-label="Trade details">
+            <div class="app-sheet-header px-3 pt-1" id="tradeDetailHeader"></div>
+            <div id="tradeDetailContent" class="app-sheet-body trade-detail-scroll px-3 py-2 w-100"></div>
+            <div class="app-sheet-footer" id="tradeDetailFooter"></div>
         </div>
 
         <!-- Trade add/edit sheet shell (Cupertino Pane) -->
-        <div id="txModal" aria-label="Trade form">
-            <div class="px-3 py-3" id="txModalBody">
-                <form id="txForm" class="tx-form d-flex flex-column" novalidate>
-                    <input type="hidden" id="txEditId" value="" />
-                    <input type="hidden" id="txStatus" value="open" />
-                    <input type="hidden" id="txBuyDate" value="" />
-                    <input type="hidden" id="txSellDate" value="" />
-                    <input type="hidden" id="txModalTitle" value="New Trade" />
-
+        <div id="txModal" class="app-sheet-layout" aria-label="Trade form">
+            <div class="app-sheet-header px-3 pt-3 pb-2" id="txModalHeader">
                     <div class="tx-modal-top d-flex align-items-start gap-2">
                         <div class="position-relative flex-grow-1 min-w-0" id="txCompanySearchWrap">
                             <i class="fas fa-search tx-company-search-icon" aria-hidden="true"></i>
-                            <input type="text" class="form-control tx-company-input" id="txCompany" placeholder="Search company name or symbol" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" aria-label="Company" />
-                            <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
+                            <input type="text" class="form-control tx-company-input" id="txCompany" placeholder="Search company name or symbol" required autocomplete="off" form="txForm" readonly inputmode="none" onclick="openCompanySearchSheet('tx')" aria-label="Company" aria-haspopup="dialog" />
                             <div class="tx-company-selected d-none" id="txCompanySelected">
                                 <span class="tx-company-selected-symbol" id="txCompanySelectedSymbol"></span>
                             </div>
@@ -820,6 +878,14 @@
                             <i class="fas fa-times text-muted" aria-hidden="true"></i>
                         </button>
                     </div>
+            </div>
+            <div class="app-sheet-body px-3 pb-3" id="txModalBody">
+                <form id="txForm" class="tx-form d-flex flex-column" novalidate>
+                    <input type="hidden" id="txEditId" value="" />
+                    <input type="hidden" id="txStatus" value="open" />
+                    <input type="hidden" id="txBuyDate" value="" />
+                    <input type="hidden" id="txSellDate" value="" />
+                    <input type="hidden" id="txModalTitle" value="New Trade" />
 
                     <!-- Live quote holders for fill-from-market (not shown on the form). -->
                     <div class="d-none" aria-hidden="true">
@@ -828,10 +894,22 @@
                     </div>
 
                     <section class="tx-section tx-section--detail" data-tx-section="detail">
-                        <div class="tx-broker-row mb-3">
-                            <label class="form-label mb-1" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
-                            <input type="hidden" id="txBroker" value="" />
-                            <div id="txBrokerHost" class="w-100"></div>
+                        <div class="tx-broker-leverage-row mb-3">
+                            <div class="tx-broker-col">
+                                <label class="form-label mb-1" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
+                                <input type="hidden" id="txBroker" value="" />
+                                <div id="txBrokerHost" class="w-100"></div>
+                            </div>
+                            <div class="tx-leverage-col">
+                                <label class="form-label mb-1 text-nowrap" for="txLeverage">
+                                    <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>
+                                    Leverage <span class="text-danger">*</span>
+                                </label>
+                                <div class="tx-leverage-field">
+                                    <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1" step="0.1" value="1" inputmode="decimal" aria-label="Leverage value" oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
+                                    <span class="tx-leverage-suffix" aria-hidden="true">x</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="trade-detail-prices tx-form-prices">
@@ -868,17 +946,6 @@
                         </div>
                         <span class="d-none" id="txSellPriceRequired" aria-hidden="true"></span>
                         <span class="d-none" id="txSellPriceHint" aria-hidden="true"></span>
-
-                        <div class="tx-leverage-row mt-3">
-                            <label class="form-label mb-0 text-nowrap" for="txLeverage">
-                                <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>
-                                Leverage <span class="text-danger">*</span>
-                            </label>
-                            <div class="tx-leverage-field">
-                                <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1" step="0.1" value="1" inputmode="decimal" aria-label="Leverage value" oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
-                                <span class="tx-leverage-suffix" aria-hidden="true">x</span>
-                            </div>
-                        </div>
 
                         <section class="trade-detail-costs mt-3">
                             <div class="trade-detail-cost-card trade-detail-cost-card--interest" role="group" aria-label="Interest">
@@ -948,7 +1015,7 @@
                     </section>
                 </form>
             </div>
-            <div class="border-top p-3 bg-body" id="txModalFooter"></div>
+            <div class="app-sheet-footer border-top p-3 bg-body" id="txModalFooter"></div>
         </div>
     </div>
 
@@ -997,29 +1064,31 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/cupertino-pane@1.5.4/dist/cupertino-pane.min.js" crossorigin="anonymous"></script>
     <!-- COMPONENT SCRIPTS -->
-    <script src="lib/_registry.js"></script>
-    <script src="lib/format.js"></script>
-    <script src="lib/bootstrap.js"></script>
-    <script src="pages/common/app-shell.js"></script>
-    <script src="pages/common/trade-list.js"></script>
-    <script src="pages/common/trade-sheets.js"></script>
-    <script src="pages/common/trade-modal.js"></script>
-    <script src="pages/common/app-version.js"></script>
-    <script src="pages/trades/trades-page.js"></script>
-    <script src="pages/trades/trade-detail-page.js"></script>
-    <script src="pages/market/market-page.js"></script>
-    <script src="pages/money/money-page.js"></script>
-    <script src="pages/more/more-page.js"></script>
-    <script src="pages/mtf-calculator/mtf-calculator-page.js"></script>
-    <script src="pages/past/past-page.js"></script>
-    <script src="pages/search/search-page.js"></script>
-    <script src="pages/settings/settings-page.js"></script>
-    <script src="pages/transactions/transactions-page.js"></script>
+    <script src="shared/lib/_registry.js"></script>
+    <script src="shared/lib/format.js"></script>
+    <script src="shared/lib/bootstrap.js"></script>
+    <script src="features/common/app-shell.js"></script>
+    <script src="features/common/trade-list.js"></script>
+    <script src="features/common/trade-sheets.js"></script>
+    <script src="features/common/trade-modal.js"></script>
+    <script src="features/common/search-page.js"></script>
+    <script src="features/positions/trades-page.js"></script>
+    <script src="features/positions/trade-detail-page.js"></script>
+    <script src="features/positions/past-page.js"></script>
+    <script src="features/watchlist/watchlist-page.js"></script>
+    <script src="features/calendar/calendar-page.js"></script>
+    <script src="features/more/more-page.js"></script>
+    <script src="features/more/app-version.js"></script>
+    <script src="features/more/money-page.js"></script>
+    <script src="features/more/mtf-calculator-page.js"></script>
+    <script src="features/more/settings-page.js"></script>
+    <script src="features/more/json-visualizer.js"></script>
     <!-- DB / SERVICE LAYER -->
-    <script src="db/_registry.js"></script>
-    <script src="db/firebase-config.js"></script>
-    <script src="db/storage-service.js"></script>
-    <script src="db/sync-service.js"></script>
+    <script src="shared/db/_registry.js"></script>
+    <script src="shared/db/db-call-log.js"></script>
+    <script src="shared/db/firebase-config.js"></script>
+    <script src="shared/db/storage-service.js"></script>
+    <script src="shared/db/sync-service.js"></script>
     <script src="main.js"></script>
 
 </body>

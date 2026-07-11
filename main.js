@@ -85,12 +85,17 @@
                 renderCurrentView,
                 renderPastTrades,
                 renderMarketPage,
+                renderCalendarPage,
+                shiftCalendarMonth,
+                openCalendarMonthPicker,
+                shiftCalendarPickerYear,
+                jumpCalendarMonth,
+                jumpCalendarToTodayMonth,
+                openCalendarDaySheet,
                 renderSearchResults,
                 renderTradeDetailPage,
                 TradeDetailSheet,
-                renderTransactions,
                 renderSettings,
-                renderSettingsMoneyAccounts,
                 formatMoneyEntryTimeDisplay,
                 sortMoneyEntries,
                 renderMoney,
@@ -315,6 +320,39 @@
             const NSE_EQUITY_CSV_URL = 'https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv';
             const JINA_PROXY = 'https://r.jina.ai/';
             const YAHOO_SEARCH_BASE = 'https://query2.finance.yahoo.com/v1/finance/search';
+            const appNetworkStats = {
+                startedAt: Date.now(),
+                jinaCalls: 0,
+                quoteFetches: 0,
+                catalogFetches: 0,
+                lastCallAt: null,
+                lastCallLabel: ''
+            };
+
+            function shortNetworkLabel(url) {
+                try {
+                    const u = String(url || '');
+                    if (/chart\//i.test(u)) {
+                        const m = u.match(/chart\/([^?/]+)/i);
+                        return m ? ('quote ' + decodeURIComponent(m[1])) : 'quote';
+                    }
+                    if (/EQUITY_L\.csv/i.test(u)) return 'NSE catalog';
+                    if (/finance\/search/i.test(u)) return 'symbol search';
+                    return u.length > 48 ? u.slice(0, 48) + '…' : u;
+                } catch (_) {
+                    return 'network';
+                }
+            }
+
+            function noteNetworkCall(kind, labelOrUrl) {
+                const label = shortNetworkLabel(labelOrUrl);
+                if (kind === 'jina') appNetworkStats.jinaCalls += 1;
+                else if (kind === 'quote') appNetworkStats.quoteFetches += 1;
+                else if (kind === 'catalog') appNetworkStats.catalogFetches += 1;
+                appNetworkStats.lastCallAt = Date.now();
+                appNetworkStats.lastCallLabel = label;
+            }
+
             let stockSymbols = [];
             let stockCatalogLoading = false;
             let stockCatalogLoaded = false;
@@ -413,6 +451,7 @@
             }
 
             async function fetchViaJina(targetUrl) {
+                noteNetworkCall('jina', targetUrl);
                 const res = await fetch(JINA_PROXY + targetUrl, {
                     headers: { Accept: 'text/plain' }
                 });
@@ -451,6 +490,7 @@
             async function loadStockCatalogFromInternet() {
                 if (stockCatalogLoading || stockCatalogLoaded) return stockCatalogLoaded;
                 stockCatalogLoading = true;
+                noteNetworkCall('catalog', NSE_EQUITY_CSV_URL);
                 setStockCatalogStatus('Fetching NSE stock list from internet…');
                 try {
                     const { text, source } = await fetchNseEquityCsvText();
@@ -928,8 +968,14 @@
             async function selectStockSymbol(idx) {
                 const item = stockAcResults[idx];
                 if (!item) return;
+                await selectStockSymbolFromMeta(item);
+            }
+
+            async function selectStockSymbolFromMeta(item) {
+                if (!item) return;
                 if (stockAcBlurTimer) clearTimeout(stockAcBlurTimer);
-                document.getElementById('txCompany').value = item.n;
+                const companyEl = document.getElementById('txCompany');
+                if (companyEl) companyEl.value = item.n || item.s || '';
                 setTxCompanyMeta(item);
                 hideCompanyAcList();
                 await fillTradeFormFromLivePrice(item);
@@ -989,6 +1035,226 @@
                 });
             }
 
+            // ---------- MTF CALCULATOR company search (live quote → ₹1L qty + 1.35% sell) ----------
+            const CALC_DEFAULT_BUDGET = 100000;
+            const CALC_SELL_PCT = 1.35; // +1.35% of buy
+            let calcSelectedMeta = null;
+            let calcStockAcResults = [];
+            let calcStockAcActiveIdx = -1;
+            let calcStockSearchSeq = 0;
+            let calcStockSearchTimer = null;
+            let calcStockAcBlurTimer = null;
+            let calcLivePriceSeq = 0;
+
+            function setCalcCompanyLiveNote(msg, isError) {
+                const note = document.getElementById('calcCompanyLiveNote');
+                if (!note) return;
+                note.className = isError ? 'small text-danger mb-0 mt-1' : 'small text-muted mb-0 mt-1';
+                note.innerHTML = msg || '';
+            }
+
+            function hideCalcCompanyAcList() {
+                const list = document.getElementById('calcCompanyAcList');
+                if (list) {
+                    list.classList.add('d-none');
+                    list.innerHTML = '';
+                }
+                calcStockAcResults = [];
+                calcStockAcActiveIdx = -1;
+            }
+
+            function renderCalcCompanyAcList(items) {
+                const list = document.getElementById('calcCompanyAcList');
+                const input = document.getElementById('calcCompany');
+                if (!list || !input) return;
+                calcStockAcResults = items || [];
+                calcStockAcActiveIdx = calcStockAcResults.length ? 0 : -1;
+
+                if (!calcStockAcResults.length) {
+                    const q = (input.value || '').trim();
+                    list.innerHTML = q.length
+                        ? `<div class="px-3 py-2 small text-muted">No match for “${escapeHtml(q)}”.</div>`
+                        : '';
+                    list.classList.toggle('d-none', q.length < 1);
+                    return;
+                }
+
+                list.innerHTML = calcStockAcResults.map((it, idx) => {
+                    const meta = it.sector
+                        ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
+                        : (it.i ? `${escapeHtml(it.i)} · ${escapeHtml(it.e || 'NSE')}` : escapeHtml(it.e || 'NSE'));
+                    const activeCls = idx === calcStockAcActiveIdx ? ' bg-light' : '';
+                    return `
+                    <div class="list-group-item list-group-item-action border-0 border-bottom rounded-0${activeCls}" role="option" data-idx="${idx}" onmousedown="selectCalcStockSymbol(${idx})">
+                        <div class="fw-medium text-body-secondary small">${escapeHtml(it.s)}</div>
+                        <div class="small">${escapeHtml(it.n)}</div>
+                        <div class="small text-muted">${meta}</div>
+                    </div>`;
+                }).join('');
+                list.classList.remove('d-none');
+            }
+
+            function showCalcCompanyAcLoading(msg) {
+                const list = document.getElementById('calcCompanyAcList');
+                if (!list) return;
+                list.innerHTML = `<div class="px-3 py-2 small text-muted"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
+                list.classList.remove('d-none');
+            }
+
+            async function runCalcStockSearch(query) {
+                const q = (query || '').trim();
+                const seq = ++calcStockSearchSeq;
+                if (q.length < 1) {
+                    hideCalcCompanyAcList();
+                    return;
+                }
+
+                showCalcCompanyAcLoading(stockCatalogLoaded ? 'Searching…' : 'Fetching live market data…');
+                loadStockCatalogFromInternet();
+
+                let results = stockCatalogLoaded ? searchStockSymbolsLocal(q, 12) : [];
+                if (results.length && seq === calcStockSearchSeq) renderCalcCompanyAcList(results);
+
+                if (q.length >= 2) {
+                    try {
+                        const remote = await fetchYahooStockSearch(q);
+                        if (seq !== calcStockSearchSeq) return;
+                        results = mergeStockResults(results, remote);
+                        renderCalcCompanyAcList(results);
+                    } catch (_) {
+                        if (seq === calcStockSearchSeq && !results.length && stockCatalogLoaded) {
+                            renderCalcCompanyAcList(results);
+                        }
+                    }
+                } else if (stockCatalogLoaded) {
+                    results = searchStockSymbolsLocal(q, 12);
+                    if (seq === calcStockSearchSeq) renderCalcCompanyAcList(results);
+                } else {
+                    await loadStockCatalogFromInternet();
+                    if (seq !== calcStockSearchSeq) return;
+                    results = searchStockSymbolsLocal(q, 12);
+                    renderCalcCompanyAcList(results);
+                }
+            }
+
+            async function fillCalcFromLivePrice(item) {
+                if (!item || !item.s) {
+                    showToast('Select a company from the list first.', 'warning');
+                    return null;
+                }
+
+                const seq = ++calcLivePriceSeq;
+                setCalcCompanyLiveNote('<i class="fas fa-spinner fa-spin me-1"></i>Fetching live price…', false);
+
+                let quote = getTradeLiveQuote(item.s);
+                if (!isFreshMarketQuote(quote)) {
+                    quote = await fetchOneMarketQuote(item);
+                    cacheMarketQuote(quote);
+                }
+                if (seq !== calcLivePriceSeq) return null;
+
+                if (!isValidMarketQuote(quote)) {
+                    setCalcCompanyLiveNote('Live price unavailable — enter buy manually.', true);
+                    showToast('Could not fetch live price. Enter buy price manually.', 'warning');
+                    return null;
+                }
+
+                const buy = roundTradePrice(quote.price);
+                const qty = Math.max(1, Math.floor(CALC_DEFAULT_BUDGET / Number(buy)));
+                const sell = roundTradePrice(Number(buy) * (1 + CALC_SELL_PCT / 100));
+
+                const buyEl = document.getElementById('calcBuyPrice');
+                const qtyEl = document.getElementById('calcQty');
+                if (buyEl) buyEl.value = buy;
+                if (qtyEl) qtyEl.value = String(qty);
+
+                // Sync sell-% chips to +1.35% (sets sell from live buy).
+                if (typeof setCalcSellPct === 'function') setCalcSellPct(CALC_SELL_PCT);
+                else {
+                    const sellEl = document.getElementById('calcSellPrice');
+                    if (sellEl) sellEl.value = sell;
+                    if (typeof updateMtfCalculator === 'function') updateMtfCalculator();
+                }
+
+                const sellShown = document.getElementById('calcSellPrice')?.value || sell;
+                setCalcCompanyLiveNote(
+                    `${escapeHtml(item.s)} · Live ₹${buy} · Qty ${qty} (₹1L) · Sell +1.35% ₹${sellShown}`,
+                    false
+                );
+                showToast(`Filled ${item.s}: Buy ₹${buy} · Qty ${qty} · Sell +1.35%`, 'success');
+                return quote;
+            }
+
+            async function selectCalcStockSymbol(idx) {
+                const item = calcStockAcResults[idx];
+                if (!item) return;
+                await selectCalcStockFromMeta(item);
+            }
+
+            async function selectCalcStockFromMeta(item) {
+                if (!item) return;
+                if (calcStockAcBlurTimer) clearTimeout(calcStockAcBlurTimer);
+                calcSelectedMeta = item;
+                const input = document.getElementById('calcCompany');
+                if (input) input.value = item.n || item.s || '';
+                hideCalcCompanyAcList();
+                await fillCalcFromLivePrice(item);
+            }
+
+            function onCalcCompanyInput() {
+                calcSelectedMeta = null;
+                const q = (document.getElementById('calcCompany')?.value || '').trim();
+                if (q.length < 1) {
+                    hideCalcCompanyAcList();
+                    setCalcCompanyLiveNote('Search a stock to fill qty (₹1L), buy (live), and sell (+1.35%).', false);
+                    return;
+                }
+                clearTimeout(calcStockSearchTimer);
+                calcStockSearchTimer = setTimeout(() => runCalcStockSearch(q), 300);
+            }
+
+            function onCalcCompanyFocus() {
+                const q = (document.getElementById('calcCompany')?.value || '').trim();
+                loadStockCatalogFromInternet();
+                if (q.length >= 1) {
+                    clearTimeout(calcStockSearchTimer);
+                    calcStockSearchTimer = setTimeout(() => runCalcStockSearch(q), 120);
+                }
+            }
+
+            function onCalcCompanyBlur() {
+                calcStockAcBlurTimer = setTimeout(hideCalcCompanyAcList, 150);
+            }
+
+            function onCalcCompanyKeydown(e) {
+                const list = document.getElementById('calcCompanyAcList');
+                if (!list || list.classList.contains('d-none') || !calcStockAcResults.length) return;
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    calcStockAcActiveIdx = Math.min(calcStockAcActiveIdx + 1, calcStockAcResults.length - 1);
+                    highlightCalcCompanyAcItem();
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    calcStockAcActiveIdx = Math.max(calcStockAcActiveIdx - 1, 0);
+                    highlightCalcCompanyAcItem();
+                } else if (e.key === 'Enter' && calcStockAcActiveIdx >= 0) {
+                    e.preventDefault();
+                    selectCalcStockSymbol(calcStockAcActiveIdx);
+                } else if (e.key === 'Escape') {
+                    hideCalcCompanyAcList();
+                }
+            }
+
+            function highlightCalcCompanyAcItem() {
+                const list = document.getElementById('calcCompanyAcList');
+                if (!list) return;
+                list.querySelectorAll('[role="option"]').forEach((el, i) => {
+                    el.classList.toggle('bg-primary-subtle', i === calcStockAcActiveIdx);
+                    el.classList.toggle('bg-light', i === calcStockAcActiveIdx);
+                    if (i === calcStockAcActiveIdx) el.scrollIntoView({ block: 'nearest' });
+                });
+            }
+
             function initCompanyAutocomplete() {
                 const cached = loadStockCatalogCache();
                 if (cached) applyStockCatalog(cached, 'cached');
@@ -1015,6 +1281,14 @@
                     n: String(name || sym).trim() || sym,
                     e: 'NSE'
                 };
+                // Refresh this company before opening the trade form.
+                try {
+                    await enqueueQuoteFetch(meta, { force: true });
+                    try { persistMarketQuoteCacheLocal(); } catch (_) {}
+                    try { paintAfterQuoteUpdate(); } catch (_) {}
+                } catch (err) {
+                    console.warn('Company quote refresh failed', err);
+                }
                 const openForm = (typeof window.openAddModal === 'function')
                     ? window.openAddModal
                     : openAddModal;
@@ -1031,9 +1305,19 @@
             }
 
             function onMarketQuotesListClick(e) {
-                const buyBtn = e.target && e.target.closest
-                    ? e.target.closest('.market-buy-btn')
-                    : null;
+                const target = e.target && e.target.closest ? e.target : null;
+                if (!target || typeof target.closest !== 'function') return;
+
+                const removeBtn = target.closest('.market-remove-btn');
+                if (removeBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const sym = removeBtn.getAttribute('data-remove-symbol') || '';
+                    removeMarketWatchlistSymbol(sym);
+                    return;
+                }
+
+                const buyBtn = target.closest('.market-buy-btn');
                 if (!buyBtn) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -1162,7 +1446,7 @@
 
             // ---------- MARKET QUOTES (live Yahoo chart via Jina fallback) ----------
             const YAHOO_CHART_BASE = 'https://query1.finance.yahoo.com/v8/finance/chart/';
-            const MARKET_REFRESH_MS = 60000;
+            const MARKET_REFRESH_MS = 5 * 60 * 1000; // auto-refresh every 5 minutes
 
             let marketQuoteCache = {};
             let marketUpdatedAt = null;
@@ -1201,44 +1485,85 @@
                 const s = normalizeMarketSymbol(item && (item.s || item.symbol));
                 if (!s) return null;
                 const n = String((item && (item.n || item.name)) || s).trim() || s;
-                // Identity only when adding — quotes are written on refresh.
+                // Identity only — live quotes stay in a separate localStorage cache.
                 return { s, n };
             }
 
-            function watchlistQuoteSnapshotFromRow(item) {
-                const price = Number(item && item.price);
-                if (!isFinite(price) || price <= 0) return null;
-                const previousClose = Number(item.previousClose);
-                const change = Number(item.change);
-                const changePct = Number(item.changePct);
-                return {
-                    price,
-                    previousClose: isFinite(previousClose) ? previousClose : null,
-                    change: isFinite(change) ? change : null,
-                    changePct: isFinite(changePct) ? changePct : null,
-                    updatedAt: item.updatedAt ? String(item.updatedAt) : null
-                };
+            function tombstoneWatchlistSymbol(symbol) {
+                const db = window.MTFDb;
+                if (db && typeof db.tombstoneWatchlistSymbol === 'function') {
+                    db.tombstoneWatchlistSymbol(symbol);
+                }
             }
 
-            function hydrateMarketQuoteCacheFromDb() {
-                const list = getStorage().marketWatchlist || [];
+            function clearWatchlistTombstone(symbol) {
+                const db = window.MTFDb;
+                if (db && typeof db.clearWatchlistTombstone === 'function') {
+                    db.clearWatchlistTombstone(symbol);
+                }
+            }
+
+            function stripWatchlistTombstones(list) {
+                const db = window.MTFDb;
+                if (db && typeof db.stripWatchlistTombstones === 'function') {
+                    return db.stripWatchlistTombstones(list)
+                        .map((raw) => normalizeWatchlistEntry(raw))
+                        .filter(Boolean);
+                }
+                return (Array.isArray(list) ? list : [])
+                    .map((raw) => normalizeWatchlistEntry(raw))
+                    .filter(Boolean);
+            }
+
+            function readQuoteCacheMap() {
+                const db = window.MTFDb;
+                if (db && typeof db.readMarketQuoteCacheMap === 'function') {
+                    return db.readMarketQuoteCacheMap() || {};
+                }
+                try {
+                    const raw = localStorage.getItem('mtf_market_quote_cache');
+                    if (!raw) return {};
+                    const parsed = JSON.parse(raw);
+                    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+                } catch (_) {
+                    return {};
+                }
+            }
+
+            function writeQuoteCacheMap(map) {
+                const db = window.MTFDb;
+                if (db && typeof db.writeMarketQuoteCacheMap === 'function') {
+                    db.writeMarketQuoteCacheMap(map || {});
+                    return;
+                }
+                try {
+                    localStorage.setItem('mtf_market_quote_cache', JSON.stringify(map || {}));
+                } catch (_) { /* ignore */ }
+            }
+
+            function hydrateMarketQuoteCacheFromLocal() {
+                const map = readQuoteCacheMap();
                 let newest = null;
-                list.forEach((item) => {
-                    const s = normalizeMarketSymbol(item && item.s);
+                Object.keys(map).forEach((key) => {
+                    const snap = map[key];
+                    const s = normalizeMarketSymbol((snap && snap.symbol) || key);
                     if (!s) return;
-                    const snap = watchlistQuoteSnapshotFromRow(item);
-                    if (!snap) return;
+                    const price = Number(snap && snap.price);
+                    if (!isFinite(price) || price <= 0) return;
                     const existing = marketQuoteCache[s];
-                    if (isValidMarketQuote(existing) && !existing.fromLocalDb) return;
+                    if (isValidMarketQuote(existing) && !existing.fromLocalCache) return;
+                    const previousClose = Number(snap.previousClose);
+                    const change = Number(snap.change);
+                    const changePct = Number(snap.changePct);
                     marketQuoteCache[s] = {
                         symbol: s,
-                        name: String(item.n || s).trim() || s,
-                        price: snap.price,
-                        previousClose: snap.previousClose,
-                        change: snap.change,
-                        changePct: snap.changePct,
-                        updatedAt: snap.updatedAt,
-                        fromLocalDb: true,
+                        name: String((snap && snap.name) || s).trim() || s,
+                        price,
+                        previousClose: isFinite(previousClose) ? previousClose : null,
+                        change: isFinite(change) ? change : null,
+                        changePct: isFinite(changePct) ? changePct : null,
+                        updatedAt: snap.updatedAt ? String(snap.updatedAt) : null,
+                        fromLocalCache: true,
                         error: false
                     };
                     if (snap.updatedAt) {
@@ -1251,50 +1576,50 @@
                 }
             }
 
-            function persistMarketQuotesToLocalDb() {
-                const data = getStorage();
-                const list = Array.isArray(data.marketWatchlist) ? data.marketWatchlist : [];
-                data.marketWatchlist = list.map((raw) => {
-                    const entry = normalizeWatchlistEntry(raw);
-                    if (!entry) return null;
-                    const cached = marketQuoteCache[entry.s];
-                    if (isValidMarketQuote(cached)) {
-                        return {
-                            s: entry.s,
-                            n: String(cached.name || entry.n || entry.s).trim() || entry.s,
-                            price: Number(cached.price),
-                            previousClose: cached.previousClose != null && isFinite(Number(cached.previousClose))
-                                ? Number(cached.previousClose)
-                                : null,
-                            change: cached.change != null && isFinite(Number(cached.change))
-                                ? Number(cached.change)
-                                : null,
-                            changePct: cached.changePct != null && isFinite(Number(cached.changePct))
-                                ? Number(cached.changePct)
-                                : null,
-                            updatedAt: cached.updatedAt || new Date().toISOString()
-                        };
-                    }
-                    const prev = watchlistQuoteSnapshotFromRow(raw);
-                    return prev
-                        ? { s: entry.s, n: entry.n, ...prev }
-                        : { s: entry.s, n: entry.n };
-                }).filter(Boolean);
-                return saveStorage(data);
+            /** Persist quotes to localStorage only — never via saveStorage / Firestore. */
+            function persistMarketQuoteCacheLocal() {
+                const map = readQuoteCacheMap();
+                Object.keys(marketQuoteCache).forEach((key) => {
+                    const q = marketQuoteCache[key];
+                    if (!isValidMarketQuote(q)) return;
+                    const s = normalizeMarketSymbol(q.symbol || key);
+                    if (!s) return;
+                    map[s] = {
+                        symbol: s,
+                        name: String(q.name || s).trim() || s,
+                        price: Number(q.price),
+                        previousClose: q.previousClose != null && isFinite(Number(q.previousClose))
+                            ? Number(q.previousClose)
+                            : null,
+                        change: q.change != null && isFinite(Number(q.change))
+                            ? Number(q.change)
+                            : null,
+                        changePct: q.changePct != null && isFinite(Number(q.changePct))
+                            ? Number(q.changePct)
+                            : null,
+                        updatedAt: q.updatedAt || new Date().toISOString()
+                    };
+                });
+                writeQuoteCacheMap(map);
+            }
+
+            let quoteCachePersistTimer = null;
+            function schedulePersistMarketQuoteCache() {
+                if (quoteCachePersistTimer) clearTimeout(quoteCachePersistTimer);
+                quoteCachePersistTimer = setTimeout(() => {
+                    quoteCachePersistTimer = null;
+                    try { persistMarketQuoteCacheLocal(); } catch (_) {}
+                }, 250);
             }
 
             function addToMarketWatchlist(item) {
                 const entry = normalizeWatchlistEntry(item);
                 if (!entry) return Promise.resolve(null);
+                clearWatchlistTombstone(entry.s);
                 const data = getStorage();
-                const list = (Array.isArray(data.marketWatchlist) ? data.marketWatchlist : [])
-                    .map((raw) => {
-                        const id = normalizeWatchlistEntry(raw);
-                        if (!id) return null;
-                        const snap = watchlistQuoteSnapshotFromRow(raw);
-                        return snap ? { ...id, ...snap } : id;
-                    })
-                    .filter(Boolean);
+                const list = stripWatchlistTombstones(
+                    Array.isArray(data.marketWatchlist) ? data.marketWatchlist : []
+                );
                 const existing = list.find((x) => x.s === entry.s);
                 if (existing) {
                     existing.n = entry.n;
@@ -1308,24 +1633,59 @@
             function removeFromMarketWatchlist(symbol) {
                 const key = normalizeMarketSymbol(symbol);
                 if (!key) return Promise.resolve(null);
+                tombstoneWatchlistSymbol(key);
                 const data = getStorage();
-                data.marketWatchlist = (data.marketWatchlist || [])
-                    .map((raw) => {
-                        const id = normalizeWatchlistEntry(raw);
-                        if (!id || id.s === key) return null;
-                        const snap = watchlistQuoteSnapshotFromRow(raw);
-                        return snap ? { ...id, ...snap } : id;
-                    })
-                    .filter(Boolean);
+                data.marketWatchlist = stripWatchlistTombstones(data.marketWatchlist || [])
+                    .filter((id) => id && id.s !== key);
                 delete marketQuoteCache[key];
+                const map = readQuoteCacheMap();
+                if (map[key]) {
+                    delete map[key];
+                    writeQuoteCacheMap(map);
+                }
                 return saveStorage(data);
             }
 
             function removeMarketWatchlistSymbol(symbol) {
-                return removeFromMarketWatchlist(symbol).then(() => {
-                    try { renderMarketPage(); } catch (_) {}
-                    return refreshMarketQuotes();
+                const key = normalizeMarketSymbol(symbol);
+                if (!key) {
+                    showToast('Could not remove — missing symbol.', 'warning');
+                    return Promise.resolve(null);
+                }
+                const entry = getMarketWatchlist().find((item) => item.s === key);
+                const label = (entry && entry.n && entry.n !== key)
+                    ? `${key} (${entry.n})`
+                    : key;
+
+                confirmAction({
+                    title: '<i class="fas fa-trash-alt me-2"></i>Remove from watchlist?',
+                    titleClass: 'text-danger',
+                    message: `Remove ${label} from your watchlist?`,
+                    confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Remove',
+                    confirmClass: 'danger',
+                    onConfirm: () => {
+                        // Optimistic UI: drop the card immediately.
+                        try {
+                            const cards = document.querySelectorAll('#marketQuotesList [data-quote-symbol]');
+                            cards.forEach((card) => {
+                                const sym = (card.getAttribute('data-quote-symbol') || '').toUpperCase();
+                                if (sym === key) card.remove();
+                            });
+                        } catch (_) { /* ignore */ }
+
+                        return removeFromMarketWatchlist(key).then(() => {
+                            try { renderMarketPage(); } catch (_) {}
+                            showToast(key + ' removed from watchlist', 'success');
+                            return true;
+                        }).catch((err) => {
+                            console.warn('removeMarketWatchlistSymbol failed', err);
+                            showToast('Could not remove from watchlist.', 'danger');
+                            try { renderMarketPage(); } catch (_) {}
+                            return false;
+                        });
+                    }
                 });
+                return Promise.resolve(null);
             }
 
             function getMarketUniverse() {
@@ -1404,7 +1764,7 @@
 
             // ---------- Viewport quote queue (fetch only on-screen symbols) ----------
             const QUOTE_QUEUE_CONCURRENCY = 1;
-            const QUOTE_FRESH_MS = 60000;
+            const QUOTE_FRESH_MS = 5 * 60 * 1000; // treat quotes as fresh for 5 minutes
             const QUOTE_BACKOFF_BASE_MS = 5000;
             const QUOTE_BACKOFF_MAX_MS = 60000;
             const QUOTE_ROOT_MARGIN = '120px 0px';
@@ -1498,15 +1858,17 @@
                 if (!isMarketPageVisible()) return;
                 const formatChangePct = (window.MTFComponents && window.MTFComponents.formatChangePct) || null;
                 const formatChangeAbs = (window.MTFComponents && window.MTFComponents.formatChangeAbs) || null;
-                const iconToneClass = (tone) => {
-                    if (tone === 'up') return 'text-success bg-success-subtle';
-                    if (tone === 'down') return 'text-danger bg-danger-subtle';
-                    return 'text-body-secondary bg-light';
-                };
                 const changeToneClass = (tone) => {
                     if (tone === 'up') return 'text-success';
                     if (tone === 'down') return 'text-danger';
                     return 'text-muted';
+                };
+                const formatPrice = (n) => {
+                    if (n == null || isNaN(Number(n))) return '—';
+                    return '₹' + Number(n).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
                 };
                 document.querySelectorAll('[data-quote-symbol]').forEach((el) => {
                     const sym = getQuoteSymbolFromEl(el);
@@ -1516,47 +1878,35 @@
                     const changePct = Number(q.changePct);
                     const hasChange = !isNaN(change);
                     const tone = !hasChange ? 'neutral' : change >= 0 ? 'up' : 'down';
+                    const toneCls = changeToneClass(tone);
                     const priceEl = el.querySelector('[data-quote-price]');
                     const changeEl = el.querySelector('[data-quote-change]');
-                    const iconEl = el.querySelector('[data-quote-icon]');
-                    if (priceEl) {
-                        priceEl.textContent = q.price == null || isNaN(Number(q.price))
-                            ? '—'
-                            : '₹' + Number(q.price).toLocaleString('en-IN', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2
-                            });
-                    }
+                    const changeAbsEl = el.querySelector('[data-quote-change-abs]');
+                    const changePctEl = el.querySelector('[data-quote-change-pct]');
+                    const prevEl = el.querySelector('[data-quote-prev]');
+                    if (priceEl) priceEl.textContent = formatPrice(q.price);
+                    const absText = hasChange && formatChangeAbs ? formatChangeAbs(change) : '—';
+                    const pctText = hasChange && formatChangePct ? formatChangePct(changePct) : '—';
+                    const combo = hasChange ? `${absText} (${pctText})` : '—';
                     if (changeEl) {
-                        changeEl.textContent = hasChange && formatChangeAbs && formatChangePct
-                            ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
-                            : '—';
+                        changeEl.textContent = combo;
                         changeEl.classList.remove('text-success', 'text-danger', 'text-muted');
-                        changeEl.classList.add(changeToneClass(tone));
+                        changeEl.classList.add(toneCls);
                     }
-                    if (iconEl) {
-                        iconEl.classList.remove(
-                            'text-success', 'bg-success-subtle',
-                            'text-danger', 'bg-danger-subtle',
-                            'text-body-secondary', 'bg-light'
-                        );
-                        iconToneClass(tone).split(/\s+/).forEach((c) => iconEl.classList.add(c));
+                    if (changeAbsEl) {
+                        changeAbsEl.textContent = absText;
+                        changeAbsEl.classList.remove('text-success', 'text-danger', 'text-muted');
+                        changeAbsEl.classList.add(toneCls);
+                    }
+                    if (changePctEl) {
+                        changePctEl.textContent = pctText;
+                        changePctEl.classList.remove('text-success', 'text-danger', 'text-muted');
+                        changePctEl.classList.add(toneCls);
+                    }
+                    if (prevEl) {
+                        prevEl.textContent = formatPrice(q.previousClose);
                     }
                 });
-                const statusEl = document.getElementById('marketUpdatedAt');
-                if (statusEl && marketUpdatedAt && !marketLoading) {
-                    try {
-                        const d = new Date(marketUpdatedAt);
-                        if (!isNaN(d.getTime())) {
-                            statusEl.textContent = 'Updated ' + d.toLocaleTimeString('en-IN', {
-                                hour: '2-digit',
-                                minute: '2-digit',
-                                second: '2-digit',
-                                hour12: true
-                            });
-                        }
-                    } catch (_) {}
-                }
             }
 
             function enqueueQuoteFetch(item, opts) {
@@ -1607,6 +1957,7 @@
                                 quoteBackoffUntil = Date.now() + quoteBackoffMs;
                             }
                             marketUpdatedAt = new Date().toISOString();
+                            schedulePersistMarketQuoteCache();
                             paintAfterQuoteUpdate();
                             job.resolve(quote);
                         } catch (e) {
@@ -1657,6 +2008,7 @@
 
             async function fetchOneMarketQuote(item, opts) {
                 const sym = normalizeMarketSymbol(item.s);
+                noteNetworkCall('quote', sym);
                 const remembered = yahooSuffixBySymbol[sym];
                 // Prefer the exchange that worked before. Default to NSE only —
                 // blindly also hitting .BO doubled Jina calls and caused 429s.
@@ -1715,12 +2067,12 @@
                 const existing = marketQuoteCache[key];
                 // Never replace a good cached price with a failed/empty result.
                 if (!isValidMarketQuote(quote) && isValidMarketQuote(existing)) return false;
-                marketQuoteCache[key] = { ...quote, fromLocalDb: false };
+                marketQuoteCache[key] = { ...quote, fromLocalCache: false };
                 return adoptDisplayedTradeQuote(quote);
             }
 
             function getMarketQuotes() {
-                hydrateMarketQuoteCacheFromDb();
+                hydrateMarketQuoteCacheFromLocal();
                 const universe = getMarketUniverse();
                 return universe.map((item) => {
                     const cached = marketQuoteCache[item.s];
@@ -1746,14 +2098,30 @@
                 });
             }
 
+            function setMarketHeaderRefreshBusy(busy) {
+                const btn = document.getElementById('appHeaderRefreshBtn');
+                if (!btn) return;
+                btn.disabled = !!busy;
+                btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+                const icon = btn.querySelector('i');
+                if (icon) icon.classList.toggle('fa-spin', !!busy);
+            }
+
             async function refreshMarketQuotes(opts) {
-                const silent = opts && opts.silent;
+                const silent = !!(opts && opts.silent);
                 const notify = !!(opts && opts.notify);
-                const force = !(opts && opts.silent) || !!(opts && opts.force);
-                if (marketLoading) return;
+                const force = !silent || !!(opts && opts.force);
+                if (marketLoading) {
+                    if (notify) showToast('Refresh already in progress…', 'info');
+                    return;
+                }
                 marketLoading = true;
                 marketError = '';
-                hydrateMarketQuoteCacheFromDb();
+                setMarketHeaderRefreshBusy(true);
+                if (notify) showToast('Request sent…', 'info');
+                hydrateMarketQuoteCacheFromLocal();
+                // Keep the list mounted — never swap to a "Refreshing…" label.
+                // First paint uses cached prices; pool updates rows one-by-one.
                 if (!silent) {
                     try { renderMarketPage(); } catch (_) {}
                     observeQuoteRows();
@@ -1761,10 +2129,10 @@
                 let refreshedOk = false;
                 try {
                     loadStockCatalogFromInternet();
-                    observeQuoteRows();
-                    const items = getVisibleQuoteItems();
+                    // Full watchlist pool — fetch one-by-one (QUOTE_QUEUE_CONCURRENCY = 1).
+                    const items = getMarketWatchlist();
                     if (!items.length) {
-                        marketUpdatedAt = marketUpdatedAt || new Date().toISOString();
+                        marketUpdatedAt = new Date().toISOString();
                         marketError = '';
                         refreshedOk = true;
                         return;
@@ -1783,8 +2151,8 @@
                         refreshedOk = true;
                     }
                     if (refreshedOk) {
-                        try { await persistMarketQuotesToLocalDb(); } catch (e) {
-                            console.warn('Could not save watchlist quotes to local DB', e);
+                        try { persistMarketQuoteCacheLocal(); } catch (e) {
+                            console.warn('Could not save watchlist quotes to localStorage', e);
                         }
                     }
                 } catch (e) {
@@ -1793,10 +2161,13 @@
                     console.warn('Market quote refresh failed', e);
                 } finally {
                     marketLoading = false;
-                    try { renderMarketPage(); } catch (_) {}
-                    observeQuoteRows();
+                    setMarketHeaderRefreshBusy(false);
+                    try { paintAfterQuoteUpdate(); } catch (_) {}
+                    if (!silent) {
+                        observeQuoteRows();
+                    }
                     if (notify) {
-                        if (refreshedOk) showToast('Data refreshed', 'success');
+                        if (refreshedOk) showToast('Request successful', 'success');
                         else showToast(marketError || 'Could not refresh data.', 'danger');
                     }
                 }
@@ -1815,19 +2186,19 @@
 
             function startMarketRefresh() {
                 stopMarketRefresh();
-                hydrateMarketQuoteCacheFromDb();
+                hydrateMarketQuoteCacheFromLocal();
                 syncMarketSubTabUI();
                 try { renderMarketPage(); } catch (_) {}
                 observeQuoteRows();
-                refreshMarketQuotes();
+                // Pool-fetch whole watchlist on open; then every 5 minutes in place.
+                refreshMarketQuotes({ force: true });
                 marketRefreshTimer = setInterval(() => {
                     const page = document.getElementById('page-market');
                     if (!page || page.classList.contains('d-none')) {
                         stopMarketRefresh();
                         return;
                     }
-                    observeQuoteRows();
-                    refreshMarketQuotes({ silent: true, force: false });
+                    refreshMarketQuotes({ silent: true, force: true });
                 }, MARKET_REFRESH_MS);
             }
 
@@ -2470,6 +2841,18 @@
                 const item = marketAcResults[idx];
                 if (!item) return;
                 if (marketAcBlurTimer) clearTimeout(marketAcBlurTimer);
+
+                if (searchContext === 'tx-company') {
+                    closeSearchPage();
+                    selectStockSymbolFromMeta(item);
+                    return;
+                }
+                if (searchContext === 'calc-company') {
+                    closeSearchPage();
+                    selectCalcStockFromMeta(item);
+                    return;
+                }
+
                 addToMarketWatchlist(item).then(() => {
                     showToast(`Added ${item.s || item.n || 'stock'} to watchlist`, 'success');
                     closeSearchPage();
@@ -2519,9 +2902,7 @@
             }
 
             function refreshActiveMoreView() {
-                const txPage = document.getElementById('page-transactions');
                 const calcPage = document.getElementById('page-mtf-calc');
-                if (txPage && !txPage.classList.contains('d-none') && txPage.offsetParent !== null) renderTransactions();
                 if (calcPage && !calcPage.classList.contains('d-none') && calcPage.offsetParent !== null) updateMtfCalculator();
             }
 
@@ -2785,7 +3166,7 @@
             }
 
             // ---------- APP BUTTON WIRING ----------
-            // trade modal → pages/common/trade-modal.js
+            // trade modal → features/common/trade-modal.js
             function renderSyncConnectRow() {
                 const row = document.getElementById('syncConnectRow');
                 if (!row) return;
@@ -2796,13 +3177,13 @@
             }
 
             function paintAddMoneyAccountBtn() {
-                const host = document.getElementById('addMoneyAccountBtnHost');
+                const host = document.getElementById('moneyAddAccountBtnHost');
                 if (!host) return;
-                host.innerHTML = renderAppButton('Add Account', {
+                host.innerHTML = renderAppButton('Add', {
                     variant: 'action',
                     onclick: 'openAddMoneyAccountModal()',
                     icon: 'fa-plus',
-                    fullWidth: true
+                    size: 'sm'
                 });
             }
 
@@ -2819,10 +3200,10 @@
                 }
                 const backupHost = document.getElementById('settingsBackupBtnHost');
                 if (backupHost) {
-                    backupHost.innerHTML = renderAppButton('Copy / Paste', {
+                    backupHost.innerHTML = renderAppButton('Open', {
                         variant: 'action',
                         onclick: 'openBackupTextModal()',
-                        icon: 'fa-copy',
+                        icon: 'fa-code',
                         size: 'sm'
                     });
                 }
@@ -2844,20 +3225,10 @@
                 const result = document.getElementById('marketFeedCheckResult');
                 const btn = document.getElementById('settingsMarketFeedBtn');
                 if (badge) {
-                    badge.className = 'd-inline-flex align-items-center badge  rounded-pill px-2 py-1  h-auto small fw-medium border';
-                    if (state === 'ok') {
-                        badge.className += ' bg-success-subtle border-success/20 text-success';
-                        badge.textContent = 'Live';
-                    } else if (state === 'error') {
-                        badge.className += ' bg-danger-subtle border-danger text-danger';
-                        badge.textContent = 'Unavailable';
-                    } else if (state === 'checking') {
-                        badge.className += ' bg-light border text-body-secondary';
-                        badge.textContent = 'Checking…';
-                    } else {
-                        badge.className += ' bg-light border text-body-secondary';
-                        badge.textContent = 'Not checked';
-                    }
+                    if (state === 'ok') setAppTagElement(badge, 'Live', 'success');
+                    else if (state === 'error') setAppTagElement(badge, 'Unavailable', 'error');
+                    else if (state === 'checking') setAppTagElement(badge, 'Checking…', 'warning');
+                    else setAppTagElement(badge, 'Not checked', 'default');
                 }
                 if (result) {
                     result.innerHTML = detailHtml || 'Tap Check Feed to verify real-time market data.';
@@ -2992,6 +3363,7 @@
                     if (typeof createPane !== 'function') return null;
                     tradeFilterPane = createPane('#tradeFilterSheet', {
                         fullHeight: true,
+                        heightRatio: 0.9,
                         // Pin Cancel / Apply via CSS flex — don't let Cupertino
                         // size the middle panel to full viewport height.
                         topperOverflow: false
@@ -3275,18 +3647,16 @@
                 );
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
-                if (id === 'page-search') return { page: searchContext === 'past' ? 'past' : 'trades', moreFeature: null };
-                // Past is an in-page switch on Trades — bottom nav stays on trades.
                 if (id === 'page-trades') {
                     if (tradesViewMode === 'past') return { page: 'past', moreFeature: null };
                     return { page: 'trades', moreFeature: null };
                 }
                 if (id === 'page-past') return { page: 'past', moreFeature: null };
                 if (id === 'page-market') return { page: 'market', moreFeature: null };
+                if (id === 'page-calendar') return { page: 'calendar', moreFeature: null };
                 if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
                 if (id === 'page-more') return { page: 'more', moreFeature: null };
                 if (id === 'page-settings') return { page: 'settings', moreFeature: null };
-                if (id === 'page-transactions') return { page: 'more', moreFeature: 'transactions' };
                 if (id === 'page-mtf-calc') return { page: 'more', moreFeature: 'mtf-calc' };
                 return { page: 'trades', moreFeature: null };
             }
@@ -3341,6 +3711,10 @@
                     return true;
                 }
                 if (saved.moreFeature) {
+                    if (!moreFeatureMap[saved.moreFeature]) {
+                        navigateTo('more');
+                        return true;
+                    }
                     openMoreFeature(saved.moreFeature);
                     return true;
                 }
@@ -3392,6 +3766,7 @@
             function openTradeDetail(id) {
                 const tradeId = String(id || '');
                 if (!tradeId) return;
+                if (getSearchSheetPane()?.isOpen?.()) closeSearchPage();
                 tradeDetailId = tradeId;
                 stopMarketRefresh();
                 renderTradeDetailPage();
@@ -3405,21 +3780,14 @@
                 if (!fromPane && TradeDetailSheet && TradeDetailSheet.isOpen()) {
                     TradeDetailSheet.close({ quiet: true });
                 }
-                const searchPage = document.getElementById('page-search');
-                const onSearch = searchPage && !searchPage.classList.contains('d-none');
-                if (onSearch) {
-                    BottomBar.setBarVisible(false);
-                    BottomBar.setFabVisible(false);
-                    return;
-                }
                 BottomBar.setBarVisible(true);
                 const current = getCurrentAppPage();
                 updateFabVisibility(current.page === 'past' ? 'trades' : current.page);
             }
 
             // ---------- NAVIGATION ----------
-            const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', more: 'page-more' };
-            const moreFeatureMap = { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
+            const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', calendar: 'page-calendar', more: 'page-more' };
+            const moreFeatureMap = { money: 'page-money', 'mtf-calc': 'page-mtf-calc' };
             let activeMoreFeature = null;
 
             function showPage(pageId) {
@@ -3453,6 +3821,10 @@
                     stopTradeLiveRefresh();
                     try { renderMarketPage(); } catch (_) {}
                     startMarketRefresh();
+                } else if (page === 'calendar') {
+                    stopMarketRefresh();
+                    stopTradeLiveRefresh();
+                    try { renderCalendarPage(); } catch (_) {}
                 } else if (page === 'trades') {
                     stopMarketRefresh();
                     // Trades tab always opens current open trades (not Plan/Past).
@@ -3480,12 +3852,15 @@
             function openMoreFeature(feature) {
                 stopMarketRefresh();
                 stopTradeLiveRefresh();
+                if (!moreFeatureMap[feature]) {
+                    navigateTo('more');
+                    return;
+                }
                 activeMoreFeature = feature;
                 showPage(moreFeatureMap[feature]);
                 setBottomNavActive('more');
                 updateFabVisibility('more');
                 if (feature === 'money') renderMoney();
-                if (feature === 'transactions') renderTransactions();
                 if (feature === 'mtf-calc') {
                     renderMtfCalculator();
                     updateMtfCalculator();
@@ -4110,14 +4485,13 @@
                 return sortTradesList(trades, 'holding');
             }
 
-            function paintOpenTradeSummary(net, openCount, profitCount, lossCount, invested, mtfUsed) {
+            function paintOpenTradeSummary(net, openCount, profitCount, lossCount, invested) {
                 paintTradeRangeSummary({
                     containerId: 'summaryOpenStats',
                     wordsId: 'summaryNetWords',
                     net,
                     invested: invested != null ? invested : 0,
                     holdings: openCount,
-                    mtfUsed: mtfUsed != null ? mtfUsed : 0,
                     usePortfolioLayout: true
                 });
             }
@@ -4141,69 +4515,131 @@
 
             // ---------- RENDER PLAN TRADES (removed — Watchlist replaces Plan) ----------
 
-            // ---------- FULL-SCREEN SEARCH ----------
+            // ---------- SEARCH SHEET (trades / watchlist / company pickers) ----------
+            let searchSheetPane = null;
+            let companySearchCooldownUntil = 0;
+
+            function getSearchSheetPane() {
+                if (!searchSheetPane) {
+                    const createPane = window.MTFComponents?.createAppPane;
+                    if (typeof createPane !== 'function') return null;
+                    searchSheetPane = createPane('#searchSheet', {
+                        fullHeight: true,
+                        heightRatio: 1,
+                        topperOverflow: false
+                    });
+                }
+                return searchSheetPane;
+            }
+
+            function setSearchSheetTitle(title) {
+                const el = document.getElementById('searchSheetTitle');
+                if (el) el.textContent = title || 'Search';
+            }
+
+            function presentSearchSheet() {
+                const pane = getSearchSheetPane();
+                if (pane?.present) pane.present();
+            }
+
             function openSearchPage() {
                 const current = getCurrentAppPage().page;
                 if (current === 'market') {
-                    stopMarketRefresh();
-                    searchContext = 'watchlist';
-                    searchQuery = '';
-                    showPage('page-search');
-                    BottomBar.setBarVisible(false);
-                    BottomBar.setFabVisible(false);
-                    const input = document.getElementById('searchPageInput');
-                    if (input) {
-                        input.value = '';
-                        input.placeholder = 'Search NSE stock to add…';
-                        input.oninput = () => onMarketSearchInput();
-                        input.onkeydown = (e) => onMarketSearchKeydown(e);
-                        setTimeout(() => input.focus(), 50);
-                    }
-                    toggleClearBtn('searchPageClear', false);
-                    hideMarketAcList();
+                    openStockSearchSheet('watchlist');
                     return;
                 }
                 stopTradeLiveRefresh();
                 searchContext = current === 'past' || tradesViewMode === 'past' ? 'past' : 'trades';
                 searchQuery = '';
-                showPage('page-search');
-                BottomBar.setBarVisible(false);
-                BottomBar.setFabVisible(false);
+                setSearchSheetTitle(searchContext === 'past' ? 'Search closed trades' : 'Search open trades');
                 const input = document.getElementById('searchPageInput');
                 if (input) {
                     input.value = '';
                     input.placeholder = 'Search by company name...';
+                    input.removeAttribute('readonly');
                     input.oninput = null;
                     input.setAttribute('oninput', 'runSearchPage(this.value)');
                     input.onkeydown = null;
-                    setTimeout(() => input.focus(), 50);
                 }
                 toggleClearBtn('searchPageClear', false);
+                hideMarketAcList();
+                presentSearchSheet();
                 renderSearchResults();
+                setTimeout(() => document.getElementById('searchPageInput')?.focus(), 80);
+            }
+
+            function openStockSearchSheet(mode) {
+                searchContext = mode; // watchlist | tx-company | calc-company
+                searchQuery = '';
+                const titles = {
+                    watchlist: 'Add to watchlist',
+                    'tx-company': 'Select company',
+                    'calc-company': 'Select company'
+                };
+                setSearchSheetTitle(titles[mode] || 'Search stocks');
+                if (mode === 'watchlist') stopMarketRefresh();
+                loadStockCatalogFromInternet();
+
+                const input = document.getElementById('searchPageInput');
+                if (input) {
+                    input.value = '';
+                    input.placeholder = mode === 'watchlist'
+                        ? 'Search NSE stock to add…'
+                        : 'Search company name or symbol…';
+                    input.removeAttribute('readonly');
+                    input.oninput = () => onMarketSearchInput();
+                    input.removeAttribute('oninput');
+                    input.onkeydown = (e) => onMarketSearchKeydown(e);
+                }
+                toggleClearBtn('searchPageClear', false);
+                hideMarketAcList();
+                const list = getMarketAcListEl();
+                if (list) {
+                    list.innerHTML = `<div class="px-3 py-4 text-center text-muted small">Type a company name or symbol to search.</div>`;
+                }
+                presentSearchSheet();
+                setTimeout(() => document.getElementById('searchPageInput')?.focus(), 80);
+            }
+
+            function openCompanySearchSheet(which) {
+                if (Date.now() < companySearchCooldownUntil) return;
+                const mode = which === 'calc' ? 'calc-company' : 'tx-company';
+                // Avoid re-opening while the sheet is already up.
+                if (getSearchSheetPane()?.isOpen?.() && (searchContext === 'tx-company' || searchContext === 'calc-company')) {
+                    document.getElementById('searchPageInput')?.focus();
+                    return;
+                }
+                openStockSearchSheet(mode);
             }
 
             function closeSearchPage() {
-                BottomBar.setBarVisible(true);
+                const pane = getSearchSheetPane();
+                if (pane?.isOpen?.()) pane.close();
+                companySearchCooldownUntil = Date.now() + 450;
+                try {
+                    document.getElementById('txCompany')?.blur();
+                    document.getElementById('calcCompany')?.blur();
+                } catch (_) {}
                 const input = document.getElementById('searchPageInput');
                 if (input) {
                     input.oninput = null;
                     input.setAttribute('oninput', 'runSearchPage(this.value)');
                     input.onkeydown = null;
                     input.placeholder = 'Search by company name...';
+                    input.value = '';
                 }
+                hideMarketAcList();
+                searchQuery = '';
+                toggleClearBtn('searchPageClear', false);
                 if (searchContext === 'watchlist') {
-                    navigateTo('market');
-                    return;
-                }
-                if (searchContext === 'past') {
-                    navigateTo('past');
-                } else {
-                    navigateTo('trades');
+                    try { startMarketRefresh(); } catch (_) {}
+                } else if (searchContext === 'trades' || searchContext === 'past') {
+                    try { startTradeLiveRefresh(); } catch (_) {}
                 }
             }
 
             function runSearchPage(value) {
-                if (searchContext === 'watchlist') {
+                if (searchContext === 'watchlist' || searchContext === 'tx-company' || searchContext === 'calc-company') {
                     onMarketSearchInput();
                     return;
                 }
@@ -4213,7 +4649,7 @@
             }
 
             function clearSearchPage() {
-                if (searchContext === 'watchlist') {
+                if (searchContext === 'watchlist' || searchContext === 'tx-company' || searchContext === 'calc-company') {
                     clearMarketSearch();
                     return;
                 }
@@ -4224,7 +4660,7 @@
                 renderSearchResults();
             }
 
-            // renderSearchResults → pages/search/search-page.js
+            // renderSearchResults → features/common/search-page.js
 
             // ---------- TRADES VIEW MODE (Open / Closed) ----------
             function setTradesViewMode(mode) {
@@ -4261,7 +4697,7 @@
                 }
             }
 
-            // renderCurrentView → pages/trades/trades-page.js
+            // renderCurrentView → features/positions/trades-page.js
 
             // ---------- PAST TRADES (LIST + DETAIL) ----------
             function ensureSharedTradeRange() {
@@ -4324,10 +4760,10 @@
                 if (isPastPageVisible()) startTradeLiveRefresh();
             }
 
-            // renderPastTrades → pages/past/past-page.js
+            // renderPastTrades → features/positions/past-page.js
 
             // ---------- MONEY TRACKER ----------
-            // renderMoney, renderAccountHistorySheet → pages/money/money-page.js
+            // renderMoney, renderAccountHistorySheet → features/more/money-page.js
 
             function moneyPageDateFilterActive() {
                 return moneyPageRangeKey !== 'all' && (moneyPageFrom || moneyPageTo);
@@ -4616,7 +5052,7 @@
                 renderMoney();
             }
 
-            // money entry modal → pages/money/money-page.js
+            // money entry modal → features/more/money-page.js
             function setMoneyAccountModalMode(isEdit) {
                 const title = isEdit ? '<i class="fas fa-pen me-2"></i>Edit Account' : '<i class="fas fa-plus me-2"></i>Add Account';
                 const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
@@ -4750,45 +5186,7 @@
                 });
             }
 
-            // ---------- TOTAL TRANSACTIONS (MORE) ----------
-            function getTransactionStats(txs) {
-                const stats = {
-                    total: txs.length,
-                    open: 0,
-                    closed: 0,
-                    successful: 0,
-                    net: 0,
-                    gross: 0,
-                    charges: 0,
-                    byBroker: {}
-                };
-                ['Zerodha', 'Dhan', 'Groww'].forEach(b => {
-                    stats.byBroker[b] = { total: 0, open: 0, closed: 0, successful: 0, net: 0 };
-                });
-                txs.forEach(t => {
-                    const isOpen = (t.status || 'closed') === 'open';
-                    if (isOpen) stats.open++;
-                    else stats.closed++;
-                    if (!isOpen && (t.netProfit || 0) >= 0) stats.successful++;
-                    stats.net += t.netProfit || 0;
-                    stats.gross += t.grossProfit || 0;
-                    stats.charges += t.charges || 0;
-                    const b = t.broker || 'Zerodha';
-                    if (!stats.byBroker[b]) {
-                        stats.byBroker[b] = { total: 0, open: 0, closed: 0, successful: 0, net: 0 };
-                    }
-                    stats.byBroker[b].total++;
-                    if (isOpen) stats.byBroker[b].open++;
-                    else stats.byBroker[b].closed++;
-                    if (!isOpen && (t.netProfit || 0) >= 0) stats.byBroker[b].successful++;
-                    stats.byBroker[b].net += t.netProfit || 0;
-                });
-                return stats;
-            }
-
-            // renderTransactions → pages/transactions/transactions-page.js
-
-            // MTF Calculator → pages/mtf-calculator/mtf-calculator-page.js
+            // MTF Calculator → features/more/mtf-calculator-page.js
 
             // ---------- COPY TRANSACTION ----------
             async function copyTransaction(id) {
@@ -4839,7 +5237,7 @@
             function setPlanSearch() { /* Plan removed */ }
             function clearPlanSearch() { /* Plan removed */ }
 
-            // trade detail sheets → pages/common/trade-*-sheet.js
+            // trade detail sheets → features/common/trade-*-sheet.js
             // ---------- INTEREST BREAKDOWN ----------
             function interestDetails(t) {
                 const sellPrice = getEffectiveSellPrice(t);
@@ -4995,9 +5393,9 @@
             // ---------- MODAL HELPERS ----------
             // Dropdowns use Bootstrap data-bs-toggle (no custom init needed).
 
-            // trade modal → pages/common/trade-modal.js
+            // trade modal → features/common/trade-modal.js
             // ---------- SETTINGS ----------
-            // renderSettings, renderSettingsMoneyAccounts → pages/settings/settings-page.js
+            // renderSettings → features/more/settings-page.js
 
             function renderSyncStatus() {
                 const statusEl = document.getElementById('cloudSyncStatus');
@@ -5009,7 +5407,7 @@
 
                 if (!isFirebaseConfigured()) {
                     setAppTagElement(statusEl, 'Not configured', 'default');
-                    if (hintEl) hintEl.textContent = 'Paste your Firebase config in db/firebase-config.js to enable cloud sync. The app works offline until then.';
+                    if (hintEl) hintEl.textContent = 'Paste your Firebase config in shared/db/firebase-config.js to enable cloud sync. The app works offline until then.';
                     if (connectBtn) connectBtn.disabled = true;
                     if (disconnectBtn) disconnectBtn.classList.add('d-none');
                     return;
@@ -5045,7 +5443,114 @@
                 connectSync(input ? input.value : '');
             }
 
-            // ---------- BACKUP AS TEXT (COPY / PASTE) ----------
+            // ---------- BACKUP AS TEXT + JSON VISUALIZER ----------
+            let backupVizTimer = null;
+
+            function getQuoteCacheCount() {
+                try {
+                    const map = readQuoteCacheMap();
+                    return Object.keys(map || {}).length;
+                } catch (_) {
+                    return 0;
+                }
+            }
+
+            function getDbCallSummaryForViz() {
+                try {
+                    const fn = window.MTFDb && window.MTFDb.getDbCallLogSummary;
+                    return typeof fn === 'function' ? fn() : {};
+                } catch (_) {
+                    return {};
+                }
+            }
+
+            function paintBackupDbCallFlushButton() {
+                const host = document.getElementById('backupDbCallFlushHost');
+                if (!host || typeof renderAppButton !== 'function') return;
+                const summary = getDbCallSummaryForViz();
+                host.innerHTML = renderAppButton('Save call log to cloud', {
+                    variant: summary.dirty ? 'action' : 'cancel',
+                    onclick: 'flushDbCallLogToCloud()',
+                    icon: 'fa-cloud-upload-alt',
+                    fullWidth: true,
+                    id: 'backupDbCallFlushBtn'
+                });
+            }
+
+            function refreshBackupVisualizer() {
+                const comps = window.MTFComponents || {};
+                const parseBackupText = comps.parseBackupText;
+                const renderBackupVisualizer = comps.renderBackupVisualizer;
+                const summaryEl = document.getElementById('backupVizSummary');
+                const treeEl = document.getElementById('backupVizTree');
+                const hintEl = document.getElementById('backupVizParseHint');
+                const ta = document.getElementById('backupTextArea');
+                if (!summaryEl || !treeEl || !ta || typeof parseBackupText !== 'function' || typeof renderBackupVisualizer !== 'function') {
+                    return;
+                }
+                const dbCallSummary = getDbCallSummaryForViz();
+                const parsed = parseBackupText(ta.value);
+                if (!parsed.ok) {
+                    summaryEl.innerHTML = renderBackupVisualizer({}, {
+                        quoteCacheCount: getQuoteCacheCount(),
+                        rawChars: parsed.rawChars || 0
+                    }, appNetworkStats, dbCallSummary).summaryHtml;
+                    paintBackupDbCallFlushButton();
+                    treeEl.innerHTML = `<p class="small text-danger mb-0">${parsed.error === 'Empty' ? 'Paste JSON above to visualize.' : ('Invalid JSON: ' + parsed.error)}</p>`;
+                    if (hintEl) hintEl.textContent = parsed.error === 'Empty' ? '' : 'Fix JSON to restore or explore structure.';
+                    return;
+                }
+                const viz = renderBackupVisualizer(parsed.data, {
+                    quoteCacheCount: getQuoteCacheCount(),
+                    rawChars: parsed.rawChars
+                }, appNetworkStats, dbCallSummary);
+                summaryEl.innerHTML = viz.summaryHtml;
+                paintBackupDbCallFlushButton();
+                treeEl.innerHTML = viz.treeHtml;
+                if (hintEl) {
+                    const s = viz.summary;
+                    hintEl.textContent = `${s.trades} trades · ${s.watchlist} watchlist · ${s.rawSize} · DB calls today ${dbCallSummary.todayTotal || 0}`;
+                }
+            }
+
+            async function flushDbCallLogToCloud() {
+                const flush = window.MTFDb && window.MTFDb.flushDbCallLogToDatabase;
+                if (typeof flush !== 'function') {
+                    showToast('Call log is not available.', 'danger');
+                    return;
+                }
+                const btn = document.getElementById('backupDbCallFlushBtn');
+                if (btn) btn.disabled = true;
+                try {
+                    const result = await flush();
+                    showToast(
+                        result && result.ok
+                            ? 'Database call log saved to cloud.'
+                            : 'Saved locally. Connect Cloud Sync to push dbCallLog.',
+                        result && result.ok ? 'success' : 'warning'
+                    );
+                    try {
+                        const data = getStorage();
+                        const ta = document.getElementById('backupTextArea');
+                        if (ta) ta.value = JSON.stringify(data, null, 2);
+                    } catch (_) {}
+                    refreshBackupVisualizer();
+                } catch (e) {
+                    console.warn('flushDbCallLogToCloud failed', e);
+                    showToast('Could not save call log.', 'danger');
+                } finally {
+                    if (btn) btn.disabled = false;
+                }
+            }
+
+            function onBackupTextInput() {
+                if (backupVizTimer) clearTimeout(backupVizTimer);
+                backupVizTimer = setTimeout(() => {
+                    backupVizTimer = null;
+                    refreshBackupVisualizer();
+                }, 200);
+            }
+
             function openBackupTextModal() {
                 try {
                     const data = getStorage();
@@ -5055,8 +5560,9 @@
                         return;
                     }
                     ta.value = JSON.stringify(data, null, 2);
-                    Sheet.mountPanel('<i class="fas fa-clipboard me-2"></i>Backup as Text', 'panelBackup',
+                    Sheet.mountPanel('<i class="fas fa-code me-2"></i>Backup & JSON', 'panelBackup',
                         `<div class="d-flex gap-2">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
+                    refreshBackupVisualizer();
                 } catch (_) {
                     showToast('Could not open backup.', 'danger');
                 }
@@ -5207,9 +5713,21 @@
                     refreshAllViews,
                     onRemoteApplied: () => {
                         try { migrateTradeCompanySymbols(); } catch (_) {}
+                        try {
+                            const data = getStorage();
+                            if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
+                                window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
+                            }
+                        } catch (_) {}
                     },
                     migrateTradeCompanySymbols
                 });
+                try {
+                    const data = getStorage();
+                    if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
+                        window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
+                    }
+                } catch (_) {}
                 initSyncOnLoad();
 
                 window.addEventListener('pageshow', (e) => {
@@ -5253,10 +5771,9 @@
                     actionBtnSm: UI.actionBtnSm
                 },
                 appHeader: {
-                    moreFeatureMap: { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' },
+                    moreFeatureMap: { money: 'page-money', 'mtf-calc': 'page-mtf-calc' },
                     moreFeatureTitles: {
                         money: 'Money',
-                        transactions: 'Total Transactions',
                         'mtf-calc': 'MTF Calculator'
                     }
                 },
@@ -5271,7 +5788,6 @@
                     resolveTradeMetrics,
                     getPastFiltered,
                     ensureSharedTradeRange,
-                    getTransactionStats,
                     getPlanSearchQuery: () => planSearchQuery,
                     getTradeSearchQuery: () => tradeSearchQuery,
                     getPastSearchQuery: () => pastSearchQuery,
@@ -5437,6 +5953,9 @@
             window.deleteTradeFromEditor = deleteTradeFromEditor;
             window.saveTransaction = saveTransaction;
             window.openBackupTextModal = openBackupTextModal;
+            window.onBackupTextInput = onBackupTextInput;
+            window.refreshBackupVisualizer = refreshBackupVisualizer;
+            window.flushDbCallLogToCloud = flushDbCallLogToCloud;
             window.checkMarketFeed = checkMarketFeed;
             window.openSettingsPage = openSettingsPage;
             window.backFromSettings = backFromSettings;
@@ -5466,6 +5985,13 @@
             window.renderCurrentView = renderCurrentView;
             window.renderPastTrades = renderPastTrades;
             window.renderMarketPage = renderMarketPage;
+            window.renderCalendarPage = renderCalendarPage;
+            window.shiftCalendarMonth = shiftCalendarMonth;
+            window.openCalendarMonthPicker = openCalendarMonthPicker;
+            window.shiftCalendarPickerYear = shiftCalendarPickerYear;
+            window.jumpCalendarMonth = jumpCalendarMonth;
+            window.jumpCalendarToTodayMonth = jumpCalendarToTodayMonth;
+            window.openCalendarDaySheet = openCalendarDaySheet;
             window.refreshMarketQuotes = refreshMarketQuotes;
             window.onMarketRefreshClick = onMarketRefreshClick;
             window.refreshTradeLivePricesNow = refreshTradeLivePricesNow;
@@ -5478,7 +6004,6 @@
             window.onMarketSearchBlur = onMarketSearchBlur;
             window.selectMarketSymbol = selectMarketSymbol;
             window.clearMarketSearch = clearMarketSearch;
-            window.renderTransactions = renderTransactions;
             window.updateMtfCalculator = updateMtfCalculator;
             window.openCalcBreakdownSheet = openCalcBreakdownSheet;
             window.onCalcDateInput = onCalcDateInput;
@@ -5488,11 +6013,17 @@
             window.onCalcBuyPriceInput = onCalcBuyPriceInput;
             window.onCalcSellPriceInput = onCalcSellPriceInput;
             window.addCalcSellPctPreset = addCalcSellPctPreset;
+            window.onCalcCompanyInput = onCalcCompanyInput;
+            window.onCalcCompanyKeydown = onCalcCompanyKeydown;
+            window.onCalcCompanyFocus = onCalcCompanyFocus;
+            window.onCalcCompanyBlur = onCalcCompanyBlur;
+            window.selectCalcStockSymbol = selectCalcStockSymbol;
             window.renderSettings = renderSettings;
             window.setTradeSearch = setTradeSearch;
             window.setTradesViewMode = setTradesViewMode;
             window.openSearchPage = openSearchPage;
             window.closeSearchPage = closeSearchPage;
+            window.openCompanySearchSheet = openCompanySearchSheet;
             window.runSearchPage = runSearchPage;
             window.clearSearchPage = clearSearchPage;
             window.clearTradeSearch = clearTradeSearch;

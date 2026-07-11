@@ -2,10 +2,11 @@
 /**
  * Bundles and minifies main.html + brand theme CSS + component/page scripts + main.js
  * into production.html. Bootstrap CSS/JS stay as external CDN links.
- * Run: npm run build   (or: node build-production.js)
- * Ship (bump version + stamp date/time): npm run ship
  *
- * Always repairs scripts/manifest.json + main.html script tags first
+ * Run:  npm run build          (bumps patch version + stamps builtAt)
+ *       node build-production.js --no-bump   (rebuild without bumping)
+ *
+ * Always repairs shared/scripts/manifest.json + main.html script tags first
  * (same as `npm run repair`).
  */
 'use strict';
@@ -13,18 +14,18 @@
 const fs = require('fs');
 const path = require('path');
 const { minify } = require('html-minifier-terser');
-const { syncManifest } = require('./scripts/sync-manifest');
+const { syncManifest } = require('./shared/scripts/sync-manifest');
 
 const ROOT = __dirname;
 const OUT_FILE = path.join(ROOT, 'production.html');
-const MANIFEST = path.join(ROOT, 'scripts', 'manifest.json');
+const MANIFEST = path.join(ROOT, 'shared', 'scripts', 'manifest.json');
 const VERSION_JSON = path.join(ROOT, 'app-version.json');
-const VERSION_JS = path.join(ROOT, 'pages', 'common', 'app-version.js');
+const VERSION_JS = path.join(ROOT, 'features', 'more', 'app-version.js');
 
 const htmlPath = path.join(ROOT, 'main.html');
-const themeCssPath = path.join(ROOT, 'css', '_variables.css');
+const themeCssPath = path.join(ROOT, 'shared', 'css', '_variables.css');
 const BOOTSTRAP_CSS_RE = /bootstrap@[\d.]+\/dist\/css\/bootstrap\.min\.css/;
-const THEME_LINK_RE = /<link rel="stylesheet" href="css\/_variables\.css"\s*\/?>/;
+const THEME_LINK_RE = /<link rel="stylesheet" href="shared\/css\/_variables\.css"\s*\/?>/;
 
 const MINIFY_OPTIONS = {
     collapseWhitespace: true,
@@ -90,7 +91,7 @@ function writeVersionFiles(state) {
     fs.writeFileSync(VERSION_JSON, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
     const js = `/**
  * App version + build stamp shown on the More page.
- * Updated by \`npm run ship\` (or \`node build-production.js --bump\`).
+ * Bumped automatically by \`npm run build\` / \`npm run save\`.
  */
 (function (global) {
     'use strict';
@@ -131,6 +132,13 @@ function prepareVersion({ bump }) {
     return { previous: current, next, bumped: bump };
 }
 
+function shouldBumpVersion(argv) {
+    // Default: bump. Opt out with --no-bump (used by agent rebuild hooks).
+    if (argv.includes('--no-bump')) return false;
+    if (argv.includes('--bump')) return true;
+    return true;
+}
+
 function bundleJs() {
     const { scripts } = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'));
     return scripts.map((rel) => {
@@ -153,7 +161,7 @@ async function build() {
         }
     }
 
-    const bump = process.argv.includes('--bump');
+    const bump = shouldBumpVersion(process.argv);
     const versionInfo = prepareVersion({ bump });
 
     let html = fs.readFileSync(htmlPath, 'utf8');
@@ -162,7 +170,7 @@ async function build() {
         process.exit(1);
     }
     if (!THEME_LINK_RE.test(html)) {
-        console.error('main.html is missing <link rel="stylesheet" href="css/_variables.css" />');
+        console.error('main.html is missing <link rel="stylesheet" href="shared/css/_variables.css" />');
         process.exit(1);
     }
 
@@ -193,11 +201,11 @@ async function build() {
     const scriptCount = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts.length;
 
     console.log(`✓ production.html (${sizeKb} KB, minified from ${unminKb} KB, −${saved}%)`);
-    console.log(`  Sources: main.html, css/_variables.css, ${scriptCount} JS files (scripts/manifest.json), Bootstrap CDN`);
+    console.log(`  Sources: main.html, shared/css/_variables.css, ${scriptCount} JS files (shared/scripts/manifest.json), Bootstrap CDN`);
     if (versionInfo.bumped) {
         console.log(`  Version: ${versionInfo.previous.version} → ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
     } else {
-        console.log(`  Version: ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
+        console.log(`  Version: ${versionInfo.next.version} (${versionInfo.next.builtAt}) [no bump]`);
     }
     console.log('  Copy production.html to your phone for mobile deployment.');
 }
