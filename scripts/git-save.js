@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Create a dated save branch, commit, push, and open a PR back to the base branch.
+ * Create a dated save branch, commit, push, and open a PR against Dev.
  *
  * npm run save
  * npm run save -- quote-fix
@@ -11,6 +11,8 @@ const { execFileSync, spawnSync } = require('child_process');
 const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
+/** PRs from `npm run save` always target this branch. */
+const PR_BASE_BRANCH = 'Dev';
 const SECRET_PATTERNS = [
     /\.env$/i,
     /credentials\.json$/i,
@@ -204,14 +206,15 @@ function main() {
         fail('Not a git repository');
     }
 
-    let baseBranch;
+    let currentBranch;
     try {
-        baseBranch = runGit(['branch', '--show-current']);
+        currentBranch = runGit(['branch', '--show-current']);
     } catch (_) {
         fail('Could not determine current branch');
     }
-    if (!baseBranch) fail('Detached HEAD — checkout a branch first');
+    if (!currentBranch) fail('Detached HEAD — checkout a branch first');
 
+    const baseBranch = PR_BASE_BRANCH;
     const userName = parseUserName(process.argv);
     const now = new Date();
     const existing = listExistingBranchNames();
@@ -220,7 +223,8 @@ function main() {
     const commitMessage = buildCommitMessage(userName, now);
     const prBody = buildPrBody(userName, now);
 
-    console.log(`Base branch:  ${baseBranch}`);
+    console.log(`Current:      ${currentBranch}`);
+    console.log(`PR base:      ${baseBranch}`);
     console.log(`New branch:   ${newBranch}`);
 
     try {
