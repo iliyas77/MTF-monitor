@@ -133,13 +133,26 @@ async function runSmoke(report) {
             report.fail('UI shells', 'Trades list container missing');
         }
 
-        // --- Navigation: Past ---
-        await page.click('#bottomBarNav [data-page="past"]');
+        // --- Navigation: Past (under Trades dropdown) ---
+        await page.click('#bottomBarNav [data-page="trades"]');
         await page.waitForTimeout(200);
-        if (!(await pageVisible(page, 'page-past'))) {
-            report.fail('Nav Past', '#page-past not shown');
+        const pastViaDropdown = await page.evaluate(() => {
+            if (typeof window.setTradesViewMode === 'function') {
+                window.setTradesViewMode('past');
+                return true;
+            }
+            return false;
+        });
+        await page.waitForTimeout(200);
+        const pastOk = await page.evaluate(() => {
+            const trades = document.getElementById('page-trades');
+            const modeBtn = document.getElementById('tradesViewMode');
+            return !!(trades && !trades.classList.contains('d-none') && modeBtn && /past/i.test(modeBtn.textContent || ''));
+        });
+        if (!pastViaDropdown || !pastOk) {
+            report.fail('Nav Past', 'Past view not shown under Trades');
         } else {
-            report.pass('Nav Past', 'Past Trades page shown');
+            report.pass('Nav Past', 'Past trades shown via Trades dropdown');
         }
 
         // --- Navigation: Market ---

@@ -244,23 +244,23 @@
             ${renderBrokerRatesPanel(broker, result.mtfAmount, inp.buyDate, inp.sellDate)}
             <hr class="my-3" />
             <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-hand-holding-usd', { className: 'me-2' })}Funding</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Total Investment</span><span class="small fw-semibold text-end">${fmtDec(result.totalInvestment)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Your Margin</span><span class="small fw-semibold text-end">${fmtDec(result.ownMargin)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Broker Funded</span><span class="small fw-semibold text-end">${fmtDec(result.mtfAmount)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Leverage</span><span class="small fw-semibold text-end">${levDisplay}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Total Investment</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.totalInvestment)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Your Margin</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.ownMargin)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Broker Funded</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.mtfAmount)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Leverage</span><span class="fs-6 fw-semibold text-end">${levDisplay}</span></div>
             <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-clock', { className: 'me-2' })}Holding</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="small fw-semibold text-end">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="fs-6 fw-semibold text-end">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
             <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-calculator', { className: 'me-2' })}P&L</div>
             <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">MTF Interest</span><span class="small fw-semibold text-end text-warning">- ${fmtDec(result.interest)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">MTF Interest</span><span class="fs-6 fw-semibold text-end text-warning">- ${fmtDec(result.interest)}</span></div>
             <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
             <div class="d-flex justify-content-between gap-4 py-2 border-bottom border-top fw-medium text-body-secondary pt-2 mt-1"><span class="small text-muted">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
             <div class="small text-uppercase fw-medium text-muted mb-2 mt-3">${global.MTFComponents.renderIcon('fa-percent', { className: 'me-2' })}Interest Detail</div>
-            <div class="bg-light rounded-3 p-2 my-2 small text-center">
+            <div class="bg-light rounded-3 p-2 my-2 fs-6 text-center">
                 ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
             </div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / day</span><span class="small fw-semibold text-end">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / year</span><span class="small fw-semibold text-end">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / day</span><span class="fs-6 fw-semibold text-end">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / year</span><span class="fs-6 fw-semibold text-end">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
             <div class="small text-uppercase fw-medium text-muted mb-2 mt-3">${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-2' })}Charges Breakdown</div>
             ${chargesTable(buy, sell)}
         `;

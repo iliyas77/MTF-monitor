@@ -33,13 +33,13 @@
             ${intraNote}
             ${chargesTable(buy, sell)}
             <div class="row g-2 text-center mt-3">
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-primary">Buy Side</div><div class="fw-semibold text-primary">${fmtDec(buy.total)}</div></div></div>
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Sell Side</div><div class="fw-medium text-body-secondary">${fmtDec(sell.total)}</div></div></div>
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Total</div><div class="fw-medium text-body">${fmtDec(grand)}</div></div></div>
+                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-primary">Buy Side</div><div class="fs-6 fw-semibold text-primary">${fmtDec(buy.total)}</div></div></div>
+                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Sell Side</div><div class="fs-6 fw-medium text-body-secondary">${fmtDec(sell.total)}</div></div></div>
+                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Total</div><div class="fs-6 fw-medium text-body">${fmtDec(grand)}</div></div></div>
             </div>
         `;
 
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-2' })}${tx.company} Charges`, chargesHtml, '');
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Charges</span>`, chargesHtml, '');
     }
 
     global.MTFRegister({ openChargesModal });

@@ -7,7 +7,6 @@
     const {
         renderAppButton,
         renderAppButtonRow,
-        paintAmount,
         fmtDec,
         setDateInputValue,
         initDateFields,
@@ -59,7 +58,12 @@
     }
 
     function getTxFormStatus() {
-        return document.querySelector('input[name="status"]:checked')?.value || 'closed';
+        return document.getElementById('txStatus')?.value || 'open';
+    }
+
+    function setTxFormStatus(status) {
+        const el = document.getElementById('txStatus');
+        if (el) el.value = status === 'closed' ? 'closed' : 'open';
     }
 
     function syncTxSellPriceField() {
@@ -76,17 +80,7 @@
     }
 
     function syncTxModalStatusField() {
-        const { getTxModalContext, isPlannedTrade, getTransaction } = tradeModal();
-        const row = document.getElementById('txStatusRow');
-        const brokerCol = document.getElementById('txBrokerCol');
-        const editId = document.getElementById('txEditId')?.value;
-        const editingPlan = editId && isPlannedTrade && isPlannedTrade(getTransaction(editId) || {});
-        const hideStatus = (getTxModalContext ? getTxModalContext() : 'trades') === 'plan' || editingPlan;
-        if (row) row.classList.toggle('d-none', hideStatus);
-        if (brokerCol) {
-            brokerCol.classList.toggle('col-6', !hideStatus);
-            brokerCol.classList.toggle('col-12', hideStatus);
-        }
+        /* Status UI removed — new trades are always open. */
     }
 
     function onTxStatusChange() {
@@ -111,26 +105,20 @@
     }
 
     function clearPreview() {
-        document.getElementById('previewDays').textContent = '0';
-        paintAmount(document.getElementById('previewGross'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-        paintAmount(document.getElementById('previewInterest'), 0, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-        paintAmount(document.getElementById('previewCharges'), 0, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
-        paintAmount(document.getElementById('previewNet'), 0, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-        document.getElementById('previewTotalInv').textContent = '₹0';
-        document.getElementById('previewOwnMargin').textContent = '₹0';
-        document.getElementById('previewMtfAmt').textContent = '₹0';
+        const totalEl = document.getElementById('previewTotalInv');
+        const marginEl = document.getElementById('previewOwnMargin');
+        const mtfEl = document.getElementById('previewMtfAmt');
+        if (totalEl) totalEl.textContent = '₹0';
+        if (marginEl) marginEl.textContent = '₹0';
+        if (mtfEl) mtfEl.textContent = '₹0';
     }
 
     function updatePreview() {
-        const { calculateTrade } = tradeModal();
-        const company = document.getElementById('txCompany').value || 'Preview';
-        const broker = document.getElementById('txBroker').value || 'Zerodha';
         const qty = parseFloat(document.getElementById('txQty').value) || 0;
         const bp = parseFloat(document.getElementById('txBuyPrice').value) || 0;
         let sp = parseFloat(document.getElementById('txSellPrice').value) || 0;
         const buyDate = document.getElementById('txBuyDate').value;
         const sellDate = document.getElementById('txSellDate').value;
-        const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
         const status = getTxFormStatus();
 
         if (status === 'open' && sp <= 0 && bp > 0) sp = bp;
@@ -140,12 +128,6 @@
             return;
         }
 
-        const result = calculateTrade({ company, broker, quantity: qty, buyPrice: bp, sellPrice: sp, buyDate, sellDate, leverage });
-        document.getElementById('previewDays').textContent = result.holdingDays;
-        paintAmount(document.getElementById('previewGross'), result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' });
-        paintAmount(document.getElementById('previewInterest'), result.interest, { size: 'sm', decimals: true, tone: 'warning', align: 'right' });
-        paintAmount(document.getElementById('previewCharges'), result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right' });
-        paintAmount(document.getElementById('previewNet'), result.netProfit, { size: 'sm', decimals: true, align: 'right' });
         updateLeverageBreakdown();
     }
 
@@ -164,9 +146,10 @@
         document.getElementById('txBuyPrice').addEventListener('input', updateLeverageBreakdown);
         document.getElementById('txQty').addEventListener('input', updateLeverageBreakdown);
 
-        const { onTxBuyPriceInputForSuggest, onTxSellPriceInputManual, onTxTradeDatesChangeForSuggest } = tradeModal();
+        const { onTxBuyPriceInputForSuggest, onTxSellPriceInputManual, onTxQtyInputManual, onTxTradeDatesChangeForSuggest } = tradeModal();
         const buyEl = document.getElementById('txBuyPrice');
         const sellEl = document.getElementById('txSellPrice');
+        const qtyEl = document.getElementById('txQty');
         const buyDateEl = document.getElementById('txBuyDate');
         const sellDateEl = document.getElementById('txSellDate');
         if (buyEl && onTxBuyPriceInputForSuggest) {
@@ -176,6 +159,10 @@
         if (sellEl && onTxSellPriceInputManual) {
             sellEl.removeEventListener('input', onTxSellPriceInputManual);
             sellEl.addEventListener('input', onTxSellPriceInputManual);
+        }
+        if (qtyEl && onTxQtyInputManual) {
+            qtyEl.removeEventListener('input', onTxQtyInputManual);
+            qtyEl.addEventListener('input', onTxQtyInputManual);
         }
         [buyDateEl, sellDateEl].forEach((el) => {
             if (!el || !onTxTradeDatesChangeForSuggest) return;
@@ -190,8 +177,7 @@
             getTradesViewMode,
             setTxModalContext,
             setTxBroker,
-            resetCompanyAutocomplete,
-            getTomorrowDateKey
+            resetCompanyAutocomplete
         } = tradeModal();
 
         const currentPage = getCurrentAppPage ? getCurrentAppPage().page : 'trades';
@@ -207,23 +193,15 @@
         setTxModalMode(false);
         document.getElementById('txForm').reset();
         document.getElementById('txLeverage').value = 1;
+        setTxFormStatus('open');
         if (setTxBroker) setTxBroker('');
-        const today = new Date().toISOString().split('T')[0];
-        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-        const tomorrow = getTomorrowDateKey ? getTomorrowDateKey() : today;
-        if (ctx === 'plan') {
-            document.getElementById('statusOpen').checked = true;
-            setDateInputValue(document.getElementById('txBuyDate'), tomorrow);
-            setDateInputValue(document.getElementById('txSellDate'), tomorrow);
-        } else {
-            document.getElementById('statusClosed').checked = true;
-            setDateInputValue(document.getElementById('txBuyDate'), yesterday);
-            setDateInputValue(document.getElementById('txSellDate'), today);
-        }
+        const d = new Date();
+        const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        setDateInputValue(document.getElementById('txBuyDate'), today);
+        setDateInputValue(document.getElementById('txSellDate'), today);
         if (resetCompanyAutocomplete) resetCompanyAutocomplete();
         if (tradeModal().resetTxPriceAutoFlags) tradeModal().resetTxPriceAutoFlags();
         clearPreview();
-        syncTxModalStatusField();
         syncTxSellPriceField();
         initDateFields(document.getElementById('txModal'));
         showOffcanvas(document.getElementById('txModal'));
@@ -267,12 +245,8 @@
         document.getElementById('txBuyPrice').value = tx.buyPrice || '';
         document.getElementById('txSellPrice').value = tx.sellPrice || '';
         document.getElementById('txLeverage').value = tx.leverage || 1;
-        document.getElementById('txNotes').value = tx.notes || '';
+        setTxFormStatus(tx.status || 'closed');
 
-        const status = tx.status || 'closed';
-        document.querySelector(`input[name="status"][value="${status}"]`).checked = true;
-
-        syncTxModalStatusField();
         syncTxSellPriceField();
         updatePreview();
         updateLeverageBreakdown();
@@ -310,7 +284,8 @@
         const buyPrice = parseFloat(document.getElementById('txBuyPrice').value);
         let sellPrice = parseFloat(document.getElementById('txSellPrice').value);
         const leverage = parseFloat(document.getElementById('txLeverage').value) || 1;
-        const notes = document.getElementById('txNotes').value.trim();
+        const existing = editId && getTransaction ? getTransaction(editId) : null;
+        const notes = existing?.notes || '';
         const status = getTxFormStatus();
 
         if (!company) { showToast('Please enter company name.', 'warning'); return; }
@@ -375,7 +350,7 @@
             document.getElementById('txEditId').value = '';
             document.getElementById('txForm').reset();
             setTxSaveBtnLabel(false);
-            document.getElementById('statusClosed').checked = true;
+            setTxFormStatus('open');
             document.getElementById('txLeverage').value = 1;
             if (setTxBroker) setTxBroker('');
             if (resetCompanyAutocomplete) resetCompanyAutocomplete();
@@ -390,6 +365,7 @@
         openViewFromEditor,
         deleteTradeFromEditor,
         getTxFormStatus,
+        setTxFormStatus,
         syncTxSellPriceField,
         syncTxModalStatusField,
         onTxStatusChange,
