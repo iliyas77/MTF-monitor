@@ -6,6 +6,7 @@
 
     const {
         paintPlanTradeSummary,
+        countTradePnlBuckets,
         renderFlatTradesList,
         renderPlanTradeListItem,
         renderPageEmptyCard
@@ -39,7 +40,10 @@
             net += resolveTradeMetrics ? resolveTradeMetrics(t).netProfit : 0;
         });
 
-        paintPlanTradeSummary(net, filtered.length);
+        const buckets = countTradePnlBuckets
+            ? countTradePnlBuckets(filtered, resolveTradeMetrics)
+            : { profit: 0, loss: 0 };
+        paintPlanTradeSummary(net, filtered.length, buckets.profit, buckets.loss);
 
         const container = document.getElementById('planTradesList');
         if (!container) return;
@@ -51,7 +55,7 @@
             return;
         }
 
-        container.innerHTML = renderFlatTradesList(filtered, renderPlanTradeListItem);
+        container.innerHTML = renderFlatTradesList(filtered, renderPlanTradeListItem, 'plan');
     }
 
     global.MTFRegister({ renderPlanTrades });

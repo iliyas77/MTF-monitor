@@ -281,7 +281,7 @@
 
 /* ========== Trade list item ========== */
 /**
- * O10 — Trade list item organism.
+ * O10 — Trade list item organism (full + compact/collapsed card).
  */
 (function (global) {
     'use strict';
@@ -291,8 +291,14 @@
         renderTradeListItemLeverageMeta,
         renderTradeListItemDetails,
         renderTradeListItemActions,
-        appTag
+        appTag,
+        fmtDec,
+        renderAmount,
+        renderIcon
     } = global.MTFComponents;
+
+    const COLLAPSED_TRADES_KEY = 'mtf_collapsed_trade_cards';
+    const COMPACT_MODE_KEY = 'mtf_trade_cards_compact_mode';
 
     function escapeHtml(str) {
         return String(str || '')
@@ -306,6 +312,57 @@
         const s = String(company || '').trim();
         if (!s) return '•';
         return s.charAt(0).toUpperCase();
+    }
+
+    function isCompactMode() {
+        try {
+            return localStorage.getItem(COMPACT_MODE_KEY) === '1';
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function setCompactMode(on) {
+        try {
+            localStorage.setItem(COMPACT_MODE_KEY, on ? '1' : '0');
+            // Drop legacy per-card collapse keys — collapse is all-or-nothing now.
+            localStorage.removeItem(COLLAPSED_TRADES_KEY);
+        } catch (_) { /* ignore quota / private mode */ }
+    }
+
+    function refreshTradeCardsView() {
+        const render = (global.MTFComponents || {}).renderCurrentView;
+        if (typeof render !== 'function') return false;
+        try {
+            render();
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function setAllVisibleTradeCardsCollapsed(collapsed) {
+        setCompactMode(collapsed);
+        if (refreshTradeCardsView()) return;
+        syncTradeCardsCollapseAllButton();
+    }
+
+    function toggleAllTradeCardsCollapse() {
+        setAllVisibleTradeCardsCollapsed(!isCompactMode());
+    }
+
+    function syncTradeCardsCollapseAllButton() {
+        const btn = document.getElementById('tradesCollapseAllBtn');
+        if (!btn) return;
+        const collapsed = isCompactMode();
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.classList.toggle('fa-compress-alt', !collapsed);
+            icon.classList.toggle('fa-expand-alt', collapsed);
+        }
+        btn.setAttribute('aria-label', collapsed ? 'Expand all cards' : 'Collapse all cards');
+        btn.setAttribute('title', collapsed ? 'Expand all cards' : 'Collapse all cards');
+        btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
     }
 
     function getTradeTargetPrice(t) {
@@ -419,7 +476,6 @@
         const gapHtml = price != null ? gapText : '—';
         const returnHtml = escapeHtml(returnText);
 
-        const { renderIcon } = global.MTFComponents;
         const spinnerHtml = loading
             ? renderIcon('fa-spinner', { className: 'fa-spin', size: 'xs' })
             : '';
@@ -454,11 +510,61 @@
         return renderTradeMetricsTable(rows, 'Current Market', attrs, spinnerHtml);
     }
 
+    function renderTradesCompactTable(trades) {
+        const resolveTradeMetrics = (global.MTFAppHelpers || {}).resolveTradeMetrics;
+        const rows = (trades || []).map((t) => {
+            const metrics = resolveTradeMetrics
+                ? resolveTradeMetrics(t)
+                : { netProfit: 0, sellPrice: t.sellPrice || 0, charges: 0 };
+            const company = t.company || 'trade';
+            const tradeId = escapeHtml(t.id || '');
+            const qty = Number(t.quantity) || 0;
+            const buy = fmtDec(t.buyPrice || 0);
+            const sell = fmtDec(metrics.sellPrice != null ? metrics.sellPrice : (t.sellPrice || 0));
+            return `
+                <tr data-trade-card data-trade-id="${tradeId}" data-collapsed="true">
+                    <td class="trades-compact-company" title="${escapeHtml(company)} · Qty ${qty}">
+                        <div class="d-flex align-items-baseline justify-content-between gap-1 min-w-0 w-100">
+                            <span class="text-truncate min-w-0 flex-grow-1">${escapeHtml(company)}</span>
+                            <span class="flex-shrink-0 small text-body-secondary text-nowrap">(Qty ${qty})</span>
+                        </div>
+                    </td>
+                    <td class="text-nowrap small trades-compact-prices">
+                        <span class="text-info">${buy}</span>
+                        <span class="text-muted mx-1">/</span>
+                        <span class="text-danger">${sell}</span>
+                    </td>
+                    <td class="text-end text-nowrap trades-compact-pnl">
+                        ${renderAmount(metrics.netProfit, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false })}
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        return `
+            <div class="bg-body" data-trades-compact-table>
+                <table class="table table-sm align-middle mb-0 trades-compact-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" class="trades-compact-company">Company (Qty)</th>
+                            <th scope="col" class="trades-compact-prices">Buy / Sell</th>
+                            <th scope="col" class="text-end trades-compact-pnl">P&amp;L</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    }
+
     function renderTradeListItem(t, serialNo, variant = 'open') {
         const resolveTradeMetrics = (global.MTFAppHelpers || {}).resolveTradeMetrics;
-        const metrics = resolveTradeMetrics ? resolveTradeMetrics(t) : { netProfit: 0 };
+        const metrics = resolveTradeMetrics
+            ? resolveTradeMetrics(t)
+            : { netProfit: 0, sellPrice: t.sellPrice || 0, charges: 0 };
         const qty = Number(t.quantity) || 0;
         const company = t.company || 'trade';
+        const tradeId = escapeHtml(t.id || '');
         const brokerLabel = (variant === 'past' || variant === 'plan') && t.broker
             ? appTag(t.broker, 'broker')
             : '';
@@ -469,9 +575,9 @@
         const details = renderTradeListItemDetails(t);
 
         return `
-            <article class="card bg-body border rounded w-100">
+            <article class="card bg-body border rounded w-100" data-trade-card data-trade-id="${tradeId}">
                 <div class="card-body p-3 d-flex flex-column gap-3">
-                    <div class="d-flex justify-content-between align-items-center gap-2">
+                    <div class="d-flex justify-content-between align-items-center gap-2 min-w-0">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
                             <span class="d-inline-flex align-items-center gap-1">
                                 <span class="small text-muted text-uppercase">Qty</span>
@@ -483,7 +589,7 @@
                     <hr class="m-0">
                     <div class="d-flex align-items-center gap-2 min-w-0">
                         <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary bg-opacity-10 text-primary fw-semibold" style="width:2rem;height:2rem" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
-                        <span class="text-truncate">${company}</span>
+                        <span class="text-truncate">${escapeHtml(company)}</span>
                         ${renderTradeListItemLeverageMeta(t)}
                         ${brokerLabel}
                         ${verifiedLabel}
@@ -513,7 +619,11 @@
         renderTradeListItem,
         renderOpenTradeListItem,
         renderPastTradeListItem,
-        renderPlanTradeListItem
+        renderPlanTradeListItem,
+        renderTradesCompactTable,
+        toggleAllTradeCardsCollapse,
+        syncTradeCardsCollapseAllButton,
+        isCompactMode
     });
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -546,7 +656,13 @@
         return `<div class="d-flex flex-column gap-3 w-100">${trades.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
     }
 
-    function renderFlatTradesList(trades, renderItem) {
+    function renderFlatTradesList(trades, renderItem, variant = 'open') {
+        const comps = global.MTFComponents || {};
+        if (typeof comps.isCompactMode === 'function'
+            && comps.isCompactMode()
+            && typeof comps.renderTradesCompactTable === 'function') {
+            return comps.renderTradesCompactTable(trades, variant);
+        }
         return renderTradesList(trades, renderItem);
     }
 
@@ -614,7 +730,7 @@
 
 /* ========== Trade summary row ========== */
 /**
- * M7 — Trade summary row molecule (P&L + count for page summaries).
+ * M7 — Trade summary row molecule (P&L + profit/loss counts + total).
  */
 (function (global) {
     'use strict';
@@ -637,58 +753,97 @@
         </div>`;
     }
 
-    function renderTwoItemSummaryRow(net, count, countLabel) {
+    function renderTwoItemSummaryRow(net, count, countLabel, profitCount, lossCount) {
         const n = Number(net) || 0;
         const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
         const pnlToneClass = n >= 0 ? 'text-success' : 'text-danger';
-        return `<div class="d-flex align-items-center justify-content-between gap-2 w-100">
-            <div class="flex-fill min-w-0 text-start">
+        const hasBuckets = profitCount != null && lossCount != null;
+        const profit = Number(profitCount) || 0;
+        const loss = Number(lossCount) || 0;
+        const countsHtml = hasBuckets
+            ? `<div class="d-flex align-items-center flex-shrink-0">
+                <div class="text-center px-2">
+                    <div class="small text-uppercase fw-normal text-success">Profit</div>
+                    <div class="fs-5 fw-normal text-success">${profit}</div>
+                </div>
+                <div class="align-self-stretch border-start border" aria-hidden="true"></div>
+                <div class="text-center px-2">
+                    <div class="small text-uppercase fw-normal text-danger">Loss</div>
+                    <div class="fs-5 fw-normal text-danger">${loss}</div>
+                </div>
+                <div class="align-self-stretch border-start border" aria-hidden="true"></div>
+                <div class="text-center px-2">
+                    <div class="small text-uppercase fw-normal text-muted">${countLabel}</div>
+                    <div class="fs-5 fw-normal text-body-secondary">${count}</div>
+                </div>
+            </div>`
+            : `<div class="text-end flex-shrink-0">
+                <div class="small text-uppercase fw-normal text-muted">${countLabel}</div>
+                <div class="fs-5 fw-normal text-body-secondary">${count}</div>
+            </div>`;
+        return `<div class="d-flex align-items-center justify-content-between gap-3 w-100">
+            <div class="min-w-0 text-start">
                 <div class="small text-uppercase fw-normal text-muted">P&L</div>
                 <div class="fs-5 fw-normal ${pnlToneClass} text-truncate">${pnlFormatted}</div>
             </div>
-            <div class="flex-fill min-w-0 text-end">
-                <div class="small text-uppercase fw-normal text-muted">${countLabel}</div>
-                <div class="fs-5 fw-normal text-body-secondary text-truncate">${count}</div>
-            </div>
+            ${countsHtml}
         </div>`;
     }
 
-    function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel, useTwoItemLayout }) {
+    function countTradePnlBuckets(trades, resolveTradeMetrics) {
+        let profit = 0;
+        let loss = 0;
+        (trades || []).forEach((t) => {
+            const net = resolveTradeMetrics
+                ? Number(resolveTradeMetrics(t).netProfit) || 0
+                : Number(t.netProfit) || 0;
+            if (net >= 0) profit += 1;
+            else loss += 1;
+        });
+        return { profit, loss };
+    }
+
+    function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel, useTwoItemLayout, profitCount, lossCount }) {
         const el = document.getElementById(containerId);
         if (!el) return;
         if (useTwoItemLayout) {
-            el.innerHTML = renderTwoItemSummaryRow(net, count, countLabel);
+            el.innerHTML = renderTwoItemSummaryRow(net, count, countLabel, profitCount, lossCount);
         } else {
             el.innerHTML = renderTradeSummaryRow(net, count, countLabel);
         }
         if (wordsId) paintMoneyAmountWords(document.getElementById(wordsId), net, 'center');
     }
 
-    function paintPastTradeSummary(net, tradeCount) {
+    function paintPastTradeSummary(net, tradeCount, profitCount, lossCount) {
         paintTradeRangeSummary({
             containerId: 'pastSummaryStats',
             wordsId: 'pastSummaryNetWords',
             net,
             count: tradeCount,
-            countLabel: 'Trades',
-            useTwoItemLayout: true
+            countLabel: 'Closed',
+            useTwoItemLayout: true,
+            profitCount,
+            lossCount
         });
     }
 
-    function paintPlanTradeSummary(net, planCount) {
+    function paintPlanTradeSummary(net, planCount, profitCount, lossCount) {
         paintTradeRangeSummary({
             containerId: 'planSummaryStats',
             wordsId: 'planSummaryNetWords',
             net,
             count: planCount,
-            countLabel: 'Planned',
-            useTwoItemLayout: true
+            countLabel: 'Plan',
+            useTwoItemLayout: true,
+            profitCount,
+            lossCount
         });
     }
 
     global.MTFRegister({
         renderTradeSummaryRow,
         renderTwoItemSummaryRow,
+        countTradePnlBuckets,
         paintTradeRangeSummary,
         paintPastTradeSummary,
         paintPlanTradeSummary
