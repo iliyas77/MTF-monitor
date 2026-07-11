@@ -587,7 +587,7 @@
                         <div class="card bg-body rounded">
                             <div class="card-body p-3">
                                 ${header}
-                                <div data-trade-date-list class="${expanded ? '' : 'd-none'}">${itemsHtml}</div>
+                                <div data-trade-date-list class="collapse${expanded ? ' show' : ''}">${itemsHtml}</div>
                             </div>
                         </div>
                     </section>
@@ -596,7 +596,7 @@
             return `
                 <section class="${idx ? 'mt-4' : ''}" data-trade-date-group>
                     ${header}
-                    <div data-trade-date-list class="${expanded ? '' : 'd-none'}">${itemsHtml}</div>
+                    <div data-trade-date-list class="collapse${expanded ? ' show' : ''}">${itemsHtml}</div>
                 </section>
             `;
         }).join('');
