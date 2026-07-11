@@ -1,5 +1,5 @@
 /**
- * O25 — Trade add/edit modal organism.
+ * O25 — Trade add/edit sheet organism (Cupertino Pane).
  */
 (function (global) {
     'use strict';
@@ -11,13 +11,44 @@
         setDateInputValue,
         initDateFields,
         showToast,
-        showOffcanvas,
-        hideOffcanvas,
-        onOffcanvasHidden
+        createAppPane,
+        Sheet
     } = global.MTFComponents;
+
+    let tradePane = null;
+    let onHiddenReset = null;
 
     function tradeModal() {
         return (global.MTFAppHelpers || {}).tradeModal || {};
+    }
+
+    function getTradePane() {
+        if (!tradePane) {
+            tradePane = createAppPane('#txModal', {
+                maxFitRatio: 0.95,
+                onDismiss: () => {
+                    if (typeof onHiddenReset === 'function') onHiddenReset();
+                }
+            });
+        }
+        return tradePane;
+    }
+
+    const TradeSheet = {
+        present() {
+            if (Sheet?.isOpen?.()) Sheet.close();
+            getTradePane().present();
+        },
+        close() {
+            getTradePane().close();
+        },
+        isOpen() {
+            return getTradePane().isOpen();
+        }
+    };
+
+    function closeTradeModal() {
+        TradeSheet.close();
     }
 
     function renderTxModalFooter(isEdit = false) {
@@ -29,7 +60,7 @@
         footer.innerHTML = `${renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
             actionId: 'txSaveBtn',
             actionOnClick: 'saveTransaction()',
-            cancelDismiss: 'offcanvas'
+            cancelOnClick: 'closeTradeModal()'
         })}${deleteBtn}`;
     }
 
@@ -204,7 +235,7 @@
         clearPreview();
         syncTxSellPriceField();
         initDateFields(document.getElementById('txModal'));
-        showOffcanvas(document.getElementById('txModal'));
+        TradeSheet.present();
         attachCalcListeners();
         updateLeverageBreakdown();
     }
@@ -252,7 +283,7 @@
         updateLeverageBreakdown();
         attachCalcListeners();
         initDateFields(document.getElementById('txModal'));
-        showOffcanvas(document.getElementById('txModal'));
+        TradeSheet.present();
     }
 
     async function saveTransaction() {
@@ -336,7 +367,7 @@
             await addTransaction(finalTx);
             showToast(`Trade saved${synced}!`, 'success');
         }
-        hideOffcanvas(document.getElementById('txModal'));
+        TradeSheet.close();
         if (refreshTradeListViews) refreshTradeListViews();
         if (renderMoney) renderMoney();
         if (refreshActiveMoreView) refreshActiveMoreView();
@@ -344,9 +375,8 @@
 
     function initTradeModal() {
         const { setTxBroker, resetCompanyAutocomplete } = tradeModal();
-        const txEl = document.getElementById('txModal');
-        if (!txEl) return;
-        onOffcanvasHidden(txEl, () => {
+        if (!document.getElementById('txModal')) return;
+        onHiddenReset = () => {
             document.getElementById('txEditId').value = '';
             document.getElementById('txForm').reset();
             setTxSaveBtnLabel(false);
@@ -355,10 +385,12 @@
             if (setTxBroker) setTxBroker('');
             if (resetCompanyAutocomplete) resetCompanyAutocomplete();
             clearPreview();
-        });
+        };
     }
 
     global.MTFRegister({
+        TradeSheet,
+        closeTradeModal,
         renderTxModalFooter,
         setTxModalMode,
         setTxSaveBtnLabel,

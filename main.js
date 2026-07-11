@@ -81,7 +81,6 @@
                 showLoading,
                 hideLoading,
                 hideModal,
-                hideOffcanvas,
                 updateAppHeader,
                 renderPlanTrades,
                 renderCurrentView,
@@ -127,6 +126,7 @@
                 saveHoldDates,
                 renderTxModalFooter,
                 setTxModalMode,
+                closeTradeModal,
                 openViewFromEditor,
                 deleteTradeFromEditor,
                 onTxStatusChange,
@@ -4000,7 +4000,7 @@
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
                         await deleteTransaction(id);
-                        hideOffcanvas(document.getElementById('txModal'));
+                        closeTradeModal();
                         refreshTradeListViews();
                         renderMoney();
                         refreshActiveMoreView();
@@ -4505,6 +4505,7 @@
             };
 
             window.closeSheet = closeSheet;
+            window.closeTradeModal = closeTradeModal;
             window.closeDialog = closeDialog;
 
             window.navigateTo = navigateTo;

@@ -450,23 +450,6 @@
     <div id="bottomBarMount"></div>
 
 
-    <!-- GENERIC BOTTOM SHEET -->
-    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="appSheet" aria-labelledby="appSheetTitle">
-        <div class="offcanvas-header border-bottom flex-column align-items-stretch gap-2 pt-3 pb-2 px-3">
-            <div class="d-flex justify-content-center flex-shrink-0">
-                <span class="d-inline-block bg-secondary-subtle rounded-pill" style="width:2.5rem;height:0.25rem" aria-hidden="true"></span>
-            </div>
-            <div class="d-flex align-items-center gap-2 min-w-0 w-100">
-                <h5 class="offcanvas-title fw-semibold flex-grow-1 min-w-0 mb-0 overflow-hidden" id="appSheetTitle"></h5>
-                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" data-bs-dismiss="offcanvas" aria-label="Close">
-                    <i class="fas fa-times text-muted" aria-hidden="true"></i>
-                </button>
-            </div>
-        </div>
-        <div class="offcanvas-body" id="appSheetBody"></div>
-        <div class="border-top p-3 bg-body d-none" id="appSheetFooter"></div>
-    </div>
-
     <!-- GENERIC CENTER DIALOG -->
     <div class="modal fade" id="appDialog" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -489,8 +472,18 @@
         </div>
     </div>
 
-    <!-- HIDDEN SHEET PANELS (persistent form fields) -->
+    <!-- HIDDEN SHEET PANELS (persistent form fields) + app sheet shell -->
     <div id="sheetPanels" class="d-none">
+        <div id="appSheet" aria-labelledby="appSheetTitle">
+            <div class="border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
+                <h5 class="fw-semibold flex-grow-1 min-w-0 mb-0 overflow-hidden" id="appSheetTitle"></h5>
+                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeSheet()" aria-label="Close">
+                    <i class="fas fa-times text-muted" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="px-3 py-3" id="appSheetBody"></div>
+            <div class="border-top p-3 bg-body d-none" id="appSheetFooter"></div>
+        </div>
         <div id="panelMoneyPageFilter">
             <div class="mb-3">
                 <label class="form-label small text-uppercase text-muted fw-medium">Type</label>
@@ -652,89 +645,84 @@
                     </div></div>
         <div id="panelBackup"><p class="small text-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
                     <textarea class="form-control w-100 font-monospace small" id="backupTextArea" rows="10" spellcheck="false"></textarea></div>
-    </div>
 
-    <!-- MODAL: ADD/EDIT -->
-    <div class="offcanvas offcanvas-bottom" tabindex="-1" id="txModal" aria-labelledby="txModalTitle">
-        <div class="offcanvas-header border-bottom flex-column align-items-stretch gap-2 pt-3 pb-2 px-3">
-            <div class="d-flex justify-content-center flex-shrink-0">
-                <span class="d-inline-block bg-secondary-subtle rounded-pill" style="width:2.5rem;height:0.25rem" aria-hidden="true"></span>
-            </div>
-            <div class="d-flex align-items-center gap-2 min-w-0 w-100">
+        <!-- Trade add/edit sheet shell (Cupertino Pane) -->
+        <div id="txModal" aria-labelledby="txModalTitle">
+            <div class="border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
                 <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" style="width:2.75rem;height:2.75rem"><i class="fas fa-eye"></i></button>
-                <h5 class="offcanvas-title fw-semibold flex-grow-1 min-w-0 mb-0 text-truncate" id="txModalTitle">Trade</h5>
-                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" data-bs-dismiss="offcanvas" aria-label="Close">
+                <h5 class="fw-semibold flex-grow-1 min-w-0 mb-0 text-truncate" id="txModalTitle">Trade</h5>
+                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeTradeModal()" aria-label="Close">
                     <i class="fas fa-times text-muted" aria-hidden="true"></i>
                 </button>
             </div>
-        </div>
-        <div class="offcanvas-body">
-            <form id="txForm" class="d-flex flex-column gap-4" novalidate>
-                <input type="hidden" id="txEditId" value="" />
+            <div class="px-3 py-3" id="txModalBody">
+                <form id="txForm" class="d-flex flex-column gap-4" novalidate>
+                    <input type="hidden" id="txEditId" value="" />
 
-                <div class="row g-3 align-items-end">
-                    <div class="col-6">
-                        <label class="form-label text-nowrap" for="txCompany">Company <span class="text-danger">*</span></label>
-                        <div class="position-relative">
-                            <input type="text" class="form-control" id="txCompany" placeholder="Symbol or name" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
-                            <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-6">
+                            <label class="form-label text-nowrap" for="txCompany">Company <span class="text-danger">*</span></label>
+                            <div class="position-relative">
+                                <input type="text" class="form-control" id="txCompany" placeholder="Symbol or name" required autocomplete="off" oninput="onTxCompanyInput()" onkeydown="onTxCompanyKeydown(event)" onfocus="onTxCompanyFocus()" onblur="onTxCompanyBlur()" />
+                                <div class="position-absolute start-0 end-0 top-100 mt-1 border rounded-3 bg-body shadow-sm d-none overflow-y-auto" style="max-height:16rem;z-index:1050" id="txCompanyAcList" role="listbox"></div>
+                            </div>
+                        </div>
+                        <div class="col-6" id="txBrokerCol">
+                            <label class="form-label text-nowrap" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
+                            <input type="hidden" id="txBroker" value="" />
+                            <div id="txBrokerHost" class="w-100"></div>
                         </div>
                     </div>
-                    <div class="col-6" id="txBrokerCol">
-                        <label class="form-label text-nowrap" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
-                        <input type="hidden" id="txBroker" value="" />
-                        <div id="txBrokerHost" class="w-100"></div>
-                    </div>
-                </div>
-                <div id="txCompanyMeta" class="form-text d-none"></div>
-                <div id="txCompanyCatalogStatus" class="form-text"></div>
-                <input type="hidden" id="txStatus" value="open" />
+                    <div id="txCompanyMeta" class="form-text d-none"></div>
+                    <div id="txCompanyCatalogStatus" class="form-text"></div>
+                    <input type="hidden" id="txStatus" value="open" />
 
-                <div class="row g-3">
-                    <div class="col-6">
-                        <label class="form-label text-nowrap text-info" for="txBuyDate">Buy Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="txBuyDate" required />
-                    </div>
-                    <div class="col-6">
-                        <label class="form-label text-nowrap text-danger" for="txSellDate">Sell Date <span class="text-danger">*</span></label>
-                        <input type="date" class="form-control" id="txSellDate" required />
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-4">
-                        <label class="form-label text-nowrap" for="txQty">Qty <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="txQty" required min="1" step="1" />
-                    </div>
-                    <div class="col-4">
-                        <label class="form-label text-nowrap text-info" for="txBuyPrice">Buy <span class="text-danger">*</span></label>
-                        <div class="input-group">
-                            <input type="number" class="form-control" id="txBuyPrice" required min="0.01" step="0.01" />
-                            <button type="button" class="btn btn-outline-secondary px-2" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
-                                <i class="fas fa-sync-alt" aria-hidden="true"></i>
-                            </button>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label text-nowrap text-info" for="txBuyDate">Buy Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="txBuyDate" required />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-nowrap text-danger" for="txSellDate">Sell Date <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" id="txSellDate" required />
                         </div>
                     </div>
-                    <div class="col-4">
-                        <label class="form-label text-nowrap text-danger" for="txSellPrice">Sell <span class="text-danger" id="txSellPriceRequired">*</span></label>
-                        <input type="number" class="form-control" id="txSellPrice" min="0.01" step="0.01" />
-                        <div class="form-text d-none" id="txSellPriceHint">Optional for open trades.</div>
-                    </div>
-                </div>
 
-                <div>
-                    <label class="form-label" for="txLeverage">Leverage (X)</label>
-                    <input type="number" class="form-control" id="txLeverage" min="1" step="0.1" value="1" />
-                    <div class="form-text">Your own margin = Total Investment / Leverage.</div>
-                    <div id="leverageBreakdown" class="mt-2 small text-muted">
-                        <div class="d-flex justify-content-between gap-2"><span>Total Investment</span><span id="previewTotalInv">₹0</span></div>
-                        <div class="d-flex justify-content-between gap-2"><span>Your Margin</span><span id="previewOwnMargin">₹0</span></div>
-                        <div class="d-flex justify-content-between gap-2"><span>Broker Funded</span><span id="previewMtfAmt">₹0</span></div>
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <label class="form-label text-nowrap" for="txQty">Qty <span class="text-danger">*</span></label>
+                            <input type="number" class="form-control" id="txQty" required min="1" step="1" />
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label text-nowrap text-info" for="txBuyPrice">Buy <span class="text-danger">*</span></label>
+                            <div class="input-group">
+                                <input type="number" class="form-control" id="txBuyPrice" required min="0.01" step="0.01" />
+                                <button type="button" class="btn btn-outline-secondary px-2" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
+                                    <i class="fas fa-sync-alt" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <label class="form-label text-nowrap text-danger" for="txSellPrice">Sell <span class="text-danger" id="txSellPriceRequired">*</span></label>
+                            <input type="number" class="form-control" id="txSellPrice" min="0.01" step="0.01" />
+                            <div class="form-text d-none" id="txSellPriceHint">Optional for open trades.</div>
+                        </div>
                     </div>
-                </div>
-            </form>
+
+                    <div>
+                        <label class="form-label" for="txLeverage">Leverage (X)</label>
+                        <input type="number" class="form-control" id="txLeverage" min="1" step="0.1" value="1" />
+                        <div class="form-text">Your own margin = Total Investment / Leverage.</div>
+                        <div id="leverageBreakdown" class="mt-2 small text-muted">
+                            <div class="d-flex justify-content-between gap-2"><span>Total Investment</span><span id="previewTotalInv">₹0</span></div>
+                            <div class="d-flex justify-content-between gap-2"><span>Your Margin</span><span id="previewOwnMargin">₹0</span></div>
+                            <div class="d-flex justify-content-between gap-2"><span>Broker Funded</span><span id="previewMtfAmt">₹0</span></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="border-top p-3 bg-body" id="txModalFooter"></div>
         </div>
-        <div class="border-top p-3 bg-body" id="txModalFooter"></div>
     </div>
 
     <!-- MONEY ENTRY MODAL -->
@@ -787,6 +775,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <!-- Bootstrap JS (includes Popper) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cupertino-pane@1.5.4/dist/cupertino-pane.min.js" crossorigin="anonymous"></script>
     <!-- COMPONENT SCRIPTS -->
     <script src="lib/_registry.js"></script>
     <script src="lib/format.js"></script>
