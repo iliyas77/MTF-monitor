@@ -1,10 +1,118 @@
 /**
- * O22 — Generic bottom sheet organism (Bootstrap Offcanvas).
+ * O22 — Cupertino Pane adapters for app bottom sheets.
+ * Pane behavior (drag, backdrop, dismiss) comes from the plugin;
+ * hosts only manage content + parking the shell in #sheetPanels.
  */
 (function (global) {
     'use strict';
 
-    const { initDateFields, showOffcanvas, hideOffcanvas, onOffcanvasHidden } = global.MTFComponents;
+    const { initDateFields } = global.MTFComponents;
+
+    /**
+     * Shared Cupertino Pane controller for a persistent DOM shell.
+     * @param {string} selector
+     * @param {{ cssClass?: string, homeId?: string, maxFitRatio?: number, onDismiss?: Function }} opts
+     */
+    function createAppPane(selector, opts = {}) {
+        const {
+            cssClass = 'app-sheet-pane',
+            homeId = 'sheetPanels',
+            maxFitRatio = 0.9,
+            onDismiss = null
+        } = opts;
+
+        const host = {
+            _pane: null,
+            _open: false,
+            _closing: false,
+
+            el: () => document.querySelector(selector),
+            _home: () => document.getElementById(homeId),
+
+            _park() {
+                const el = host.el();
+                const home = host._home();
+                if (el && home && el.parentElement !== home) {
+                    home.appendChild(el);
+                }
+            },
+
+            _create() {
+                const CupertinoPane = global.CupertinoPane;
+                if (typeof CupertinoPane !== 'function') {
+                    console.error('CupertinoPane is not loaded');
+                    return null;
+                }
+                return new CupertinoPane(selector, {
+                    parentElement: 'body',
+                    cssClass,
+                    fitHeight: true,
+                    maxFitHeight: Math.round(window.innerHeight * maxFitRatio),
+                    fitScreenHeight: true,
+                    initialBreak: 'top',
+                    backdrop: true,
+                    backdropOpacity: 0.45,
+                    bottomClose: true,
+                    fastSwipeClose: true,
+                    buttonDestroy: false,
+                    showDraggable: true,
+                    draggableOver: true,
+                    events: {
+                        onDidPresent: () => {
+                            host._open = true;
+                            host._closing = false;
+                        },
+                        onDidDismiss: () => {
+                            host._open = false;
+                            host._closing = false;
+                            if (typeof onDismiss === 'function') onDismiss();
+                            host._park();
+                        },
+                        onBackdropTap: () => host.close()
+                    }
+                });
+            },
+
+            _getPane() {
+                if (!host._pane) host._pane = host._create();
+                return host._pane;
+            },
+
+            present() {
+                const pane = host._getPane();
+                if (!pane) return;
+                if (host._open && !host._closing) {
+                    pane.calcFitHeight?.(true);
+                    return;
+                }
+                host._closing = false;
+                pane.present({ animate: true }).then(() => {
+                    pane.calcFitHeight?.(true);
+                }).catch(() => {});
+            },
+
+            close() {
+                const pane = host._pane;
+                if (!pane || host._closing) {
+                    if (!pane) host._park();
+                    return;
+                }
+                host._closing = true;
+                pane.destroy({ animate: true }).catch(() => {
+                    host._closing = false;
+                    host._open = false;
+                    if (typeof onDismiss === 'function') onDismiss();
+                    host._park();
+                });
+            },
+
+            isOpen() {
+                return host._open && !host._closing;
+            }
+        };
+
+        return host;
+    }
 
     const Sheet = {
         el: () => document.getElementById('appSheet'),
@@ -13,16 +121,15 @@
         footerEl: () => document.getElementById('appSheetFooter'),
         _home: () => document.getElementById('sheetPanels'),
         _activePanel: null,
-        _bound: false,
+        _paneHost: null,
 
-        _ensureBound() {
-            if (Sheet._bound) return;
-            const el = Sheet.el();
-            if (!el) return;
-            Sheet._bound = true;
-            onOffcanvasHidden(el, () => {
-                Sheet._restoreActivePanel();
-            });
+        _host() {
+            if (!Sheet._paneHost) {
+                Sheet._paneHost = createAppPane('#appSheet', {
+                    onDismiss: () => Sheet._restoreActivePanel()
+                });
+            }
+            return Sheet._paneHost;
         },
 
         _restoreActivePanel() {
@@ -40,7 +147,9 @@
         },
 
         open(title, content, footerHtml = '') {
-            Sheet._ensureBound();
+            if (global.MTFComponents.TradeSheet?.isOpen?.()) {
+                global.MTFComponents.TradeSheet.close();
+            }
             const body = Sheet.bodyEl();
             const footer = Sheet.footerEl();
             if (Sheet.titleEl()) {
@@ -62,7 +171,7 @@
                 footer.classList.toggle('d-none', !footerHtml);
             }
             if (body) initDateFields(body);
-            showOffcanvas(Sheet.el());
+            Sheet._host().present();
         },
 
         mountPanel(title, panelId, footerHtml) {
@@ -71,17 +180,16 @@
         },
 
         close() {
-            Sheet._restoreActivePanel();
-            hideOffcanvas(Sheet.el());
+            const host = Sheet._paneHost;
+            if (!host) {
+                Sheet._restoreActivePanel();
+                return;
+            }
+            host.close();
         },
 
-        show() {
-            Sheet._ensureBound();
-            showOffcanvas(Sheet.el());
-        },
-
-        hide() {
-            Sheet.close();
+        isOpen() {
+            return !!Sheet._paneHost?.isOpen?.();
         }
     };
 
@@ -89,5 +197,5 @@
         Sheet.close();
     }
 
-    global.MTFRegister({ Sheet, closeSheet });
+    global.MTFRegister({ createAppPane, Sheet, closeSheet });
 })(typeof window !== 'undefined' ? window : globalThis);
