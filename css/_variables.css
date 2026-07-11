@@ -276,7 +276,6 @@ hr {
 }
 
 .navbar,
-.offcanvas,
 .modal-content,
 .dropdown-menu,
 .card,
@@ -289,24 +288,6 @@ hr {
 .list-group-item-action:hover,
 .list-group-item-action:focus {
     background-color: var(--gr-row-hover);
-}
-
-/* Bottom sheets: content-sized, capped at 90vh, centered in the mobile column */
-.offcanvas.offcanvas-bottom {
-    --bs-offcanvas-height: auto;
-    left: 0;
-    right: 0;
-    width: 100%;
-    max-width: 480px;
-    margin-left: auto;
-    margin-right: auto;
-    max-height: 90vh;
-    border-top-left-radius: var(--radius-xl);
-    border-top-right-radius: var(--radius-xl);
-}
-
-#txModal {
-    --bs-offcanvas-height: 95vh;
 }
 
 #txModal #txBrokerTrigger.tx-broker-trigger {
@@ -327,20 +308,25 @@ hr {
     margin-right: auto;
 }
 
-#appSheet .offcanvas-header,
-#txModal .offcanvas-header,
-#appSheetFooter,
 #txModalFooter {
     flex-shrink: 0;
 }
 
-#appSheet .offcanvas-header {
-    overflow: hidden;
+#txModalBody {
+    min-height: 0;
+    overflow-y: auto;
+}
+
+/* App sheets — Cupertino Pane owns behavior; only brand + stacking overrides here */
+:root {
+    --cupertino-pane-background: #fff;
+    --cupertino-pane-color: var(--gr-text1);
+    --cupertino-pane-border-radius: var(--radius-xl);
+    --cupertino-pane-move-background: var(--gr-border, #c0c0c0);
 }
 
 #appSheet #appSheetTitle {
     min-width: 0;
-    max-width: 100%;
     overflow: hidden;
 }
 
@@ -348,18 +334,36 @@ hr {
     flex-shrink: 0;
 }
 
-#appSheet .offcanvas-body,
-#txModal .offcanvas-body {
-    flex: 1 1 auto;
+#appSheetBody {
     min-height: 0;
     overflow-y: auto;
 }
 
-.offcanvas .dropdown-menu {
+/* Above sticky header (~1020) and #bottomBar (1030) */
+.cupertino-pane-wrapper.app-sheet-pane {
+    z-index: 1055 !important;
+}
+
+.cupertino-pane-wrapper.app-sheet-pane .backdrop {
+    z-index: 1055 !important;
+}
+
+.cupertino-pane-wrapper.app-sheet-pane .pane {
+    z-index: 1056 !important;
+    max-width: 480px;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+
+.cupertino-pane-wrapper.app-sheet-pane .dropdown-menu,
+#txModal .dropdown-menu {
     z-index: 1080;
 }
 
-.offcanvas .dropdown[data-bs-display="static"] .dropdown-menu {
+.cupertino-pane-wrapper.app-sheet-pane .dropdown[data-bs-display="static"] .dropdown-menu,
+#txModal .dropdown[data-bs-display="static"] .dropdown-menu {
     position: absolute;
 }
 
