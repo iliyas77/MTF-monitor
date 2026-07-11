@@ -33,13 +33,35 @@
         if (!Array.isArray(data.moneyEntries)) data.moneyEntries = [];
         data.moneyEntries = data.moneyEntries.map(normalizeMoneyEntry);
         if (!Array.isArray(data.marketWatchlist)) data.marketWatchlist = [];
+        // Watchlist rows: company identity + optional last quote snapshot from feed refresh.
         data.marketWatchlist = data.marketWatchlist
-            .map((item) => ({
-                s: String((item && (item.s || item.symbol)) || '').trim().toUpperCase().replace(/\.(NS|BO)$/i, ''),
-                n: String((item && (item.n || item.name)) || '').trim()
-            }))
-            .filter((item) => item.s)
-            .map((item) => ({ s: item.s, n: item.n || item.s }));
+            .map((item) => {
+                const s = String((item && (item.s || item.symbol)) || '').trim().toUpperCase().replace(/\.(NS|BO)$/i, '');
+                const n = String((item && (item.n || item.name || item.company)) || '').trim();
+                if (!s) return null;
+                const out = { s, n: n || s };
+                const price = Number(item && item.price);
+                if (isFinite(price) && price > 0) {
+                    out.price = price;
+                    const prev = Number(item.previousClose);
+                    const change = Number(item.change);
+                    const changePct = Number(item.changePct);
+                    if (isFinite(prev)) out.previousClose = prev;
+                    if (isFinite(change)) out.change = change;
+                    if (isFinite(changePct)) out.changePct = changePct;
+                    if (item.updatedAt) out.updatedAt = String(item.updatedAt);
+                }
+                return out;
+            })
+            .filter(Boolean);
+        // Plan mode removed — promote leftover planned rows into Open.
+        if (Array.isArray(data.transactions)) {
+            data.transactions = data.transactions.map((t) => {
+                if (!t || typeof t !== 'object') return t;
+                if (t.executed === false) return { ...t, executed: true };
+                return t;
+            });
+        }
         return data;
     }
 

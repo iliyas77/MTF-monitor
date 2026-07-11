@@ -15,7 +15,6 @@
     "pages/more/more-page.js",
     "pages/mtf-calculator/mtf-calculator-page.js",
     "pages/past/past-page.js",
-    "pages/plan/plan-page.js",
     "pages/search/search-page.js",
     "pages/settings/settings-page.js",
     "pages/transactions/transactions-page.js",

@@ -56,11 +56,12 @@
             ? `${formatChangeAbs(change)} (${formatChangePct(changePct)})`
             : '—';
         const removeBtn = q.removable
-            ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle flex-shrink-0 ms-1" onclick="removeMarketWatchlistSymbol('${escapeHtml(q.symbol || '')}')" aria-label="Remove from watchlist">${global.MTFComponents.renderIcon('fa-times', { size: 'sm' })}</button>`
+            ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle flex-shrink-0 ms-1" onclick="event.stopPropagation();removeMarketWatchlistSymbol(${JSON.stringify(q.symbol || '')})" aria-label="Remove from watchlist">${global.MTFComponents.renderIcon('fa-times', { size: 'sm' })}</button>`
             : '';
+        const name = q.name || q.symbol || '';
+        const buyBtn = `<button type="button" class="btn btn-sm btn-primary px-2 flex-shrink-0 ms-1 market-buy-btn" data-buy-symbol="${escapeHtml(q.symbol || '')}" data-buy-name="${escapeHtml(name)}" aria-label="Buy ${escapeHtml(q.symbol || name || 'stock')}">Buy</button>`;
 
         const changeToneClass = tone === 'up' ? 'text-success' : tone === 'down' ? 'text-danger' : 'text-muted';
-        const name = q.name || q.symbol || '';
         return `<div class="list-group-item px-3 py-3" data-quote-symbol="${escapeHtml(q.symbol || '')}" data-symbol="${escapeHtml(q.symbol || '')}" role="listitem">
             <div class="d-flex align-items-center gap-2 w-100 min-w-0">
                 <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 fw-semibold ${toneClass(tone)}" style="width:2rem;height:2rem" data-quote-icon aria-hidden="true">${escapeHtml(symbolInitial(q.symbol))}</span>
@@ -68,10 +69,11 @@
                     <div class="fw-semibold text-truncate">${escapeHtml(q.symbol || '—')}</div>
                     <div class="small text-muted text-truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
                 </div>
-                <div class="text-end flex-shrink-0" style="max-width:42%">
+                <div class="text-end flex-shrink-0" style="max-width:36%">
                     <div class="fw-semibold text-nowrap" data-quote-price>${priceText}</div>
                     <div class="small text-truncate ${changeToneClass}" data-quote-change title="${escapeHtml(changeText)}">${changeText}</div>
                 </div>
+                ${buyBtn}
                 ${removeBtn}
             </div>
         </div>`;
@@ -81,7 +83,7 @@
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /**
- * Market page — live NSE quotes for In Trade / Watchlist.
+ * Watchlist page — live NSE quotes for stocks you pick.
  */
 (function (global) {
     'use strict';
@@ -118,11 +120,9 @@
 
         const {
             getMarketQuotes = () => [],
-            getMarketFilterQuery = () => '',
             getMarketUpdatedAt = () => null,
             getMarketLoading = () => false,
             getMarketError = () => '',
-            getMarketSubTab = () => 'in-trade',
             syncMarketSubTabUI
         } = marketPages();
 
@@ -133,19 +133,18 @@
         const listContainer = document.getElementById('marketQuotesList');
         const loading = getMarketLoading();
         const error = getMarketError() || '';
-        const subTab = getMarketSubTab() === 'watchlist' ? 'watchlist' : 'in-trade';
-        const filter = (getMarketFilterQuery() || '').trim().toLowerCase();
-        let quotes = getMarketQuotes() || [];
+        const quotes = getMarketQuotes() || [];
 
         const sectionLabel = document.getElementById('marketSectionLabel');
-        if (sectionLabel) {
-            sectionLabel.textContent = subTab === 'watchlist' ? 'Watchlist' : 'Live market';
-        }
+        if (sectionLabel) sectionLabel.textContent = 'Watchlist';
 
         if (statusEl) {
-            statusEl.textContent = loading
-                ? 'Refreshing prices…'
+            const stamp = loading
+                ? 'Refreshing…'
                 : formatUpdatedAt(getMarketUpdatedAt());
+            statusEl.textContent = stamp;
+            const hasStamp = !!(getMarketUpdatedAt() || loading);
+            statusEl.classList.toggle('d-none', !hasStamp);
         }
         if (refreshBtn) {
             refreshBtn.disabled = !!loading;
@@ -159,18 +158,10 @@
             return;
         }
 
-        if (subTab === 'in-trade' && filter) {
-            quotes = quotes.filter((q) => {
-                const sym = (q.symbol || '').toLowerCase();
-                const name = (q.name || '').toLowerCase();
-                return sym.includes(filter) || name.includes(filter);
-            });
-        }
-
         if (loading && quotes.length === 0) {
             listContainer.innerHTML = renderPageEmptyCard(
                 'fa-spinner fa-spin',
-                'Loading market prices',
+                'Loading watchlist prices',
                 'Fetching live quotes from the internet…'
             );
             return;
@@ -186,25 +177,11 @@
         }
 
         if (quotes.length === 0) {
-            if (subTab === 'watchlist') {
-                listContainer.innerHTML = renderPageEmptyCard(
-                    'fa-star',
-                    'Watchlist is empty',
-                    'Search to add stocks to your watchlist.'
-                );
-            } else if (filter) {
-                listContainer.innerHTML = renderPageEmptyCard(
-                    'fa-search',
-                    `No quotes match “${filter}”`,
-                    'Try another symbol or clear the search.'
-                );
-            } else {
-                listContainer.innerHTML = renderPageEmptyCard(
-                    'fa-briefcase',
-                    'No open or planned trades',
-                    'Companies from your open and planned trades will show here.'
-                );
-            }
+            listContainer.innerHTML = renderPageEmptyCard(
+                'fa-star',
+                'Watchlist is empty',
+                'Tap search in the header to add stocks.'
+            );
             return;
         }
 

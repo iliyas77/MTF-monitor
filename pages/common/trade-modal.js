@@ -106,7 +106,7 @@
     }
 
     function normalizeTxStatus(status) {
-        if (status === 'closed' || status === 'planned') return status;
+        if (status === 'closed') return 'closed';
         return 'open';
     }
 
@@ -139,23 +139,11 @@
         const next = normalizeTxStatus(status);
         const el = document.getElementById('txStatus');
         if (el) el.value = next;
-        syncTxModalStatusField();
         onTxStatusChange();
     }
 
     function syncTxModalStatusField() {
-        const status = getTxFormStatus();
-        document.querySelectorAll('.tx-status-option').forEach((btn) => {
-            const active = btn.getAttribute('data-status') === status;
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-pressed', active ? 'true' : 'false');
-            const icon = btn.querySelector('.tx-status-option-icon');
-            if (icon) {
-                icon.className = active
-                    ? 'fas fa-check-circle tx-status-option-icon'
-                    : 'far fa-circle tx-status-option-icon';
-            }
-        });
+        /* Status chips removed — Open/Closed via Positions Done only. */
     }
 
     function syncTxSellDateField() {
@@ -241,15 +229,7 @@
 
     function clearPreview() {
         updateLeverageBreakdown();
-
-        setText('txIfSoldSellValue', '₹0.00');
-        setText('txIfSoldTotalCost', '₹0.00');
-        setText('txIfSoldNet', '₹0.00');
-        setText('txIfSoldNetPct', '0%');
-        const netEl = document.getElementById('txIfSoldNet');
-        const pctEl = document.getElementById('txIfSoldNetPct');
-        if (netEl) netEl.className = 'trade-detail-ifsold-value text-body-secondary';
-        if (pctEl) pctEl.className = 'trade-detail-ifsold-value text-body-secondary';
+        setFormPnl(null);
 
         setText('txCostInterest', '₹0.00');
         setText('txCostInterestMeta', '0D');
@@ -262,8 +242,23 @@
         setText('txTimelineBuy', shortFn(buyDate));
         setText('txTimelineExit', shortFn(sellDate));
         setText('txTimelineHold', '0 Days');
-        setText('txIfSoldTitle', 'If Sold Now');
-        setText('txIfSoldSub', '(At Current Market Price)');
+    }
+
+    function setFormPnl(net) {
+        const valueEl = document.getElementById('txFormPnlValue');
+        const badgeEl = document.getElementById('txFormPnlBadge');
+        if (!valueEl) return;
+        if (net == null || !isFinite(Number(net))) {
+            valueEl.textContent = '—';
+            valueEl.className = 'trade-detail-pnl-value text-body-secondary';
+            if (badgeEl) badgeEl.className = 'badge rounded-pill border trade-detail-pnl-badge text-body-secondary';
+            return;
+        }
+        const v = Number(net);
+        const tone = toneClass(v);
+        valueEl.textContent = signedMoney(v);
+        valueEl.className = `trade-detail-pnl-value ${tone}`;
+        if (badgeEl) badgeEl.className = `badge rounded-pill border trade-detail-pnl-badge ${tone}`;
     }
 
     function updatePreview() {
@@ -288,11 +283,9 @@
 
         const livePrice = getLivePriceFromForm();
         const hasLive = livePrice != null && livePrice > 0;
-        const sellForCalc = hasLive ? livePrice : (target > 0 ? target : bp);
-        const usingLive = hasLive;
-
-        setText('txIfSoldTitle', usingLive ? 'If Sold Now' : (target > 0 ? 'At Target' : 'If Sold Now'));
-        setText('txIfSoldSub', usingLive ? '(At Current Market Price)' : (target > 0 ? '(At Target Price)' : '(Enter prices)'));
+        // Form P&L is planned result at Target (not “if sold now” at live).
+        // Live often equals Buy after auto-fill, which made P&L look like only charges.
+        const sellForCalc = target > 0 ? target : (hasLive ? livePrice : bp);
 
         if (qty <= 0 || bp <= 0 || sellForCalc <= 0) {
             clearPreview();
@@ -323,18 +316,7 @@
         const charges = Number(calc.totalCharges) || 0;
         const totalCost = interest + charges;
         const net = Number(calc.netProfit) || 0;
-        const investment = Number(calc.totalInvestment) || (bp * qty);
-        const netPct = investment > 0 ? (net / investment) * 100 : 0;
-        const sellValue = sellForCalc * qty;
-
-        setText('txIfSoldSellValue', fmtDec(sellValue));
-        setText('txIfSoldTotalCost', fmtDec(totalCost));
-        setText('txIfSoldNet', signedMoney(net));
-        setText('txIfSoldNetPct', signedPct(netPct));
-        const netEl = document.getElementById('txIfSoldNet');
-        const pctEl = document.getElementById('txIfSoldNetPct');
-        if (netEl) netEl.className = `trade-detail-ifsold-value ${toneClass(net)}`;
-        if (pctEl) pctEl.className = `trade-detail-ifsold-value ${toneClass(netPct)}`;
+        setFormPnl(net);
 
         setText('txCostInterest', fmtDec(interest));
         const perDay = days > 0 ? Math.round((interest / days) * 100) / 100 : 0;
@@ -387,28 +369,22 @@
         });
     }
 
-    function defaultStatusForContext(ctx) {
-        if (ctx === 'plan') return 'planned';
-        if (ctx === 'past') return 'closed';
+    function defaultStatusForContext() {
         return 'open';
     }
 
-    function openAddModal() {
+    async function openAddModal(preselectedMeta) {
         const {
-            getCurrentAppPage,
-            getTradesViewMode,
             setTxModalContext,
             setTxBroker,
-            resetCompanyAutocomplete
+            resetCompanyAutocomplete,
+            setTxCompanyMeta,
+            setTxCompanySearchLocked,
+            fillTradeFormFromLivePrice,
+            findStockMetaForCompany
         } = tradeModal();
 
-        const currentPage = getCurrentAppPage ? getCurrentAppPage().page : 'trades';
-        const tradesViewMode = getTradesViewMode ? getTradesViewMode() : 'trade';
-        const ctx = currentPage === 'plan' ? 'plan'
-            : currentPage === 'past' ? 'past'
-            : (currentPage === 'trades' && tradesViewMode === 'plan') ? 'plan'
-            : 'trades';
-        if (setTxModalContext) setTxModalContext(ctx);
+        if (setTxModalContext) setTxModalContext('trades');
 
         document.getElementById('txEditId').value = '';
         setTxSaveBtnLabel(false);
@@ -422,17 +398,35 @@
         if (resetCompanyAutocomplete) resetCompanyAutocomplete();
         if (tradeModal().resetTxPriceAutoFlags) tradeModal().resetTxPriceAutoFlags();
         clearPreview();
-        setTxFormStatus(defaultStatusForContext(ctx));
+        setTxFormStatus('open');
         syncTxLeverageDisplay();
+
+        const meta = preselectedMeta && preselectedMeta.s
+            ? preselectedMeta
+            : null;
+        if (meta) {
+            const resolved = (findStockMetaForCompany && (findStockMetaForCompany(meta.s) || findStockMetaForCompany(meta.n || ''))) || meta;
+            document.getElementById('txCompany').value = resolved.n || resolved.s || '';
+            if (setTxCompanyMeta) setTxCompanyMeta(resolved);
+            if (setTxCompanySearchLocked) setTxCompanySearchLocked(true, resolved);
+        } else if (setTxCompanySearchLocked) {
+            setTxCompanySearchLocked(false);
+        }
+
         TradeSheet.present();
         attachCalcListeners();
         updateLeverageBreakdown();
+        updatePreview();
+
+        if (meta && fillTradeFormFromLivePrice) {
+            try { await fillTradeFormFromLivePrice(meta); } catch (_) {}
+            updatePreview();
+        }
     }
 
     function openEditModal(id) {
         const {
             getTransaction,
-            isPlannedTrade,
             setTxModalContext,
             resetCompanyAutocomplete,
             findStockMetaForCompany,
@@ -443,8 +437,7 @@
 
         const tx = getTransaction ? getTransaction(id) : null;
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
-        const planned = isPlannedTrade ? isPlannedTrade(tx) : false;
-        const ctx = planned ? 'plan' : ((tx.status || 'closed') === 'open' ? 'trades' : 'past');
+        const ctx = ((tx.status || 'closed') === 'open' ? 'trades' : 'past');
         if (setTxModalContext) setTxModalContext(ctx);
 
         document.getElementById('txEditId').value = id;
@@ -459,6 +452,10 @@
         document.getElementById('txCompany').value = editMatch ? editMatch.n : (tx.company || '');
         if (editMatch && setTxCompanyMeta) setTxCompanyMeta(editMatch);
         else if (tx.symbol && setTxCompanyMeta) setTxCompanyMeta({ s: tx.symbol, n: tx.company || tx.symbol, e: 'NSE' });
+        const lockedMeta = editMatch || (tx.symbol ? { s: tx.symbol, n: tx.company || tx.symbol, e: 'NSE' } : null);
+        if (tradeModal().setTxCompanySearchLocked) {
+            tradeModal().setTxCompanySearchLocked(!!lockedMeta, lockedMeta);
+        }
         if (setTxBroker) setTxBroker(tx.broker || '');
         const buyDate = tx.buyDate || todayDateStr();
         setTxFormDates(buyDate, tx.sellDate || buyDate);
@@ -466,7 +463,7 @@
         document.getElementById('txBuyPrice').value = tx.buyPrice || '';
         document.getElementById('txSellPrice').value = tx.sellPrice || '';
         document.getElementById('txLeverage').value = tx.leverage || 1;
-        setTxFormStatus(planned ? 'planned' : (tx.status || 'closed'));
+        setTxFormStatus((tx.status || 'closed') === 'closed' ? 'closed' : 'open');
 
         syncTxLeverageDisplay();
         updatePreview();
@@ -505,10 +502,10 @@
         document.getElementById('txLeverage').value = String(leverage);
         const existing = editId && getTransaction ? getTransaction(editId) : null;
         const notes = existing?.notes || '';
-        const formStatus = getTxFormStatus();
-        const isPlanned = formStatus === 'planned';
-        const isClosed = formStatus === 'closed';
-        const status = isClosed ? 'closed' : 'open';
+        // New trades are always Open. Closed only via Done on the position.
+        const status = existing && (existing.status || '') === 'closed' ? 'closed' : 'open';
+        const isClosed = status === 'closed';
+        const executed = true;
 
         if (!company) { showToast('Please enter company name.', 'warning'); return; }
         if (!broker) { showToast('Please select a broker.', 'warning'); return; }
@@ -533,7 +530,7 @@
             leverage,
             notes,
             status,
-            executed: !isPlanned
+            executed
         };
         if (symbol) txData.symbol = symbol;
         const calc = calculateTrade(txData);

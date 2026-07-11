@@ -82,7 +82,6 @@
                 hideLoading,
                 hideModal,
                 updateAppHeader,
-                renderPlanTrades,
                 renderCurrentView,
                 renderPastTrades,
                 renderMarketPage,
@@ -668,6 +667,39 @@
                 /* Company header is always visible in the detail-style form. */
             }
 
+            function setTxCompanySearchLocked(locked, meta) {
+                const searchWrap = document.getElementById('txCompanySearchWrap');
+                const lockedWrap = document.getElementById('txCompanyLocked');
+                const nameEl = document.getElementById('txCompanyLockedName');
+                const metaEl = document.getElementById('txCompanyLockedMeta');
+                const avatarEl = document.getElementById('txCompanyLockedAvatar');
+                const companyInput = document.getElementById('txCompany');
+                if (searchWrap) searchWrap.classList.toggle('d-none', !!locked);
+                if (lockedWrap) lockedWrap.classList.toggle('d-none', !locked);
+                const selectedWrap = document.getElementById('txCompanySelected');
+                if (selectedWrap && locked) selectedWrap.classList.add('d-none');
+                if (!locked) {
+                    if (companyInput) companyInput.required = true;
+                    return;
+                }
+                if (companyInput) companyInput.required = false;
+                const company = (meta && (meta.n || meta.s)) || companyInput?.value || 'Company';
+                const symbol = (meta && meta.s) || '';
+                const exchange = (meta && meta.e) || 'NSE';
+                if (nameEl) {
+                    nameEl.textContent = company;
+                    nameEl.title = company;
+                }
+                if (metaEl) metaEl.textContent = symbol ? `${symbol} · ${exchange}` : exchange;
+                if (avatarEl) {
+                    const initial = String(company).trim().charAt(0).toUpperCase() || '—';
+                    let h = 0;
+                    for (let i = 0; i < company.length; i++) h = ((h << 5) - h) + company.charCodeAt(i);
+                    avatarEl.textContent = initial;
+                    avatarEl.className = `trade-detail-avatar trade-position-avatar--${Math.abs(h) % 6}`;
+                }
+            }
+
             function setTxCompanyMeta(meta) {
                 selectedStockMeta = meta;
                 const selectedWrap = document.getElementById('txCompanySelected');
@@ -967,8 +999,47 @@
             function resetCompanyAutocomplete() {
                 hideCompanyAcList();
                 setTxCompanyMeta(null);
+                setTxCompanySearchLocked(false);
                 clearTimeout(stockSearchTimer);
                 setTxLivePriceBtnBusy(false);
+            }
+
+            async function openBuyTradeFromMarket(symbol, name) {
+                const sym = String(symbol || '').trim().toUpperCase();
+                if (!sym) {
+                    showToast('Missing company symbol.', 'warning');
+                    return;
+                }
+                const meta = findStockMetaForSymbol(sym) || {
+                    s: sym,
+                    n: String(name || sym).trim() || sym,
+                    e: 'NSE'
+                };
+                const openForm = (typeof window.openAddModal === 'function')
+                    ? window.openAddModal
+                    : openAddModal;
+                if (typeof openForm !== 'function') {
+                    showToast('Trade form is not ready yet.', 'danger');
+                    return;
+                }
+                try {
+                    await openForm(meta);
+                } catch (err) {
+                    console.error('openBuyTradeFromMarket', err);
+                    showToast('Could not open trade form.', 'danger');
+                }
+            }
+
+            function onMarketQuotesListClick(e) {
+                const buyBtn = e.target && e.target.closest
+                    ? e.target.closest('.market-buy-btn')
+                    : null;
+                if (!buyBtn) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const sym = buyBtn.getAttribute('data-buy-symbol') || '';
+                const name = buyBtn.getAttribute('data-buy-name') || '';
+                openBuyTradeFromMarket(sym, name);
             }
 
             function findStockMetaForSymbol(symbol) {
@@ -1098,7 +1169,7 @@
             let marketLoading = false;
             let marketError = '';
             let marketFilterQuery = '';
-            let marketSubTab = 'in-trade';
+            let marketSubTab = 'watchlist';
             let marketRefreshTimer = null;
             let marketSearchTimer = null;
             let marketSearchSeq = 0;
@@ -1121,34 +1192,132 @@
                 const list = getStorage().marketWatchlist || [];
                 return list.map((item) => ({
                     s: normalizeMarketSymbol(item.s),
-                    n: item.n || item.s,
+                    n: String(item.n || item.s || '').trim() || normalizeMarketSymbol(item.s),
                     extra: true
                 })).filter((item) => item.s);
             }
 
-            function addToMarketWatchlist(item) {
-                if (!item || !item.s) return Promise.resolve(null);
-                const key = normalizeMarketSymbol(item.s);
-                if (!key) return Promise.resolve(null);
+            function normalizeWatchlistEntry(item) {
+                const s = normalizeMarketSymbol(item && (item.s || item.symbol));
+                if (!s) return null;
+                const n = String((item && (item.n || item.name)) || s).trim() || s;
+                // Identity only when adding — quotes are written on refresh.
+                return { s, n };
+            }
+
+            function watchlistQuoteSnapshotFromRow(item) {
+                const price = Number(item && item.price);
+                if (!isFinite(price) || price <= 0) return null;
+                const previousClose = Number(item.previousClose);
+                const change = Number(item.change);
+                const changePct = Number(item.changePct);
+                return {
+                    price,
+                    previousClose: isFinite(previousClose) ? previousClose : null,
+                    change: isFinite(change) ? change : null,
+                    changePct: isFinite(changePct) ? changePct : null,
+                    updatedAt: item.updatedAt ? String(item.updatedAt) : null
+                };
+            }
+
+            function hydrateMarketQuoteCacheFromDb() {
+                const list = getStorage().marketWatchlist || [];
+                let newest = null;
+                list.forEach((item) => {
+                    const s = normalizeMarketSymbol(item && item.s);
+                    if (!s) return;
+                    const snap = watchlistQuoteSnapshotFromRow(item);
+                    if (!snap) return;
+                    const existing = marketQuoteCache[s];
+                    if (isValidMarketQuote(existing) && !existing.fromLocalDb) return;
+                    marketQuoteCache[s] = {
+                        symbol: s,
+                        name: String(item.n || s).trim() || s,
+                        price: snap.price,
+                        previousClose: snap.previousClose,
+                        change: snap.change,
+                        changePct: snap.changePct,
+                        updatedAt: snap.updatedAt,
+                        fromLocalDb: true,
+                        error: false
+                    };
+                    if (snap.updatedAt) {
+                        const t = Date.parse(snap.updatedAt);
+                        if (!isNaN(t) && (newest == null || t > newest)) newest = t;
+                    }
+                });
+                if (newest != null && !marketUpdatedAt) {
+                    marketUpdatedAt = new Date(newest).toISOString();
+                }
+            }
+
+            function persistMarketQuotesToLocalDb() {
                 const data = getStorage();
-                const list = Array.isArray(data.marketWatchlist) ? data.marketWatchlist.slice() : [];
-                const existing = list.find((x) => normalizeMarketSymbol(x.s) === key);
+                const list = Array.isArray(data.marketWatchlist) ? data.marketWatchlist : [];
+                data.marketWatchlist = list.map((raw) => {
+                    const entry = normalizeWatchlistEntry(raw);
+                    if (!entry) return null;
+                    const cached = marketQuoteCache[entry.s];
+                    if (isValidMarketQuote(cached)) {
+                        return {
+                            s: entry.s,
+                            n: String(cached.name || entry.n || entry.s).trim() || entry.s,
+                            price: Number(cached.price),
+                            previousClose: cached.previousClose != null && isFinite(Number(cached.previousClose))
+                                ? Number(cached.previousClose)
+                                : null,
+                            change: cached.change != null && isFinite(Number(cached.change))
+                                ? Number(cached.change)
+                                : null,
+                            changePct: cached.changePct != null && isFinite(Number(cached.changePct))
+                                ? Number(cached.changePct)
+                                : null,
+                            updatedAt: cached.updatedAt || new Date().toISOString()
+                        };
+                    }
+                    const prev = watchlistQuoteSnapshotFromRow(raw);
+                    return prev
+                        ? { s: entry.s, n: entry.n, ...prev }
+                        : { s: entry.s, n: entry.n };
+                }).filter(Boolean);
+                return saveStorage(data);
+            }
+
+            function addToMarketWatchlist(item) {
+                const entry = normalizeWatchlistEntry(item);
+                if (!entry) return Promise.resolve(null);
+                const data = getStorage();
+                const list = (Array.isArray(data.marketWatchlist) ? data.marketWatchlist : [])
+                    .map((raw) => {
+                        const id = normalizeWatchlistEntry(raw);
+                        if (!id) return null;
+                        const snap = watchlistQuoteSnapshotFromRow(raw);
+                        return snap ? { ...id, ...snap } : id;
+                    })
+                    .filter(Boolean);
+                const existing = list.find((x) => x.s === entry.s);
                 if (existing) {
-                    existing.n = item.n || existing.n || key;
+                    existing.n = entry.n;
                 } else {
-                    list.unshift({ s: key, n: item.n || key });
+                    list.unshift(entry);
                 }
                 data.marketWatchlist = list;
-                return saveStorage(data).then(() => ({ s: key, n: item.n || key }));
+                return saveStorage(data).then(() => ({ s: entry.s, n: entry.n }));
             }
 
             function removeFromMarketWatchlist(symbol) {
                 const key = normalizeMarketSymbol(symbol);
                 if (!key) return Promise.resolve(null);
                 const data = getStorage();
-                data.marketWatchlist = (data.marketWatchlist || []).filter(
-                    (x) => normalizeMarketSymbol(x.s) !== key
-                );
+                data.marketWatchlist = (data.marketWatchlist || [])
+                    .map((raw) => {
+                        const id = normalizeWatchlistEntry(raw);
+                        if (!id || id.s === key) return null;
+                        const snap = watchlistQuoteSnapshotFromRow(raw);
+                        return snap ? { ...id, ...snap } : id;
+                    })
+                    .filter(Boolean);
+                delete marketQuoteCache[key];
                 return saveStorage(data);
             }
 
@@ -1159,90 +1328,26 @@
                 });
             }
 
-            function getPortfolioMarketSymbols() {
-                const txs = getTransactions();
-                const out = [];
-                const seen = new Set();
-                txs.forEach((t) => {
-                    if (!isActiveOpenTrade(t) && !isPlannedTrade(t)) return;
-                    let sym = normalizeMarketSymbol(t.symbol || '');
-                    let name = t.company || '';
-                    if (!sym) {
-                        const mapped = lookupTradeFeedMapping(t.company || '');
-                        if (mapped) {
-                            sym = mapped.symbol;
-                            name = mapped.company;
-                        }
-                    }
-                    if (!sym) {
-                        const meta = findStockMetaForCompany(t.company || '');
-                        sym = meta ? meta.s : '';
-                        name = meta ? meta.n : (t.company || '');
-                    }
-                    if (!sym) {
-                        const raw = String(t.company || '').trim().toUpperCase();
-                        if (/^[A-Z0-9&.-]{1,20}$/.test(raw)) {
-                            sym = raw;
-                            name = t.company || raw;
-                        }
-                    }
-                    if (!sym) return;
-                    const key = normalizeMarketSymbol(sym);
-                    if (seen.has(key)) return;
-                    seen.add(key);
-                    out.push({ s: key, n: name, pinned: true });
-                });
-                return out;
-            }
-
             function getMarketUniverse() {
-                if (marketSubTab === 'watchlist') {
-                    return getMarketWatchlist().map((item) => {
-                        const catalog = findStockMetaForSymbol(item.s);
-                        return {
-                            s: item.s,
-                            n: item.n || (catalog && catalog.n) || item.s,
-                            pinned: false,
-                            extra: true,
-                            removable: true
-                        };
-                    });
-                }
-                return getPortfolioMarketSymbols().map((item) => {
+                return getMarketWatchlist().map((item) => {
                     const catalog = findStockMetaForSymbol(item.s);
                     return {
                         s: item.s,
                         n: item.n || (catalog && catalog.n) || item.s,
-                        pinned: true,
-                        extra: false,
-                        removable: false
+                        pinned: false,
+                        extra: true,
+                        removable: true
                     };
                 });
             }
 
             function syncMarketSubTabUI() {
-                document.querySelectorAll('#marketSubTabList [data-market-tab]').forEach((btn) => {
-                    const active = btn.dataset.marketTab === marketSubTab;
-                    btn.classList.toggle('active', active);
-                    btn.setAttribute('aria-selected', active ? 'true' : 'false');
-                });
-                const input = document.getElementById('marketSearchInput');
-                if (input) {
-                    input.placeholder = marketSubTab === 'watchlist'
-                        ? 'Search NSE stock to add…'
-                        : 'Filter by name or symbol…';
-                }
+                /* Watchlist search lives in the header search screen. */
             }
 
-            function setMarketSubTab(tab) {
-                marketSubTab = tab === 'watchlist' ? 'watchlist' : 'in-trade';
+            function setMarketSubTab() {
+                marketSubTab = 'watchlist';
                 marketFilterQuery = '';
-                hideMarketAcList();
-                const input = document.getElementById('marketSearchInput');
-                if (input) input.value = '';
-                const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('d-none');
-                syncMarketSubTabUI();
                 try { renderMarketPage(); } catch (_) {}
                 refreshMarketQuotes();
             }
@@ -1610,11 +1715,12 @@
                 const existing = marketQuoteCache[key];
                 // Never replace a good cached price with a failed/empty result.
                 if (!isValidMarketQuote(quote) && isValidMarketQuote(existing)) return false;
-                marketQuoteCache[key] = quote;
+                marketQuoteCache[key] = { ...quote, fromLocalDb: false };
                 return adoptDisplayedTradeQuote(quote);
             }
 
             function getMarketQuotes() {
+                hydrateMarketQuoteCacheFromDb();
                 const universe = getMarketUniverse();
                 return universe.map((item) => {
                     const cached = marketQuoteCache[item.s];
@@ -1642,14 +1748,17 @@
 
             async function refreshMarketQuotes(opts) {
                 const silent = opts && opts.silent;
+                const notify = !!(opts && opts.notify);
                 const force = !(opts && opts.silent) || !!(opts && opts.force);
                 if (marketLoading) return;
                 marketLoading = true;
                 marketError = '';
+                hydrateMarketQuoteCacheFromDb();
                 if (!silent) {
                     try { renderMarketPage(); } catch (_) {}
                     observeQuoteRows();
                 }
+                let refreshedOk = false;
                 try {
                     loadStockCatalogFromInternet();
                     observeQuoteRows();
@@ -1657,6 +1766,7 @@
                     if (!items.length) {
                         marketUpdatedAt = marketUpdatedAt || new Date().toISOString();
                         marketError = '';
+                        refreshedOk = true;
                         return;
                     }
                     await Promise.all(items.map((item) => enqueueQuoteFetch(item, { force })));
@@ -1667,17 +1777,33 @@
                     }).length;
                     if (failed === items.length && items.length) {
                         marketError = 'Could not reach market data. Check internet and try again.';
+                        refreshedOk = false;
                     } else {
                         marketError = '';
+                        refreshedOk = true;
+                    }
+                    if (refreshedOk) {
+                        try { await persistMarketQuotesToLocalDb(); } catch (e) {
+                            console.warn('Could not save watchlist quotes to local DB', e);
+                        }
                     }
                 } catch (e) {
                     marketError = 'Could not reach market data. Check internet and try again.';
+                    refreshedOk = false;
                     console.warn('Market quote refresh failed', e);
                 } finally {
                     marketLoading = false;
                     try { renderMarketPage(); } catch (_) {}
                     observeQuoteRows();
+                    if (notify) {
+                        if (refreshedOk) showToast('Data refreshed', 'success');
+                        else showToast(marketError || 'Could not refresh data.', 'danger');
+                    }
                 }
+            }
+
+            function onMarketRefreshClick() {
+                refreshMarketQuotes({ force: true, notify: true });
             }
 
             function stopMarketRefresh() {
@@ -1689,6 +1815,7 @@
 
             function startMarketRefresh() {
                 stopMarketRefresh();
+                hydrateMarketQuoteCacheFromDb();
                 syncMarketSubTabUI();
                 try { renderMarketPage(); } catch (_) {}
                 observeQuoteRows();
@@ -2196,28 +2323,38 @@
                 refreshTradeLivePrices({ force: true });
             }
 
+            function isWatchlistSearchOpen() {
+                return searchContext === 'watchlist';
+            }
+
+            function getMarketSearchInput() {
+                return document.getElementById('searchPageInput');
+            }
+
+            function getMarketAcListEl() {
+                return document.getElementById('searchPageList');
+            }
+
             function hideMarketAcList() {
-                const list = document.getElementById('marketAcList');
+                const list = getMarketAcListEl();
                 if (list) {
-                    list.classList.add('d-none');
-                    list.classList.remove('d-block');
-                    list.innerHTML = '';
+                    list.innerHTML = isWatchlistSearchOpen()
+                        ? `<div class="px-3 py-4 text-center text-muted small">Type a company name or symbol to add.</div>`
+                        : '';
                 }
                 marketAcResults = [];
                 marketAcActiveIdx = -1;
             }
 
             function showMarketAcLoading(msg) {
-                const list = document.getElementById('marketAcList');
+                const list = getMarketAcListEl();
                 if (!list) return;
-                list.innerHTML = `<div class="px-3 py-2 small text-muted"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
-                list.classList.remove('d-none');
-                list.classList.add('d-block');
+                list.innerHTML = `<div class="px-3 py-3 small text-muted"><i class="fas fa-spinner fa-spin me-1"></i>${escapeHtml(msg || 'Searching…')}</div>`;
             }
 
             function renderMarketAcList(items) {
-                const list = document.getElementById('marketAcList');
-                const input = document.getElementById('marketSearchInput');
+                const list = getMarketAcListEl();
+                const input = getMarketSearchInput();
                 if (!list || !input) return;
                 marketAcResults = items || [];
                 marketAcActiveIdx = marketAcResults.length ? 0 : -1;
@@ -2225,28 +2362,24 @@
                 if (!marketAcResults.length) {
                     const q = (input.value || '').trim();
                     list.innerHTML = q.length
-                        ? `<div class="px-3 py-2 small text-muted">No match for “${escapeHtml(q)}”.</div>`
-                        : '';
-                    list.classList.toggle('d-none', q.length < 1);
-                    list.classList.toggle('d-block', q.length >= 1);
+                        ? `<div class="px-3 py-3 small text-muted">No match for “${escapeHtml(q)}”.</div>`
+                        : `<div class="px-3 py-4 text-center text-muted small">Type a company name or symbol to add.</div>`;
                     return;
                 }
 
-                list.innerHTML = marketAcResults.map((it, idx) => {
+                list.innerHTML = `<div class="list-group list-group-flush">${marketAcResults.map((it, idx) => {
                     const meta = it.sector
                         ? `${escapeHtml(it.sector)}${it.industry ? ' · ' + escapeHtml(it.industry) : ''} · ${escapeHtml(it.e || 'NSE')}`
                         : escapeHtml(it.e || 'NSE');
                     const activeCls = idx === marketAcActiveIdx ? ' active' : '';
                     const name = it.n || '';
                     return `
-                    <button type="button" class="dropdown-item py-2${activeCls}" role="option" data-idx="${idx}" onmousedown="selectMarketSymbol(${idx})">
+                    <button type="button" class="list-group-item list-group-item-action py-3${activeCls}" role="option" data-idx="${idx}" onclick="selectMarketSymbol(${idx})">
                         <div class="fw-semibold text-truncate">${escapeHtml(it.s)}</div>
                         <div class="small text-body-secondary text-truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
                         <div class="small text-muted text-truncate">${meta}</div>
                     </button>`;
-                }).join('');
-                list.classList.remove('d-none');
-                list.classList.add('d-block');
+                }).join('')}</div>`;
             }
 
             async function runMarketStockSearch(query) {
@@ -2278,11 +2411,9 @@
                         if (stockCatalogLoaded) {
                             renderMarketAcList(searchStockSymbolsLocal(q, 12));
                         } else if (!results.length) {
-                            const list = document.getElementById('marketAcList');
+                            const list = getMarketAcListEl();
                             if (list) {
-                                list.innerHTML = `<div class="px-3 py-2 small text-muted">Could not reach market data. Check internet and try again.</div>`;
-                                list.classList.remove('d-none');
-                                list.classList.add('d-block');
+                                list.innerHTML = `<div class="px-3 py-3 small text-muted">Could not reach market data. Check internet and try again.</div>`;
                             }
                         }
                     }
@@ -2292,17 +2423,9 @@
             }
 
             function onMarketSearchInput() {
-                const input = document.getElementById('marketSearchInput');
+                const input = getMarketSearchInput();
                 const q = (input && input.value || '').trim();
-                const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.toggle('d-none', !q);
-
-                if (marketSubTab === 'in-trade') {
-                    marketFilterQuery = (input && input.value) || '';
-                    hideMarketAcList();
-                    try { renderMarketPage(); } catch (_) {}
-                    return;
-                }
+                toggleClearBtn('searchPageClear', !!q);
 
                 clearTimeout(marketSearchTimer);
                 if (q.length < 1) {
@@ -2313,26 +2436,18 @@
             }
 
             function onMarketSearchFocus() {
-                if (marketSubTab !== 'watchlist') return;
-                const input = document.getElementById('marketSearchInput');
+                const input = getMarketSearchInput();
                 const q = (input && input.value || '').trim();
                 if (q.length >= 1) runMarketStockSearch(q);
             }
 
             function onMarketSearchBlur() {
-                marketAcBlurTimer = setTimeout(() => hideMarketAcList(), 150);
+                /* Full-screen watchlist search keeps results visible. */
             }
 
             function onMarketSearchKeydown(e) {
-                if (marketSubTab !== 'watchlist') {
-                    if (e.key === 'Escape') {
-                        clearMarketSearch();
-                    }
-                    return;
-                }
-                const list = document.getElementById('marketAcList');
-                if (!list || list.classList.contains('d-none') || !marketAcResults.length) {
-                    if (e.key === 'Escape') hideMarketAcList();
+                if (!marketAcResults.length) {
+                    if (e.key === 'Escape') closeSearchPage();
                     return;
                 }
                 if (e.key === 'ArrowDown') {
@@ -2347,43 +2462,33 @@
                     e.preventDefault();
                     if (marketAcActiveIdx >= 0) selectMarketSymbol(marketAcActiveIdx);
                 } else if (e.key === 'Escape') {
-                    hideMarketAcList();
+                    closeSearchPage();
                 }
             }
 
             function selectMarketSymbol(idx) {
-                if (marketSubTab !== 'watchlist') return;
                 const item = marketAcResults[idx];
                 if (!item) return;
                 if (marketAcBlurTimer) clearTimeout(marketAcBlurTimer);
-                hideMarketAcList();
-                const input = document.getElementById('marketSearchInput');
-                if (input) input.value = '';
-                const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('d-none');
                 addToMarketWatchlist(item).then(() => {
+                    showToast(`Added ${item.s || item.n || 'stock'} to watchlist`, 'success');
+                    closeSearchPage();
                     try { renderMarketPage(); } catch (_) {}
                     return refreshMarketQuotes();
                 });
             }
 
             function clearMarketSearch() {
-                const input = document.getElementById('marketSearchInput');
+                const input = getMarketSearchInput();
                 if (input) {
                     input.value = '';
                     input.focus();
                 }
-                const clearBtn = document.getElementById('marketSearchClear');
-                if (clearBtn) clearBtn.classList.add('d-none');
+                toggleClearBtn('searchPageClear', false);
                 hideMarketAcList();
-                if (marketSubTab === 'in-trade') {
-                    marketFilterQuery = '';
-                    try { renderMarketPage(); } catch (_) {}
-                }
             }
 
             function refreshAllViews() {
-                try { renderPlanTrades(); } catch (_) {}
                 try { renderCurrentView(); } catch (_) {}
                 try { renderPastTrades(); } catch (_) {}
                 try { renderMoney(); } catch (_) {}
@@ -2393,7 +2498,6 @@
             }
 
             function refreshTradeListViews() {
-                try { renderPlanTrades(); } catch (_) {}
                 try { renderCurrentView(); } catch (_) {}
                 try { renderPastTrades(); } catch (_) {}
                 try { refreshTradeDetailIfVisible(); } catch (_) {}
@@ -2886,20 +2990,24 @@
                 if (!tradeFilterPane) {
                     const createPane = window.MTFComponents?.createAppPane;
                     if (typeof createPane !== 'function') return null;
-                    tradeFilterPane = createPane('#tradeFilterSheet', { fullHeight: true });
+                    tradeFilterPane = createPane('#tradeFilterSheet', {
+                        fullHeight: true,
+                        // Pin Cancel / Apply via CSS flex — don't let Cupertino
+                        // size the middle panel to full viewport height.
+                        topperOverflow: false
+                    });
                 }
                 return tradeFilterPane;
             }
 
             function statusFromViewMode(mode) {
-                if (mode === 'plan') return 'plan';
                 if (mode === 'past') return tradeCancelledOnly ? 'cancelled' : 'closed';
                 if (mode === 'all') return 'all';
                 return 'open';
             }
 
             function viewModeFromStatus(status) {
-                if (status === 'plan') return 'plan';
+                if (status === 'plan') return 'trade';
                 if (status === 'closed' || status === 'cancelled') return 'past';
                 if (status === 'all') return 'all';
                 return 'trade';
@@ -2911,6 +3019,12 @@
                 const from = fromEl?.value || pastFrom;
                 const to = toEl?.value || pastTo;
                 if (!from && !to) return 'All dates';
+                if (pastRangeDays === 'today') return 'Today';
+                if (pastRangeDays === 'yesterday') return 'Yesterday';
+                if (pastRangeDays === 'this-week') return 'This week';
+                if (pastRangeDays === 'last-week') return 'Last week';
+                if (pastRangeDays === 'work-20') return '20 WD';
+                if (pastRangeDays === 'work-30') return '30 WD';
                 if (from && to) {
                     try {
                         return `${fmtDateShort(from)} – ${fmtDateShort(to)}`;
@@ -2921,34 +3035,153 @@
                 return 'Custom dates';
             }
 
-            function updateTradeFilterSummary() {
-                const el = document.getElementById('tradeFilterSummary');
-                if (!el) return;
-                const draft = readTradeFilterSheetDraft();
-                const statusLabel = {
-                    all: 'All',
-                    open: 'Open',
-                    plan: 'Planned',
-                    closed: 'Closed',
-                    cancelled: 'Cancelled'
-                }[draft.status] || 'Open';
-                const holdLabel = draft.holdDays === 'all' ? null : `${draft.holdDays} days`;
-                const sortLabel = {
+            let tradeFilterCategory = 'status';
+
+            function setTradeFilterCategory(cat) {
+                tradeFilterCategory = cat || 'status';
+                document.querySelectorAll('#panelPastFilter .trade-filter-nav-item').forEach((btn) => {
+                    btn.classList.toggle('is-active', btn.getAttribute('data-filter-cat') === tradeFilterCategory);
+                });
+                document.querySelectorAll('#panelPastFilter .trade-filter-panel').forEach((panel) => {
+                    const active = panel.getAttribute('data-filter-panel') === tradeFilterCategory;
+                    panel.classList.toggle('is-active', active);
+                    if (active) panel.removeAttribute('hidden');
+                    else panel.setAttribute('hidden', '');
+                });
+            }
+
+            function tradeFilterStatusLabel(status) {
+                return ({ all: 'All', open: 'Open', closed: 'Closed', cancelled: 'Cancelled' })[status] || 'Open';
+            }
+
+            function tradeFilterHoldLabel(holdDays) {
+                return ({ '1-3': '1–3 days', '4-7': '4–7 days', '8+': '8+ days' })[holdDays] || holdDays;
+            }
+
+            function tradeFilterSortLabel(sortBy) {
+                return ({
                     company: 'Company',
                     holding: 'Holding days',
                     buyDate: 'Buy date',
                     pnl: 'P&L',
-                    return: 'Return'
-                }[draft.sortBy] || 'Holding days';
-                const perfCount = draft.perf.size;
-                const parts = [
-                    statusLabel,
-                    formatFilterRangeSummary(),
-                    holdLabel,
-                    perfCount ? `${perfCount} perf.` : null,
-                    `Sort · ${sortLabel}`
-                ].filter(Boolean);
-                el.textContent = parts.join(' · ');
+                    return: 'Current return'
+                })[sortBy] || 'Holding days';
+            }
+
+            function tradeFilterPerfLabel(key) {
+                return ({
+                    profit: 'Profit',
+                    loss: 'Loss',
+                    near_target: 'Near target',
+                    target_hit: 'Target hit',
+                    verified: 'Verified'
+                })[key] || key;
+            }
+
+            function buildTradeFilterChips(draft) {
+                const chips = [
+                    { key: 'status', label: `Status: ${tradeFilterStatusLabel(draft.status)}` }
+                ];
+                if (draft.holdDays && draft.holdDays !== 'all') {
+                    chips.push({ key: 'holding', label: `Holding: ${tradeFilterHoldLabel(draft.holdDays)}` });
+                }
+                draft.perf.forEach((key) => {
+                    chips.push({ key: `perf:${key}`, label: `Performance: ${tradeFilterPerfLabel(key)}` });
+                });
+                chips.push({ key: 'sort', label: `Sort: ${tradeFilterSortLabel(draft.sortBy)}` });
+                const rangeLabel = formatFilterRangeSummary();
+                if (rangeLabel && rangeLabel !== 'All dates') {
+                    chips.push({ key: 'dates', label: rangeLabel });
+                }
+                return chips;
+            }
+
+            function clearTradeFilterChip(key) {
+                if (key === 'status') {
+                    const el = document.getElementById('tradeFilterStatus-open');
+                    if (el) el.checked = true;
+                } else if (key === 'holding') {
+                    const el = document.getElementById('tradeFilterHold-all');
+                    if (el) el.checked = true;
+                } else if (key === 'sort') {
+                    const el = document.getElementById('tradeFilterSort-holding');
+                    if (el) el.checked = true;
+                } else if (key === 'dates') {
+                    draftPastRange('all');
+                    return;
+                } else if (String(key).startsWith('perf:')) {
+                    const perfKey = String(key).slice(5);
+                    const idMap = {
+                        profit: 'tradeFilterPerf-profit',
+                        loss: 'tradeFilterPerf-loss',
+                        near_target: 'tradeFilterPerf-near',
+                        target_hit: 'tradeFilterPerf-hit',
+                        verified: 'tradeFilterPerf-verified'
+                    };
+                    const el = document.getElementById(idMap[perfKey]);
+                    if (el) el.checked = false;
+                }
+                updateTradeFilterSummary();
+            }
+
+            function clearAllTradeFilterChips() {
+                resetTradeFilterSheet();
+            }
+
+            function updateTradeFilterSummary() {
+                const draft = readTradeFilterSheetDraft();
+                const chips = buildTradeFilterChips(draft);
+
+                const chipsEl = document.getElementById('tradeFilterChips');
+                if (chipsEl) {
+                    chipsEl.innerHTML = chips.map((chip) => (
+                        `<span class="trade-filter-chip">` +
+                        `<span class="trade-filter-chip-label">${escapeHtml(chip.label)}</span>` +
+                        `<button type="button" class="trade-filter-chip-remove" aria-label="Remove ${escapeHtml(chip.label)}" onclick="clearTradeFilterChip('${chip.key}')">` +
+                        `<i class="fas fa-times" aria-hidden="true"></i></button></span>`
+                    )).join('');
+                }
+
+                const clearAll = document.getElementById('tradeFilterClearAll');
+                if (clearAll) clearAll.classList.toggle('d-none', chips.length === 0);
+
+                const applyBtn = document.getElementById('tradeFilterApplyBtn');
+                if (applyBtn) {
+                    applyBtn.textContent = chips.length
+                        ? `Apply filters (${chips.length})`
+                        : 'Apply filters';
+                }
+
+                const statusHint = document.getElementById('tradeFilterStatusHint');
+                if (statusHint) {
+                    const hintText = ({
+                        all: 'Showing all trades',
+                        open: 'Showing only open trades',
+                        closed: 'Showing only closed trades',
+                        cancelled: 'Showing only cancelled trades'
+                    })[draft.status] || 'Showing only open trades';
+                    const span = statusHint.querySelector('span');
+                    if (span) span.textContent = hintText;
+                    else statusHint.textContent = hintText;
+                }
+
+                const setBadge = (cat, count) => {
+                    const badge = document.querySelector(`#panelPastFilter [data-filter-badge="${cat}"]`);
+                    if (!badge) return;
+                    if (count > 0) {
+                        badge.textContent = String(count);
+                        badge.classList.remove('d-none');
+                    } else {
+                        badge.classList.add('d-none');
+                    }
+                };
+                setBadge('status', 1);
+                setBadge('holding', draft.holdDays !== 'all' ? 1 : 0);
+                setBadge('performance', draft.perf.size);
+                setBadge('sort', 1);
+
+                const datesMeta = document.querySelector('#panelPastFilter [data-filter-meta="dates"]');
+                if (datesMeta) datesMeta.textContent = formatFilterRangeSummary();
             }
 
             function syncTradeFilterSheetControls() {
@@ -2992,13 +3225,25 @@
                     window.MTFComponents.TradeSheet.close();
                 }
                 syncTradeFilterSheetControls();
+                setTradeFilterCategory('status');
                 const body = document.getElementById('tradeFilterContent');
                 if (body) {
-                    body.setAttribute('overflow-y', '');
+                    // Do not mark overflow-y here — Cupertino would size this middle
+                    // panel to nearly full pane height and clip Cancel / Apply.
+                    body.removeAttribute('overflow-y');
+                    body.style.height = '';
+                    body.style.maxHeight = '';
                     body.scrollTop = 0;
                 }
                 const pane = getTradeFilterPane();
-                if (pane) pane.present();
+                if (pane) {
+                    pane.present()?.then?.(() => {
+                        if (body) {
+                            body.style.height = '';
+                            body.style.maxHeight = '';
+                        }
+                    });
+                }
             }
 
             function openTradeFilterSheet() {
@@ -3031,8 +3276,8 @@
                 if (!active) return { page: 'trades', moreFeature: null };
                 const id = active.id;
                 if (id === 'page-search') return { page: searchContext === 'past' ? 'past' : 'trades', moreFeature: null };
-                // Plan/Past are in-page switches on Trades — bottom nav stays on trades.
-                if (id === 'page-plan' || id === 'page-trades') {
+                // Past is an in-page switch on Trades — bottom nav stays on trades.
+                if (id === 'page-trades') {
                     if (tradesViewMode === 'past') return { page: 'past', moreFeature: null };
                     return { page: 'trades', moreFeature: null };
                 }
@@ -3173,7 +3418,7 @@
             }
 
             // ---------- NAVIGATION ----------
-            const pageMap = { plan: 'page-plan', trades: 'page-trades', past: 'page-past', market: 'page-market', more: 'page-more' };
+            const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', more: 'page-more' };
             const moreFeatureMap = { money: 'page-money', transactions: 'page-transactions', 'mtf-calc': 'page-mtf-calc' };
             let activeMoreFeature = null;
 
@@ -3189,8 +3434,7 @@
             }
 
             function updateFabVisibility(page) {
-                const showFab = page === 'plan' || (page === 'trades' && tradesViewMode !== 'past');
-                BottomBar.setFabVisible(showFab);
+                BottomBar.setFabVisible(false);
             }
 
             function navigateTo(page) {
@@ -3199,14 +3443,7 @@
                     return;
                 }
                 if (page === 'plan') {
-                    stopMarketRefresh();
-                    activeMoreFeature = null;
-                    showPage(pageMap['trades']);
-                    setBottomNavActive('trades');
-                    setTradesViewMode('plan');
-                    updateFabVisibility('trades');
-                    startTradeLiveRefresh();
-                    saveNavState();
+                    navigateTo('trades');
                     return;
                 }
                 activeMoreFeature = null;
@@ -3666,7 +3903,7 @@
             }
 
             function resetTradeFilterSheet() {
-                const statusVal = tradesViewMode === 'plan' ? 'plan' : (tradesViewMode === 'past' ? 'closed' : 'open');
+                const statusVal = tradesViewMode === 'past' ? 'closed' : 'open';
                 const st = document.querySelector(`input[name="tradeFilterStatus"][value="${statusVal}"]`);
                 if (st) st.checked = true;
                 const holdAll = document.getElementById('tradeFilterHold-all');
@@ -3677,6 +3914,7 @@
                     el.checked = false;
                 });
                 draftPastRange(tradesViewMode === 'past' ? 'this-week' : 'all');
+                setTradeFilterCategory('status');
                 updateTradeFilterSummary();
             }
 
@@ -3901,18 +4139,28 @@
                 return `${y}-${m}-${day}`;
             }
 
-            // ---------- RENDER PLAN TRADES (O13) ----------
-            // renderPlanTrades → pages/plan/plan-page.js
+            // ---------- RENDER PLAN TRADES (removed — Watchlist replaces Plan) ----------
 
             // ---------- FULL-SCREEN SEARCH ----------
             function openSearchPage() {
                 const current = getCurrentAppPage().page;
                 if (current === 'market') {
-                    const input = document.getElementById('marketSearchInput');
+                    stopMarketRefresh();
+                    searchContext = 'watchlist';
+                    searchQuery = '';
+                    showPage('page-search');
+                    BottomBar.setBarVisible(false);
+                    BottomBar.setFabVisible(false);
+                    const input = document.getElementById('searchPageInput');
                     if (input) {
-                        input.focus();
-                        input.select();
+                        input.value = '';
+                        input.placeholder = 'Search NSE stock to add…';
+                        input.oninput = () => onMarketSearchInput();
+                        input.onkeydown = (e) => onMarketSearchKeydown(e);
+                        setTimeout(() => input.focus(), 50);
                     }
+                    toggleClearBtn('searchPageClear', false);
+                    hideMarketAcList();
                     return;
                 }
                 stopTradeLiveRefresh();
@@ -3924,6 +4172,10 @@
                 const input = document.getElementById('searchPageInput');
                 if (input) {
                     input.value = '';
+                    input.placeholder = 'Search by company name...';
+                    input.oninput = null;
+                    input.setAttribute('oninput', 'runSearchPage(this.value)');
+                    input.onkeydown = null;
                     setTimeout(() => input.focus(), 50);
                 }
                 toggleClearBtn('searchPageClear', false);
@@ -3932,22 +4184,39 @@
 
             function closeSearchPage() {
                 BottomBar.setBarVisible(true);
+                const input = document.getElementById('searchPageInput');
+                if (input) {
+                    input.oninput = null;
+                    input.setAttribute('oninput', 'runSearchPage(this.value)');
+                    input.onkeydown = null;
+                    input.placeholder = 'Search by company name...';
+                }
+                if (searchContext === 'watchlist') {
+                    navigateTo('market');
+                    return;
+                }
                 if (searchContext === 'past') {
                     navigateTo('past');
-                } else if (tradesViewMode === 'plan') {
-                    navigateTo('plan');
                 } else {
                     navigateTo('trades');
                 }
             }
 
             function runSearchPage(value) {
+                if (searchContext === 'watchlist') {
+                    onMarketSearchInput();
+                    return;
+                }
                 searchQuery = value || '';
                 toggleClearBtn('searchPageClear', searchQuery.trim());
                 renderSearchResults();
             }
 
             function clearSearchPage() {
+                if (searchContext === 'watchlist') {
+                    clearMarketSearch();
+                    return;
+                }
                 searchQuery = '';
                 const input = document.getElementById('searchPageInput');
                 if (input) { input.value = ''; input.focus(); }
@@ -3957,9 +4226,10 @@
 
             // renderSearchResults → pages/search/search-page.js
 
-            // ---------- TRADES VIEW MODE (Trade / Plan switch) ----------
+            // ---------- TRADES VIEW MODE (Open / Closed) ----------
             function setTradesViewMode(mode) {
-                const next = mode === 'plan' ? 'plan'
+                // Plan removed — Watchlist replaces it. Remap legacy 'plan' → open.
+                const next = mode === 'plan' ? 'trade'
                     : (mode === 'past' ? 'past'
                         : (mode === 'all' ? 'all'
                             : (mode === 'cancelled' ? 'cancelled' : 'trade')));
@@ -4566,18 +4836,8 @@
                 renderPastTrades();
                 if (isPastPageVisible()) startTradeLiveRefresh();
             }
-            function setPlanSearch(value) {
-                planSearchQuery = value || '';
-                toggleClearBtn('planSearchClear', planSearchQuery.trim());
-                renderPlanTrades();
-            }
-            function clearPlanSearch() {
-                planSearchQuery = '';
-                const input = document.getElementById('planSearch');
-                if (input) { input.value = ''; input.focus(); }
-                toggleClearBtn('planSearchClear', false);
-                renderPlanTrades();
-            }
+            function setPlanSearch() { /* Plan removed */ }
+            function clearPlanSearch() { /* Plan removed */ }
 
             // trade detail sheets → pages/common/trade-*-sheet.js
             // ---------- INTEREST BREAKDOWN ----------
@@ -4898,6 +5158,13 @@
                     onNavigate: navigateTo,
                     onFabClick: openAddModal
                 });
+                BottomBar.setFabVisible(false);
+
+                const marketQuotesList = document.getElementById('marketQuotesList');
+                if (marketQuotesList && !marketQuotesList.dataset.buyBound) {
+                    marketQuotesList.dataset.buyBound = '1';
+                    marketQuotesList.addEventListener('click', onMarketQuotesListClick);
+                }
 
                 initModals();
                 initCompanyAutocomplete();
@@ -4958,9 +5225,6 @@
                         return;
                     }
                     restoreNavStateIfNeeded();
-                    if (!document.getElementById('page-plan').classList.contains('d-none')) {
-                        renderPlanTrades();
-                    }
                     if (!document.getElementById('page-trades').classList.contains('d-none')) {
                         renderCurrentView();
                     }
@@ -5109,6 +5373,7 @@
                     resetCompanyAutocomplete,
                     findStockMetaForCompany,
                     setTxCompanyMeta,
+                    setTxCompanySearchLocked,
                     resolveCompanyName,
                     resolveCompanySymbol,
                     getTomorrowDateKey,
@@ -5149,6 +5414,7 @@
             window.openMoreFeature = openMoreFeature;
             window.backToMoreHub = backToMoreHub;
             window.openAddModal = openAddModal;
+            window.openBuyTradeFromMarket = openBuyTradeFromMarket;
             window.onTxStatusChange = onTxStatusChange;
             window.setTxFormStatus = setTxFormStatus;
             window.onTxLeverageInput = onTxLeverageInput;
@@ -5201,6 +5467,7 @@
             window.renderPastTrades = renderPastTrades;
             window.renderMarketPage = renderMarketPage;
             window.refreshMarketQuotes = refreshMarketQuotes;
+            window.onMarketRefreshClick = onMarketRefreshClick;
             window.refreshTradeLivePricesNow = refreshTradeLivePricesNow;
             window.observeQuoteRows = observeQuoteRows;
             window.setMarketSubTab = setMarketSubTab;
@@ -5238,9 +5505,13 @@
             window.draftPastRange = draftPastRange;
             window.resetTradeFilterSheet = resetTradeFilterSheet;
             window.updateTradeFilterSummary = updateTradeFilterSummary;
+            window.setTradeFilterCategory = setTradeFilterCategory;
+            window.clearTradeFilterChip = clearTradeFilterChip;
+            window.clearAllTradeFilterChips = clearAllTradeFilterChips;
             window.setPastRange = setPastRange;
             window.onPastFilterDateChange = onPastFilterDateChange;
             window.openFilterSheet = openFilterSheet;
+            window.closeFilterSheet = closeFilterSheet;
             window.openTradeFilterSheet = openTradeFilterSheet;
             window.applyTradeRangeFilter = applyTradeRangeFilter;
             window.setTradeRange = setTradeRange;

@@ -75,7 +75,7 @@
     }
 
     function renderTransactions() {
-        const { getTransactionStats, isPlannedTrade } = tradePages();
+        const { getTransactionStats } = tradePages();
         const getTransactions = tradePages().getTransactions;
         const txs = getTransactions ? getTransactions().slice().sort((a, b) => (a.id < b.id ? 1 : -1)) : [];
         const stats = getTransactionStats ? getTransactionStats(txs) : { total: 0, open: 0, closed: 0, successful: 0, net: 0, gross: 0, charges: 0, byBroker: {} };
@@ -99,7 +99,6 @@
             return;
         }
         listEl.innerHTML = renderGroupedTradesWithChips(txs, (t, i) => {
-            if (isPlannedTrade && isPlannedTrade(t)) return renderTradeListItem(t, i, 'plan');
             return renderTradeListItem(t, i, (t.status || 'closed') === 'open' ? 'open' : 'past');
         });
     }
