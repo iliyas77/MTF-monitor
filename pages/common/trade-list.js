@@ -281,23 +281,20 @@
 
 /* ========== Trade list item ========== */
 /**
- * O10 — Trade list item organism (full + compact/collapsed card).
+ * O10 — Trade list item organism (full + per-card collapse).
  */
 (function (global) {
     'use strict';
 
     const {
-        renderTradeCardPnl,
-        renderTradeListItemLeverageMeta,
-        renderTradeListItemDetails,
-        renderTradeListItemActions,
-        appTag,
+        formatTradeLeverageLabel,
         fmtDec,
         renderAmount,
         renderIcon
     } = global.MTFComponents;
 
-    const COLLAPSED_TRADES_KEY = 'mtf_collapsed_trade_cards';
+    const EXPANDED_TRADES_KEY = 'mtf_expanded_trade_cards';
+    const LEGACY_COLLAPSED_TRADES_KEY = 'mtf_collapsed_trade_cards';
     const COMPACT_MODE_KEY = 'mtf_trade_cards_compact_mode';
 
     function escapeHtml(str) {
@@ -314,55 +311,73 @@
         return s.charAt(0).toUpperCase();
     }
 
-    function isCompactMode() {
+    function readExpandedTradeIds() {
         try {
-            return localStorage.getItem(COMPACT_MODE_KEY) === '1';
+            const raw = JSON.parse(localStorage.getItem(EXPANDED_TRADES_KEY));
+            return new Set(Array.isArray(raw) ? raw.map(String) : []);
         } catch (_) {
-            return false;
+            return new Set();
         }
     }
 
-    function setCompactMode(on) {
+    function writeExpandedTradeIds(ids) {
         try {
-            localStorage.setItem(COMPACT_MODE_KEY, on ? '1' : '0');
-            // Drop legacy per-card collapse keys — collapse is all-or-nothing now.
-            localStorage.removeItem(COLLAPSED_TRADES_KEY);
+            localStorage.setItem(EXPANDED_TRADES_KEY, JSON.stringify([...ids]));
+            localStorage.removeItem(LEGACY_COLLAPSED_TRADES_KEY);
+            localStorage.removeItem(COMPACT_MODE_KEY);
         } catch (_) { /* ignore quota / private mode */ }
     }
 
-    function refreshTradeCardsView() {
-        const render = (global.MTFComponents || {}).renderCurrentView;
-        if (typeof render !== 'function') return false;
-        try {
-            render();
-            return true;
-        } catch (_) {
-            return false;
+    /** Cards are collapsed by default; only explicitly expanded IDs stay open. */
+    function isTradeCardCollapsed(tradeId) {
+        if (!tradeId) return true;
+        return !readExpandedTradeIds().has(String(tradeId));
+    }
+
+    function setTradeCardCollapsed(tradeId, collapsed) {
+        if (!tradeId) return;
+        const ids = readExpandedTradeIds();
+        const key = String(tradeId);
+        if (collapsed) ids.delete(key);
+        else ids.add(key);
+        writeExpandedTradeIds(ids);
+    }
+
+    function syncTradeCardCollapseUi(card, collapsed) {
+        if (!card) return;
+        const full = card.querySelector('[data-trade-card-full]');
+        if (full) {
+            // Toggle class directly so UI stays in sync (Bootstrap Collapse animates async).
+            const inst = global.bootstrap?.Collapse
+                ? global.bootstrap.Collapse.getInstance(full)
+                : null;
+            if (inst) inst.dispose();
+            full.classList.remove('collapsing');
+            full.classList.toggle('show', !collapsed);
+            full.style.height = '';
+            full.style.overflow = '';
+        }
+        card.dataset.collapsed = collapsed ? 'true' : 'false';
+        card.classList.toggle('trade-position-card--expanded', !collapsed);
+        const btn = card.querySelector('[data-trade-collapse-btn]');
+        if (btn) btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+        const chevronWrap = card.querySelector('[data-trade-collapse-chevron]');
+        if (chevronWrap) {
+            const icon = chevronWrap.matches('i.fas') ? chevronWrap : chevronWrap.querySelector('i.fas');
+            if (icon) icon.classList.toggle('fa-rotate-180', collapsed);
         }
     }
 
-    function setAllVisibleTradeCardsCollapsed(collapsed) {
-        setCompactMode(collapsed);
-        if (refreshTradeCardsView()) return;
-        syncTradeCardsCollapseAllButton();
-    }
-
-    function toggleAllTradeCardsCollapse() {
-        setAllVisibleTradeCardsCollapsed(!isCompactMode());
-    }
-
-    function syncTradeCardsCollapseAllButton() {
-        const btn = document.getElementById('tradesCollapseAllBtn');
-        if (!btn) return;
-        const collapsed = isCompactMode();
-        const icon = btn.querySelector('i');
-        if (icon) {
-            icon.classList.toggle('fa-compress-alt', !collapsed);
-            icon.classList.toggle('fa-expand-alt', collapsed);
-        }
-        btn.setAttribute('aria-label', collapsed ? 'Expand all cards' : 'Collapse all cards');
-        btn.setAttribute('title', collapsed ? 'Expand all cards' : 'Collapse all cards');
-        btn.setAttribute('aria-pressed', collapsed ? 'true' : 'false');
+    function toggleTradeCardCollapse(tradeId) {
+        const id = String(tradeId || '');
+        if (!id) return;
+        const esc = (typeof CSS !== 'undefined' && CSS.escape)
+            ? CSS.escape(id)
+            : id.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+        const card = document.querySelector(`[data-trade-card][data-trade-id="${esc}"]`);
+        const next = !isTradeCardCollapsed(id);
+        setTradeCardCollapsed(id, next);
+        if (card) syncTradeCardCollapseUi(card, next);
     }
 
     function getTradeTargetPrice(t) {
@@ -442,117 +457,182 @@
         return 'text-body-secondary';
     }
 
-    function renderTradeLiveMetricsRow(t, variant) {
+    function hashCompanyTone(company) {
+        const s = String(company || '');
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+        return Math.abs(h) % 6;
+    }
+
+    function formatDayChangeLabel(quote) {
+        if (!quote || quote.price == null || isNaN(Number(quote.price))) return '—';
+        const change = Number(quote.change);
+        const changePct = Number(quote.changePct);
+        if (isNaN(change)) return '—';
+        const pctText = !isNaN(changePct)
+            ? `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`
+            : '';
+        const abs = Math.abs(change).toLocaleString('en-IN', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+        const absText = `${change >= 0 ? '+₹' : '-₹'}${abs}`;
+        return pctText ? `${pctText} (${absText})` : absText;
+    }
+
+    /**
+     * Progress from buy → target:
+     * (Current − Buy) / (Target − Buy) × 100
+     * Reaches 100% when CMP hits the target.
+     */
+    function targetProgressPct(livePrice, targetPrice, buyPrice) {
+        const live = Number(livePrice);
+        const target = Number(targetPrice);
+        const buy = Number(buyPrice);
+        if (!(live > 0) || !(target > 0) || !(buy > 0)) return null;
+        const span = target - buy;
+        if (Math.abs(span) < 1e-9) return live >= target ? 100 : 0;
+        return ((live - buy) / span) * 100;
+    }
+
+    function clampProgressFill(pct) {
+        if (pct == null || isNaN(pct)) return 0;
+        const n = Number(pct);
+        // Negative progress: show magnitude in red so the bar is visible.
+        if (n < 0) return Math.min(100, Math.abs(n));
+        return Math.max(0, Math.min(100, n));
+    }
+
+    /** Negative → red · >60% green · 30–60% orange · 0–30% red */
+    function progressBand(pct) {
+        if (pct == null || isNaN(Number(pct))) return 'neutral';
+        const n = Number(pct);
+        if (n < 0) return 'neg';
+        if (n > 60) return 'high';
+        if (n >= 30) return 'mid';
+        return 'low';
+    }
+
+    function progressBandTextClass(band) {
+        if (band === 'high') return 'text-success';
+        if (band === 'mid') return 'text-progress-mid';
+        if (band === 'neg' || band === 'low') return 'text-danger';
+        return 'text-body-secondary';
+    }
+
+    function progressBandBarClass(band) {
+        if (band === 'high') return 'bg-success';
+        if (band === 'mid') return 'bg-progress-mid';
+        if (band === 'neg' || band === 'low') return 'bg-danger';
+        return 'bg-secondary';
+    }
+
+    function renderPositionLiveBlock(t, variant) {
         const helpers = (global.MTFAppHelpers || {}).tradePages || {};
         const resolveSymbol = helpers.resolveTradeLiveSymbol;
         const getQuote = helpers.getTradeLiveQuote;
         const isRefreshing = helpers.isTradeLiveRefreshing;
-        if (!resolveSymbol) return '';
-
-        const symbol = resolveSymbol(t);
-        if (!symbol) return '';
-
-        const quote = getQuote ? getQuote(symbol) : null;
+        const symbol = resolveSymbol ? resolveSymbol(t) : '';
+        const quote = symbol && getQuote ? getQuote(symbol) : null;
         const loading = isRefreshing ? !!isRefreshing() : false;
         const price = quote && quote.price != null && !isNaN(Number(quote.price))
             ? Number(quote.price)
             : null;
         const change = quote ? Number(quote.change) : NaN;
-        const tone = price == null || isNaN(change)
+        const dayTone = price == null || isNaN(change)
             ? 'neutral'
             : change >= 0 ? 'up' : 'down';
+        const buyPrice = Number(t.buyPrice) || 0;
         const targetPrice = getTradeTargetPrice(t);
-        const gapTone = targetGapTone(price, targetPrice);
-        const gapText = formatTargetGapLabel(price, targetPrice);
-        const liveReturn = price != null ? estimateLiveReturn(t, price) : null;
-        const returnTone = liveReturnTone(liveReturn);
-        const returnText = formatLiveReturn(liveReturn);
+        const progress = targetProgressPct(price, targetPrice, buyPrice);
+        const fill = clampProgressFill(progress);
+        const band = progressBand(progress);
         const targetAttr = targetPrice != null && !isNaN(Number(targetPrice))
             ? String(Number(targetPrice))
             : '';
+        const buyAttr = buyPrice > 0 ? String(buyPrice) : '';
         const tradeId = escapeHtml(t.id || '');
-
-        const priceHtml = escapeHtml(formatLivePrice(price));
-        const gapHtml = price != null ? gapText : '—';
-        const returnHtml = escapeHtml(returnText);
-
+        const symbolAttr = escapeHtml(symbol || '');
         const spinnerHtml = loading
-            ? renderIcon('fa-spinner', { className: 'fa-spin', size: 'xs' })
-            : '';
-
-        const liveCell = (field, label, icon, valueHtml, toneKey, iconClass) => `
-            <td class="p-2 align-top bg-transparent" style="width:33.333%">
-                <button type="button" class="btn border-0 bg-transparent text-start p-0 w-100 shadow-none ${liveToneClass(toneKey)}"
-                    data-live-field="${field}"
-                    onclick="refreshTradeLivePricesNow('${escapeHtml(symbol)}')"
-                    title="Tap to refresh live price">
-                    <span class="small text-muted d-inline-flex align-items-center gap-1 text-truncate w-100">
-                        ${renderIcon(icon, { className: iconClass, size: 'xs' })}
-                        ${label}
-                    </span>
-                    <span class="fs-6 fw-normal d-block mt-1 text-break" data-live-value>${valueHtml}</span>
-                </button>
-            </td>`;
-
-        const { renderTradeMetricsTable } = global.MTFComponents;
-        const rows = `
-            <tr>
-                ${liveCell('price', 'Price', 'fa-chart-line', priceHtml, tone, 'text-primary')}
-                ${liveCell('target', 'Target', 'fa-bullseye', gapHtml, gapTone, 'text-warning')}
-                ${liveCell('return', 'If Sold Now', 'fa-hand-holding-usd', returnHtml, returnTone, 'text-info')}
-            </tr>`;
-        const attrs = `
-            data-live-symbol="${escapeHtml(symbol)}"
-            data-quote-symbol="${escapeHtml(symbol)}"
-            data-target-price="${escapeHtml(targetAttr)}"
-            data-trade-id="${tradeId}"`;
-
-        return renderTradeMetricsTable(rows, 'Current Market', attrs, spinnerHtml);
-    }
-
-    function renderTradesCompactTable(trades) {
-        const resolveTradeMetrics = (global.MTFAppHelpers || {}).resolveTradeMetrics;
-        const rows = (trades || []).map((t) => {
-            const metrics = resolveTradeMetrics
-                ? resolveTradeMetrics(t)
-                : { netProfit: 0, sellPrice: t.sellPrice || 0, charges: 0 };
-            const company = t.company || 'trade';
-            const tradeId = escapeHtml(t.id || '');
-            const qty = Number(t.quantity) || 0;
-            const buy = fmtDec(t.buyPrice || 0);
-            const sell = fmtDec(metrics.sellPrice != null ? metrics.sellPrice : (t.sellPrice || 0));
-            return `
-                <tr data-trade-card data-trade-id="${tradeId}" data-collapsed="true">
-                    <td class="trades-compact-company" title="${escapeHtml(company)} · Qty ${qty}">
-                        <div class="d-flex align-items-baseline justify-content-between gap-1 min-w-0 w-100">
-                            <span class="text-truncate min-w-0 flex-grow-1">${escapeHtml(company)}</span>
-                            <span class="flex-shrink-0 small text-body-secondary text-nowrap">(Qty ${qty})</span>
-                        </div>
-                    </td>
-                    <td class="text-nowrap small trades-compact-prices">
-                        <span class="text-info">${buy}</span>
-                        <span class="text-muted mx-1">/</span>
-                        <span class="text-danger">${sell}</span>
-                    </td>
-                    <td class="text-end text-nowrap trades-compact-pnl">
-                        ${renderAmount(metrics.netProfit, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false })}
-                    </td>
-                </tr>
-            `;
-        }).join('');
+            ? `<span data-live-loading class="ms-1">${renderIcon('fa-spinner', { className: 'fa-spin' })}</span>`
+            : `<span data-live-loading class="ms-1"></span>`;
+        const progressLabel = progress == null || isNaN(progress)
+            ? '—'
+            : `${Math.round(progress)}%`;
 
         return `
-            <div class="bg-body" data-trades-compact-table>
-                <table class="table table-sm align-middle mb-0 trades-compact-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th scope="col" class="trades-compact-company">Company (Qty)</th>
-                            <th scope="col" class="trades-compact-prices">Buy / Sell</th>
-                            <th scope="col" class="text-end trades-compact-pnl">P&amp;L</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
+            <div class="trade-position-metrics"
+                data-live-symbol="${symbolAttr}"
+                data-quote-symbol="${symbolAttr}"
+                data-buy-price="${escapeHtml(buyAttr)}"
+                data-target-price="${escapeHtml(targetAttr)}"
+                data-trade-id="${tradeId}"
+                data-trade-variant="${escapeHtml(variant)}">
+                <div class="trade-position-grid">
+                    <div class="trade-position-cell ${liveToneClass(dayTone)}" data-live-field="price">
+                        <span class="d-flex align-items-center gap-1 min-w-0">
+                            <span class="trade-position-price text-body text-truncate" data-live-value>${escapeHtml(formatLivePrice(price))}</span>
+                            ${spinnerHtml}
+                        </span>
+                        <span class="trade-position-change text-truncate ${liveToneClass(dayTone)}" data-live-change>${escapeHtml(formatDayChangeLabel(quote))}</span>
+                    </div>
+                    <div class="trade-position-cell">
+                        <span class="trade-position-label text-info">Buy</span>
+                        <span class="trade-position-value text-body text-truncate">${fmtDec(buyPrice)}</span>
+                    </div>
+                    <div class="trade-position-cell">
+                        <span class="trade-position-label text-success">Target</span>
+                        <span class="trade-position-value trade-position-target-value text-truncate">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
+                    </div>
+                    <div class="trade-position-cell trade-position-cell--progress">
+                        <span class="trade-position-progress-pct ${progressBandTextClass(band)}" data-live-progress-pct>${escapeHtml(progressLabel)}</span>
+                        <div class="progress trade-position-progress${band === 'neg' ? ' trade-position-progress--neg' : ''}" role="progressbar" aria-valuenow="${Math.round(progress == null || isNaN(progress) ? 0 : progress)}" aria-valuemin="0" aria-valuemax="100" data-live-progress-track>
+                            <div class="progress-bar ${progressBandBarClass(band)}"
+                                data-live-progress-bar style="width:${fill}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTradeCardHeader(t, metrics, company, variant) {
+        const qty = Number(t.quantity) || 0;
+        const leverage = formatTradeLeverageLabel(t);
+        const getDaysHeld = (global.MTFAppHelpers || {}).getDaysHeld;
+        const daysHeld = getDaysHeld ? getDaysHeld(t) : 0;
+        const daysLabel = daysHeld === 1 ? '1 Day' : `${daysHeld} Days`;
+        const tone = hashCompanyTone(company);
+        const helpers = (global.MTFAppHelpers || {}).tradePages || {};
+        const resolveSymbol = helpers.resolveTradeLiveSymbol;
+        const getQuote = helpers.getTradeLiveQuote;
+        const symbol = resolveSymbol ? resolveSymbol(t) : '';
+        const quote = symbol && getQuote ? getQuote(symbol) : null;
+        const livePrice = quote && quote.price != null && !isNaN(Number(quote.price))
+            ? Number(quote.price)
+            : null;
+        const useLivePnl = variant !== 'past' && livePrice != null;
+        const liveReturn = useLivePnl ? estimateLiveReturn(t, livePrice) : null;
+        const pnlAmount = liveReturn != null && !isNaN(Number(liveReturn))
+            ? liveReturn
+            : metrics.netProfit;
+
+        return `
+            <div class="d-flex align-items-start gap-2 w-100 min-w-0">
+                <span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
+                <div class="min-w-0 flex-grow-1 overflow-hidden">
+                    <div class="trade-position-name" title="${escapeHtml(company)}">${escapeHtml(company)}</div>
+                    <div class="trade-position-meta">
+                        <span>Qty ${qty}</span>
+                        <span class="trade-position-meta-sep" aria-hidden="true">•</span>
+                        <span>${escapeHtml(leverage)} MTF</span>
+                        <span class="trade-position-meta-sep" aria-hidden="true">•</span>
+                        <span>${escapeHtml(daysLabel)}</span>
+                    </div>
+                </div>
+                <div class="trade-position-pnl flex-shrink-0" data-trade-card-pnl>
+                    ${renderAmount(pnlAmount, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false })}
+                </div>
             </div>
         `;
     }
@@ -562,42 +642,20 @@
         const metrics = resolveTradeMetrics
             ? resolveTradeMetrics(t)
             : { netProfit: 0, sellPrice: t.sellPrice || 0, charges: 0 };
-        const qty = Number(t.quantity) || 0;
         const company = t.company || 'trade';
         const tradeId = escapeHtml(t.id || '');
-        const brokerLabel = (variant === 'past' || variant === 'plan') && t.broker
-            ? appTag(t.broker, 'broker')
-            : '';
-        const verifiedLabel = variant === 'past' && t.verified
-            ? `<span class="badge rounded-pill text-bg-success">Verified</span>`
-            : '';
-        const liveMetrics = renderTradeLiveMetricsRow(t, variant);
-        const details = renderTradeListItemDetails(t);
+        const positionLive = renderPositionLiveBlock(t, variant);
 
         return `
-            <article class="card bg-body border rounded w-100" data-trade-card data-trade-id="${tradeId}">
-                <div class="card-body p-3 d-flex flex-column gap-3">
-                    <div class="d-flex justify-content-between align-items-center gap-2 min-w-0">
-                        <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <span class="d-inline-flex align-items-center gap-1">
-                                <span class="small text-muted text-uppercase">Qty</span>
-                                <span class="fs-6 fw-semibold text-info">${qty}</span>
-                            </span>
-                        </div>
-                        <div>${renderTradeCardPnl(metrics.netProfit)}</div>
-                    </div>
-                    <hr class="m-0">
-                    <div class="d-flex align-items-center gap-2 min-w-0">
-                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-primary bg-opacity-10 text-primary fw-semibold" style="width:2rem;height:2rem" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
-                        <span class="text-truncate">${escapeHtml(company)}</span>
-                        ${renderTradeListItemLeverageMeta(t)}
-                        ${brokerLabel}
-                        ${verifiedLabel}
-                    </div>
-                    ${liveMetrics}
-                    ${details}
-                    <hr class="m-0">
-                    ${renderTradeListItemActions(t, variant)}
+            <article class="card bg-body border rounded w-100 trade-position-card"
+                data-trade-card data-trade-id="${tradeId}" data-trade-open-detail
+                role="button" tabindex="0"
+                onclick="openTradeDetail('${tradeId}')"
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}"
+                aria-label="Open ${escapeHtml(company)} details">
+                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
+                    ${renderTradeCardHeader(t, metrics, company, variant)}
+                    ${positionLive}
                 </div>
             </article>
         `;
@@ -620,10 +678,10 @@
         renderOpenTradeListItem,
         renderPastTradeListItem,
         renderPlanTradeListItem,
-        renderTradesCompactTable,
-        toggleAllTradeCardsCollapse,
-        syncTradeCardsCollapseAllButton,
-        isCompactMode
+        toggleTradeCardCollapse,
+        isTradeCardCollapsed,
+        setTradeCardCollapsed,
+        syncTradeCardCollapseUi
     });
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -657,12 +715,6 @@
     }
 
     function renderFlatTradesList(trades, renderItem, variant = 'open') {
-        const comps = global.MTFComponents || {};
-        if (typeof comps.isCompactMode === 'function'
-            && comps.isCompactMode()
-            && typeof comps.renderTradesCompactTable === 'function') {
-            return comps.renderTradesCompactTable(trades, variant);
-        }
         return renderTradesList(trades, renderItem);
     }
 
@@ -730,12 +782,50 @@
 
 /* ========== Trade summary row ========== */
 /**
- * M7 — Trade summary row molecule (P&L + profit/loss counts + total).
+ * M7 — Trade summary: four portfolio metric cards (P&L / Invested / Holdings / MTF).
  */
 (function (global) {
     'use strict';
 
-    const { fmt, paintMoneyAmountWords } = global.MTFComponents;
+    const { fmt, fmtINR, paintMoneyAmountWords } = global.MTFComponents;
+
+    function aggregatePortfolioSummary(trades, resolveTradeMetrics) {
+        let net = 0;
+        let invested = 0;
+        let ownMargin = 0;
+        (trades || []).forEach((t) => {
+            const m = resolveTradeMetrics ? resolveTradeMetrics(t) : t;
+            net += Number(m.netProfit) || 0;
+            invested += Number(m.totalInvestment) || 0;
+            ownMargin += Number(m.ownMargin) || 0;
+        });
+        const holdings = (trades || []).length;
+        const mtfUsed = ownMargin > 0 ? invested / ownMargin : (holdings > 0 ? 1 : 0);
+        return { net, invested, holdings, mtfUsed };
+    }
+
+    function renderPortfolioStatCard(label, valueHtml, valueClass) {
+        return `<div class="portfolio-stat-card">
+            <div class="portfolio-stat-label">${label}</div>
+            <div class="portfolio-stat-value text-truncate ${valueClass || ''}">${valueHtml}</div>
+        </div>`;
+    }
+
+    function renderPortfolioSummaryCards({ net, invested, holdings, mtfUsed }) {
+        const n = Number(net) || 0;
+        const inv = Number(invested) || 0;
+        const count = Number(holdings) || 0;
+        const lev = Number(mtfUsed) || 0;
+        const pnlFormatted = n > 0 ? '+' + fmtINR(n) : fmtINR(n);
+        const pnlToneClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-body');
+        const mtfFormatted = count > 0 ? `${lev.toFixed(2)}x` : '—';
+        return `<div class="portfolio-summary-cards" role="group" aria-label="Portfolio summary">
+            ${renderPortfolioStatCard('Total P&L', pnlFormatted, pnlToneClass)}
+            ${renderPortfolioStatCard('Total Invested', fmtINR(inv), 'text-body')}
+            ${renderPortfolioStatCard('Total Holdings', String(count), 'text-body')}
+            ${renderPortfolioStatCard('MTF Used', mtfFormatted, 'text-body')}
+        </div>`;
+    }
 
     function renderTradeSummaryRow(net, count, countLabel) {
         const toneClass = net >= 0 ? 'text-success' : 'text-danger';
@@ -753,41 +843,13 @@
         </div>`;
     }
 
-    function renderTwoItemSummaryRow(net, count, countLabel, profitCount, lossCount) {
-        const n = Number(net) || 0;
-        const pnlFormatted = n > 0 ? '+' + fmt(n) : fmt(n);
-        const pnlToneClass = n >= 0 ? 'text-success' : 'text-danger';
-        const hasBuckets = profitCount != null && lossCount != null;
-        const profit = Number(profitCount) || 0;
-        const loss = Number(lossCount) || 0;
-        const countsHtml = hasBuckets
-            ? `<div class="d-flex align-items-center flex-shrink-0">
-                <div class="text-center px-2">
-                    <div class="small text-uppercase fw-normal text-success">Profit</div>
-                    <div class="fs-5 fw-normal text-success">${profit}</div>
-                </div>
-                <div class="align-self-stretch border-start border" aria-hidden="true"></div>
-                <div class="text-center px-2">
-                    <div class="small text-uppercase fw-normal text-danger">Loss</div>
-                    <div class="fs-5 fw-normal text-danger">${loss}</div>
-                </div>
-                <div class="align-self-stretch border-start border" aria-hidden="true"></div>
-                <div class="text-center px-2">
-                    <div class="small text-uppercase fw-normal text-muted">${countLabel}</div>
-                    <div class="fs-5 fw-normal text-body-secondary">${count}</div>
-                </div>
-            </div>`
-            : `<div class="text-end flex-shrink-0">
-                <div class="small text-uppercase fw-normal text-muted">${countLabel}</div>
-                <div class="fs-5 fw-normal text-body-secondary">${count}</div>
-            </div>`;
-        return `<div class="d-flex align-items-center justify-content-between gap-3 w-100">
-            <div class="min-w-0 text-start">
-                <div class="small text-uppercase fw-normal text-muted">P&L</div>
-                <div class="fs-5 fw-normal ${pnlToneClass} text-truncate">${pnlFormatted}</div>
-            </div>
-            ${countsHtml}
-        </div>`;
+    function renderTwoItemSummaryRow(net, count) {
+        return renderPortfolioSummaryCards({
+            net,
+            invested: 0,
+            holdings: count,
+            mtfUsed: 0
+        });
     }
 
     function countTradePnlBuckets(trades, resolveTradeMetrics) {
@@ -803,44 +865,67 @@
         return { profit, loss };
     }
 
-    function paintTradeRangeSummary({ containerId, wordsId, net, count, countLabel, useTwoItemLayout, profitCount, lossCount }) {
+    function paintTradeRangeSummary({
+        containerId,
+        wordsId,
+        net,
+        invested,
+        holdings,
+        mtfUsed,
+        count,
+        countLabel,
+        useTwoItemLayout,
+        profitCount,
+        lossCount,
+        usePortfolioLayout
+    }) {
         const el = document.getElementById(containerId);
         if (!el) return;
-        if (useTwoItemLayout) {
-            el.innerHTML = renderTwoItemSummaryRow(net, count, countLabel, profitCount, lossCount);
+        const portfolio = usePortfolioLayout
+            || invested != null
+            || holdings != null
+            || mtfUsed != null
+            || useTwoItemLayout;
+        if (portfolio) {
+            el.innerHTML = renderPortfolioSummaryCards({
+                net,
+                invested: invested != null ? invested : 0,
+                holdings: holdings != null ? holdings : count,
+                mtfUsed: mtfUsed != null ? mtfUsed : 0
+            });
         } else {
             el.innerHTML = renderTradeSummaryRow(net, count, countLabel);
         }
         if (wordsId) paintMoneyAmountWords(document.getElementById(wordsId), net, 'center');
     }
 
-    function paintPastTradeSummary(net, tradeCount, profitCount, lossCount) {
+    function paintPastTradeSummary(summary) {
         paintTradeRangeSummary({
             containerId: 'pastSummaryStats',
             wordsId: 'pastSummaryNetWords',
-            net,
-            count: tradeCount,
-            countLabel: 'Closed',
-            useTwoItemLayout: true,
-            profitCount,
-            lossCount
+            net: summary.net,
+            invested: summary.invested,
+            holdings: summary.holdings,
+            mtfUsed: summary.mtfUsed,
+            usePortfolioLayout: true
         });
     }
 
-    function paintPlanTradeSummary(net, planCount, profitCount, lossCount) {
+    function paintPlanTradeSummary(summary) {
         paintTradeRangeSummary({
             containerId: 'planSummaryStats',
             wordsId: 'planSummaryNetWords',
-            net,
-            count: planCount,
-            countLabel: 'Plan',
-            useTwoItemLayout: true,
-            profitCount,
-            lossCount
+            net: summary.net,
+            invested: summary.invested,
+            holdings: summary.holdings,
+            mtfUsed: summary.mtfUsed,
+            usePortfolioLayout: true
         });
     }
 
     global.MTFRegister({
+        aggregatePortfolioSummary,
+        renderPortfolioSummaryCards,
         renderTradeSummaryRow,
         renderTwoItemSummaryRow,
         countTradePnlBuckets,

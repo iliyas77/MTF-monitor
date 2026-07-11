@@ -19,22 +19,40 @@
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" id="toastContainer"></div>
 
     <!-- ============ HEADER ============ -->
-    <header id="appHeader" class="navbar sticky-top border-bottom px-3 py-3 bg-body w-100">
+    <header id="appHeader" class="navbar sticky-top bg-body w-100 border-0 px-2 py-2">
         <div id="appHeaderDefault" class="d-flex align-items-center justify-content-between gap-2 w-100">
-            <h5 class="fw-normal text-body mb-0 fs-3 text-truncate min-w-0" id="appHeaderDefaultTitle"><i class="fas fa-chart-line text-success me-2"></i>MTF Profit Tracker</h5>
-            <button type="button" id="appHeaderSearchBtn" class="btn btn-outline-secondary rounded-circle border flex-shrink-0 d-none" style="width:2.75rem;height:2.75rem" onclick="openSearchPage()" aria-label="Search"><i class="fas fa-search text-muted"></i></button>
+            <div class="d-flex align-items-center gap-1 min-w-0">
+                <button type="button" id="appHeaderMenuBtn" class="app-header-icon-btn flex-shrink-0" onclick="navigateTo('more')" aria-label="Menu">
+                    <i class="fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <h1 class="app-header-title text-truncate mb-0" id="appHeaderDefaultTitle">My Positions</h1>
+            </div>
+            <div id="appHeaderDefaultActions" class="d-flex align-items-center flex-shrink-0">
+                <button type="button" id="appHeaderSearchBtn" class="app-header-icon-btn d-none" onclick="openSearchPage()" aria-label="Search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none" onclick="openFilterSheet()" aria-label="Filter">
+                    <i class="fas fa-filter" aria-hidden="true"></i>
+                </button>
+                <div class="dropdown" id="appHeaderMoreWrap">
+                    <button type="button" id="appHeaderMoreBtn" class="app-header-icon-btn d-none" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" id="appHeaderMoreMenu"></ul>
+                </div>
+            </div>
         </div>
-        <div id="appHeaderSettings" class="d-none d-flex align-items-center gap-3 w-100">
-            <button type="button" class="btn btn-outline-secondary rounded-circle border flex-shrink-0" style="width:2.75rem;height:2.75rem" onclick="backFromSettings()" aria-label="Back">
-                <i class="fas fa-arrow-left text-muted"></i>
+        <div id="appHeaderSettings" class="d-none d-flex align-items-center gap-2 w-100">
+            <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backFromSettings()" aria-label="Back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </button>
-            <h5 class="fw-semibold text-body mb-0 fs-3"><i class="fas fa-cog me-2"></i>Settings</h5>
+            <h1 class="app-header-title mb-0">Settings</h1>
         </div>
-        <div id="appHeaderSubpage" class="d-none d-flex align-items-center gap-3 min-w-0 w-100">
-            <button type="button" class="btn btn-outline-secondary rounded-circle border flex-shrink-0" style="width:2.75rem;height:2.75rem" onclick="backToMoreHub()" aria-label="Back">
-                <i class="fas fa-arrow-left text-muted"></i>
+        <div id="appHeaderSubpage" class="d-none d-flex align-items-center gap-2 min-w-0 w-100">
+            <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backToMoreHub()" aria-label="Back">
+                <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </button>
-            <h5 class="fw-normal text-body mb-0 fs-3 text-truncate" id="appHeaderSubpageTitle"></h5>
+            <h1 class="app-header-title text-truncate mb-0" id="appHeaderSubpageTitle"></h1>
         </div>
     </header>
 
@@ -43,11 +61,9 @@
     <!-- PAGE: PLAN -->
     <section id="page-plan" class="w-100 d-none">
         <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
-            <div class="card w-100 rounded-3" id="planSummaryCard">
-                <div class="card-body py-2 px-3">
-                    <div id="planSummaryStats"></div>
-                    <div id="planSummaryNetWords"></div>
-                </div>
+            <div class="w-100" id="planSummaryCard">
+                <div id="planSummaryStats"></div>
+                <div id="planSummaryNetWords"></div>
             </div>
 
             <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1 w-100">
@@ -67,14 +83,10 @@
     <!-- PAGE: TRADES -->
     <section id="page-trades" class="w-100 d-none">
         <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
-            <div class="card w-100 rounded-3" id="summaryCard">
-                <div class="card-body py-2 px-3">
-                    <div id="summaryOpenStats"></div>
-                    <div id="summaryNetWords"></div>
-                </div>
+            <div class="w-100" id="summaryCard">
+                <div id="summaryOpenStats"></div>
+                <div id="summaryNetWords"></div>
             </div>
-
-            <div class="w-100" id="tradesFilterBar"></div>
 
             <div id="transactionList" class="w-100"></div>
         </div>
@@ -83,14 +95,10 @@
     <!-- PAGE: PAST TRADES -->
     <section id="page-past" class="w-100 d-none">
         <div class="px-3 pt-3 w-100 d-flex flex-column gap-3">
-            <div class="card w-100 rounded-3" id="pastSummaryCard">
-                <div class="card-body py-2 px-3">
-                    <div id="pastSummaryStats"></div>
-                    <div id="pastSummaryNetWords"></div>
-                </div>
+            <div class="w-100" id="pastSummaryCard">
+                <div id="pastSummaryStats"></div>
+                <div id="pastSummaryNetWords"></div>
             </div>
-
-            <div class="w-100" id="pastFilterBar"></div>
 
             <div id="pastTradesList" class="w-100"></div>
         </div>
@@ -543,42 +551,90 @@
                 <input type="date" class="form-control" id="moneyHistoryTo" />
             </div>
         </div>
-        <div id="panelPastFilter">
-            <section class="mb-3">
-                <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
+        <div id="panelPastFilter" class="trade-filters">
+            <section class="trade-filters-section">
+                <h4 class="trade-filters-title">Status</h4>
+                <div class="trade-filters-radios" role="radiogroup" aria-label="Trade status">
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="all" id="tradeFilterStatus-all"><span>All</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="open" id="tradeFilterStatus-open" checked><span>Open</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="plan" id="tradeFilterStatus-plan"><span>Planned</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="closed" id="tradeFilterStatus-closed"><span>Closed</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterStatus" value="cancelled" id="tradeFilterStatus-cancelled"><span>Cancelled</span></label>
+                </div>
+            </section>
+
+            <section class="trade-filters-section">
+                <h4 class="trade-filters-title">Holding Days</h4>
+                <div class="trade-filters-chips" role="group" aria-label="Holding days">
+                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-all" value="all" checked>
+                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-all">All</label>
+                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-1-3" value="1-3">
+                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-1-3">1–3</label>
+                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-4-7" value="4-7">
+                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-4-7">4–7</label>
+                    <input type="radio" class="btn-check" name="tradeFilterHoldDays" id="tradeFilterHold-8" value="8+">
+                    <label class="btn btn-sm btn-outline-success" for="tradeFilterHold-8">8+</label>
+                </div>
+            </section>
+
+            <section class="trade-filters-section">
+                <h4 class="trade-filters-title">Performance</h4>
+                <div class="trade-filters-checks" role="group" aria-label="Performance">
+                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-profit" value="profit"><span>Profit</span></label>
+                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-loss" value="loss"><span>Loss</span></label>
+                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-near" value="near_target"><span>Near Target</span></label>
+                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-hit" value="target_hit"><span>Target Hit</span></label>
+                    <label class="trade-filters-check"><input type="checkbox" id="tradeFilterPerf-verified" value="verified"><span>Verified</span></label>
+                </div>
+            </section>
+
+            <section class="trade-filters-section">
+                <h4 class="trade-filters-title">Sort By</h4>
+                <div class="trade-filters-radios" role="radiogroup" aria-label="Sort by">
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="company" id="tradeFilterSort-company"><span>Company</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="holding" id="tradeFilterSort-holding" checked><span>Holding Days</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="buyDate" id="tradeFilterSort-buyDate"><span>Buy Date</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="pnl" id="tradeFilterSort-pnl"><span>P&amp;L</span></label>
+                    <label class="trade-filters-radio"><input type="radio" name="tradeFilterSort" value="return" id="tradeFilterSort-return"><span>Current Return</span></label>
+                </div>
+            </section>
+
+            <section class="trade-filters-section">
+                <h4 class="trade-filters-title">Quick range</h4>
                 <div class="row g-2" id="pastRangeButtons" role="group" aria-label="Quick date range">
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setPastRange('all')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)draftPastRange('all')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-all">All</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)setPastRange('today')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)draftPastRange('today')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-today">Today</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setPastRange('yesterday')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)draftPastRange('yesterday')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-yesterday">Yesterday</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)setPastRange('this-week')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)draftPastRange('this-week')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-this-week">This Week</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)setPastRange('last-week')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)draftPastRange('last-week')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-last-week">Last week</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)setPastRange('work-20')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)draftPastRange('work-20')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-20">20 WD</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)setPastRange('work-30')">
+                        <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)draftPastRange('work-30')">
                         <label class="btn btn-sm btn-outline-success w-100" for="pastRange-work-30">30 WD</label>
                     </div>
                 </div>
             </section>
-            <section class="mb-3">
-                <h4 class="small text-muted text-uppercase fw-medium mb-2">Custom range</h4>
+
+            <section class="trade-filters-section trade-filters-section--last">
+                <h4 class="trade-filters-title">Custom range</h4>
                 <div class="d-flex align-items-end gap-2">
                     <div class="flex-fill">
                         <label class="form-label small mb-1" for="pastFrom">From</label>
@@ -679,6 +735,11 @@
                     </div></div>
         <div id="panelBackup"><p class="small text-muted mb-2">Copy this text and save it anywhere (notes, email, chat). To restore later, paste your backup text here and tap Restore.</p>
                     <textarea class="form-control w-100 font-monospace small" id="backupTextArea" rows="10" spellcheck="false"></textarea></div>
+
+        <!-- Trade detail sheet (full-height Cupertino Pane) -->
+        <div id="tradeDetailSheet" aria-label="Trade details">
+            <div id="tradeDetailContent" class="trade-detail-scroll px-3 pt-1 pb-5 w-100" overflow-y></div>
+        </div>
 
         <!-- Trade add/edit sheet shell (Cupertino Pane) -->
         <div id="txModal" aria-labelledby="txModalTitle">
@@ -813,6 +874,7 @@
     <script src="pages/common/trade-modal.js"></script>
     <script src="pages/common/app-version.js"></script>
     <script src="pages/trades/trades-page.js"></script>
+    <script src="pages/trades/trade-detail-page.js"></script>
     <script src="pages/market/market-page.js"></script>
     <script src="pages/money/money-page.js"></script>
     <script src="pages/more/more-page.js"></script>
