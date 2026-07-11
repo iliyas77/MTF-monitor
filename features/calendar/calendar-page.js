@@ -51,6 +51,18 @@
         return `${n < 0 ? '−' : '+'}₹${body}`;
     }
 
+    /** Whole-rupee P&L for header cards / bar (matches mock). */
+    function formatWholePnl(amount, { signed = true, abs = false } = {}) {
+        const n = Number(amount) || 0;
+        if (Math.abs(n) < 0.005 && !abs) return '—';
+        const value = abs ? Math.abs(n) : n;
+        const rounded = Math.round(Math.abs(value));
+        const body = rounded.toLocaleString('en-IN');
+        if (!signed) return `₹${body}`;
+        if (abs) return `${n < 0 ? '−' : '+'}₹${body}`;
+        return `${value < 0 ? '−' : '+'}₹${body}`;
+    }
+
     function isClosedTrade(t) {
         if ((t.status || 'closed') === 'open') return false;
         if ((t.status || '') === 'cancelled') return false;
@@ -90,54 +102,143 @@
         return map;
     }
 
-    /** Month totals for closed trades in viewYear/viewMonth. */
-    function buildMonthSummary(year, month) {
-        const helpers = tradePages();
-        const txs = typeof helpers.getTransactions === 'function' ? helpers.getTransactions() : [];
-        const prefix = `${year}-${pad2(month + 1)}-`;
-        let trades = 0;
-        let wins = 0;
-        let losses = 0;
-        let net = 0;
-        const activeDays = new Set();
-        const byBroker = Object.create(null);
+    function hashNameTone(name) {
+        const s = String(name || '');
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+        return Math.abs(h) % 6;
+    }
 
+    function nameInitial(name) {
+        const s = String(name || '').trim();
+        if (!s) return '•';
+        return s.charAt(0).toUpperCase();
+    }
+
+    function brokerAvatarHtml(name) {
+        const tone = hashNameTone(name);
+        const letter = escapeHtml(nameInitial(name));
+        return `<span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true">${letter}</span>`;
+    }
+
+    function brokerKey(raw) {
+        const name = String(raw || '').trim();
+        return name && !/^none$/i.test(name) ? name : 'Other';
+    }
+
+    function emptyMonthBucket() {
+        return {
+            trades: 0,
+            wins: 0,
+            losses: 0,
+            activeDays: new Set(),
+            net: 0,
+            grossProfit: 0,
+            grossLoss: 0,
+            byBroker: Object.create(null),
+            dayNets: Object.create(null)
+        };
+    }
+
+    function accumulateClosedMonth(txs, year, month) {
+        const prefix = `${year}-${pad2(month + 1)}`;
+        const bucket = emptyMonthBucket();
         txs.forEach((t) => {
             if (!isClosedTrade(t)) return;
             const sell = String(t.sellDate || '');
-            if (!sell || sell.slice(0, 7) !== prefix.slice(0, 7)) return;
+            if (!sell || sell.slice(0, 7) !== prefix) return;
             const pnl = Number(t.netProfit) || 0;
-            const brokerRaw = String(t.broker || '').trim();
-            const broker = brokerRaw && !/^none$/i.test(brokerRaw) ? brokerRaw : 'Other';
-            trades += 1;
-            net += pnl;
-            activeDays.add(sell.slice(0, 10));
-            if (pnl >= 0) wins += 1;
-            else losses += 1;
-            if (!byBroker[broker]) {
-                byBroker[broker] = { broker, trades: 0, wins: 0, losses: 0, net: 0 };
+            const day = sell.slice(0, 10);
+            const broker = brokerKey(t.broker);
+            bucket.trades += 1;
+            bucket.net += pnl;
+            if (pnl >= 0) {
+                bucket.wins += 1;
+                bucket.grossProfit += pnl;
+            } else {
+                bucket.losses += 1;
+                bucket.grossLoss += Math.abs(pnl);
             }
-            byBroker[broker].trades += 1;
-            byBroker[broker].net += pnl;
-            if (pnl >= 0) byBroker[broker].wins += 1;
-            else byBroker[broker].losses += 1;
+            bucket.activeDays.add(day);
+            bucket.dayNets[day] = (bucket.dayNets[day] || 0) + pnl;
+            if (!bucket.byBroker[broker]) {
+                bucket.byBroker[broker] = {
+                    broker,
+                    trades: 0,
+                    wins: 0,
+                    losses: 0,
+                    net: 0,
+                    dayNets: Object.create(null)
+                };
+            }
+            const row = bucket.byBroker[broker];
+            row.trades += 1;
+            row.net += pnl;
+            row.dayNets[day] = (row.dayNets[day] || 0) + pnl;
+            if (pnl >= 0) row.wins += 1;
+            else row.losses += 1;
         });
+        return bucket;
+    }
 
-        const brokers = Object.keys(byBroker)
+    function seriesFromDayNets(dayNets) {
+        return Object.keys(dayNets || {})
+            .sort()
+            .map((key) => Math.round((Number(dayNets[key]) || 0) * 100) / 100);
+    }
+
+    function finalizeMonthBucket(bucket) {
+        const brokers = Object.keys(bucket.byBroker)
             .map((key) => {
-                const row = byBroker[key];
-                row.net = Math.round(row.net * 100) / 100;
-                return row;
+                const row = bucket.byBroker[key];
+                return {
+                    broker: row.broker,
+                    trades: row.trades,
+                    wins: row.wins,
+                    losses: row.losses,
+                    net: Math.round(row.net * 100) / 100,
+                    series: seriesFromDayNets(row.dayNets)
+                };
             })
             .sort((a, b) => Math.abs(b.net) - Math.abs(a.net) || b.trades - a.trades || a.broker.localeCompare(b.broker));
-
         return {
-            trades,
-            wins,
-            losses,
-            activeDays: activeDays.size,
-            net: Math.round(net * 100) / 100,
-            brokers
+            trades: bucket.trades,
+            wins: bucket.wins,
+            losses: bucket.losses,
+            activeDays: bucket.activeDays.size,
+            net: Math.round(bucket.net * 100) / 100,
+            grossProfit: Math.round(bucket.grossProfit * 100) / 100,
+            grossLoss: Math.round(bucket.grossLoss * 100) / 100,
+            brokers,
+            series: seriesFromDayNets(bucket.dayNets)
+        };
+    }
+
+    /** Month totals for closed trades in viewYear/viewMonth (+ previous month for MoM). */
+    function buildMonthSummary(year, month) {
+        const helpers = tradePages();
+        const txs = typeof helpers.getTransactions === 'function' ? helpers.getTransactions() : [];
+        const current = finalizeMonthBucket(accumulateClosedMonth(txs, year, month));
+        const prevDate = new Date(year, month - 1, 1);
+        const previous = finalizeMonthBucket(
+            accumulateClosedMonth(txs, prevDate.getFullYear(), prevDate.getMonth())
+        );
+        const prevBrokers = Object.create(null);
+        previous.brokers.forEach((row) => {
+            prevBrokers[row.broker] = row;
+        });
+        current.brokers = current.brokers.map((row) => {
+            const prev = prevBrokers[row.broker];
+            return {
+                ...row,
+                prevNet: prev ? prev.net : 0,
+                prevTrades: prev ? prev.trades : 0
+            };
+        });
+        return {
+            ...current,
+            previous,
+            prevMonthLabel: `${MONTH_NAMES[prevDate.getMonth()].slice(0, 3)} ${prevDate.getFullYear()}`
         };
     }
 
@@ -146,45 +247,215 @@
         return Number(amount) >= 0 ? 'text-success' : 'text-danger';
     }
 
-    function paintMonthSummary(year, month) {
-        const summary = buildMonthSummary(year, month);
-        const labelEl = document.getElementById('calendarMonthSummaryLabel');
-        const tradesEl = document.getElementById('calSummaryTrades');
-        const winLossEl = document.getElementById('calSummaryWinLoss');
-        const daysEl = document.getElementById('calSummaryDays');
-        const pnlEl = document.getElementById('calSummaryPnl');
-        const brokerListEl = document.getElementById('calSummaryBrokerList');
+    function formatCompactPnl(amount) {
+        const n = Number(amount) || 0;
+        if (Math.abs(n) < 0.005) return '—';
+        const fmtINR = global.MTFComponents?.fmtINR;
+        const abs = Math.abs(n);
+        const body = typeof fmtINR === 'function'
+            ? fmtINR(abs).replace(/^₹/, '')
+            : Math.round(abs).toLocaleString('en-IN');
+        const whole = body.includes('.') ? body.replace(/\.00$/, '') : body;
+        return `${n >= 0 ? '+' : '−'}₹${whole}`;
+    }
 
-        if (labelEl) {
-            labelEl.textContent = `${MONTH_NAMES[month]} ${year}`;
+    function formatPct(value) {
+        const n = Number(value);
+        if (!isFinite(n)) return null;
+        const abs = Math.abs(n);
+        const text = abs >= 10 ? abs.toFixed(0) : abs.toFixed(1);
+        return `${text}%`;
+    }
+
+    function pctChange(curr, prev) {
+        const c = Number(curr) || 0;
+        const p = Number(prev) || 0;
+        if (Math.abs(p) < 0.005) return null;
+        return ((c - p) / Math.abs(p)) * 100;
+    }
+
+    function momFootHtml(deltaPct, prevLabel, opts = {}) {
+        const { absoluteDelta = null, preferAbsolute = false } = opts;
+        if (preferAbsolute && absoluteDelta != null && absoluteDelta !== 0) {
+            const up = absoluteDelta > 0;
+            const cls = up ? 'is-up' : 'is-down';
+            const arrow = up ? '↗' : '↘';
+            return `<span class="cal-mom ${cls}">${arrow} ${Math.abs(absoluteDelta)} vs ${escapeHtml(prevLabel)}</span>`;
         }
-        if (tradesEl) tradesEl.textContent = String(summary.trades);
-        if (winLossEl) winLossEl.textContent = `${summary.wins} / ${summary.losses}`;
-        if (daysEl) daysEl.textContent = String(summary.activeDays);
-        if (pnlEl) {
-            pnlEl.textContent = summary.trades ? formatDayPnl(summary.net) : '—';
-            pnlEl.classList.remove('text-success', 'text-danger', 'text-muted');
-            pnlEl.classList.add(pnlToneClass(summary.net, summary.trades > 0));
+        if (deltaPct == null) {
+            return `<span class="cal-mom is-flat">vs ${escapeHtml(prevLabel)}</span>`;
         }
-        if (brokerListEl) {
-            if (!summary.brokers.length) {
-                brokerListEl.innerHTML = '<p class="small text-muted mb-0">No closed trades this month.</p>';
+        const up = deltaPct >= 0;
+        const cls = Math.abs(deltaPct) < 0.05 ? 'is-flat' : (up ? 'is-up' : 'is-down');
+        const arrow = Math.abs(deltaPct) < 0.05 ? '→' : (up ? '↗' : '↘');
+        const pct = formatPct(deltaPct) || '0%';
+        return `<span class="cal-mom ${cls}">${arrow} ${pct} vs ${escapeHtml(prevLabel)}</span>`;
+    }
+
+    function sparklineSvg(series, positive) {
+        const pts = (Array.isArray(series) ? series : []).map((n) => Number(n) || 0);
+        if (!pts.length) {
+            return '<svg class="cal-spark" viewBox="0 0 64 24" aria-hidden="true"><path d="M2 12 H62" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.25"/></svg>';
+        }
+        const w = 64;
+        const h = 24;
+        const pad = 2;
+        let min = Math.min(...pts, 0);
+        let max = Math.max(...pts, 0);
+        if (Math.abs(max - min) < 0.001) {
+            max = min + 1;
+        }
+        const coords = pts.map((v, i) => {
+            const x = pad + (pts.length === 1 ? (w - pad * 2) / 2 : (i / (pts.length - 1)) * (w - pad * 2));
+            const y = pad + (1 - ((v - min) / (max - min))) * (h - pad * 2);
+            return [x, y];
+        });
+        const line = coords.map((c, i) => `${i ? 'L' : 'M'}${c[0].toFixed(1)} ${c[1].toFixed(1)}`).join(' ');
+        const fill = `${line} L${coords[coords.length - 1][0].toFixed(1)} ${h} L${coords[0][0].toFixed(1)} ${h} Z`;
+        const stroke = positive ? 'var(--gr-accent)' : 'var(--gr-danger)';
+        const fillColor = positive ? 'rgba(21,155,90,0.14)' : 'rgba(239,68,68,0.12)';
+        return `<svg class="cal-spark" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${fill}" fill="${fillColor}"/><path d="${line}" fill="none" stroke="${stroke}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+
+    function buildBrokerRowsHtml(summary) {
+        if (!summary.brokers.length) {
+            return '<p class="small text-muted mb-0 px-1">No closed trades this month.</p>';
+        }
+        return summary.brokers.map((row) => {
+            const positive = row.net >= 0;
+            const toneCls = pnlToneClass(row.net, row.trades > 0);
+            const mom = pctChange(row.net, row.prevNet);
+            let momHtml;
+            if (mom == null) {
+                const shareBase = Math.abs(summary.net) < 0.005 ? 0 : Math.abs(summary.net);
+                const share = shareBase ? (Math.abs(row.net) / shareBase) * 100 : null;
+                momHtml = share == null
+                    ? '<span class="cal-mom is-flat">—</span>'
+                    : `<span class="cal-mom ${positive ? 'is-up' : 'is-down'}">${positive ? '↗' : '↘'} ${formatPct(share)}</span>`;
             } else {
-                brokerListEl.innerHTML = summary.brokers.map((row) => {
-                    const tone = pnlToneClass(row.net, row.trades > 0);
-                    const pnlText = formatDayPnl(row.net);
-                    return `
-                        <div class="cal-summary-broker-row">
-                            <div class="min-w-0">
-                                <div class="cal-summary-broker-name text-truncate">${escapeHtml(row.broker)}</div>
-                                <div class="cal-summary-broker-meta">${row.trades} trade${row.trades === 1 ? '' : 's'} · ${row.wins}W / ${row.losses}L</div>
-                            </div>
-                            <div class="cal-summary-broker-pnl ${tone}">${escapeHtml(pnlText)}</div>
-                        </div>
-                    `;
-                }).join('');
+                const up = mom >= 0;
+                momHtml = `<span class="cal-mom ${up ? 'is-up' : 'is-down'}">${up ? '↗' : '↘'} ${formatPct(mom)}</span>`;
             }
+            return `
+                <div class="cal-summary-broker-row">
+                    ${brokerAvatarHtml(row.broker)}
+                    <div class="cal-summary-broker-main min-w-0">
+                        <div class="cal-summary-broker-name text-truncate">${escapeHtml(row.broker)}</div>
+                        <div class="cal-summary-broker-meta">${row.trades} trade${row.trades === 1 ? '' : 's'} · ${row.wins}W / ${row.losses}L</div>
+                    </div>
+                    <div class="cal-summary-broker-spark">${sparklineSvg(row.series, positive)}</div>
+                    <div class="cal-summary-broker-stats">
+                        <div class="cal-summary-broker-pnl ${toneCls}">${escapeHtml(formatDayPnl(row.net))}</div>
+                        ${momHtml}
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function buildMonthReportHtml(year, month) {
+        const summary = buildMonthSummary(year, month);
+        const prev = summary.previous;
+        const prevLabel = summary.prevMonthLabel;
+        const hasTrades = summary.trades > 0;
+        const monthTitle = `${MONTH_NAMES[month]} ${year}`;
+        const pnlText = hasTrades ? formatDayPnl(summary.net) : '—';
+        const tone = pnlToneClass(summary.net, hasTrades);
+        const up = hasTrades && summary.net >= 0;
+        const accentCls = hasTrades ? (summary.net >= 0 ? 'is-up' : 'is-down') : '';
+        const trendCls = hasTrades ? (up ? 'is-up' : 'is-down') : 'is-flat';
+        const trendIcon = hasTrades
+            ? `<i class="fas ${up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down'}"></i>`
+            : '';
+        const winLossValue = hasTrades
+            ? `<span class="cal-wl-win">${summary.wins}</span> / <span class="cal-wl-loss">${summary.losses}</span>`
+            : '0 / 0';
+        const decided = summary.wins + summary.losses;
+        const winRateFoot = !decided
+            ? '<span class="cal-mom is-flat">No closed trades</span>'
+            : `<span class="cal-mom is-up">${formatPct((summary.wins / decided) * 100)} Win Rate</span>`;
+
+        return `
+            <div class="cal-month-report">
+                <div class="cal-report-head">
+                    <div class="cal-report-head-main min-w-0">
+                        <p class="cal-report-month-label mb-1">${escapeHtml(monthTitle)}</p>
+                        <div class="cal-summary-net-row">
+                            <div class="cal-summary-net ${tone}">${escapeHtml(pnlText)}</div>
+                            <span class="cal-summary-trend-icon ${trendCls}" aria-hidden="true">${trendIcon}</span>
+                        </div>
+                        <p class="cal-summary-net-label mb-0">
+                            Net P&amp;L (closed)
+                            <i class="fas fa-info-circle cal-summary-info" title="P&amp;L is calculated for closed trades only" aria-hidden="true"></i>
+                        </p>
+                    </div>
+                </div>
+                <div class="cal-summary-accent ${accentCls}" aria-hidden="true"></div>
+                <div class="cal-summary-metrics" aria-label="Month metrics">
+                    <div class="cal-summary-metric">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--trades" aria-hidden="true"><i class="fas fa-chart-bar"></i></span>
+                        <div class="cal-summary-metric-body">
+                            <div class="cal-summary-metric-value">${summary.trades}</div>
+                            <div class="cal-summary-metric-label">Total Trades</div>
+                            <div class="cal-summary-metric-foot">${momFootHtml(pctChange(summary.trades, prev.trades), prevLabel)}</div>
+                        </div>
+                    </div>
+                    <div class="cal-summary-metric">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--wl" aria-hidden="true"><i class="fas fa-balance-scale"></i></span>
+                        <div class="cal-summary-metric-body">
+                            <div class="cal-summary-metric-value">${winLossValue}</div>
+                            <div class="cal-summary-metric-label">Win / Loss</div>
+                            <div class="cal-summary-metric-foot">${winRateFoot}</div>
+                        </div>
+                    </div>
+                    <div class="cal-summary-metric">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--days" aria-hidden="true"><i class="far fa-calendar"></i></span>
+                        <div class="cal-summary-metric-body">
+                            <div class="cal-summary-metric-value">${summary.activeDays}</div>
+                            <div class="cal-summary-metric-label">Active Days</div>
+                            <div class="cal-summary-metric-foot">${momFootHtml(null, prevLabel, {
+                                preferAbsolute: true,
+                                absoluteDelta: summary.activeDays - prev.activeDays
+                            })}</div>
+                        </div>
+                    </div>
+                    <div class="cal-summary-metric">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--pnl" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
+                        <div class="cal-summary-metric-body">
+                            <div class="cal-summary-metric-value ${tone}">${escapeHtml(hasTrades ? formatCompactPnl(summary.net) : '—')}</div>
+                            <div class="cal-summary-metric-label">Net P&amp;L</div>
+                            <div class="cal-summary-metric-foot">${momFootHtml(pctChange(summary.net, prev.net), prevLabel)}</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="cal-summary-brokers">
+                    <p class="cal-summary-brokers-title">By broker</p>
+                    <div class="cal-summary-broker-list">${buildBrokerRowsHtml(summary)}</div>
+                </div>
+                <p class="cal-summary-footnote mb-0">
+                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                    W = Win · L = Loss · P&amp;L is calculated for closed trades only
+                </p>
+            </div>
+        `;
+    }
+
+    function openCalendarMonthReport() {
+        ensureViewMonth();
+        const { Sheet, renderIcon, showToast } = global.MTFComponents || {};
+        if (!Sheet || typeof Sheet.open !== 'function') {
+            if (showToast) showToast('Report unavailable.', 'warning');
+            return;
         }
+        const titleIcon = typeof renderIcon === 'function'
+            ? renderIcon('fa-file-alt', { className: 'me-1 flex-shrink-0 text-primary' })
+            : '';
+        const monthTitle = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+        Sheet.open(
+            `${titleIcon}<span class="text-truncate min-w-0 flex-grow-1">Monthly report · ${escapeHtml(monthTitle)}</span>`,
+            buildMonthReportHtml(viewYear, viewMonth),
+            ''
+        );
     }
 
     function shiftCalendarMonth(delta) {
@@ -337,6 +608,60 @@
         );
     }
 
+    function paintCalendarHeaderStats(year, month) {
+        const summary = buildMonthSummary(year, month);
+        const profitEl = document.getElementById('calTotalProfit');
+        const lossEl = document.getElementById('calTotalLoss');
+        const barProfit = document.getElementById('calNetBarProfit');
+        const barLoss = document.getElementById('calNetBarLoss');
+        const barLabel = document.getElementById('calNetBarLabel');
+        const bar = document.getElementById('calNetBar');
+        const hasActivity = summary.grossProfit > 0.005 || summary.grossLoss > 0.005;
+
+        if (profitEl) {
+            profitEl.textContent = hasActivity || summary.trades
+                ? formatWholePnl(summary.grossProfit, { signed: true })
+                : '—';
+        }
+        if (lossEl) {
+            lossEl.textContent = hasActivity || summary.trades
+                ? (summary.grossLoss > 0.005 ? formatWholePnl(-summary.grossLoss, { signed: true }) : '₹0')
+                : '—';
+        }
+
+        const total = summary.grossProfit + summary.grossLoss;
+        let profitPct = 50;
+        let lossPct = 50;
+        if (total > 0.005) {
+            profitPct = (summary.grossProfit / total) * 100;
+            lossPct = (summary.grossLoss / total) * 100;
+            if (profitPct > 0 && profitPct < 8) profitPct = 8;
+            if (lossPct > 0 && lossPct < 8) lossPct = 8;
+            const scale = 100 / (profitPct + lossPct);
+            profitPct *= scale;
+            lossPct *= scale;
+        } else if (!hasActivity) {
+            profitPct = 100;
+            lossPct = 0;
+        }
+
+        if (barProfit) barProfit.style.width = `${profitPct}%`;
+        if (barLoss) barLoss.style.width = `${lossPct}%`;
+        if (barLabel) {
+            if (hasActivity || summary.trades) {
+                const rounded = Math.round(Math.abs(summary.net)).toLocaleString('en-IN');
+                barLabel.textContent = `${summary.net < 0 ? '−' : ''}₹${rounded}`;
+            } else {
+                barLabel.textContent = '—';
+            }
+        }
+        if (bar) {
+            bar.classList.toggle('is-empty', !hasActivity && !summary.trades);
+            bar.classList.toggle('is-profit-only', summary.grossLoss < 0.005 && summary.grossProfit > 0.005);
+            bar.classList.toggle('is-loss-only', summary.grossProfit < 0.005 && summary.grossLoss > 0.005);
+        }
+    }
+
     function renderCalendarPage() {
         ensureViewMonth();
         const titleEl = document.getElementById('calendarMonthTitle');
@@ -344,6 +669,7 @@
         if (!gridEl) return;
 
         if (titleEl) titleEl.textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+        paintCalendarHeaderStats(viewYear, viewMonth);
 
         const daily = buildDailyNetMap(viewYear, viewMonth);
         const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -373,8 +699,12 @@
             const clickAttrs = clickable
                 ? ` role="button" tabindex="0" onclick="openCalendarDaySheet('${escapeHtml(key)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCalendarDaySheet('${escapeHtml(key)}');}"`
                 : ' role="gridcell"';
+            const todayBadge = isToday
+                ? '<span class="cal-today-badge">Today</span>'
+                : '';
             cells.push(`
-                <div class="cal-cell cal-cell--${tone}${isToday ? ' cal-cell--today' : ''}${clickable ? ' cal-cell--clickable' : ''}" data-date="${escapeHtml(key)}" aria-label="${escapeHtml(key)}${count ? `, net ${pnlLabel}` : ''}"${clickAttrs}>
+                <div class="cal-cell cal-cell--${tone}${isToday ? ' cal-cell--today' : ''}${clickable ? ' cal-cell--clickable' : ''}${isToday && !count ? ' cal-cell--today-empty' : ''}" data-date="${escapeHtml(key)}" aria-label="${escapeHtml(key)}${count ? `, net ${pnlLabel}` : ''}${isToday ? ', today' : ''}"${clickAttrs}>
+                    ${todayBadge}
                     <span class="cal-day">${day}</span>
                     <span class="cal-pnl">${escapeHtml(pnlLabel)}</span>
                     ${countLabel ? `<span class="cal-count">${escapeHtml(countLabel)}</span>` : ''}
@@ -383,7 +713,6 @@
         }
 
         gridEl.innerHTML = cells.join('');
-        paintMonthSummary(viewYear, viewMonth);
     }
 
     global.MTFRegister({
@@ -394,6 +723,7 @@
         jumpCalendarMonth,
         jumpCalendarToTodayMonth,
         openCalendarDaySheet,
+        openCalendarMonthReport,
         getClosedTradesForSellDate,
         buildMonthSummary
     });

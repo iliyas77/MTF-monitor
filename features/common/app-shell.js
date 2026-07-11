@@ -573,6 +573,7 @@
         const onSubpage = !!moreFeature;
         const onTrades = pageId === 'page-trades' || pageId === 'page-past' || pageId === 'page-plan';
         const onMarket = pageId === 'page-market';
+        const onCalendar = pageId === 'page-calendar';
         const hideDefault = onSettings || onSubpage;
 
         if (appHeader) appHeader.classList.remove('d-none');
@@ -589,6 +590,7 @@
 
         const searchBtn = document.getElementById('appHeaderSearchBtn');
         const refreshBtn = document.getElementById('appHeaderRefreshBtn');
+        const reportBtn = document.getElementById('appHeaderReportBtn');
         const filterBtn = document.getElementById('appHeaderFilterBtn');
         const moreBtn = document.getElementById('appHeaderMoreBtn');
         const moreMenu = document.getElementById('appHeaderMoreMenu');
@@ -596,6 +598,7 @@
 
         if (searchBtn) searchBtn.classList.toggle('d-none', !(onTrades || onMarket));
         if (refreshBtn) refreshBtn.classList.toggle('d-none', !onMarket);
+        if (reportBtn) reportBtn.classList.toggle('d-none', !onCalendar);
         if (filterBtn) filterBtn.classList.toggle('d-none', !onTrades);
         if (moreBtn) moreBtn.classList.toggle('d-none', !onTrades);
         if (moreMenu && onTrades) moreMenu.innerHTML = renderHeaderMoreMenu();

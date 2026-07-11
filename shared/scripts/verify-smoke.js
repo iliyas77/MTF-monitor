@@ -796,22 +796,58 @@ async function runSmoke(report) {
             const title = document.getElementById('calendarMonthTitle')?.textContent || '';
             const jump = document.getElementById('calendarMonthJumpBtn');
             const card = document.querySelector('#page-calendar .cal-month-card');
-            const summary = document.querySelector('#page-calendar .cal-month-summary-card');
+            const profit = document.getElementById('calTotalProfit');
+            const loss = document.getElementById('calTotalLoss');
+            const bar = document.getElementById('calNetBar');
+            const todayBtn = document.querySelector('#page-calendar .cal-today-btn');
+            const reportBtn = document.getElementById('appHeaderReportBtn');
             const cells = grid?.querySelectorAll('.cal-cell:not(.cal-cell--pad)')?.length || 0;
             return {
                 hasGrid: !!grid,
                 hasTitle: /[A-Za-z]+ \d{4}/.test(title),
                 hasJump: !!jump,
                 hasCard: !!card,
-                hasSummary: !!(summary && document.getElementById('calSummaryTrades') && document.getElementById('calSummaryPnl') && document.getElementById('calSummaryBrokerList')),
+                hasProfitLoss: !!(profit && loss),
+                hasBar: !!bar,
+                hasTodayBtn: !!todayBtn,
+                hasReportBtn: !!(reportBtn && !reportBtn.classList.contains('d-none')),
                 hasDays: cells >= 28
             };
         });
-        if (calendarView.hasGrid && calendarView.hasTitle && calendarView.hasJump && calendarView.hasCard && calendarView.hasSummary && calendarView.hasDays) {
-            report.pass('Calendar UI', 'white card + month jump + month summary + day cells');
+        if (calendarView.hasGrid && calendarView.hasTitle && calendarView.hasJump && calendarView.hasCard && calendarView.hasProfitLoss && calendarView.hasBar && calendarView.hasTodayBtn && calendarView.hasReportBtn && calendarView.hasDays) {
+            report.pass('Calendar UI', 'profit/loss cards + net bar + today + report + day cells');
         } else {
-            report.warn('Calendar UI', `grid=${calendarView.hasGrid} title=${calendarView.hasTitle} jump=${calendarView.hasJump} card=${calendarView.hasCard} summary=${calendarView.hasSummary} days=${calendarView.hasDays}`);
+            report.warn('Calendar UI', JSON.stringify(calendarView));
         }
+
+        await page.click('#appHeaderReportBtn');
+        await page.waitForTimeout(350);
+        const reportSheet = await page.evaluate(() => {
+            const sheet = document.getElementById('appSheet');
+            const body = document.getElementById('appSheetBody');
+            const open = sheet && !sheet.classList.contains('d-none') && sheet.getAttribute('aria-hidden') !== 'true';
+            const html = body?.innerHTML || '';
+            return {
+                open: !!open || !!(body && body.querySelector('.cal-month-report')),
+                hasReport: html.includes('cal-month-report'),
+                hasMetrics: html.includes('cal-summary-metrics'),
+                hasBrokers: html.includes('cal-summary-brokers')
+            };
+        });
+        if (reportSheet.open && reportSheet.hasReport && reportSheet.hasMetrics && reportSheet.hasBrokers) {
+            report.pass('Calendar report', 'monthly report sheet shown');
+        } else {
+            report.warn('Calendar report', `open=${reportSheet.open} report=${reportSheet.hasReport} metrics=${reportSheet.hasMetrics} brokers=${reportSheet.hasBrokers}`);
+        }
+        await page.evaluate(() => {
+            if (window.MTFComponents?.Sheet?.close) window.MTFComponents.Sheet.close();
+            else if (typeof window.closeSheet === 'function') window.closeSheet();
+            document.querySelectorAll('.cupertino-pane-wrapper.app-sheet-pane').forEach((el) => {
+                try { el.remove(); } catch (_) { /* ignore */ }
+            });
+        });
+        await page.waitForFunction(() => !document.querySelector('.cupertino-pane-wrapper.app-sheet-pane .cal-month-report'), null, { timeout: 5000 }).catch(() => {});
+        await page.waitForTimeout(250);
 
         // --- Navigation: More ---
         await page.click('#bottomBarNav [data-page="more"]');
@@ -860,12 +896,14 @@ async function runSmoke(report) {
             company: !!document.getElementById('calcCompany'),
             qty: !!document.getElementById('calcQty'),
             hasCompare: !!document.getElementById('calcComparePanel'),
+            hasLeverage: !!document.getElementById('calcLeverageCards'),
+            hasOverview: !!document.getElementById('calcOverviewGrid'),
             hasSummary: !!document.getElementById('calcSummaryStats')
         }));
-        if (calcFields.company && calcFields.qty && calcFields.hasCompare && calcFields.hasSummary) {
-            report.pass('MTF Calc UI', 'calculator company + summary + compare present');
+        if (calcFields.company && calcFields.qty && calcFields.hasCompare && calcFields.hasLeverage && calcFields.hasOverview) {
+            report.pass('MTF Calc UI', 'company + leverage + overview + compare present');
         } else {
-            report.warn('MTF Calc UI', `company=${calcFields.company} qty=${calcFields.qty} compare=${calcFields.hasCompare} summary=${calcFields.hasSummary}`);
+            report.warn('MTF Calc UI', JSON.stringify(calcFields));
         }
         await page.locator('#appHeaderSubpage button[aria-label="Back"]').click();
         await page.waitForTimeout(200);
