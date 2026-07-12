@@ -3713,6 +3713,10 @@
 
             function getCurrentAppPage() {
                 // Pages use Bootstrap `d-none` (not legacy `.hidden`).
+                const entryPage = document.getElementById('page-money-entry');
+                if (entryPage && !entryPage.classList.contains('d-none')) {
+                    return { page: 'more', moreFeature: 'money-entry' };
+                }
                 const active = Array.from(document.querySelectorAll('section[id^="page-"]')).find(
                     (el) => !el.classList.contains('d-none')
                 );
@@ -3884,12 +3888,15 @@
 
             function showMoneyEntryPage() {
                 activeMoreFeature = 'money-entry';
-                showPage('page-money-entry');
+                const page = document.getElementById('page-money-entry');
+                if (page) page.classList.remove('d-none');
                 setMoneyEntryChromeHidden(true);
                 saveNavState();
             }
 
             function closeMoneyEntryPage() {
+                const page = document.getElementById('page-money-entry');
+                if (page) page.classList.add('d-none');
                 setMoneyEntryChromeHidden(false);
                 openMoreFeature('money');
             }
@@ -3944,6 +3951,20 @@
                 stopTradeLiveRefresh();
                 if (!moreFeatureMap[feature]) {
                     navigateTo('more');
+                    return;
+                }
+                if (feature === 'money-entry') {
+                    setMoneyEntryChromeHidden(true);
+                    activeMoreFeature = feature;
+                    showPage('page-money');
+                    setBottomNavActive('more');
+                    updateFabVisibility('money');
+                    paintAddMoneyAccountBtn();
+                    updateMoneyFabVisibility();
+                    renderMoney();
+                    const page = document.getElementById('page-money-entry');
+                    if (page) page.classList.remove('d-none');
+                    saveNavState();
                     return;
                 }
                 if (feature !== 'money-entry') setMoneyEntryChromeHidden(false);
