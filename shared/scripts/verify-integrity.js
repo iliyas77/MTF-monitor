@@ -130,6 +130,54 @@ function runIntegrity(report) {
     } else {
         report.pass('Syntax', `${scripts.length} JS files parse cleanly`);
     }
+
+    const dbScripts = scripts.filter((s) => s.startsWith('shared/db/'));
+    const expectedDb = [
+        'shared/db/_registry.js',
+        'shared/db/firebase-config.js',
+        'shared/db/db-service.js'
+    ];
+    const unexpectedDb = dbScripts.filter((s) => !expectedDb.includes(s));
+    const missingDb = expectedDb.filter((s) => !dbScripts.includes(s));
+    const legacyDb = [
+        'shared/db/db-call-log.js',
+        'shared/db/storage-service.js',
+        'shared/db/sync-service.js',
+        'shared/db/money-ledger-service.js'
+    ].filter((s) => fs.existsSync(path.join(ROOT, s)));
+    if (missingDb.length || unexpectedDb.length || legacyDb.length) {
+        report.fail(
+            'DB layout',
+            [
+                missingDb.length ? `missing ${missingDb.join(', ')}` : '',
+                unexpectedDb.length ? `unexpected ${unexpectedDb.join(', ')}` : '',
+                legacyDb.length ? `legacy files still present: ${legacyDb.join(', ')}` : ''
+            ].filter(Boolean).join('; ')
+        );
+    } else {
+        report.pass('DB layout', 'registry + firebase-config + db-service only');
+    }
+
+    const moneyPage = path.join(ROOT, 'features/more/money-page.js');
+    const mainJs = path.join(ROOT, 'main.js');
+    if (!fs.existsSync(moneyPage)) {
+        report.fail('Money module', 'features/more/money-page.js missing');
+    } else if (!fs.existsSync(mainJs)) {
+        report.fail('Money module', 'main.js missing');
+    } else {
+        const moneySrc = fs.readFileSync(moneyPage, 'utf8') + '\n' + fs.readFileSync(mainJs, 'utf8');
+        const html = fs.readFileSync(path.join(ROOT, 'main.html'), 'utf8');
+        const missingHtml = ['appHeaderMoneySearch', 'appHeaderMoneyTools', 'moneySearchInput']
+            .filter((h) => !html.includes(h));
+        const missingJs = ['setMoneySearchQuery', 'setMoneyMonthKey', 'openMoneyPageFilterSheet', 'renderMoney', 'moneyMonthPicker']
+            .filter((h) => !moneySrc.includes(h));
+        const missing = [...missingHtml, ...missingJs];
+        if (missing.length) {
+            report.fail('Money module', `missing: ${missing.join(', ')}`);
+        } else {
+            report.pass('Money module', 'wallets UI + header search/tools + month picker wired');
+        }
+    }
 }
 
 module.exports = { runIntegrity };

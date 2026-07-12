@@ -80,7 +80,10 @@
                 confirmAction,
                 showLoading,
                 hideLoading,
+                showBlockingProgress,
+                hideBlockingProgress,
                 hideModal,
+                showModal,
                 updateAppHeader,
                 renderCurrentView,
                 renderPastTrades,
@@ -150,10 +153,22 @@
                 openMoneyEntryModal,
                 openEditMoneyEntryModal,
                 saveMoneyEntry,
-                onMoneyEntryTypeToggle,
+                onMoneyEntryTypePick,
                 setMoneyEntryType,
                 toggleMoneyEntryDateTimeEdit,
                 onMoneyEntryDateTimeChange,
+                updateMoneyEntryAmountPreview,
+                onMoneyEntryAmountInput,
+                applyMoneyEntryAmountChip,
+                focusMoneyEntryAmountCustom,
+                onMoneyEntryNoteInput,
+                applyMoneyEntryRemarkChip,
+                focusMoneyEntryRemarkCustom,
+                onMoneyEntryBrokerSelectChange,
+                toggleMoneyEntryBalanceVisibility,
+                pickMoneyEntryWallet,
+                focusMoneyEntryBrokerPicker,
+                refreshMoneyEntryWalletSelects,
                 chargeSides,
                 chargesTable
             } = window.MTFComponents;
@@ -181,6 +196,7 @@
                 deleteMoneyEntry,
                 updateMoneyEntry,
                 getMoneyEntry,
+                addMoneyTransfer,
                 isFirebaseConfigured,
                 cloudPush,
                 connectSync,
@@ -3188,14 +3204,58 @@
             }
 
             function paintAddMoneyAccountBtn() {
+                // Header "Add Wallet" removed — wallets are added from the + FAB sheet.
                 const host = document.getElementById('moneyAddAccountBtnHost');
-                if (!host) return;
-                host.innerHTML = renderAppButton('Add', {
-                    variant: 'action',
-                    onclick: 'openAddMoneyAccountModal()',
-                    icon: 'fa-plus',
-                    size: 'sm'
-                });
+                if (host) host.innerHTML = '';
+            }
+
+            function updateMoneyFabVisibility() {
+                const onMoney = activeMoreFeature === 'money';
+                // Hide FAB on the add/edit transaction page itself.
+                BottomBar.setFabVisible(!!onMoney);
+                const fab = document.getElementById('bottomBarFab');
+                if (fab) {
+                    fab.setAttribute('aria-label', 'Add transaction');
+                    fab.title = 'Add transaction';
+                }
+                if (!onMoney) {
+                    BottomBar._onFabClick = openAddModal;
+                    return;
+                }
+                BottomBar._onFabClick = () => openMoneyEntryModal(null, 'deposit');
+            }
+
+            function updateFabVisibility(page) {
+                if (activeMoreFeature === 'money' || page === 'money') {
+                    updateMoneyFabVisibility();
+                    return;
+                }
+                BottomBar.setFabVisible(false);
+                BottomBar._onFabClick = openAddModal;
+            }
+
+            function onMoneyEntryBrokerChange(selectEl) {
+                if (!selectEl || selectEl.value !== '__add_wallet__') return;
+                const accounts = typeof getMoneyAccounts === 'function' ? getMoneyAccounts() : [];
+                selectEl.value = document.getElementById('moneyEntryAccountId')?.value
+                    || accounts[0]?.id
+                    || '';
+                openAddMoneyAccountModal({ returnToEntry: true });
+            }
+
+            function refreshOpenMoneyEntryWallets(selectedAccountId) {
+                if (typeof refreshMoneyEntryWalletSelects === 'function') {
+                    refreshMoneyEntryWalletSelects(selectedAccountId);
+                }
+            }
+
+            function reopenMoneyEntryAfterWallet(selectedAccountId) {
+                refreshOpenMoneyEntryWallets(selectedAccountId);
+                showMoneyEntryPage();
+                setTimeout(() => {
+                    const amountEl = document.getElementById('moneyEntryAmount');
+                    if (amountEl) amountEl.focus();
+                }, 200);
             }
 
             function paintSettingsActionButtons() {
@@ -3666,6 +3726,7 @@
                 if (id === 'page-market') return { page: 'market', moreFeature: null };
                 if (id === 'page-calendar') return { page: 'calendar', moreFeature: null };
                 if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
+                if (id === 'page-money-entry') return { page: 'more', moreFeature: 'money-entry' };
                 if (id === 'page-more') return { page: 'more', moreFeature: null };
                 if (id === 'page-settings') return { page: 'settings', moreFeature: null };
                 if (id === 'page-mtf-calc') return { page: 'more', moreFeature: 'mtf-calc' };
@@ -3759,6 +3820,7 @@
                 }
                 stopMarketRefresh();
                 stopTradeLiveRefresh();
+                setMoneyEntryChromeHidden(false);
                 renderSettings();
                 showPage('page-settings');
                 setBottomNavActive(null);
@@ -3798,7 +3860,7 @@
 
             // ---------- NAVIGATION ----------
             const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', calendar: 'page-calendar', more: 'page-more' };
-            const moreFeatureMap = { money: 'page-money', 'mtf-calc': 'page-mtf-calc' };
+            const moreFeatureMap = { money: 'page-money', 'money-entry': 'page-money-entry', 'mtf-calc': 'page-mtf-calc' };
             let activeMoreFeature = null;
 
             function showPage(pageId) {
@@ -3812,8 +3874,24 @@
                 BottomBar.setActive(page);
             }
 
-            function updateFabVisibility(page) {
-                BottomBar.setFabVisible(false);
+            function setMoneyEntryChromeHidden(hidden) {
+                document.body.classList.toggle('money-entry-immersive', !!hidden);
+                const appHeader = document.getElementById('appHeader');
+                if (appHeader) appHeader.classList.toggle('d-none', !!hidden);
+                BottomBar.setBarVisible(!hidden);
+                if (hidden) BottomBar.setFabVisible(false);
+            }
+
+            function showMoneyEntryPage() {
+                activeMoreFeature = 'money-entry';
+                showPage('page-money-entry');
+                setMoneyEntryChromeHidden(true);
+                saveNavState();
+            }
+
+            function closeMoneyEntryPage() {
+                setMoneyEntryChromeHidden(false);
+                openMoreFeature('money');
             }
 
             function navigateTo(page) {
@@ -3825,6 +3903,7 @@
                     navigateTo('trades');
                     return;
                 }
+                setMoneyEntryChromeHidden(false);
                 activeMoreFeature = null;
                 showPage(pageMap[page]);
                 setBottomNavActive(page);
@@ -3867,11 +3946,16 @@
                     navigateTo('more');
                     return;
                 }
+                if (feature !== 'money-entry') setMoneyEntryChromeHidden(false);
                 activeMoreFeature = feature;
                 showPage(moreFeatureMap[feature]);
                 setBottomNavActive('more');
-                updateFabVisibility('more');
-                if (feature === 'money') renderMoney();
+                updateFabVisibility(feature === 'money' ? 'money' : 'more');
+                if (feature === 'money') {
+                    paintAddMoneyAccountBtn();
+                    updateMoneyFabVisibility();
+                    renderMoney();
+                }
                 if (feature === 'mtf-calc') {
                     renderMtfCalculator();
                     updateMtfCalculator();
@@ -3880,6 +3964,11 @@
             }
 
             function backToMoreHub() {
+                if (activeMoreFeature === 'money-entry'
+                    || !document.getElementById('page-money-entry')?.classList.contains('d-none')) {
+                    openMoreFeature('money');
+                    return;
+                }
                 activeMoreFeature = null;
                 showPage('page-more');
                 setBottomNavActive('more');
@@ -3917,6 +4006,9 @@
             let moneyPageFrom = null;
             let moneyPageTo = null;
             let moneyPageRangeKey = 'all';
+            let moneyPageSort = 'newest';
+            let moneySearchQuery = '';
+            let moneyMonthKey = new Date().toISOString().slice(0, 7);
             let moneyHistorySheetAccountId = null;
             let moneyHistoryTypeFilter = 'all';
             let moneyHistoryFrom = null;
@@ -3925,19 +4017,30 @@
 
             const APP_MONEY_TYPE_OPTIONS = [
                 { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
-                { value: 'withdraw', label: 'Withdraw', icon: 'fa-minus', variant: 'withdraw' },
-                { value: 'deposit', label: 'Invest', icon: 'fa-plus', variant: 'deposit' }
+                { value: 'deposit', label: 'Deposit', icon: 'fa-plus', variant: 'deposit' },
+                { value: 'withdraw', label: 'Withdrawal', icon: 'fa-minus', variant: 'withdraw' },
+                { value: 'adjustment', label: 'Adjustment', icon: 'fa-sliders-h', variant: 'muted' },
+                { value: 'transfer', label: 'Transfer', icon: 'fa-exchange-alt', variant: 'muted' }
             ];
             const APP_MONEY_TYPE_FILTER_OPTIONS = [
-                { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
-                { value: 'deposit', label: 'Invest only', icon: 'fa-plus', variant: 'deposit' },
-                { value: 'withdraw', label: 'Withdrawals only', icon: 'fa-minus', variant: 'withdraw' }
+                { value: 'all', label: 'All types', icon: 'fa-layer-group', variant: 'muted' },
+                { value: 'deposit', label: 'Deposits', icon: 'fa-plus', variant: 'deposit' },
+                { value: 'withdraw', label: 'Withdrawals', icon: 'fa-minus', variant: 'withdraw' },
+                { value: 'adjustment', label: 'Adjustments', icon: 'fa-sliders-h', variant: 'muted' },
+                { value: 'transfer', label: 'Transfers', icon: 'fa-exchange-alt', variant: 'muted' }
             ];
             const APP_BROKER_OPTIONS = [
                 { value: '', label: 'Select Broker', icon: 'fa-building', variant: 'muted' },
                 { value: 'Zerodha', label: 'Zerodha', icon: 'fa-chart-line', variant: 'broker' },
                 { value: 'Dhan', label: 'Dhan', icon: 'fa-chart-line', variant: 'broker' },
-                { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' }
+                { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Angel One', label: 'Angel One', icon: 'fa-chart-line', variant: 'broker' }
+            ];
+            const APP_MONEY_BROKER_OPTIONS = [
+                { value: 'Zerodha', label: 'Zerodha', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Dhan', label: 'Dhan', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' },
+                { value: 'Angel One', label: 'Angel One', icon: 'fa-chart-line', variant: 'broker' }
             ];
 
             function setFilterBtnHighlight(btn, active) {
@@ -4535,6 +4638,9 @@
                     const createPane = window.MTFComponents?.createAppPane;
                     if (typeof createPane !== 'function') return null;
                     searchSheetPane = createPane('#searchSheet', {
+                        // Higher stack than trade/app sheets so the search field
+                        // is not covered by the sheet underneath's drag handle.
+                        cssClass: 'app-sheet-pane app-sheet-pane--search',
                         fullHeight: true,
                         heightRatio: 1,
                         topperOverflow: false
@@ -4598,8 +4704,9 @@
                         ? 'Search NSE stock to add…'
                         : 'Search company name or symbol…';
                     input.removeAttribute('readonly');
-                    input.oninput = () => onMarketSearchInput();
+                    // removeAttribute('oninput') clears the IDL handler — strip first, then assign.
                     input.removeAttribute('oninput');
+                    input.oninput = () => onMarketSearchInput();
                     input.onkeydown = (e) => onMarketSearchKeydown(e);
                 }
                 toggleClearBtn('searchPageClear', false);
@@ -4781,7 +4888,7 @@
             }
 
             function moneyPageFiltersActive() {
-                return moneyPageTypeFilter !== 'all' || moneyPageDateFilterActive();
+                return moneyPageTypeFilter !== 'all' || moneyPageDateFilterActive() || !!String(moneySearchQuery || '').trim();
             }
 
             function matchesMoneyPageEntryFilter(e) {
@@ -4792,11 +4899,30 @@
                     if (moneyPageFrom && d < moneyPageFrom) return false;
                     if (moneyPageTo && d > moneyPageTo) return false;
                 }
+                const q = String(moneySearchQuery || '').trim().toLowerCase();
+                if (q) {
+                    const acc = getMoneyAccounts().find((a) => a.id === e.accountId);
+                    const hay = [
+                        e.note || '',
+                        String(e.amount || ''),
+                        e.date || '',
+                        acc ? acc.name : '',
+                        acc ? acc.broker : '',
+                        e.type || ''
+                    ].join(' ').toLowerCase();
+                    if (!hay.includes(q)) return false;
+                }
                 return true;
             }
 
             function getMoneyPageFilterViewTitle() {
-                const titles = { deposit: 'Investments', withdraw: 'Withdrawals' };
+                const titles = {
+                    deposit: 'Deposits',
+                    withdraw: 'Withdrawals',
+                    adjustment: 'Adjustments',
+                    transfer: 'Transfers'
+                };
+                if (String(moneySearchQuery || '').trim()) return 'Search results';
                 return titles[moneyPageTypeFilter] || 'Transactions';
             }
 
@@ -4805,7 +4931,7 @@
                 if (moneyAccountFilter !== 'all') {
                     entries = entries.filter(e => e.accountId === moneyAccountFilter);
                 }
-                return sortMoneyEntries(entries);
+                return sortMoneyEntries(entries, moneyPageSort);
             }
 
             function syncMoneyPageFilterUI() {
@@ -4815,15 +4941,20 @@
                 if (fromEl) setDateInputValue(fromEl, moneyPageFrom || '');
                 if (toEl) setDateInputValue(toEl, moneyPageTo || '');
                 setRangeButtonsActive('#moneyPageRangeButtons', moneyPageRangeKey);
+                document.querySelectorAll('#moneyPageSortButtons .btn-check[data-sort]').forEach((input) => {
+                    input.checked = input.dataset.sort === moneyPageSort;
+                });
                 const filterBtn = document.getElementById('moneyPageFilterBtn');
                 setFilterBtnHighlight(filterBtn, moneyPageFiltersActive());
                 const filterBtnActive = document.getElementById('moneyPageFilterBtnActive');
                 setFilterBtnHighlight(filterBtnActive, moneyPageFiltersActive());
+                const clearBtn = document.getElementById('moneySearchClear');
+                if (clearBtn) clearBtn.classList.toggle('d-none', !String(moneySearchQuery || '').trim());
             }
 
             function openMoneyPageFilterSheet() {
                 syncMoneyPageFilterUI();
-                Sheet.mountPanel('<i class="fas fa-filter me-2"></i>Filter Money', 'panelMoneyPageFilter',
+                Sheet.mountPanel('<i class="fas fa-filter me-2"></i>Filter Wallets', 'panelMoneyPageFilter',
                     renderAppButtonRow('Clear', 'Apply', { cancelOnClick: 'clearMoneyPageFilters()', actionOnClick: 'applyMoneyPageFilter()', actionIcon: 'fa-check' }));
             }
 
@@ -4836,18 +4967,75 @@
                 if (daysOrKey === 'all') {
                     moneyPageFrom = null;
                     moneyPageTo = null;
+                } else if (daysOrKey === 'today') {
+                    const date = localDateStr(new Date());
+                    moneyPageFrom = date;
+                    moneyPageTo = date;
                 } else if (daysOrKey === 'yesterday') {
                     const y = new Date();
                     y.setDate(y.getDate() - 1);
                     const date = localDateStr(y);
                     moneyPageFrom = date;
                     moneyPageTo = date;
+                } else if (daysOrKey === 'week') {
+                    const range = getThisWeekMonFriRange();
+                    moneyPageFrom = range.from;
+                    moneyPageTo = range.to;
+                } else if (daysOrKey === 'month') {
+                    const now = new Date();
+                    moneyPageFrom = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+                    moneyPageTo = localDateStr(now);
+                } else if (daysOrKey === 'lastMonth') {
+                    const now = new Date();
+                    const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                    const last = new Date(now.getFullYear(), now.getMonth(), 0);
+                    moneyPageFrom = localDateStr(first);
+                    moneyPageTo = localDateStr(last);
                 } else {
                     const range = getDateRange(daysOrKey);
                     moneyPageFrom = range.from;
                     moneyPageTo = range.to;
                 }
                 syncMoneyPageFilterUI();
+            }
+
+            function setMoneyPageSort(sortKey) {
+                moneyPageSort = sortKey || 'newest';
+                syncMoneyPageFilterUI();
+            }
+
+            function setMoneySearchQuery(value) {
+                moneySearchQuery = value || '';
+                const clearBtn = document.getElementById('moneySearchClear');
+                if (clearBtn) clearBtn.classList.toggle('d-none', !String(moneySearchQuery).trim());
+                const input = document.getElementById('moneySearchInput');
+                if (input && input.value !== moneySearchQuery) input.value = moneySearchQuery;
+                renderMoney();
+            }
+
+            function clearMoneySearchQuery() {
+                moneySearchQuery = '';
+                const input = document.getElementById('moneySearchInput');
+                if (input) input.value = '';
+                const clearBtn = document.getElementById('moneySearchClear');
+                if (clearBtn) clearBtn.classList.add('d-none');
+                renderMoney();
+            }
+
+            function shiftMoneyMonthChart(delta) {
+                const [y, m] = (moneyMonthKey || '').split('-').map(Number);
+                const d = new Date(y || new Date().getFullYear(), (m || 1) - 1 + Number(delta || 0), 1);
+                moneyMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                renderMoney();
+            }
+
+            function setMoneyMonthKey(value) {
+                const raw = String(value || '').trim();
+                if (!/^\d{4}-\d{2}$/.test(raw)) return;
+                const [y, m] = raw.split('-').map(Number);
+                if (!y || !m || m < 1 || m > 12) return;
+                moneyMonthKey = `${y}-${String(m).padStart(2, '0')}`;
+                renderMoney();
             }
 
             function applyMoneyPageFilter() {
@@ -4902,13 +5090,17 @@
                 moneyPageFrom = null;
                 moneyPageTo = null;
                 moneyPageRangeKey = 'all';
+                moneyPageSort = 'newest';
+                moneySearchQuery = '';
+                const input = document.getElementById('moneySearchInput');
+                if (input) input.value = '';
                 closeMoneyPageFilterSheet();
                 renderMoney();
             }
 
             function getMoneyHistorySheetTitle() {
                 const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
-                if (!acc) return 'Account History';
+                if (!acc) return 'Wallet History';
                 const holder = acc.holderName ? ` · ${acc.holderName}` : '';
                 return `${acc.name}${holder}`;
             }
@@ -5063,15 +5255,24 @@
                 renderMoney();
             }
 
-            // money entry modal → features/more/money-page.js
+            // money entry page → features/more/money-page.js
             function setMoneyAccountModalMode(isEdit) {
-                const title = isEdit ? '<i class="fas fa-pen me-2"></i>Edit Account' : '<i class="fas fa-plus me-2"></i>Add Account';
+                const title = isEdit ? '<i class="fas fa-pen me-2"></i>Edit Wallet' : '<i class="fas fa-plus me-2"></i>Add Wallet';
                 const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
-                    ${isEdit ? `<div class="mt-2">${renderAppButton('Delete Account', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true })}</div>` : ''}`;
+                    ${isEdit ? `<div class="mt-2">${renderAppButton('Delete Wallet', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true })}</div>` : ''}`;
                 Sheet.mountPanel(title, 'panelMoneyAccount', footer);
             }
 
             function showMoneyAccountModal() { /* panel mounted by setMoneyAccountModalMode */ }
+
+            function onMoneyAccountBrokerChange() {
+                const broker = document.getElementById('moneyAccountBroker')?.value || '';
+                const wrap = document.getElementById('moneyAccountCustomNameWrap');
+                const nameEl = document.getElementById('moneyAccountName');
+                const isCustom = broker === '__custom';
+                if (wrap) wrap.classList.toggle('d-none', !isCustom);
+                if (!isCustom && nameEl) nameEl.value = broker;
+            }
 
             function updateMoneyAccountOpeningPreview() {
                 const previewEl = document.getElementById('moneyAccountOpeningPreview');
@@ -5091,88 +5292,145 @@
                 previewEl.classList.remove('d-none');
             }
 
-            function openAddMoneyAccountModal() {
+            let moneyReturnToEntryAfterWallet = false;
+
+            function openAddMoneyAccountModal(opts) {
+                opts = opts || {};
+                moneyReturnToEntryAfterWallet = !!opts.returnToEntry;
+                if (!isSyncConnected()) {
+                    showToast('Connect Cloud Sync to manage broker wallets.', 'warning');
+                    return;
+                }
                 document.getElementById('moneyAccountEditId').value = '';
-                document.getElementById('moneyAccountName').value = '';
-                document.getElementById('moneyAccountHolderName').value = '';
+                const brokerEl = document.getElementById('moneyAccountBroker');
+                if (brokerEl) brokerEl.value = 'Dhan';
+                document.getElementById('moneyAccountName').value = 'Dhan';
+                const holderEl = document.getElementById('moneyAccountHolderName');
+                if (holderEl) {
+                    holderEl.value = '';
+                    holderEl.disabled = false;
+                    holderEl.readOnly = false;
+                    holderEl.removeAttribute('readonly');
+                    holderEl.removeAttribute('disabled');
+                }
                 document.getElementById('moneyAccountOpeningBalance').value = '';
+                onMoneyAccountBrokerChange();
                 updateMoneyAccountOpeningPreview();
                 setMoneyAccountModalMode(false);
                 showMoneyAccountModal();
+                setTimeout(() => {
+                    const focusEl = document.getElementById('moneyAccountHolderName');
+                    if (focusEl) focusEl.focus();
+                }, 120);
             }
 
             function openMoneyAccountModal(accountId) {
                 const acc = getMoneyAccounts().find(a => a.id === accountId);
                 if (!acc) return;
                 document.getElementById('moneyAccountEditId').value = acc.id;
+                const brokerEl = document.getElementById('moneyAccountBroker');
+                const known = APP_MONEY_BROKER_OPTIONS.some((o) => o.value === acc.broker || o.value === acc.name);
+                if (brokerEl) {
+                    if (known) {
+                        brokerEl.value = acc.broker || acc.name;
+                    } else {
+                        brokerEl.value = '__custom';
+                    }
+                }
                 document.getElementById('moneyAccountName').value = acc.name;
                 document.getElementById('moneyAccountHolderName').value = acc.holderName || '';
                 document.getElementById('moneyAccountOpeningBalance').value = acc.openingBalance || '';
+                onMoneyAccountBrokerChange();
                 updateMoneyAccountOpeningPreview();
                 setMoneyAccountModalMode(true);
                 showMoneyAccountModal();
             }
 
             function saveMoneyAccount() {
+                if (!isSyncConnected()) {
+                    showToast('Connect Cloud Sync to manage broker wallets.', 'warning');
+                    return;
+                }
                 const id = document.getElementById('moneyAccountEditId').value;
-                const name = document.getElementById('moneyAccountName').value.trim();
+                const brokerSel = document.getElementById('moneyAccountBroker')?.value || '';
+                let name = '';
+                let broker = '';
+                if (brokerSel === '__custom') {
+                    name = document.getElementById('moneyAccountName').value.trim();
+                    broker = name;
+                } else {
+                    name = brokerSel;
+                    broker = brokerSel;
+                }
                 const holderName = document.getElementById('moneyAccountHolderName').value.trim();
                 const openingBalance = parseFloat(document.getElementById('moneyAccountOpeningBalance').value) || 0;
-                if (!name) { showToast('Please enter an account name.', 'warning'); return; }
+                if (!name) { showToast('Please choose a broker.', 'warning'); return; }
 
                 const isEdit = !!id;
-                const existing = isEdit ? getMoneyAccounts().find(a => a.id === id) : null;
-                confirmAction({
-                    title: isEdit
-                        ? '<i class="fas fa-pen me-2"></i>Save Account?'
-                        : '<i class="fas fa-plus-circle me-2"></i>Add Account?',
-                    titleClass: 'text-primary',
-                    message: isEdit
-                        ? `Save changes to "${name}"?`
-                        : `Add account "${name}"?`,
-                    confirmLabel: isEdit
-                        ? '<i class="fas fa-save me-1"></i> Save'
-                        : '<i class="fas fa-plus me-1"></i> Add',
-                    confirmClass: 'btn-primary',
-                    onConfirm: async () => {
+                (async () => {
+                    try {
+                        let saved = null;
                         if (isEdit) {
-                            await updateMoneyAccount(id, { name, holderName, broker: existing?.broker || 'None', openingBalance });
-                            showToast(isSyncConnected() ? 'Account updated and synced!' : 'Account updated!', 'success');
+                            saved = await updateMoneyAccount(id, { name, holderName, broker, openingBalance });
+                            showToast('Wallet updated in cloud!', 'success');
                         } else {
-                            await addMoneyAccount({ name, holderName, broker: 'None', openingBalance });
-                            showToast(isSyncConnected() ? 'Account added and synced!' : 'Account added!', 'success');
+                            saved = await addMoneyAccount({ name, holderName, broker, openingBalance });
+                            showToast('Wallet added to cloud!', 'success');
                         }
+                        const keepEntryOpen = moneyReturnToEntryAfterWallet && !isEdit;
+                        moneyReturnToEntryAfterWallet = false;
                         Sheet.close();
                         renderMoney();
                         renderSettings();
+                        if (keepEntryOpen) {
+                            reopenMoneyEntryAfterWallet(saved && saved.id ? saved.id : null);
+                        }
+                    } catch (err) {
+                        if (err && err.message === 'sync_required') return;
+                        console.warn('saveMoneyAccount', err);
+                        const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
+                            ? window.MTFDb.firestoreErrorMessage(err)
+                            : (err && err.message) || 'Could not save wallet.';
+                        showToast(detail, 'danger');
                     }
-                });
+                })();
             }
 
             function confirmDeleteMoneyAccount() {
                 const id = document.getElementById('moneyAccountEditId').value;
                 if (!id) return;
                 const acc = getMoneyAccounts().find(a => a.id === id);
-                const name = acc ? acc.name : 'this account';
+                const name = acc ? acc.name : 'this wallet';
                 const entryCount = getMoneyEntries().filter(e => e.accountId === id).length;
-                const extra = entryCount ? ` This will also remove ${entryCount} deposit/withdrawal record(s).` : '';
+                const extra = entryCount ? ` This will also remove ${entryCount} transaction(s).` : '';
                 confirmAction({
-                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Account?',
+                    title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Wallet?',
                     titleClass: 'text-danger',
                     message: `Delete "${name}"?${extra} This cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
-                        await deleteMoneyAccount(id);
-                        if (moneyAccountFilter === id) moneyAccountFilter = 'all';
-                        if (moneyHistorySheetAccountId === id) {
-                            moneyHistorySheetAccountId = null;
-                            Sheet.close();
-                        }
+                        // Close sheets immediately; block UI until cloud delete finishes.
+                        moneyReturnToEntryAfterWallet = false;
+                        if (moneyHistorySheetAccountId === id) moneyHistorySheetAccountId = null;
                         Sheet.close();
-                        renderMoney();
-                        renderSettings();
-                        showToast(isSyncConnected() ? 'Account deleted and synced.' : 'Account deleted.', 'danger');
+                        showBlockingProgress('Deleting wallet…');
+                        try {
+                            await deleteMoneyAccount(id);
+                            if (moneyAccountFilter === id) moneyAccountFilter = 'all';
+                            renderMoney();
+                            renderSettings();
+                            showToast('Wallet deleted from cloud.', 'danger');
+                        } catch (err) {
+                            if (err && err.message === 'sync_required') return;
+                            console.warn('deleteMoneyAccount', err);
+                            const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
+                                ? window.MTFDb.firestoreErrorMessage(err)
+                                : 'Could not delete wallet.';
+                            showToast(detail, 'danger');
+                        } finally {
+                            hideBlockingProgress();
+                        }
                     }
                 });
             }
@@ -5180,19 +5438,34 @@
             function confirmDeleteMoneyEntry(id) {
                 const entry = getMoneyEntry(id);
                 const amt = entry ? fmtINR(entry.amount) : 'this entry';
-                const typeLabel = entry?.type === 'deposit' ? 'deposit' : 'withdrawal';
+                const isTransfer = entry?.type === 'transfer';
+                const typeLabel = isTransfer ? 'transfer (both sides)' : (entry?.type || 'entry');
                 confirmAction({
                     title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Entry?',
                     titleClass: 'text-danger',
-                    message: `Delete this ${typeLabel} of ${amt}? This cannot be undone.`,
+                    message: isTransfer
+                        ? `Delete both sides of this transfer (${amt})? This cannot be undone.`
+                        : `Delete this ${typeLabel} of ${amt}? This cannot be undone.`,
                     confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
                     confirmClass: 'btn-error',
                     onConfirm: async () => {
-                        await deleteMoneyEntry(id);
-                        hideModal(document.getElementById('moneyEntryModal'));
-                        renderMoney();
-                        refreshMoneyHistorySheetIfOpen();
-                        showToast(isSyncConnected() ? 'Entry deleted and synced.' : 'Entry deleted.', 'danger');
+                        showBlockingProgress('Deleting transaction…');
+                        try {
+                            await deleteMoneyEntry(id);
+                            closeMoneyEntryPage();
+                            renderMoney();
+                            refreshMoneyHistorySheetIfOpen();
+                            showToast('Entry deleted from cloud.', 'danger');
+                        } catch (err) {
+                            if (err && err.message === 'sync_required') return;
+                            console.warn('deleteMoneyEntry', err);
+                            const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
+                                ? window.MTFDb.firestoreErrorMessage(err)
+                                : 'Could not delete entry.';
+                            showToast(detail, 'danger');
+                        } finally {
+                            hideBlockingProgress();
+                        }
                     }
                 });
             }
@@ -5722,6 +5995,12 @@
                     hideLoading,
                     renderSettings,
                     refreshAllViews,
+                    onMoneyLedgerChanged: () => {
+                        try {
+                            if (activeMoreFeature === 'money') renderMoney();
+                            refreshMoneyHistorySheetIfOpen();
+                        } catch (_) {}
+                    },
                     onRemoteApplied: () => {
                         try { migrateTradeCompanySymbols(); } catch (_) {}
                         try {
@@ -5782,9 +6061,10 @@
                     actionBtnSm: UI.actionBtnSm
                 },
                 appHeader: {
-                    moreFeatureMap: { money: 'page-money', 'mtf-calc': 'page-mtf-calc' },
+                    moreFeatureMap: { money: 'page-money', 'money-entry': 'page-money-entry', 'mtf-calc': 'page-mtf-calc' },
                     moreFeatureTitles: {
-                        money: 'Money',
+                        money: 'Broker Wallets',
+                        'money-entry': 'Add Transaction',
                         'mtf-calc': 'MTF Calculator'
                     }
                 },
@@ -5850,7 +6130,11 @@
                     getMoneyPageFrom: () => moneyPageFrom,
                     getMoneyPageTo: () => moneyPageTo,
                     getMoneyPageRangeKey: () => moneyPageRangeKey,
+                    getMoneySearchQuery: () => moneySearchQuery,
+                    getMoneyMonthKey: () => moneyMonthKey,
                     setMoneyAccountFilter,
+                    paintAddMoneyAccountBtn,
+                    updateMoneyFabVisibility,
                     getMoneyHistorySheetAccountId: () => moneyHistorySheetAccountId,
                     getMoneyHistorySheetTitle,
                     syncMoneyHistoryFilterUI,
@@ -5920,18 +6204,31 @@
                 },
                 moneyModal: {
                     getMoneyAccounts,
+                    getMoneyEntries,
                     getMoneyEntry,
                     getNowTime,
                     addMoneyEntry,
                     updateMoneyEntry,
+                    addMoneyTransfer,
+                    isSyncConnected,
+                    showMoneyEntryPage,
+                    closeMoneyEntryPage,
                     setMoneyHistorySheetAccountId: (id) => { moneyHistorySheetAccountId = id; },
                     renderMoney,
                     refreshMoneyHistorySheetIfOpen,
-                    getSyncNote: () => (isSyncConnected() ? ' and synced' : '')
+                    getSyncNote: () => (isSyncConnected() ? ' to cloud' : '')
                 }
             };
 
-            window.closeSheet = closeSheet;
+            window.closeSheet = function closeSheetAndClearMoneyStack() {
+                const shouldReopenEntry = moneyReturnToEntryAfterWallet;
+                moneyReturnToEntryAfterWallet = false;
+                closeSheet();
+                if (shouldReopenEntry) {
+                    // Cancelled wallet add — stay / return to the transaction page.
+                    reopenMoneyEntryAfterWallet(document.getElementById('moneyEntryAccountId')?.value || null);
+                }
+            };
             window.closeTradeModal = closeTradeModal;
             window.closeDialog = closeDialog;
 
@@ -6085,19 +6382,37 @@
             window.clearMoneyPageFilters = clearMoneyPageFilters;
             window.onMoneyPageDateInputChange = onMoneyPageDateInputChange;
             window.clearMoneyHistoryFilters = clearMoneyHistoryFilters;
-            window.onMoneyEntryTypeToggle = onMoneyEntryTypeToggle;
+            window.onMoneyEntryTypePick = onMoneyEntryTypePick;
             window.setMoneyEntryType = setMoneyEntryType;
             window.toggleMoneyEntryDateTimeEdit = toggleMoneyEntryDateTimeEdit;
             window.onMoneyEntryDateTimeChange = onMoneyEntryDateTimeChange;
             window.openMoneyEntryModal = openMoneyEntryModal;
             window.updateMoneyEntryAmountPreview = updateMoneyEntryAmountPreview;
+            window.onMoneyEntryAmountInput = onMoneyEntryAmountInput;
+            window.applyMoneyEntryAmountChip = applyMoneyEntryAmountChip;
+            window.focusMoneyEntryAmountCustom = focusMoneyEntryAmountCustom;
+            window.onMoneyEntryNoteInput = onMoneyEntryNoteInput;
+            window.applyMoneyEntryRemarkChip = applyMoneyEntryRemarkChip;
+            window.focusMoneyEntryRemarkCustom = focusMoneyEntryRemarkCustom;
+            window.onMoneyEntryBrokerSelectChange = onMoneyEntryBrokerSelectChange;
+            window.toggleMoneyEntryBalanceVisibility = toggleMoneyEntryBalanceVisibility;
+            window.pickMoneyEntryWallet = pickMoneyEntryWallet;
+            window.focusMoneyEntryBrokerPicker = focusMoneyEntryBrokerPicker;
+            window.closeMoneyEntryPage = closeMoneyEntryPage;
             window.openEditMoneyEntryModal = openEditMoneyEntryModal;
             window.saveMoneyEntry = saveMoneyEntry;
             window.openAddMoneyAccountModal = openAddMoneyAccountModal;
             window.updateMoneyAccountOpeningPreview = updateMoneyAccountOpeningPreview;
+            window.onMoneyAccountBrokerChange = onMoneyAccountBrokerChange;
+            window.onMoneyEntryBrokerChange = onMoneyEntryBrokerChange;
             window.openMoneyAccountModal = openMoneyAccountModal;
             window.saveMoneyAccount = saveMoneyAccount;
             window.confirmDeleteMoneyAccount = confirmDeleteMoneyAccount;
             window.confirmDeleteMoneyEntry = confirmDeleteMoneyEntry;
+            window.setMoneyPageSort = setMoneyPageSort;
+            window.setMoneySearchQuery = setMoneySearchQuery;
+            window.clearMoneySearchQuery = clearMoneySearchQuery;
+            window.shiftMoneyMonthChart = shiftMoneyMonthChart;
+            window.setMoneyMonthKey = setMoneyMonthKey;
 
         })(typeof window !== 'undefined' ? window : globalThis);

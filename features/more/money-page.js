@@ -15,7 +15,32 @@
         return `${String(hr).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
     }
 
-    global.MTFRegister({ formatMoneyEntryTimeDisplay });
+    function moneyEntryTypeLabel(entry) {
+        if (!entry) return 'Entry';
+        if (entry.type === 'deposit') return 'Deposit';
+        if (entry.type === 'withdraw') return 'Withdrawal';
+        if (entry.type === 'adjustment') {
+            return entry.adjustmentSign === -1 ? 'Adjustment (−)' : 'Adjustment (+)';
+        }
+        if (entry.type === 'transfer') {
+            return entry.transferLeg === 'in' ? 'Transfer in' : 'Transfer out';
+        }
+        return entry.type || 'Entry';
+    }
+
+    function moneyEntryTone(entry) {
+        const db = global.MTFDb || {};
+        if (typeof db.entryIsInflow === 'function') {
+            return db.entryIsInflow(entry) ? 'deposit' : 'withdraw';
+        }
+        if (entry.type === 'deposit') return 'deposit';
+        if (entry.type === 'withdraw') return 'withdraw';
+        if (entry.type === 'adjustment') return entry.adjustmentSign === -1 ? 'withdraw' : 'deposit';
+        if (entry.type === 'transfer') return entry.transferLeg === 'in' ? 'deposit' : 'withdraw';
+        return 'deposit';
+    }
+
+    global.MTFRegister({ formatMoneyEntryTimeDisplay, moneyEntryTypeLabel, moneyEntryTone });
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /**
@@ -30,33 +55,37 @@
         renderDateChip,
         renderAmount,
         renderMoneyAmountWords,
-        formatMoneyEntryTimeDisplay
+        formatMoneyEntryTimeDisplay,
+        moneyEntryTypeLabel,
+        moneyEntryTone
     } = global.MTFComponents;
 
     function renderMoneyFilterListItem(e, showAccount, hideTypeBadge, accounts) {
-        const isDeposit = e.type === 'deposit';
-        const typeBadge = hideTypeBadge ? '' : (isDeposit
-            ? appTag('Invest', 'secondary')
-            : appTag('Withdraw', 'error'));
+        const tone = moneyEntryTone(e);
+        const typeBadge = hideTypeBadge ? '' : appTag(moneyEntryTypeLabel(e), tone === 'deposit' ? 'secondary' : 'error');
         const acc = accounts.find((a) => a.id === e.accountId);
         const { renderIcon } = global.MTFComponents;
         const accountChip = showAccount && acc
             ? appTag(`${renderIcon('fa-university', { className: 'me-1' })}${acc.name}`)
             : '';
+        const noteLine = e.note ? `<div class="small text-muted text-truncate mt-1">${e.note}</div>` : '';
         const topRow = (accountChip || typeBadge)
             ? `<div class="d-flex flex-wrap gap-2 mb-1">${accountChip}${typeBadge}</div>`
             : '';
         return `
-            <div class="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom">
-                <div class="min-w-0 flex-fill">
-                    ${topRow}
-                    <div class="small text-muted d-flex flex-wrap align-items-center gap-1">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+            <button type="button" class="btn btn-link text-decoration-none text-body text-start w-100 p-0" onclick="openEditMoneyEntryModal('${e.id}')">
+                <div class="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom">
+                    <div class="min-w-0 flex-fill">
+                        ${topRow}
+                        <div class="small text-muted d-flex flex-wrap align-items-center gap-1">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                        ${noteLine}
+                    </div>
+                    <div class="d-flex flex-column align-items-end text-end flex-shrink-0 min-w-0">
+                        ${renderAmount(e.amount, { size: 'md', tone, align: 'right' })}
+                        ${renderMoneyAmountWords(e.amount, 'right')}
+                    </div>
                 </div>
-                <div class="d-flex flex-column align-items-end text-end flex-shrink-0 min-w-0">
-                    ${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}
-                    ${renderMoneyAmountWords(e.amount, 'right')}
-                </div>
-            </div>
+            </button>
         `;
     }
 
@@ -64,7 +93,7 @@
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /**
- * M39 — Money account card molecule.
+ * M39 — Broker wallet card molecule.
  */
 (function (global) {
     'use strict';
@@ -72,88 +101,146 @@
     const {
         appTag,
         renderAmount,
-        renderMoneyAmountWords,
-        menuIconClass
+        menuIconClass,
+        escapeHtml,
+        renderBrokerLogo,
+        normalizeBrokerKey
     } = global.MTFComponents;
 
     function ui() {
         return (global.MTFAppHelpers || {}).ui || {};
     }
 
+    function walletAvatarTone(name) {
+        const s = String(name || '');
+        let h = 0;
+        for (let i = 0; i < s.length; i++) h = ((h << 5) - h) + s.charCodeAt(i);
+        return Math.abs(h) % 6;
+    }
+
+    function walletInitial(name) {
+        const raw = String(name || '').trim();
+        if (!raw) return 'W';
+        const parts = raw.split(/\s+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
+        }
+        return raw.slice(0, 2).toUpperCase();
+    }
+
+    function esc(value) {
+        if (typeof escapeHtml === 'function') return escapeHtml(value);
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
     function renderMoneyAccountCard(stats, historyCount) {
         const acc = stats.account;
-        const holderLine = acc.holderName ? appTag(acc.holderName) : '';
+        const name = acc.name || 'Wallet';
+        const broker = (acc.broker && acc.broker !== name) ? acc.broker : '';
+        const holder = acc.holderName || '';
+        const metaBits = [broker, holder].filter(Boolean);
+        const metaLine = metaBits.length
+            ? `<div class="money-wallet-meta text-truncate" title="${esc(metaBits.join(' · '))}">${esc(metaBits.join(' · '))}</div>`
+            : `<div class="money-wallet-meta text-muted">Broker wallet</div>`;
+        const tone = walletAvatarTone(name);
+        const initial = esc(walletInitial(name));
+        const safeName = esc(name);
+        const logoKey = (normalizeBrokerKey && (normalizeBrokerKey(acc.broker) || normalizeBrokerKey(name))) || name;
+        const logoHtml = typeof renderBrokerLogo === 'function'
+            ? renderBrokerLogo(logoKey, { size: 'md', className: 'money-wallet-avatar flex-shrink-0' })
+            : `<span class="trade-position-avatar trade-position-avatar--${tone} money-wallet-avatar flex-shrink-0" aria-hidden="true">${initial}</span>`;
+        const cashTone = (Number(stats.totalValue) || 0) >= 0 ? 'positive' : 'negative';
         const actionBtnSm = ui().actionBtnSm || 'btn btn-sm rounded-3 p-0 d-flex align-items-center justify-content-center';
-        const row = (label, amount, extra = '', tone = 'positive') =>
-            `<div class="py-2 border-bottom ${extra}">
-                <div class="d-flex justify-content-between align-items-start gap-4">
-                    <span class="small flex-shrink-0 pt-1 ${tone === 'deposit' ? 'text-primary' : 'text-muted'}">${label}</span>
-                    <div class="d-flex flex-column align-items-end text-end min-w-0">
-                        ${renderAmount(amount, { size: 'md', tone, align: 'right', pill: false })}
-                        ${renderMoneyAmountWords(amount, 'right')}
-                    </div>
-                </div>
-            </div>`;
+        const txLabel = historyCount === 1 ? '1 txn' : `${historyCount || 0} txns`;
+
         return `
-            <div class="card bg-body rounded" data-money-account-card>
+            <article class="card money-wallet-card border-0 shadow-sm" data-money-account-card role="listitem" aria-label="${safeName}">
                 <div class="card-body p-0">
-                    <div class="px-4 pt-4 pb-3">
-                        <div class="d-flex justify-content-between align-items-start gap-2">
-                            <div class="min-w-0">
-                                <div class="fw-semibold text-truncate">${acc.name}</div>
-                                ${holderLine}
-                            </div>
-                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: 'positive', pill: false })}
-                                <div class="dropdown">
-                                    <button type="button" class="${actionBtnSm} btn-outline-secondary bg-light border" style="width:2rem;height:2rem" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More">
-                                        ${global.MTFComponents.renderIcon('fa-ellipsis-v', { size: 'sm' })}
+                    <div class="money-wallet-top">
+                        <button type="button" class="money-wallet-open btn btn-link text-decoration-none text-body text-start p-0 min-w-0 flex-fill" onclick="openAccountHistorySheet('${acc.id}')">
+                            ${logoHtml}
+                            <span class="money-wallet-identity min-w-0">
+                                <span class="money-wallet-name text-truncate" title="${safeName}">${safeName}</span>
+                                ${metaLine}
+                            </span>
+                        </button>
+                        <div class="money-wallet-balance flex-shrink-0 text-end">
+                            <button type="button" class="btn btn-link text-decoration-none p-0" onclick="openAccountHistorySheet('${acc.id}')" aria-label="Cash in ${safeName}">
+                                ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: cashTone, pill: false })}
+                            </button>
+                            <div class="money-wallet-balance-label">Available</div>
+                        </div>
+                        <div class="dropdown flex-shrink-0">
+                            <button type="button" class="${actionBtnSm} money-wallet-more btn-outline-secondary" style="width:2rem;height:2rem" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More for ${safeName}">
+                                ${global.MTFComponents.renderIcon('fa-ellipsis-v', { size: 'sm' })}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
+                                        <span class="${menuIconClass('deposit')}">${global.MTFComponents.renderIcon('fa-plus')}</span>
+                                        <span class="flex-fill text-start">Deposit</span>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                                        <li>
-                                            <button type="button" class="dropdown-item d-flex align-items-center" onclick="toggleMoneyAccountExpand(this)" aria-expanded="false">
-                                                <span class="flex-fill text-start" data-money-expand-label>Expand details</span>
-                                            </button>
-                                        </li>
-                                        <li><hr class="dropdown-divider my-0"></li>
-                                        <li>
-                                            <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
-                                                <span class="${menuIconClass('deposit')}">${global.MTFComponents.renderIcon('fa-plus')}</span>
-                                                <span class="flex-fill text-start">Deposit</span>
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
-                                                <span class="${menuIconClass('withdraw')}">${global.MTFComponents.renderIcon('fa-minus')}</span>
-                                                <span class="flex-fill text-start">Withdraw</span>
-                                            </button>
-                                        </li>
-                                        <li><hr class="dropdown-divider my-0"></li>
-                                        <li>
-                                            <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openAccountHistorySheet('${acc.id}')">
-                                                <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-history')}</span>
-                                                <span class="flex-fill text-start">History</span>
-                                                ${historyCount ? appTag(String(historyCount), 'accent') : ''}
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyAccountModal('${acc.id}')">
-                                                <span class="${menuIconClass('edit')}">${global.MTFComponents.renderIcon('fa-pen')}</span>
-                                                <span class="flex-fill text-start">Edit account</span>
-                                            </button>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
+                                        <span class="${menuIconClass('withdraw')}">${global.MTFComponents.renderIcon('fa-minus')}</span>
+                                        <span class="flex-fill text-start">Withdrawal</span>
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'transfer')">
+                                        <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-exchange-alt')}</span>
+                                        <span class="flex-fill text-start">Transfer</span>
+                                    </button>
+                                </li>
+                                <li><hr class="dropdown-divider my-0"></li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openAccountHistorySheet('${acc.id}')">
+                                        <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-history')}</span>
+                                        <span class="flex-fill text-start">History</span>
+                                        ${historyCount ? appTag(String(historyCount), 'accent') : ''}
+                                    </button>
+                                </li>
+                                <li>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyAccountModal('${acc.id}')">
+                                        <span class="${menuIconClass('edit')}">${global.MTFComponents.renderIcon('fa-pen')}</span>
+                                        <span class="flex-fill text-start">Edit wallet</span>
+                                    </button>
+                                </li>
+                            </ul>
                         </div>
                     </div>
-                    <div data-money-account-details class="collapse px-4 pb-4">
-                        ${row('Deposited', stats.deposited, '', 'deposit')}
-                        ${row('Withdrawn', stats.withdrawn, '', 'withdraw')}
-                        ${row('<span class="fw-medium text-body-secondary">Total Value</span>', stats.totalValue, 'border-bottom-0 pt-2 mt-1', 'positive')}
+                    <div class="money-wallet-metrics" aria-label="Wallet summary">
+                        <div class="money-wallet-metric">
+                            <span class="money-wallet-metric-label">Deposited</span>
+                            <span class="money-wallet-metric-value text-primary">${global.MTFComponents.fmtINR(stats.deposited)}</span>
+                        </div>
+                        <div class="money-wallet-metric">
+                            <span class="money-wallet-metric-label">Withdrawn</span>
+                            <span class="money-wallet-metric-value text-danger">${global.MTFComponents.fmtINR(stats.withdrawn)}</span>
+                        </div>
+                        <div class="money-wallet-metric">
+                            <span class="money-wallet-metric-label">Activity</span>
+                            <span class="money-wallet-metric-value">${txLabel}</span>
+                        </div>
+                    </div>
+                    <div class="money-wallet-actions">
+                        <button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
+                            <i class="fas fa-plus me-1" aria-hidden="true"></i>Deposit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
+                            <i class="fas fa-minus me-1" aria-hidden="true"></i>Withdraw
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openAccountHistorySheet('${acc.id}')">
+                            <i class="fas fa-history me-1" aria-hidden="true"></i>History
+                        </button>
                     </div>
                 </div>
-            </div>
+            </article>
         `;
     }
 
@@ -161,42 +248,93 @@
 })(typeof window !== 'undefined' ? window : globalThis);
 
 /**
- * O26 — Money entry modal organism.
+ * O26 — Money entry page organism.
  */
 (function (global) {
     'use strict';
 
     const {
-        renderAppButton,
+        renderAppButtonRow,
         renderAmount,
         renderMoneyAmountWords,
-        renderDateChip,
         fmtDateDisplay,
+        fmtDec,
         fmtINR,
         formatMoneyEntryTimeDisplay,
         setDateInputValue,
         showToast,
         confirmAction,
-        showModal,
-        hideModal
+        renderBrokerLogo,
+        getBrokerLogoSrc,
+        normalizeBrokerKey
     } = global.MTFComponents;
 
     let moneyEntryIsEdit = false;
     let moneyEntryDateTimeEditing = false;
+    let moneyEntryBalanceHidden = false;
+
+    const TYPE_META = {
+        deposit: { label: 'Deposit', icon: 'fa-chart-line', tone: 'success' },
+        withdraw: { label: 'Withdrawal', icon: 'fa-arrow-up', tone: 'danger' },
+        transfer: { label: 'Transfer', icon: 'fa-exchange-alt', tone: 'danger' },
+        adjustment: { label: 'Adjustment', icon: 'fa-sliders-h', tone: 'warning' }
+    };
 
     function moneyModal() {
         return (global.MTFAppHelpers || {}).moneyModal || {};
     }
 
-    function renderMoneyEntryFooter(label, icon = 'fa-plus') {
+    function moneyEntryTypeLabel(type) {
+        return (TYPE_META[type] || TYPE_META.deposit).label;
+    }
+
+    function formatMoneyEntryBalance(amount) {
+        if (moneyEntryBalanceHidden) return '••••••';
+        return fmtDec(amount);
+    }
+
+    function resolveMoneyEntryAccountId() {
+        const type = getMoneyEntryType();
+        if (type === 'transfer') {
+            return document.getElementById('moneyEntryFromAccount')?.value
+                || document.getElementById('moneyEntryAccountId')?.value
+                || '';
+        }
+        const broker = document.getElementById('moneyEntryBrokerSelect')?.value;
+        if (broker && broker !== '__add_wallet__') return broker;
+        return document.getElementById('moneyEntryAccountId')?.value || '';
+    }
+
+    function getMoneyEntryWalletBalance(accountId) {
+        const { getMoneyAccounts, getMoneyEntries } = moneyModal();
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const entries = getMoneyEntries ? getMoneyEntries() : [];
+        const acc = accounts.find((a) => a.id === accountId);
+        if (!acc) return 0;
+        const compute = global.MTFComponents.computeAccountTotalValue;
+        if (typeof compute === 'function') return compute(acc, entries);
+        return Number(acc.openingBalance) || 0;
+    }
+
+    function signedMoneyEntryDelta(amount, type) {
+        const n = Number(amount) || 0;
+        if (!n) return 0;
+        if (type === 'withdraw' || type === 'transfer') return -n;
+        if (type === 'adjustment') {
+            return Number(document.getElementById('moneyEntryAdjustSign')?.value) === -1 ? -n : n;
+        }
+        return n;
+    }
+
+    function renderMoneyEntryFooter(label, icon = 'fa-lock') {
         const footer = document.getElementById('moneyEntryFooter');
         if (!footer) return;
-        footer.innerHTML = renderAppButton(label, {
-            variant: 'action',
-            id: 'moneyEntrySaveBtn',
-            onclick: 'saveMoneyEntry()',
-            icon,
-            fullWidth: true
+        footer.innerHTML = renderAppButtonRow('Cancel', label, {
+            cancelOnClick: 'closeMoneyEntryPage()',
+            actionOnClick: 'saveMoneyEntry()',
+            actionId: 'moneyEntrySaveBtn',
+            actionIcon: icon,
+            rowClass: 'money-entry-actions-row'
         });
     }
 
@@ -213,7 +351,11 @@
             el.textContent = '—';
             return;
         }
-        el.innerHTML = `${renderDateChip(fmtDateDisplay(date), { size: 'sm' })}<span class="text-muted">·</span><span><i class="far fa-clock me-1"></i>${formatMoneyEntryTimeDisplay(time)}</span>`;
+        const dateText = fmtDateDisplay(date);
+        const timeText = formatMoneyEntryTimeDisplay(time);
+        el.innerHTML = `<span class="money-entry-status-date">${dateText}</span><span class="money-entry-status-time">${timeText}</span>`;
+        const previewDt = document.getElementById('moneyEntryPreviewDateTime');
+        if (previewDt) previewDt.textContent = `${dateText}, ${timeText}`;
     }
 
     function setMoneyEntryDateTimeEditing(editing) {
@@ -239,147 +381,627 @@
 
     function onMoneyEntryDateTimeChange() {
         updateMoneyEntryDateTimeDisplay();
+        updateMoneyEntryLivePreview();
+    }
+
+    function toggleMoneyEntryBalanceVisibility() {
+        moneyEntryBalanceHidden = !moneyEntryBalanceHidden;
+        const btn = document.getElementById('moneyEntryBalanceEyeBtn');
+        if (btn) {
+            btn.innerHTML = moneyEntryBalanceHidden
+                ? '<i class="far fa-eye-slash"></i>'
+                : '<i class="far fa-eye"></i>';
+            btn.setAttribute('aria-label', moneyEntryBalanceHidden ? 'Show balance' : 'Hide balance');
+            btn.title = moneyEntryBalanceHidden ? 'Show balance' : 'Hide balance';
+        }
+        refreshMoneyEntryBalances();
+    }
+
+    function syncMoneyEntryTypeUI(type) {
+        const entryType = ['deposit', 'withdraw', 'adjustment', 'transfer'].includes(type) ? type : 'deposit';
+        const typeEl = document.getElementById('moneyEntryType');
+        if (typeEl) typeEl.value = entryType;
+        const meta = TYPE_META[entryType] || TYPE_META.deposit;
+
+        document.querySelectorAll('[data-money-entry-type]').forEach((btn) => {
+            const active = btn.getAttribute('data-money-entry-type') === entryType;
+            btn.classList.remove('is-active', 'is-success', 'is-danger', 'is-warning');
+            if (active) btn.classList.add('is-active');
+            btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        });
+
+        const transferFields = document.getElementById('moneyEntryTransferFields');
+        const adjustFields = document.getElementById('moneyEntryAdjustFields');
+        const accountFields = document.getElementById('moneyEntryAccountFields');
+        if (transferFields) transferFields.classList.toggle('d-none', entryType !== 'transfer');
+        if (adjustFields) adjustFields.classList.toggle('d-none', entryType !== 'adjustment');
+        if (accountFields) accountFields.classList.toggle('d-none', entryType === 'transfer');
+
+        const statusType = document.getElementById('moneyEntryStatusType');
+        if (statusType) {
+            statusType.textContent = meta.label;
+            statusType.className = `money-entry-status-value text-${meta.tone === 'warning' ? 'warning' : (meta.tone === 'danger' ? 'danger' : 'success')}`;
+        }
+        const statusIcon = document.getElementById('moneyEntryStatusTypeIcon');
+        if (statusIcon) {
+            statusIcon.className = `money-entry-status-icon money-entry-status-icon--type is-${meta.tone}`;
+            statusIcon.innerHTML = `<i class="fas ${meta.icon}"></i>`;
+        }
+
+        const header = document.getElementById('moneyEntryHeader');
+        if (header) {
+            header.classList.remove('is-deposit', 'is-withdraw', 'is-transfer', 'is-adjustment');
+            header.classList.add(`is-${entryType}`);
+        }
+
+        setMoneyEntryModalMode(moneyEntryIsEdit, entryType);
+        refreshMoneyEntryBalances();
+        updateMoneyEntryLivePreview();
     }
 
     function setMoneyEntryType(type) {
-        const entryType = type === 'withdraw' ? 'withdraw' : 'deposit';
-        const isWithdraw = entryType === 'withdraw';
-        const typeEl = document.getElementById('moneyEntryType');
-        if (typeEl) typeEl.value = entryType;
-        const header = document.getElementById('moneyEntryHeader');
-        if (header) {
-            header.classList.remove('bg-success', 'text-white', 'bg-danger', 'text-white', 'border-success', 'border-danger');
-            header.classList.add(isWithdraw ? 'bg-danger-subtle text-danger border-danger' : 'bg-success-subtle text-success border-success', 'border-bottom');
-        }
-        const toggle = document.getElementById('moneyEntryTypeToggle');
-        if (toggle) toggle.checked = isWithdraw;
-        const previewEl = document.getElementById('moneyEntryAmountPreview');
-        if (previewEl) {
-            previewEl.classList.remove('bg-success-subtle', 'bg-danger-subtle', 'text-success', 'text-danger', 'p-2', 'rounded-3', 'fw-semibold');
-        }
-        setMoneyEntryModalMode(moneyEntryIsEdit, entryType);
+        syncMoneyEntryTypeUI(type);
+        syncMoneyEntryPageTitle(moneyEntryIsEdit, type);
     }
 
-    function onMoneyEntryTypeToggle(isWithdraw) {
-        setMoneyEntryType(isWithdraw ? 'withdraw' : 'deposit');
+    function onMoneyEntryTypePick(type) {
+        if (moneyEntryIsEdit && getMoneyEntryType() === 'transfer' && type !== 'transfer') {
+            showToast('Transfer type cannot be changed. Edit amount, date, or remarks.', 'info');
+            return;
+        }
+        setMoneyEntryType(type);
+        updateMoneyEntryAmountPreview();
+    }
+
+    function brokerLogoLabelForAccount(acc) {
+        if (!acc) return '';
+        return normalizeBrokerKey(acc.broker) || normalizeBrokerKey(acc.name) || acc.name || '';
+    }
+
+    function renderMoneyEntryPickerCards(accounts, selectedId, target, disabled) {
+        const cards = (accounts || []).map((a) => {
+            const logoLabel = brokerLogoLabelForAccount(a);
+            const logo = renderBrokerLogo(logoLabel || a.name, { size: 'md', className: 'money-entry-broker-logo' });
+            const active = a.id === selectedId ? ' is-selected' : '';
+            const dis = disabled ? ' disabled' : '';
+            return `<button type="button" class="money-entry-broker-card${active}" role="option" aria-selected="${a.id === selectedId ? 'true' : 'false'}" ${dis}
+                onclick="pickMoneyEntryWallet('${a.id}', '${target}')">
+                ${logo}
+                <span class="money-entry-broker-card-name text-truncate">${a.name}</span>
+            </button>`;
+        }).join('');
+        const addCard = disabled ? '' : `<button type="button" class="money-entry-broker-card money-entry-broker-card--add" role="option" aria-selected="false"
+            onclick="pickMoneyEntryWallet('__add_wallet__', '${target}')">
+            <span class="broker-logo broker-logo--fallback broker-logo--md money-entry-broker-logo" aria-hidden="true"><i class="fas fa-plus"></i></span>
+            <span class="money-entry-broker-card-name">Add wallet</span>
+        </button>`;
+        return cards + addCard;
+    }
+
+    function renderMoneyEntryBrokerPickers() {
+        const { getMoneyAccounts } = moneyModal();
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const brokerSelect = document.getElementById('moneyEntryBrokerSelect');
+        const fromSelect = document.getElementById('moneyEntryFromAccount');
+        const toSelect = document.getElementById('moneyEntryToAccount');
+        const brokerPicker = document.getElementById('moneyEntryBrokerPicker');
+        const fromPicker = document.getElementById('moneyEntryFromPicker');
+        const toPicker = document.getElementById('moneyEntryToPicker');
+        if (brokerPicker) {
+            brokerPicker.innerHTML = renderMoneyEntryPickerCards(
+                accounts,
+                brokerSelect?.value || '',
+                'broker',
+                !!brokerSelect?.disabled
+            );
+        }
+        if (fromPicker) {
+            fromPicker.innerHTML = renderMoneyEntryPickerCards(
+                accounts,
+                fromSelect?.value || '',
+                'from',
+                !!fromSelect?.disabled
+            );
+        }
+        if (toPicker) {
+            toPicker.innerHTML = renderMoneyEntryPickerCards(
+                accounts,
+                toSelect?.value || '',
+                'to',
+                !!toSelect?.disabled
+            );
+        }
+    }
+
+    function pickMoneyEntryWallet(accountId, target) {
+        const selectId = target === 'from'
+            ? 'moneyEntryFromAccount'
+            : (target === 'to' ? 'moneyEntryToAccount' : 'moneyEntryBrokerSelect');
+        const select = document.getElementById(selectId);
+        if (!select || select.disabled) return;
+        select.value = accountId;
+        onMoneyEntryBrokerSelectChange(select);
+        renderMoneyEntryBrokerPickers();
+        syncMoneyEntryBrandHeader();
+    }
+
+    function focusMoneyEntryBrokerPicker() {
+        const type = getMoneyEntryType();
+        const el = document.getElementById(type === 'transfer' ? 'moneyEntryTransferFields' : 'moneyEntryAccountFields');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function fillMoneyEntryWalletSelects(accounts, accountId) {
+        const addOpt = '<option value="__add_wallet__">+ Add new wallet…</option>';
+        const brokerSelect = document.getElementById('moneyEntryBrokerSelect');
+        if (brokerSelect) {
+            brokerSelect.innerHTML = accounts.map((a) =>
+                `<option value="${a.id}" ${a.id === accountId ? 'selected' : ''}>${a.name}</option>`
+            ).join('') + addOpt;
+        }
+        const fromSelect = document.getElementById('moneyEntryFromAccount');
+        const toSelect = document.getElementById('moneyEntryToAccount');
+        if (fromSelect) {
+            fromSelect.innerHTML = accounts.map((a) =>
+                `<option value="${a.id}" ${a.id === accountId ? 'selected' : ''}>${a.name}</option>`
+            ).join('') + addOpt;
+        }
+        if (toSelect) {
+            const other = accounts.find((a) => a.id !== accountId) || accounts.find((a) => a.id !== (fromSelect && fromSelect.value)) || accounts[0];
+            toSelect.innerHTML = accounts.map((a) =>
+                `<option value="${a.id}" ${other && a.id === other.id ? 'selected' : ''}>${a.name}</option>`
+            ).join('') + addOpt;
+        }
+        const accountIdEl = document.getElementById('moneyEntryAccountId');
+        if (accountIdEl && accountId) accountIdEl.value = accountId;
+        const titleEl = document.getElementById('moneyEntryAccountTitle');
+        if (titleEl && accountId) {
+            const acc = accounts.find((a) => a.id === accountId);
+            const type = document.getElementById('moneyEntryType')?.value;
+            if (type !== 'transfer' && acc) titleEl.textContent = acc.name;
+        }
+        renderMoneyEntryBrokerPickers();
+        refreshMoneyEntryBalances();
+        updateMoneyEntryLivePreview();
+        syncMoneyEntryBrandHeader();
+    }
+
+    function refreshMoneyEntryWalletSelects(selectedAccountId) {
+        const { getMoneyAccounts } = moneyModal();
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const preferred = selectedAccountId || accounts[0]?.id || '';
+        fillMoneyEntryWalletSelects(accounts, preferred);
+    }
+
+    function refreshMoneyEntryBalances() {
+        const accountId = resolveMoneyEntryAccountId();
+        const balance = getMoneyEntryWalletBalance(accountId);
+        const formatted = formatMoneyEntryBalance(balance);
+        const statusBal = document.getElementById('moneyEntryStatusBalance');
+        if (statusBal) {
+            statusBal.textContent = formatted;
+            statusBal.classList.toggle('text-success', !moneyEntryBalanceHidden && balance >= 0);
+            statusBal.classList.toggle('text-danger', !moneyEntryBalanceHidden && balance < 0);
+            statusBal.classList.toggle('text-muted', moneyEntryBalanceHidden);
+        }
+        const hintVal = document.getElementById('moneyEntryWalletBalanceValue');
+        if (hintVal) {
+            hintVal.textContent = formatted;
+            hintVal.classList.toggle('text-success', !moneyEntryBalanceHidden);
+            hintVal.classList.toggle('text-muted', moneyEntryBalanceHidden);
+        }
+        const previewCurrent = document.getElementById('moneyEntryPreviewCurrent');
+        if (previewCurrent) previewCurrent.textContent = formatted;
+        return balance;
+    }
+
+    function updateMoneyEntryLivePreview() {
+        const type = getMoneyEntryType();
+        const meta = TYPE_META[type] || TYPE_META.deposit;
+        const amount = parseFloat(document.getElementById('moneyEntryAmount')?.value) || 0;
+        const { getMoneyAccounts } = moneyModal();
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const accountId = resolveMoneyEntryAccountId();
+        const acc = accounts.find((a) => a.id === accountId);
+        const current = refreshMoneyEntryBalances();
+        const after = current + signedMoneyEntryDelta(amount, type);
+
+        const previewType = document.getElementById('moneyEntryPreviewType');
+        if (previewType) {
+            previewType.textContent = meta.label;
+            previewType.className = `money-entry-preview-value text-${meta.tone === 'warning' ? 'warning' : (meta.tone === 'danger' ? 'danger' : 'success')}`;
+        }
+
+        const previewBroker = document.getElementById('moneyEntryPreviewBroker');
+        if (previewBroker) {
+            if (type === 'transfer') {
+                const fromId = document.getElementById('moneyEntryFromAccount')?.value;
+                const toId = document.getElementById('moneyEntryToAccount')?.value;
+                const from = accounts.find((a) => a.id === fromId);
+                const to = accounts.find((a) => a.id === toId);
+                previewBroker.textContent = from && to ? `${from.name} → ${to.name}` : (from?.name || '—');
+            } else {
+                previewBroker.textContent = acc?.name || '—';
+            }
+        }
+
+        const previewAmount = document.getElementById('moneyEntryPreviewAmount');
+        if (previewAmount) {
+            previewAmount.textContent = fmtDec(amount);
+            const toneClass = type === 'withdraw' || type === 'transfer' || (type === 'adjustment' && Number(document.getElementById('moneyEntryAdjustSign')?.value) === -1)
+                ? 'text-danger'
+                : 'text-success';
+            previewAmount.className = `money-entry-preview-value ${toneClass}`;
+        }
+
+        const previewAfter = document.getElementById('moneyEntryPreviewAfter');
+        if (previewAfter) {
+            previewAfter.textContent = moneyEntryBalanceHidden ? '••••••' : fmtDec(after);
+            previewAfter.classList.toggle('text-success', !moneyEntryBalanceHidden && after >= 0);
+            previewAfter.classList.toggle('text-danger', !moneyEntryBalanceHidden && after < 0);
+        }
+
+        updateMoneyEntryDateTimeDisplay();
     }
 
     function applyMoneyEntryForm(accountId, type, isEdit) {
         const { getMoneyAccounts } = moneyModal();
         moneyEntryIsEdit = !!isEdit;
-        const acc = (getMoneyAccounts ? getMoneyAccounts() : []).find((a) => a.id === accountId);
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const acc = accounts.find((a) => a.id === accountId);
         const accountIdEl = document.getElementById('moneyEntryAccountId');
         if (accountIdEl) accountIdEl.value = accountId || '';
         const titleEl = document.getElementById('moneyEntryAccountTitle');
-        if (titleEl) titleEl.textContent = acc ? acc.name : 'Account';
+        if (titleEl) {
+            if (type === 'transfer') titleEl.textContent = isEdit ? 'Edit Transfer' : 'Transfer';
+            else titleEl.textContent = acc ? acc.name : 'Broker Wallet';
+        }
+
+        fillMoneyEntryWalletSelects(accounts, accountId);
+
+        const typeButtons = document.getElementById('moneyEntryTypeButtons');
+        if (typeButtons) typeButtons.classList.toggle('d-none', !!isEdit && type === 'transfer');
+
         setMoneyEntryType(type || 'deposit');
         setMoneyEntryDateTimeEditing(false);
         updateMoneyEntryDateTimeDisplay();
+        onMoneyEntryNoteInput();
+        updateMoneyEntryLivePreview();
     }
 
     function setMoneyEntryModalMode(isEdit, type) {
-        const isWithdraw = type === 'withdraw';
         if (isEdit) {
-            renderMoneyEntryFooter('Update', 'fa-save');
-        } else {
-            renderMoneyEntryFooter(isWithdraw ? 'Record Withdrawal' : 'Add Deposit', isWithdraw ? 'fa-minus' : 'fa-plus');
+            renderMoneyEntryFooter('Update Transaction', 'fa-save');
+            return;
         }
+        renderMoneyEntryFooter('Save Transaction', 'fa-lock');
     }
 
     function updateMoneyEntryAmountPreview() {
         const previewEl = document.getElementById('moneyEntryAmountPreview');
         const inputEl = document.getElementById('moneyEntryAmount');
-        if (!previewEl || !inputEl) return;
-        const amount = parseFloat(inputEl.value);
-        if (!amount || amount <= 0 || isNaN(amount)) {
-            previewEl.innerHTML = '';
-            previewEl.classList.add('d-none');
-            return;
+        if (previewEl && inputEl) {
+            const amount = parseFloat(inputEl.value);
+            if (!amount || amount <= 0 || isNaN(amount)) {
+                previewEl.innerHTML = '';
+                previewEl.classList.add('d-none');
+            } else {
+                const type = getMoneyEntryType();
+                let tone = 'deposit';
+                if (type === 'withdraw' || type === 'transfer') tone = 'withdraw';
+                if (type === 'adjustment') {
+                    const sign = document.getElementById('moneyEntryAdjustSign')?.value;
+                    tone = sign === '-1' ? 'withdraw' : 'deposit';
+                }
+                previewEl.innerHTML = `<div>${renderAmount(amount, {
+                    size: 'md',
+                    tone,
+                    align: 'left'
+                })}${renderMoneyAmountWords(amount, 'left')}</div>`;
+                previewEl.classList.remove('d-none');
+            }
         }
-        previewEl.innerHTML = `<div>${renderAmount(amount, {
-            size: 'md',
-            tone: document.getElementById('moneyEntryType')?.value === 'withdraw' ? 'withdraw' : 'deposit',
-            align: 'left'
-        })}${renderMoneyAmountWords(amount, 'left')}</div>`;
-        previewEl.classList.remove('d-none');
+        updateMoneyEntryLivePreview();
+    }
+
+    function onMoneyEntryAmountInput() {
+        updateMoneyEntryAmountPreview();
+    }
+
+    function applyMoneyEntryAmountChip(addAmount) {
+        const input = document.getElementById('moneyEntryAmount');
+        if (!input) return;
+        const current = parseFloat(input.value) || 0;
+        input.value = String(Math.round(current + Number(addAmount)));
+        updateMoneyEntryAmountPreview();
+        input.focus();
+    }
+
+    function focusMoneyEntryAmountCustom() {
+        const input = document.getElementById('moneyEntryAmount');
+        if (!input) return;
+        input.focus();
+        input.select();
+    }
+
+    function onMoneyEntryNoteInput() {
+        const noteEl = document.getElementById('moneyEntryNote');
+        const countEl = document.getElementById('moneyEntryNoteCount');
+        if (!noteEl || !countEl) return;
+        const len = (noteEl.value || '').length;
+        const max = Number(noteEl.getAttribute('maxlength')) || 100;
+        countEl.textContent = `${len} / ${max}`;
+    }
+
+    function applyMoneyEntryRemarkChip(text) {
+        const noteEl = document.getElementById('moneyEntryNote');
+        if (!noteEl) return;
+        noteEl.value = String(text || '').slice(0, Number(noteEl.getAttribute('maxlength')) || 100);
+        onMoneyEntryNoteInput();
+        noteEl.focus();
+    }
+
+    function focusMoneyEntryRemarkCustom() {
+        const noteEl = document.getElementById('moneyEntryNote');
+        if (!noteEl) return;
+        noteEl.focus();
+        noteEl.select();
+    }
+
+    function onMoneyEntryBrokerSelectChange(selectEl) {
+        if (typeof global.onMoneyEntryBrokerChange === 'function') {
+            global.onMoneyEntryBrokerChange(selectEl);
+        }
+        if (selectEl && selectEl.value && selectEl.value !== '__add_wallet__') {
+            const accountIdEl = document.getElementById('moneyEntryAccountId');
+            if (accountIdEl && selectEl.id === 'moneyEntryBrokerSelect') {
+                accountIdEl.value = selectEl.value;
+            }
+        }
+        refreshMoneyEntryBalances();
+        updateMoneyEntryLivePreview();
+        syncMoneyEntryBrandHeader();
+    }
+
+    function showMoneyEntryPage() {
+        const { showMoneyEntryPage: showPage } = moneyModal();
+        if (typeof showPage === 'function') showPage();
+    }
+
+    function closeMoneyEntryPage() {
+        const { closeMoneyEntryPage: closePage } = moneyModal();
+        if (typeof closePage === 'function') closePage();
+    }
+
+    function syncMoneyEntryBrandHeader() {
+        const { getMoneyAccounts } = moneyModal();
+        const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+        const type = getMoneyEntryType();
+        const accountId = resolveMoneyEntryAccountId();
+        const nameEl = document.getElementById('moneyEntryBrandName');
+        const avatarEl = document.getElementById('moneyEntryBrandAvatar');
+        const brandEl = document.getElementById('moneyEntryBrand');
+
+        let label = 'Select broker';
+        let logoSource = '';
+        if (type === 'transfer') {
+            const fromId = document.getElementById('moneyEntryFromAccount')?.value;
+            const toId = document.getElementById('moneyEntryToAccount')?.value;
+            const from = accounts.find((a) => a.id === fromId);
+            const to = accounts.find((a) => a.id === toId);
+            if (from && to) label = `${from.name} → ${to.name}`;
+            else if (from) label = from.name;
+            logoSource = brokerLogoLabelForAccount(from) || from?.name || '';
+        } else {
+            const acc = accounts.find((a) => a.id === accountId);
+            if (acc) {
+                label = acc.name || acc.broker || 'Broker';
+                logoSource = brokerLogoLabelForAccount(acc) || label;
+            }
+        }
+
+        if (nameEl) nameEl.textContent = label;
+        if (avatarEl) {
+            const src = getBrokerLogoSrc ? getBrokerLogoSrc(logoSource || label) : '';
+            if (src) {
+                avatarEl.className = 'money-entry-brand-avatar money-entry-brand-avatar--img';
+                avatarEl.innerHTML = `<img src="${src}" alt="" width="44" height="44" />`;
+            } else {
+                avatarEl.className = 'money-entry-brand-avatar';
+                const initialSource = logoSource || label;
+                avatarEl.textContent = String(initialSource || '?').trim().charAt(0).toUpperCase() || '?';
+            }
+        }
+        if (brandEl) brandEl.setAttribute('title', label);
+        const hiddenTitle = document.getElementById('moneyEntryAccountTitle');
+        if (hiddenTitle) hiddenTitle.textContent = label;
+    }
+
+    function syncMoneyEntryPageTitle(isEdit, type) {
+        const labels = {
+            deposit: 'Add Deposit',
+            withdraw: 'Add Withdrawal',
+            adjustment: 'Add Adjustment',
+            transfer: 'Transfer'
+        };
+        const title = isEdit ? 'Edit Transaction' : (labels[type] || 'Add Transaction');
+        const titleEl = document.getElementById('appHeaderSubpageTitle');
+        if (titleEl) titleEl.textContent = title;
+        const topbar = document.getElementById('moneyEntryTopbarTitle');
+        if (topbar) topbar.textContent = title;
+        syncMoneyEntryBrandHeader();
     }
 
     function openMoneyEntryModal(accountId, type) {
         const { getMoneyAccounts, getNowTime } = moneyModal();
         const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
-        if (!accounts.length) {
-            showToast('Add an account first.', 'warning');
-            return;
+        const resolvedAccountId = accountId || accounts[0]?.id || '';
+        moneyEntryBalanceHidden = false;
+        const eyeBtn = document.getElementById('moneyEntryBalanceEyeBtn');
+        if (eyeBtn) {
+            eyeBtn.innerHTML = '<i class="far fa-eye"></i>';
+            eyeBtn.setAttribute('aria-label', 'Hide balance');
         }
-        const resolvedAccountId = accountId || accounts[0]?.id;
         document.getElementById('moneyEntryEditId').value = '';
         document.getElementById('moneyEntryAmount').value = '';
+        const noteEl = document.getElementById('moneyEntryNote');
+        if (noteEl) noteEl.value = '';
+        const adjustSign = document.getElementById('moneyEntryAdjustSign');
+        if (adjustSign) adjustSign.value = '1';
         setDateInputValue(document.getElementById('moneyEntryDate'), new Date().toISOString().split('T')[0]);
         document.getElementById('moneyEntryTime').value = getNowTime ? getNowTime() : '12:00';
         applyMoneyEntryForm(resolvedAccountId, type || 'deposit', false);
         updateMoneyEntryAmountPreview();
-        document.getElementById('moneyEntryModal') && showModal(document.getElementById('moneyEntryModal'));
+        if (!accounts.length) {
+            showToast('No wallet yet — choose “Add new wallet…” under Broker.', 'info');
+        }
+        showMoneyEntryPage();
+        syncMoneyEntryPageTitle(false, type || 'deposit');
     }
 
     function openEditMoneyEntryModal(entryId) {
-        const { getMoneyEntry, getNowTime } = moneyModal();
+        const { getMoneyEntry, getNowTime, getMoneyAccounts } = moneyModal();
         const entry = getMoneyEntry ? getMoneyEntry(entryId) : null;
         if (!entry) { showToast('Entry not found.', 'danger'); return; }
+        moneyEntryBalanceHidden = false;
         document.getElementById('moneyEntryEditId').value = entry.id;
         document.getElementById('moneyEntryAmount').value = entry.amount || '';
+        const noteEl = document.getElementById('moneyEntryNote');
+        if (noteEl) noteEl.value = (entry.note || '').slice(0, 100);
+        const adjustSign = document.getElementById('moneyEntryAdjustSign');
+        if (adjustSign) adjustSign.value = String(entry.adjustmentSign === -1 ? -1 : 1);
         setDateInputValue(document.getElementById('moneyEntryDate'), entry.date || '');
         document.getElementById('moneyEntryTime').value = entry.time || (getNowTime ? getNowTime() : '12:00');
         applyMoneyEntryForm(entry.accountId, entry.type || 'deposit', true);
+
+        if (entry.type === 'transfer') {
+            const accounts = getMoneyAccounts ? getMoneyAccounts() : [];
+            const fromId = entry.transferLeg === 'out' ? entry.accountId : entry.transferPeerAccountId;
+            const toId = entry.transferLeg === 'in' ? entry.accountId : entry.transferPeerAccountId;
+            const fromSelect = document.getElementById('moneyEntryFromAccount');
+            const toSelect = document.getElementById('moneyEntryToAccount');
+            if (fromSelect) {
+                fromSelect.innerHTML = accounts.map((a) =>
+                    `<option value="${a.id}" ${a.id === fromId ? 'selected' : ''}>${a.name}</option>`
+                ).join('');
+                fromSelect.disabled = true;
+            }
+            if (toSelect) {
+                toSelect.innerHTML = accounts.map((a) =>
+                    `<option value="${a.id}" ${a.id === toId ? 'selected' : ''}>${a.name}</option>`
+                ).join('');
+                toSelect.disabled = true;
+            }
+            renderMoneyEntryBrokerPickers();
+            syncMoneyEntryBrandHeader();
+        } else {
+            const fromSelect = document.getElementById('moneyEntryFromAccount');
+            const toSelect = document.getElementById('moneyEntryToAccount');
+            if (fromSelect) fromSelect.disabled = false;
+            if (toSelect) toSelect.disabled = false;
+            renderMoneyEntryBrokerPickers();
+        }
+
         updateMoneyEntryAmountPreview();
-        document.getElementById('moneyEntryModal') && showModal(document.getElementById('moneyEntryModal'));
+        showMoneyEntryPage();
+        syncMoneyEntryPageTitle(true, entry.type || 'deposit');
     }
 
     function saveMoneyEntry() {
         const {
             addMoneyEntry,
             updateMoneyEntry,
+            addMoneyTransfer,
             setMoneyHistorySheetAccountId,
             renderMoney,
             refreshMoneyHistorySheetIfOpen,
-            getSyncNote
+            getSyncNote,
+            isSyncConnected
         } = moneyModal();
 
+        if (isSyncConnected && !isSyncConnected()) {
+            showToast('Connect Cloud Sync to save wallet transactions.', 'warning');
+            return;
+        }
+
         const editId = document.getElementById('moneyEntryEditId').value;
-        const accountId = document.getElementById('moneyEntryAccountId').value;
+        let accountId = document.getElementById('moneyEntryAccountId').value;
+        const brokerSelect = document.getElementById('moneyEntryBrokerSelect');
+        if (brokerSelect && brokerSelect.value) accountId = brokerSelect.value;
         const type = getMoneyEntryType();
         const amount = parseFloat(document.getElementById('moneyEntryAmount').value);
         const date = document.getElementById('moneyEntryDate').value;
         const time = document.getElementById('moneyEntryTime').value;
-        const note = '';
+        const note = (document.getElementById('moneyEntryNote')?.value || '').trim();
+        const adjustmentSign = Number(document.getElementById('moneyEntryAdjustSign')?.value) === -1 ? -1 : 1;
 
-        if (!accountId) { showToast('Please select an account.', 'warning'); return; }
         if (!amount || amount <= 0) { showToast('Please enter a valid amount.', 'warning'); return; }
         if (!date) { showToast('Please select a date.', 'warning'); return; }
         if (!time) { showToast('Please select a time.', 'warning'); return; }
 
-        const payload = { accountId, type, amount, date, time, note };
-        const typeLabel = type === 'withdraw' ? 'withdrawal' : 'deposit';
         const synced = getSyncNote ? getSyncNote() : '';
 
         const finish = async () => {
-            if (editId) {
-                await updateMoneyEntry(editId, payload);
-                showToast(`Entry updated${synced}!`, 'success');
-            } else {
-                await addMoneyEntry(payload);
-                showToast(type === 'withdraw' ? `Withdrawal recorded${synced}!` : `Deposit added${synced}!`, 'success');
+            try {
+                if (editId) {
+                    const updates = { amount, date, time, note };
+                    if (type === 'adjustment') updates.adjustmentSign = adjustmentSign;
+                    if (type !== 'transfer') {
+                        updates.accountId = accountId;
+                        updates.type = type;
+                    }
+                    await updateMoneyEntry(editId, updates);
+                    showToast(`Entry updated${synced}!`, 'success');
+                } else if (type === 'transfer') {
+                    const fromAccountId = document.getElementById('moneyEntryFromAccount')?.value;
+                    const toAccountId = document.getElementById('moneyEntryToAccount')?.value;
+                    if (!fromAccountId || !toAccountId) {
+                        showToast('Select From and To wallets.', 'warning');
+                        return;
+                    }
+                    if (fromAccountId === toAccountId) {
+                        showToast('Choose two different wallets.', 'warning');
+                        return;
+                    }
+                    await addMoneyTransfer({ fromAccountId, toAccountId, amount, date, time, note });
+                    showToast(`Transfer recorded${synced}!`, 'success');
+                    accountId = fromAccountId;
+                } else {
+                    if (!accountId) { showToast('Please select a broker wallet.', 'warning'); return; }
+                    await addMoneyEntry({
+                        accountId,
+                        type,
+                        amount,
+                        date,
+                        time,
+                        note,
+                        adjustmentSign: type === 'adjustment' ? adjustmentSign : 1
+                    });
+                    const labels = {
+                        deposit: 'Deposit added',
+                        withdraw: 'Withdrawal recorded',
+                        adjustment: 'Adjustment saved'
+                    };
+                    showToast(`${labels[type] || 'Entry saved'}${synced}!`, 'success');
+                }
+                closeMoneyEntryPage();
+                if (setMoneyHistorySheetAccountId) setMoneyHistorySheetAccountId(accountId);
+                if (renderMoney) renderMoney();
+                if (refreshMoneyHistorySheetIfOpen) refreshMoneyHistorySheetIfOpen();
+            } catch (err) {
+                if (err && err.message === 'sync_required') return;
+                console.warn('saveMoneyEntry', err);
+                showToast('Could not save transaction.', 'danger');
             }
-            hideModal(document.getElementById('moneyEntryModal'));
-            if (setMoneyHistorySheetAccountId) setMoneyHistorySheetAccountId(accountId);
-            if (renderMoney) renderMoney();
-            if (refreshMoneyHistorySheetIfOpen) refreshMoneyHistorySheetIfOpen();
         };
 
         if (editId) {
             confirmAction({
                 title: '<i class="fas fa-pen me-2"></i>Update Entry?',
                 titleClass: 'text-primary',
-                message: `Save changes to this ${typeLabel} of ${fmtINR(amount)}?`,
+                message: type === 'transfer'
+                    ? `Update both sides of this transfer (${fmtINR(amount)})?`
+                    : `Save changes to this ${type} of ${fmtINR(amount)}?`,
                 confirmLabel: '<i class="fas fa-save me-1"></i> Update',
                 confirmClass: 'btn-primary',
                 onConfirm: finish
@@ -396,14 +1018,26 @@
         setMoneyEntryDateTimeEditing,
         toggleMoneyEntryDateTimeEdit,
         onMoneyEntryDateTimeChange,
-        onMoneyEntryTypeToggle,
+        onMoneyEntryTypePick,
         setMoneyEntryType,
         applyMoneyEntryForm,
         setMoneyEntryModalMode,
         updateMoneyEntryAmountPreview,
+        onMoneyEntryAmountInput,
+        applyMoneyEntryAmountChip,
+        focusMoneyEntryAmountCustom,
+        onMoneyEntryNoteInput,
+        applyMoneyEntryRemarkChip,
+        focusMoneyEntryRemarkCustom,
+        onMoneyEntryBrokerSelectChange,
+        toggleMoneyEntryBalanceVisibility,
+        pickMoneyEntryWallet,
+        focusMoneyEntryBrokerPicker,
+        closeMoneyEntryPage,
         openMoneyEntryModal,
         openEditMoneyEntryModal,
-        saveMoneyEntry
+        saveMoneyEntry,
+        refreshMoneyEntryWalletSelects
     });
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -418,11 +1052,12 @@
         renderDateRangeChip,
         renderAmount,
         renderMoneyAmountWords,
-        paintTotalAmountCard,
         paintMoneyAmountWords,
         renderMoneyFilterListItem,
         renderMoneyAccountCard,
         formatMoneyEntryTimeDisplay,
+        moneyEntryTypeLabel,
+        moneyEntryTone,
         renderDateChip,
         appTag,
         Sheet,
@@ -433,25 +1068,40 @@
         return (global.MTFAppHelpers || {}).moneyPages || {};
     }
 
+    function dbApi() {
+        return global.MTFDb || {};
+    }
+
     function statLabel() {
         return LABEL_CLASSES.stat;
     }
 
-    function sortMoneyEntries(entries) {
-        return [...entries].sort((a, b) => {
+    function sortMoneyEntries(entries, sortKey) {
+        const key = sortKey || 'newest';
+        const list = [...entries];
+        list.sort((a, b) => {
+            if (key === 'highest') return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+            if (key === 'lowest') return (Number(a.amount) || 0) - (Number(b.amount) || 0);
             const da = (a.date || '') + 'T' + (a.time || '00:00');
             const db = (b.date || '') + 'T' + (b.time || '00:00');
+            if (key === 'oldest') {
+                if (da !== db) return da.localeCompare(db);
+                return (a.id < b.id ? -1 : 1);
+            }
             if (db !== da) return db.localeCompare(da);
             return (a.id < b.id ? 1 : -1);
         });
+        return list;
     }
 
     function computeAccountTotalValue(acc, entries) {
         let total = Number(acc.openingBalance) || 0;
+        const delta = dbApi().entrySignedDelta;
         entries.filter((e) => e.accountId === acc.id).forEach((e) => {
-            const amt = Number(e.amount) || 0;
-            if (e.type === 'deposit') total += amt;
-            else if (e.type === 'withdraw') total -= amt;
+            total += typeof delta === 'function' ? delta(e) : (
+                e.type === 'deposit' ? (Number(e.amount) || 0) :
+                e.type === 'withdraw' ? -(Number(e.amount) || 0) : 0
+            );
         });
         return total;
     }
@@ -463,10 +1113,26 @@
         let withdrawCount = 0;
         entries.forEach((e) => {
             const amt = Number(e.amount) || 0;
-            if (e.type === 'deposit') { deposited += amt; depositCount++; }
-            else if (e.type === 'withdraw') { withdrawn += amt; withdrawCount++; }
+            const delta = typeof dbApi().entrySignedDelta === 'function'
+                ? dbApi().entrySignedDelta(e)
+                : (e.type === 'deposit' ? amt : e.type === 'withdraw' ? -amt : 0);
+            if (delta > 0) { deposited += delta; depositCount++; }
+            else if (delta < 0) { withdrawn += Math.abs(delta); withdrawCount++; }
         });
         return { deposited, withdrawn, depositCount, withdrawCount };
+    }
+
+    function buildRunningBalances(acc, entriesChronologicalAsc) {
+        let bal = Number(acc.openingBalance) || 0;
+        const map = {};
+        entriesChronologicalAsc.forEach((e) => {
+            const delta = typeof dbApi().entrySignedDelta === 'function'
+                ? dbApi().entrySignedDelta(e)
+                : 0;
+            bal += delta;
+            map[e.id] = bal;
+        });
+        return map;
     }
 
     function computeMoneyStats() {
@@ -481,7 +1147,14 @@
         const pageFiltered = moneyPageFiltersActive()
             ? allEntries.filter(matchesMoneyPageEntryFilter)
             : allEntries;
-        const portfolio = { deposited: 0, withdrawn: 0, totalValue: 0, depositCount: 0, withdrawCount: 0 };
+        const portfolio = {
+            deposited: 0,
+            withdrawn: 0,
+            totalValue: 0,
+            depositCount: 0,
+            withdrawCount: 0,
+            txCount: allEntries.length
+        };
 
         const perAccount = accounts.map((acc) => {
             const acctAll = allEntries.filter((e) => e.accountId === acc.id);
@@ -497,10 +1170,94 @@
             portfolio.withdrawCount += summary.withdrawCount;
             portfolio.totalValue += totalValue;
 
-            return { account: acc, ...summary, totalValue };
+            return { account: acc, ...summary, totalValue, txCount: acctAll.length };
         });
 
         return { perAccount, portfolio };
+    }
+
+    function monthKeyFromDate(dateStr) {
+        return (dateStr || '').slice(0, 7);
+    }
+
+    function renderMoneyMonthChart(entries, monthKey) {
+        const host = document.getElementById('moneyMonthChart');
+        if (!host) return;
+        const key = monthKey || new Date().toISOString().slice(0, 7);
+        const monthEntries = entries.filter((e) => monthKeyFromDate(e.date) === key);
+        const summary = summarizeMoneyEntries(monthEntries);
+        const max = Math.max(summary.deposited, summary.withdrawn, 1);
+        const depPct = Math.max(4, Math.round((summary.deposited / max) * 100));
+        const wdrPct = Math.max(4, Math.round((summary.withdrawn / max) * 100));
+        const hasFlow = summary.deposited > 0 || summary.withdrawn > 0;
+        const [y, m] = key.split('-').map(Number);
+        const label = new Date(y, (m || 1) - 1, 1).toLocaleString('en-IN', { month: 'long', year: 'numeric' });
+        const net = summary.deposited - summary.withdrawn;
+        const netTone = net > 0 ? 'positive' : net < 0 ? 'negative' : 'muted';
+        const netClass = netTone === 'positive' ? 'text-success' : netTone === 'negative' ? 'text-danger' : 'text-body';
+        const netSign = net > 0 ? '+' : '';
+        const txCount = monthEntries.length;
+        const txLabel = txCount === 1 ? '1 txn' : `${txCount} txns`;
+        const { fmtINR } = global.MTFComponents;
+
+        host.innerHTML = `
+            <div class="money-month-hero">
+                <div class="money-month-nav">
+                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(-1)" aria-label="Previous month">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
+                    <div class="money-month-label-wrap">
+                        <label class="money-month-picker-label" for="moneyMonthPicker">
+                            <span class="money-month-kicker">Monthly flow</span>
+                            <span class="money-month-label">
+                                <span>${label}</span>
+                                <i class="fas fa-chevron-down money-month-label-caret" aria-hidden="true"></i>
+                            </span>
+                            <input type="month" class="money-month-picker" id="moneyMonthPicker" value="${key}" onchange="setMoneyMonthKey(this.value)" aria-label="Jump to month" />
+                        </label>
+                    </div>
+                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(1)" aria-label="Next month">
+                        <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                    </button>
+                </div>
+                <div class="money-month-net">
+                    <div class="money-month-net-label">Net this month</div>
+                    <div class="money-month-net-value ${netClass}">${netSign}${fmtINR(net)}</div>
+                    <div class="money-month-net-meta">${txLabel}</div>
+                </div>
+            </div>
+            <div class="money-month-metrics" role="group" aria-label="Month cash flow">
+                <div class="money-month-metric">
+                    <span class="money-month-metric-label">Deposited</span>
+                    <span class="money-month-metric-value text-primary">${fmtINR(summary.deposited)}</span>
+                </div>
+                <div class="money-month-metric">
+                    <span class="money-month-metric-label">Withdrawn</span>
+                    <span class="money-month-metric-value text-danger">${fmtINR(summary.withdrawn)}</span>
+                </div>
+                <div class="money-month-metric">
+                    <span class="money-month-metric-label">Activity</span>
+                    <span class="money-month-metric-value">${txCount}</span>
+                </div>
+            </div>
+            <div class="money-month-bars ${hasFlow ? '' : 'money-month-bars--empty'}">
+                <div class="money-month-bar-row">
+                    <span class="money-month-bar-dot money-month-bar-dot--in" aria-hidden="true"></span>
+                    <span class="money-month-bar-name">In</span>
+                    <div class="money-month-bar-track" aria-hidden="true">
+                        <div class="money-month-bar-fill money-month-bar-fill--in" style="width:${hasFlow ? depPct : 0}%"></div>
+                    </div>
+                </div>
+                <div class="money-month-bar-row">
+                    <span class="money-month-bar-dot money-month-bar-dot--out" aria-hidden="true"></span>
+                    <span class="money-month-bar-name">Out</span>
+                    <div class="money-month-bar-track" aria-hidden="true">
+                        <div class="money-month-bar-fill money-month-bar-fill--out" style="width:${hasFlow ? wdrPct : 0}%"></div>
+                    </div>
+                </div>
+                ${hasFlow ? '' : '<div class="money-month-empty-hint">No cash movement this month</div>'}
+            </div>
+        `;
     }
 
     function renderMoneyFilterView(displayPortfolio) {
@@ -537,10 +1294,20 @@
                 const acc = accounts.find((a) => a.id === moneyAccountFilter);
                 if (acc) parts.push(acc.name);
             }
-            const quickLabels = { yesterday: 'Yesterday', 7: 'Last 1 week', 30: 'Last 1 month', 90: 'Last 3 months' };
+            const quickLabels = {
+                today: 'Today',
+                yesterday: 'Yesterday',
+                week: 'This week',
+                month: 'This month',
+                lastMonth: 'Last month',
+                yesterday_legacy: 'Yesterday',
+                7: 'Last 1 week',
+                30: 'Last 1 month',
+                90: 'Last 3 months'
+            };
             const prefix = quickLabels[getMoneyPageRangeKey()] || '';
             if (prefix) parts.push(prefix);
-            metaEl.textContent = parts.join(' · ') || 'All accounts · All time';
+            metaEl.textContent = parts.join(' · ') || 'All wallets · All time';
         }
 
         const dateChipHost = document.getElementById('moneyPageFilterDateChipHost');
@@ -552,50 +1319,21 @@
 
         if (document.getElementById('moneyPageFilterTypeHost')) syncMoneyTypeDropdowns();
 
-        if (isWithdrawOnly) {
-            summaryEl.innerHTML = `
-                <div class="${statLabel()}">Total Withdrawn</div>
-                <div class="d-flex flex-column align-items-center text-center mx-auto">
-                    <div>
-                        ${renderAmount(displayPortfolio.withdrawn, { size: 'lg', tone: 'withdraw', align: 'center' })}
-                    </div>
-                    ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
-                </div>
-                <div class="small text-muted mt-2">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
-            `;
-        } else if (isDepositOnly) {
-            summaryEl.innerHTML = `
-                <div class="${statLabel()} text-primary">Total Deposited</div>
-                <div class="d-flex flex-column align-items-center text-center mx-auto">
-                    <div>
-                        ${renderAmount(displayPortfolio.deposited, { size: 'lg', tone: 'deposit', align: 'center' })}
-                    </div>
+        summaryEl.innerHTML = `
+            <div class="row g-2 text-center">
+                <div class="col-6 d-flex flex-column align-items-center">
+                    <div class="${statLabel()} text-primary">Deposits</div>
+                    <div>${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}</div>
                     ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
                 </div>
-                <div class="small text-muted mt-2">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
-            `;
-        } else {
-            summaryEl.innerHTML = `
-                <div class="row g-2 text-center">
-                    <div class="col-6 d-flex flex-column align-items-center">
-                        <div class="${statLabel()} text-primary">Deposited</div>
-                        <div>
-                            ${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}
-                        </div>
-                        ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
-                        <div class="small text-muted mt-1">${displayPortfolio.depositCount} deposit${displayPortfolio.depositCount === 1 ? '' : 's'}</div>
-                    </div>
-                    <div class="col-6 d-flex flex-column align-items-center">
-                        <div class="${statLabel()}">Withdrawn</div>
-                        <div>
-                            ${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
-                        </div>
-                        ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
-                        <div class="small text-muted mt-1">${displayPortfolio.withdrawCount} withdrawal${displayPortfolio.withdrawCount === 1 ? '' : 's'}</div>
-                    </div>
+                <div class="col-6 d-flex flex-column align-items-center">
+                    <div class="${statLabel()}">Withdrawals</div>
+                    <div>${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}</div>
+                    ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
                 </div>
-            `;
-        }
+            </div>
+            <div class="small text-muted mt-2">${entries.length} transaction${entries.length === 1 ? '' : 's'}</div>
+        `;
 
         if (entries.length === 0) {
             listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-outline-secondary" onclick="openMoneyPageFilterSheet()">Change filter</button></div>`;
@@ -610,7 +1348,7 @@
         const getMoneyAccounts = mp.getMoneyAccounts || (() => []);
         const getMoneyEntries = mp.getMoneyEntries || (() => []);
         const getMoneyHistorySheetAccountId = mp.getMoneyHistorySheetAccountId || (() => null);
-        const getMoneyHistorySheetTitle = mp.getMoneyHistorySheetTitle || (() => 'Account History');
+        const getMoneyHistorySheetTitle = mp.getMoneyHistorySheetTitle || (() => 'Wallet History');
         const syncMoneyHistoryFilterUI = mp.syncMoneyHistoryFilterUI || (() => {});
         const filterMoneyHistoryEntries = mp.filterMoneyHistoryEntries || ((e) => e);
         const getMoneyHistoryActiveFilterLabel = mp.getMoneyHistoryActiveFilterLabel || (() => 'All time');
@@ -631,15 +1369,12 @@
 
         syncMoneyHistoryFilterUI();
 
-        const allEntries = sortMoneyEntries(getMoneyEntries().filter((e) => e.accountId === acc.id));
+        const allEntries = sortMoneyEntries(getMoneyEntries().filter((e) => e.accountId === acc.id), 'newest');
         const entries = filterMoneyHistoryEntries(allEntries);
-        let deposited = 0;
-        let withdrawn = 0;
-        entries.forEach((e) => {
-            const amt = Number(e.amount) || 0;
-            if (e.type === 'deposit') deposited += amt;
-            else if (e.type === 'withdraw') withdrawn += amt;
-        });
+        const asc = sortMoneyEntries(allEntries, 'oldest');
+        const running = buildRunningBalances(acc, asc);
+        const balance = computeAccountTotalValue(acc, allEntries);
+        const summary = summarizeMoneyEntries(entries);
 
         if (metaEl) {
             let meta = getMoneyHistoryActiveFilterLabel();
@@ -657,27 +1392,26 @@
 
         if (summaryEl) {
             summaryEl.innerHTML = `
+                <div class="text-center mb-3">
+                    <div class="${statLabel()}">Current Balance</div>
+                    <div>${renderAmount(balance, { size: 'lg', tone: 'positive', align: 'center' })}</div>
+                    ${renderMoneyAmountWords(balance, 'center')}
+                </div>
                 <div class="row g-2 text-center">
                     <div class="col-6 d-flex flex-column align-items-center">
                         <div class="${statLabel()} text-primary">Deposited</div>
-                        <div>
-                            ${renderAmount(deposited, { size: 'md', tone: 'deposit', align: 'center' })}
-                        </div>
-                        ${renderMoneyAmountWords(deposited, 'center')}
+                        <div>${renderAmount(summary.deposited, { size: 'md', tone: 'deposit', align: 'center' })}</div>
                     </div>
                     <div class="col-6 d-flex flex-column align-items-center">
                         <div class="${statLabel()}">Withdrawn</div>
-                        <div>
-                            ${renderAmount(withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}
-                        </div>
-                        ${renderMoneyAmountWords(withdrawn, 'center')}
+                        <div>${renderAmount(summary.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}</div>
                     </div>
                 </div>
             `;
         }
 
         if (allEntries.length === 0) {
-            listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-inbox', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0">No deposits or withdrawals yet.</p></div>`;
+            listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-inbox', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0">No transactions yet.</p></div>`;
             return;
         }
 
@@ -686,25 +1420,36 @@
             return;
         }
 
+        const accounts = getMoneyAccounts();
         listEl.innerHTML = entries.map((e) => {
-            const isDeposit = e.type === 'deposit';
-            const typeBadge = isDeposit ? appTag('Deposit', 'secondary') : appTag('Withdraw', 'error');
-            const note = e.note ? `<div class="small text-muted mt-1.5">${e.note}</div>` : '';
+            const tone = moneyEntryTone(e);
+            const typeBadge = appTag(moneyEntryTypeLabel(e), tone === 'deposit' ? 'secondary' : 'error');
+            const note = e.note ? `<div class="small text-muted mt-1">${e.note}</div>` : '';
+            let peer = '';
+            if (e.type === 'transfer' && e.transferPeerAccountId) {
+                const p = accounts.find((a) => a.id === e.transferPeerAccountId);
+                if (p) peer = `<div class="small text-muted mt-1">${e.transferLeg === 'out' ? 'To' : 'From'} ${p.name}</div>`;
+            }
+            const balAfter = running[e.id];
+            const balLine = balAfter != null
+                ? `<div class="small text-muted mt-1">Balance ${global.MTFComponents.fmtINR(balAfter)}</div>`
+                : '';
             return `
                 <div class="border-bottom pb-3 mb-3">
                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <div>${typeBadge}</div>
+                        <button type="button" class="btn btn-link text-decoration-none text-body text-start p-0 flex-fill" onclick="openEditMoneyEntryModal('${e.id}')">
+                            <div>${typeBadge}</div>
+                            <div class="small text-muted d-flex flex-wrap align-items-center gap-1 mt-2">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                            ${note}${peer}${balLine}
+                        </button>
                         <div class="d-flex align-items-start gap-2">
                             <div class="d-flex flex-column align-items-end text-end">
-                                ${renderAmount(e.amount, { size: 'md', tone: isDeposit ? 'deposit' : 'withdraw', align: 'right' })}
+                                ${renderAmount(e.amount, { size: 'md', tone, align: 'right' })}
                                 ${renderMoneyAmountWords(e.amount, 'right')}
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" onclick="openEditMoneyEntryModal('${e.id}')" title="Edit" aria-label="Edit entry">${global.MTFComponents.renderIcon('fa-pen', { colour: 'text-muted' })}</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle text-danger" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry">${global.MTFComponents.renderIcon('fa-trash-alt')}</button>
                         </div>
                     </div>
-                    <div class="small text-muted d-flex flex-wrap align-items-center gap-1">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
-                    ${note}
                 </div>
             `;
         }).join('');
@@ -718,13 +1463,17 @@
         const getMoneyAccountFilter = mp.getMoneyAccountFilter || (() => 'all');
         const syncMoneyPageFilterUI = mp.syncMoneyPageFilterUI || (() => {});
         const syncMoneyAccountFilterDropdown = mp.syncMoneyAccountFilterDropdown || (() => {});
+        const getMoneySearchQuery = mp.getMoneySearchQuery || (() => '');
+        const getMoneyMonthKey = mp.getMoneyMonthKey || (() => new Date().toISOString().slice(0, 7));
 
         const page = document.getElementById('page-money');
         if (!page) return;
 
         const { perAccount, portfolio } = computeMoneyStats();
         const accounts = getMoneyAccounts();
+        const allEntries = getMoneyEntries();
         const filterActive = moneyPageFiltersActive();
+        const searchQ = String(getMoneySearchQuery() || '').trim().toLowerCase();
         const defaultView = document.getElementById('moneyPageDefaultView');
         const filterView = document.getElementById('moneyPageFilterView');
 
@@ -743,14 +1492,15 @@
                     withdrawn: one.withdrawn,
                     depositCount: one.depositCount,
                     withdrawCount: one.withdrawCount,
-                    totalValue: one.totalValue
+                    totalValue: one.totalValue,
+                    txCount: one.txCount
                 };
             }
         }
 
         syncMoneyPageFilterUI();
 
-        if (filterActive) {
+        if (filterActive || searchQ) {
             if (defaultView) defaultView.classList.add('d-none');
             if (filterView) filterView.classList.remove('d-none');
             renderMoneyFilterView(displayPortfolio);
@@ -760,27 +1510,28 @@
         if (defaultView) defaultView.classList.remove('d-none');
         if (filterView) filterView.classList.add('d-none');
 
+        const { fmtINR } = global.MTFComponents;
+        const cash = Number(displayPortfolio.totalValue) || 0;
+        const deposited = Number(displayPortfolio.deposited) || 0;
+        const withdrawn = Number(displayPortfolio.withdrawn) || 0;
+        const txCount = Number(displayPortfolio.txCount) || 0;
+
         const heroEl = document.getElementById('moneyTotalValueHero');
         if (heroEl) {
-            paintTotalAmountCard(heroEl, displayPortfolio.totalValue, {
-                label: 'Total Value',
-                size: 'hero',
-                tone: 'positive'
-            });
+            heroEl.textContent = fmtINR(cash);
+            heroEl.classList.toggle('text-success', cash >= 0);
+            heroEl.classList.toggle('text-danger', cash < 0);
         }
-        paintMoneyAmountWords(document.getElementById('moneyTotalValueWords'), displayPortfolio.totalValue, 'center');
-        paintTotalAmountCard(document.getElementById('moneyTotalDeposited'), displayPortfolio.deposited, {
-            label: 'Deposited',
-            size: 'sm',
-            tone: 'deposit'
-        });
-        paintMoneyAmountWords(document.getElementById('moneyTotalDepositedWords'), displayPortfolio.deposited, 'center');
-        paintTotalAmountCard(document.getElementById('moneyTotalWithdrawn'), displayPortfolio.withdrawn, {
-            label: 'Withdrawn',
-            size: 'sm',
-            tone: 'withdraw'
-        });
-        paintMoneyAmountWords(document.getElementById('moneyTotalWithdrawnWords'), displayPortfolio.withdrawn, 'center');
+        paintMoneyAmountWords(document.getElementById('moneyTotalValueWords'), cash, 'center');
+
+        const depEl = document.getElementById('moneyTotalDeposited');
+        if (depEl) depEl.textContent = fmtINR(deposited);
+        const witEl = document.getElementById('moneyTotalWithdrawn');
+        if (witEl) witEl.textContent = fmtINR(withdrawn);
+        const txEl = document.getElementById('moneyTotalTxCount');
+        if (txEl) txEl.textContent = String(txCount);
+
+        renderMoneyMonthChart(allEntries, getMoneyMonthKey());
 
         const filterHost = document.getElementById('moneyAccountFilterHost');
         if (filterHost) {
@@ -791,17 +1542,23 @@
             syncMoneyAccountFilterDropdown(accounts);
         }
 
+        const searchInput = document.getElementById('moneySearchInput');
+        if (searchInput && searchInput.value !== getMoneySearchQuery()) {
+            // keep user typing; only sync if empty host was reset
+        }
+
         const accountList = document.getElementById('moneyAccountList');
         if (accountList) {
-            const allEntries = getMoneyEntries();
             if (visibleAccounts.length === 0) {
                 accountList.innerHTML = `
-                    <div class="text-center text-muted py-5 px-2">
-                        ${global.MTFComponents.renderIcon('fa-university', { size: 'lg', className: 'mb-3 opacity-50' })}
-                        <h6 class="text-body-secondary">No accounts yet</h6>
-                        <p class="small text-muted mb-3">Add a trading account to track deposits and withdrawals.</p>
+                    <div class="money-wallet-empty text-center py-5 px-3">
+                        <div class="money-wallet-empty-icon" aria-hidden="true">
+                            ${global.MTFComponents.renderIcon('fa-university', { size: 'lg' })}
+                        </div>
+                        <h6 class="fw-semibold text-body mb-1">No broker wallets yet</h6>
+                        <p class="small text-muted mb-3">Add Zerodha, Dhan, Groww, or any custom broker to start tracking cash.</p>
                         <button type="button" class="btn btn-primary rounded-3 px-3" onclick="openAddMoneyAccountModal()">
-                            <i class="fas fa-plus me-1"></i>Add Account
+                            <i class="fas fa-plus me-1"></i>Add Wallet
                         </button>
                     </div>`;
             } else {
@@ -811,6 +1568,9 @@
                 }).join('');
             }
         }
+
+        if (mp.paintAddMoneyAccountBtn) mp.paintAddMoneyAccountBtn();
+        if (mp.updateMoneyFabVisibility) mp.updateMoneyFabVisibility();
     }
 
     global.MTFRegister({
@@ -818,6 +1578,10 @@
         renderMoneyFilterView,
         renderAccountHistorySheet,
         computeMoneyStats,
-        sortMoneyEntries
+        sortMoneyEntries,
+        computeAccountTotalValue,
+        summarizeMoneyEntries,
+        buildRunningBalances,
+        renderMoneyMonthChart
     });
 })(typeof window !== 'undefined' ? window : globalThis);
