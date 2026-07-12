@@ -154,7 +154,36 @@
         }
     }
 
-    global.MTFRegister({ showLoading, hideLoading, placeSyncIndicator });
+    /** Full-screen blocker — use while a destructive cloud write is in flight. */
+    function showBlockingProgress(label) {
+        let el = document.getElementById('appBlockingProgress');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'appBlockingProgress';
+            el.className = 'app-blocking-progress d-none';
+            el.setAttribute('role', 'alert');
+            el.setAttribute('aria-live', 'assertive');
+            el.setAttribute('aria-busy', 'true');
+            el.innerHTML = `
+                <div class="app-blocking-progress-card">
+                    <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading</span></div>
+                    <div class="app-blocking-progress-label" id="appBlockingProgressLabel">Please wait…</div>
+                </div>`;
+            document.body.appendChild(el);
+        }
+        const labelEl = el.querySelector('#appBlockingProgressLabel');
+        if (labelEl) labelEl.textContent = label || 'Please wait…';
+        el.classList.remove('d-none');
+        document.body.classList.add('app-blocking-progress-open');
+    }
+
+    function hideBlockingProgress() {
+        const el = document.getElementById('appBlockingProgress');
+        if (el) el.classList.add('d-none');
+        document.body.classList.remove('app-blocking-progress-open');
+    }
+
+    global.MTFRegister({ showLoading, hideLoading, placeSyncIndicator, showBlockingProgress, hideBlockingProgress });
 })(typeof window !== 'undefined' ? window : globalThis);
 /**
  * A11 — Date field atom (chip-style native date picker).

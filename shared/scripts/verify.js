@@ -40,22 +40,26 @@ function runBuild(report) {
 
 async function main() {
     const report = createReport();
-    console.log('Running app health checks…\n');
+    console.log('Running app health checks…');
+    console.log('(each point prints live as [n] ✓/✗ — full summary at the end)\n');
 
+    report.section('Integrity');
     runIntegrity(report);
 
     const integrityFailed = report.checks.some((c) => !c.ok);
     if (integrityFailed) {
-        console.log('Skipping build & smoke because integrity failed.\n');
+        console.log('\nSkipping build & smoke because integrity failed.');
         process.exit(report.print());
     }
 
+    report.section('Build');
     const built = runBuild(report);
     if (!built) {
-        console.log('Skipping smoke because build failed.\n');
+        console.log('\nSkipping smoke because build failed.');
         process.exit(report.print());
     }
 
+    report.section('Browser smoke');
     await runSmoke(report);
     process.exit(report.print());
 }

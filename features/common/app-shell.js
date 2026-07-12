@@ -576,16 +576,31 @@
         const onCalendar = pageId === 'page-calendar';
         const hideDefault = onSettings || onSubpage;
 
-        if (appHeader) appHeader.classList.remove('d-none');
+        const hideChrome = pageId === 'page-money-entry';
+        if (appHeader) appHeader.classList.toggle('d-none', hideChrome);
+        if (hideChrome) return;
 
         def.classList.toggle('d-none', hideDefault);
         settings.classList.toggle('d-none', !onSettings);
-        if (subpage) subpage.classList.toggle('d-none', !onSubpage);
+        if (subpage) {
+            subpage.classList.toggle('d-none', !onSubpage);
+            subpage.classList.toggle('d-flex', onSubpage);
+        }
         if (subpageTitle && moreFeature) {
             subpageTitle.textContent = moreFeatureTitles[moreFeature] || '';
         }
         if (defaultTitle && !hideDefault) {
             defaultTitle.textContent = renderDefaultTitle(pageId);
+        }
+
+        const moneySearch = document.getElementById('appHeaderMoneySearch');
+        if (moneySearch) moneySearch.classList.toggle('d-none', moreFeature !== 'money');
+        const moneySubtitle = document.getElementById('appHeaderMoneySubtitle');
+        if (moneySubtitle) moneySubtitle.classList.toggle('d-none', moreFeature !== 'money');
+        const moneyTools = document.getElementById('appHeaderMoneyTools');
+        if (moneyTools) {
+            moneyTools.classList.toggle('d-none', moreFeature !== 'money');
+            moneyTools.classList.toggle('d-flex', moreFeature === 'money');
         }
 
         const searchBtn = document.getElementById('appHeaderSearchBtn');

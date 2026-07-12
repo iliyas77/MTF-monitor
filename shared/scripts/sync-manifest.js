@@ -66,6 +66,18 @@ function preferredLibOrder(scripts) {
     return [...ordered, ...rest];
 }
 
+function preferredDbOrder(scripts) {
+    const preferred = [
+        'shared/db/_registry.js',
+        'shared/db/firebase-config.js',
+        'shared/db/db-service.js'
+    ];
+    const set = new Set(scripts);
+    const ordered = preferred.filter((s) => set.has(s));
+    const rest = [...set].filter((s) => !preferred.includes(s)).sort();
+    return [...ordered, ...rest];
+}
+
 function preferredFeaturesOrder(scripts) {
     // Shared shell + trade UI first (dependency order), then one *-page.js per route.
     const preferred = [
@@ -105,7 +117,7 @@ function repairScripts(existing, onDisk) {
     const next = [
         ...preferredLibOrder(allLib),
         ...preferredFeaturesOrder(allFeatures),
-        ...allDb.sort(),
+        ...preferredDbOrder(allDb),
         ...other.sort()
     ];
 

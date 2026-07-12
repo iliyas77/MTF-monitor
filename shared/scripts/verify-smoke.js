@@ -209,7 +209,9 @@ async function runSmoke(report) {
         }
 
         // --- Globals / components ---
-        const globals = await page.evaluate(() => ({
+        const globals = await page.evaluate(() => {
+            const db = window.MTFDb || {};
+            return {
             hasComponents: !!(window.MTFComponents && Object.keys(window.MTFComponents).length),
             hasDb: !!(window.MTFDb && typeof window.MTFDb.getStorage === 'function'),
             hasBottomBar: !!document.getElementById('bottomBar'),
@@ -221,8 +223,19 @@ async function runSmoke(report) {
             hasFilterSheet: typeof window.openFilterSheet === 'function',
             hasTradeDetail: typeof window.openTradeDetail === 'function'
                 && typeof window.backFromTradeDetail === 'function',
-            hasSummaryBuckets: typeof (window.MTFComponents || {}).aggregatePortfolioSummary === 'function'
-        }));
+            hasSummaryBuckets: typeof (window.MTFComponents || {}).aggregatePortfolioSummary === 'function',
+            moneyApis: {
+                getAccounts: typeof db.getMoneyAccounts === 'function',
+                getEntries: typeof db.getMoneyEntries === 'function',
+                addAccount: typeof db.addMoneyAccount === 'function',
+                addEntry: typeof db.addMoneyEntry === 'function',
+                addTransfer: typeof db.addMoneyTransfer === 'function',
+                noteDbCall: typeof db.noteDbCall === 'function',
+                cloudPush: typeof db.cloudPush === 'function',
+                connectSync: typeof db.connectSync === 'function'
+            }
+        };
+        });
         if (!globals.hasComponents || !globals.hasDb || !globals.hasBottomBar || !globals.hasHeader) {
             report.fail(
                 'Globals',
@@ -246,6 +259,12 @@ async function runSmoke(report) {
                 'Feature APIs',
                 `detail=${globals.hasTradeDetail} buckets=${globals.hasSummaryBuckets}`
             );
+        }
+        const moneyApiOk = Object.values(globals.moneyApis).every(Boolean);
+        if (moneyApiOk) {
+            report.pass('DB money APIs', 'ledger CRUD + call log + sync push on MTFDb');
+        } else {
+            report.fail('DB money APIs', JSON.stringify(globals.moneyApis));
         }
 
         // --- Trades UI shell ---
@@ -873,14 +892,135 @@ async function runSmoke(report) {
             report.warn('App version', 'version stamp not found on More page');
         }
 
-        // --- Money ---
+        // --- Money (Broker Wallets) ---
         await page.locator('#page-more .list-group-item', { hasText: 'Money' }).click();
-        await page.waitForTimeout(250);
+        await page.waitForTimeout(300);
         if (!(await pageVisible(page, 'page-money'))) {
             report.fail('Money', '#page-money not shown');
+        } else if (!(await page.locator('#moneySummaryCard').count())) {
+            report.fail('Money', 'summary card missing');
         } else {
-            report.pass('Money', 'Money page shown');
+            report.pass('Money', 'Broker Wallets page shown');
         }
+
+        const moneyChrome = await page.evaluate(() => {
+            const tools = document.getElementById('appHeaderMoneyTools');
+            const searchWrap = document.getElementById('appHeaderMoneySearch');
+            const search = document.getElementById('moneySearchInput');
+            const filterBtn = document.getElementById('moneyPageFilterBtn');
+            const filterHost = document.getElementById('moneyAccountFilterHost');
+            const subtitle = document.getElementById('appHeaderMoneySubtitle');
+            const monthInput = document.getElementById('moneyMonthPicker')
+                || document.querySelector('#moneyMonthChart input[type="month"], #moneyMonthChartCard input[type="month"]');
+            const wallets = document.getElementById('moneyAccountList');
+            const summaryHero = document.getElementById('moneyTotalValueHero');
+            return {
+                toolsVisible: !!(tools && !tools.classList.contains('d-none')),
+                searchVisible: !!(searchWrap && !searchWrap.classList.contains('d-none') && search),
+                hasFilterBtn: !!filterBtn,
+                hasFilterHost: !!filterHost,
+                hasSubtitle: !!(subtitle && /cash per broker/i.test(subtitle.textContent || '')),
+                hasMonthPicker: !!(monthInput && monthInput.type === 'month'),
+                hasWalletList: !!wallets,
+                hasSummaryHero: !!summaryHero,
+                moneyFns: {
+                    search: typeof window.setMoneySearchQuery === 'function',
+                    month: typeof window.setMoneyMonthKey === 'function',
+                    filter: typeof window.openMoneyPageFilterSheet === 'function',
+                    render: typeof window.renderMoney === 'function'
+                }
+            };
+        });
+        if (moneyChrome.toolsVisible && moneyChrome.searchVisible && moneyChrome.hasFilterBtn && moneyChrome.hasSubtitle) {
+            report.pass('Money header', 'search + All filter + filter btn + Cash per broker in header');
+        } else {
+            report.fail(
+                'Money header',
+                `tools=${moneyChrome.toolsVisible} search=${moneyChrome.searchVisible} filter=${moneyChrome.hasFilterBtn} subtitle=${moneyChrome.hasSubtitle}`
+            );
+        }
+        if (moneyChrome.hasMonthPicker && moneyChrome.moneyFns.month) {
+            report.pass('Money month', 'Monthly Flow month picker (type=month) wired');
+        } else {
+            report.fail('Money month', `picker=${moneyChrome.hasMonthPicker} setMoneyMonthKey=${moneyChrome.moneyFns.month}`);
+        }
+        if (moneyChrome.hasWalletList && moneyChrome.hasSummaryHero && moneyChrome.moneyFns.render) {
+            report.pass('Money UI', 'summary hero + wallets list + renderMoney');
+        } else {
+            report.fail(
+                'Money UI',
+                `list=${moneyChrome.hasWalletList} hero=${moneyChrome.hasSummaryHero} render=${moneyChrome.moneyFns.render}`
+            );
+        }
+
+        // Money search filters in place
+        if (moneyChrome.moneyFns.search) {
+            await page.fill('#moneySearchInput', 'zzz-no-match-smoke');
+            await page.waitForTimeout(200);
+            const searchMode = await page.evaluate(() => {
+                const filterView = document.getElementById('moneyPageFilterView');
+                const defaultView = document.getElementById('moneyPageDefaultView');
+                const title = document.getElementById('moneyPageFilterViewTitle');
+                return {
+                    filterShown: !!(filterView && !filterView.classList.contains('d-none')),
+                    defaultHidden: !!(defaultView && defaultView.classList.contains('d-none')),
+                    titleText: (title && title.textContent) || ''
+                };
+            });
+            if (searchMode.filterShown || /search/i.test(searchMode.titleText)) {
+                report.pass('Money search', 'search query switches to results view');
+            } else {
+                report.warn('Money search', `filterShown=${searchMode.filterShown} title=${searchMode.titleText || '(empty)'}`);
+            }
+            await page.evaluate(() => {
+                if (typeof window.clearMoneySearchQuery === 'function') window.clearMoneySearchQuery();
+                else if (typeof window.setMoneySearchQuery === 'function') window.setMoneySearchQuery('');
+            });
+            await page.waitForTimeout(150);
+        } else {
+            report.fail('Money search', 'setMoneySearchQuery missing');
+        }
+
+        // Add-account surface (mount panel; UI normally needs cloud sync)
+        const moneyAccountApi = await page.evaluate(() => typeof window.openAddMoneyAccountModal === 'function');
+        if (!moneyAccountApi) {
+            report.fail('Money add account', 'openAddMoneyAccountModal missing');
+        } else {
+            await page.evaluate(() => {
+                const Sheet = window.MTFComponents && window.MTFComponents.Sheet;
+                const editId = document.getElementById('moneyAccountEditId');
+                if (editId) editId.value = '';
+                if (Sheet && typeof Sheet.mountPanel === 'function') {
+                    Sheet.mountPanel('Add wallet', 'panelMoneyAccount', '');
+                }
+            });
+            await page.waitForTimeout(400);
+            const accountSheet = await page.evaluate(() => {
+                const Sheet = window.MTFComponents && window.MTFComponents.Sheet;
+                const panel = document.getElementById('panelMoneyAccount');
+                const broker = document.getElementById('moneyAccountBroker');
+                const inSheet = !!(panel && panel.closest('.cupertino-pane-wrapper, #appSheet, [data-cupertino]'));
+                const open = !!(Sheet && typeof Sheet.isOpen === 'function' && Sheet.isOpen());
+                const ok = !!(broker && (open || inSheet || broker.offsetParent !== null));
+                return {
+                    ok,
+                    note: ok
+                        ? 'account panel mounts via Sheet'
+                        : `open=${open} inSheet=${inSheet} broker=${!!broker}`
+                };
+            });
+            if (accountSheet.ok) {
+                report.pass('Money add account', accountSheet.note);
+            } else {
+                report.warn('Money add account', accountSheet.note);
+            }
+            await page.evaluate(() => {
+                if (typeof window.closeSheet === 'function') window.closeSheet();
+                else if (window.MTFComponents?.Sheet?.close) window.MTFComponents.Sheet.close();
+            });
+            await page.waitForTimeout(200);
+        }
+
         await page.locator('#appHeaderSubpage button[aria-label="Back"]').click();
         await page.waitForTimeout(200);
 

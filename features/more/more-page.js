@@ -37,7 +37,7 @@
             <p class="text-muted small text-uppercase fw-medium mb-2">Tools and reports</p>
             <div class="card bg-body rounded-3 overflow-hidden border">
                 <div class="list-group list-group-flush" role="list">
-                        ${renderMoreHubOption('Money', 'fa-coins', 'money', "openMoreFeature('money')")}
+                        ${renderMoreHubOption('Money', 'fa-wallet', 'money', "openMoreFeature('money')")}
                         ${renderMoreHubOption('MTF Calculator', 'fa-calculator', 'success', "openMoreFeature('mtf-calc')")}
                         ${renderMoreHubOption('Settings', 'fa-cog', 'primary', 'openSettingsPage()')}
                 </div>
