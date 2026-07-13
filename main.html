@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual" />
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=resizes-visual" />
     <title>MTF Profit Tracker</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        crossorigin="anonymous" />
     <link rel="stylesheet" href="shared/css/_variables.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,30 +25,37 @@
     <header id="appHeader" class="navbar sticky-top bg-body w-100 border-0 px-2 py-2">
         <div id="appHeaderDefault" class="d-flex align-items-center justify-content-between gap-2 w-100">
             <div class="d-flex align-items-center gap-1 min-w-0">
-                <button type="button" id="appHeaderMenuBtn" class="app-header-icon-btn flex-shrink-0" onclick="navigateTo('more')" aria-label="Menu">
+                <button type="button" id="appHeaderMenuBtn" class="app-header-icon-btn flex-shrink-0"
+                    onclick="navigateTo('more')" aria-label="Menu">
                     <i class="fas fa-bars" aria-hidden="true"></i>
                 </button>
                 <h1 class="app-header-title text-truncate mb-0" id="appHeaderDefaultTitle">My Positions</h1>
             </div>
             <div id="appHeaderDefaultActions" class="d-flex align-items-center flex-shrink-0">
                 <div id="appLoading" class="app-header-sync d-none" aria-live="polite" aria-busy="false">
-                    <span class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Syncing</span></span>
+                    <span class="spinner-border spinner-border-sm text-primary" role="status"><span
+                            class="visually-hidden">Syncing</span></span>
                     <span id="appLoadingLabel" class="app-header-sync-label">Syncing…</span>
                 </div>
-                <button type="button" id="appHeaderSearchBtn" class="app-header-icon-btn d-none" onclick="openSearchPage()" aria-label="Search">
-                    <i class="fas fa-search" aria-hidden="true"></i>
-                </button>
-                <button type="button" id="appHeaderRefreshBtn" class="app-header-icon-btn d-none" onclick="onMarketRefreshClick()" aria-label="Refresh watchlist prices">
+                <button type="button" id="appHeaderRefreshBtn" class="app-header-icon-btn d-none"
+                    onclick="onAppHeaderRefreshClick()" aria-label="Refresh prices">
                     <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </button>
-                <button type="button" id="appHeaderReportBtn" class="app-header-icon-btn d-none" onclick="openCalendarMonthReport()" aria-label="Monthly report">
+                <button type="button" id="appHeaderSearchBtn" class="app-header-icon-btn d-none"
+                    onclick="openSearchPage()" aria-label="Search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                </button>
+                <button type="button" id="appHeaderReportBtn" class="app-header-icon-btn d-none"
+                    onclick="openCalendarMonthReport()" aria-label="Monthly report">
                     <i class="fas fa-file-alt" aria-hidden="true"></i>
                 </button>
-                <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none" onclick="openFilterSheet()" aria-label="Filter">
+                <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none"
+                    onclick="openFilterSheet()" aria-label="Filter">
                     <i class="fas fa-filter" aria-hidden="true"></i>
                 </button>
                 <div class="dropdown" id="appHeaderMoreWrap">
-                    <button type="button" id="appHeaderMoreBtn" class="app-header-icon-btn d-none" data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
+                    <button type="button" id="appHeaderMoreBtn" class="app-header-icon-btn d-none"
+                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options">
                         <i class="fas fa-ellipsis-vertical" aria-hidden="true"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm" id="appHeaderMoreMenu"></ul>
@@ -53,7 +63,8 @@
             </div>
         </div>
         <div id="appHeaderSettings" class="d-none d-flex align-items-center gap-2 w-100">
-            <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backFromSettings()" aria-label="Back">
+            <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backFromSettings()"
+                aria-label="Back">
                 <i class="fas fa-arrow-left" aria-hidden="true"></i>
             </button>
             <h1 class="app-header-title mb-0 flex-grow-1">Settings</h1>
@@ -61,7 +72,8 @@
         </div>
         <div id="appHeaderSubpage" class="d-none flex-column gap-2 min-w-0 w-100">
             <div class="d-flex align-items-center gap-2 min-w-0 w-100">
-                <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backToMoreHub()" aria-label="Back">
+                <button type="button" class="app-header-icon-btn flex-shrink-0" onclick="backToMoreHub()"
+                    aria-label="Back">
                     <i class="fas fa-arrow-left" aria-hidden="true"></i>
                 </button>
                 <div class="min-w-0 flex-grow-1">
@@ -70,7 +82,9 @@
                 </div>
                 <div id="appHeaderMoneyTools" class="money-header-tools d-none flex-shrink-0 align-items-center gap-2">
                     <div class="flex-shrink-0" id="moneyAccountFilterHost"></div>
-                    <button type="button" class="btn btn-outline-secondary bg-body rounded-3 p-0 money-header-filter-btn" id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
+                    <button type="button"
+                        class="btn btn-outline-secondary bg-body rounded-3 p-0 money-header-filter-btn"
+                        id="moneyPageFilterBtn" onclick="openMoneyPageFilterSheet()" title="Filter" aria-label="Filter">
                         <i class="fas fa-filter text-muted"></i>
                     </button>
                 </div>
@@ -78,8 +92,11 @@
             </div>
             <div id="appHeaderMoneySearch" class="money-header-search d-none w-100">
                 <span class="money-header-search-icon" aria-hidden="true"><i class="fas fa-search"></i></span>
-                <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="moneySearchInput" placeholder="Search remarks, amount, date, broker..." oninput="setMoneySearchQuery(this.value)" autocomplete="off" spellcheck="false" />
-                <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="moneySearchClear" onclick="clearMoneySearchQuery()" title="Clear" aria-label="Clear">
+                <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="moneySearchInput"
+                    placeholder="Search remarks, amount, date, broker..." oninput="setMoneySearchQuery(this.value)"
+                    autocomplete="off" spellcheck="false" />
+                <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1"
+                    id="moneySearchClear" onclick="clearMoneySearchQuery()" title="Clear" aria-label="Clear">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
@@ -125,37 +142,44 @@
             <div class="card cal-month-card bg-body border rounded-3 overflow-hidden">
                 <div class="card-body p-3">
                     <div class="cal-toolbar">
-                        <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(-1)" aria-label="Previous month">
+                        <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(-1)"
+                            aria-label="Previous month">
                             <i class="fas fa-chevron-left" aria-hidden="true"></i>
                         </button>
                         <div class="cal-toolbar-center min-w-0">
-                            <button type="button" class="cal-month-jump-btn" id="calendarMonthJumpBtn" onclick="openCalendarMonthPicker()" aria-haspopup="dialog" aria-label="Jump to month">
+                            <button type="button" class="cal-month-jump-btn" id="calendarMonthJumpBtn"
+                                onclick="openCalendarMonthPicker()" aria-haspopup="dialog" aria-label="Jump to month">
                                 <span class="cal-month-jump-title" id="calendarMonthTitle">—</span>
                                 <i class="fas fa-chevron-down cal-month-jump-caret" aria-hidden="true"></i>
                             </button>
                             <p class="cal-toolbar-sub mb-0">
                                 Daily net P&amp;L (closed trades)
-                                <i class="fas fa-info-circle" title="P&amp;L is calculated for closed trades only" aria-hidden="true"></i>
+                                <i class="fas fa-info-circle" title="P&amp;L is calculated for closed trades only"
+                                    aria-hidden="true"></i>
                             </p>
                         </div>
                         <div class="cal-toolbar-right flex-shrink-0">
-                            <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(1)" aria-label="Next month">
+                            <button type="button" class="cal-nav-btn" onclick="shiftCalendarMonth(1)"
+                                aria-label="Next month">
                                 <i class="fas fa-chevron-right" aria-hidden="true"></i>
                             </button>
-                            <button type="button" class="cal-today-btn" onclick="jumpCalendarToTodayMonth()" aria-label="Go to today">Today</button>
+                            <button type="button" class="cal-today-btn" onclick="jumpCalendarToTodayMonth()"
+                                aria-label="Go to today">Today</button>
                         </div>
                     </div>
 
                     <div class="cal-pl-cards" aria-label="Month profit and loss">
                         <div class="cal-pl-card cal-pl-card--profit">
-                            <span class="cal-pl-card-icon" aria-hidden="true"><i class="fas fa-arrow-trend-up"></i></span>
+                            <span class="cal-pl-card-icon" aria-hidden="true"><i
+                                    class="fas fa-arrow-trend-up"></i></span>
                             <div class="cal-pl-card-body min-w-0">
                                 <div class="cal-pl-card-value" id="calTotalProfit">—</div>
                                 <div class="cal-pl-card-label">Total Profit</div>
                             </div>
                         </div>
                         <div class="cal-pl-card cal-pl-card--loss">
-                            <span class="cal-pl-card-icon" aria-hidden="true"><i class="fas fa-arrow-trend-down"></i></span>
+                            <span class="cal-pl-card-icon" aria-hidden="true"><i
+                                    class="fas fa-arrow-trend-down"></i></span>
                             <div class="cal-pl-card-body min-w-0">
                                 <div class="cal-pl-card-value" id="calTotalLoss">—</div>
                                 <div class="cal-pl-card-label">Total Loss</div>
@@ -178,9 +202,12 @@
 
                     <div class="cal-footer">
                         <div class="cal-legend" aria-label="Legend">
-                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--pos"></span> Profit</span>
-                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--neg"></span> Loss</span>
-                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--flat"></span> No trades</span>
+                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--pos"></span>
+                                Profit</span>
+                            <span class="cal-legend-item"><span class="cal-legend-swatch cal-legend-swatch--neg"></span>
+                                Loss</span>
+                            <span class="cal-legend-item"><span
+                                    class="cal-legend-swatch cal-legend-swatch--flat"></span> No trades</span>
                         </div>
                         <p class="cal-footer-note mb-0">
                             <i class="fas fa-info-circle" aria-hidden="true"></i>
@@ -197,7 +224,8 @@
         <div class="px-3 pt-3 pb-5 money-page-scroll">
             <div id="moneyPageDefaultView">
                 <div class="mb-3">
-                    <div class="card money-summary-card border-0 shadow-sm rounded-3 overflow-hidden" id="moneySummaryCard">
+                    <div class="card money-summary-card border-0 shadow-sm rounded-3 overflow-hidden"
+                        id="moneySummaryCard">
                         <div class="card-body p-0">
                             <div class="money-summary-hero">
                                 <div class="money-summary-hero-label">Cash available</div>
@@ -207,11 +235,13 @@
                             <div class="money-summary-metrics" role="group" aria-label="Cash flow summary">
                                 <div class="money-summary-metric">
                                     <div class="money-summary-metric-label">Deposits</div>
-                                    <div class="money-summary-metric-value text-primary" id="moneyTotalDeposited">₹0</div>
+                                    <div class="money-summary-metric-value text-primary" id="moneyTotalDeposited">₹0
+                                    </div>
                                 </div>
                                 <div class="money-summary-metric">
                                     <div class="money-summary-metric-label">Withdrawals</div>
-                                    <div class="money-summary-metric-value text-danger" id="moneyTotalWithdrawn">₹0</div>
+                                    <div class="money-summary-metric-value text-danger" id="moneyTotalWithdrawn">₹0
+                                    </div>
                                 </div>
                                 <div class="money-summary-metric">
                                     <div class="money-summary-metric-label">Transactions</div>
@@ -231,14 +261,18 @@
 
             <div id="moneyPageFilterView" class="d-none">
                 <div class="d-flex align-items-center gap-3 mb-4">
-                    <button type="button" class="btn btn-outline-secondary rounded-circle flex-shrink-0" onclick="clearMoneyPageFilters()" aria-label="Back to wallets" style="width:2.25rem;height:2.25rem"><i class="fas fa-arrow-left"></i></button>
+                    <button type="button" class="btn btn-outline-secondary rounded-circle flex-shrink-0"
+                        onclick="clearMoneyPageFilters()" aria-label="Back to wallets"
+                        style="width:2.25rem;height:2.25rem"><i class="fas fa-arrow-left"></i></button>
                     <div class="flex-fill min-w-0">
                         <h6 class="fw-semibold text-body-secondary mb-0" id="moneyPageFilterViewTitle">Filtered</h6>
                         <div class="small text-muted" id="moneyPageFilterViewMeta"></div>
                         <div class="mt-2" id="moneyPageFilterDateChipHost"></div>
                     </div>
                     <div class="flex-shrink-0" id="moneyPageFilterTypeHost"></div>
-                    <button type="button" class="btn btn-outline-secondary bg-body rounded-3 flex-shrink-0 p-0" id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Filters" aria-label="Filters" style="width:2.5rem;height:2.5rem">
+                    <button type="button" class="btn btn-outline-secondary bg-body rounded-3 flex-shrink-0 p-0"
+                        id="moneyPageFilterBtnActive" onclick="openMoneyPageFilterSheet()" title="Filters"
+                        aria-label="Filters" style="width:2.5rem;height:2.5rem">
                         <i class="fas fa-filter text-muted"></i>
                     </button>
                 </div>
@@ -258,170 +292,218 @@
     <section id="page-money-entry" class="w-100 d-none">
         <div class="money-entry-page">
             <div class="money-entry-sheet">
-            <div class="money-entry-topbar">
-                <div class="money-entry-brand" id="moneyEntryBrand">
-                    <span class="money-entry-brand-avatar" id="moneyEntryBrandAvatar" aria-hidden="true">?</span>
-                    <div class="money-entry-brand-text min-w-0">
-                        <button type="button" class="money-entry-brand-name text-truncate" id="moneyEntryBrandName" onclick="focusMoneyEntryBrokerPicker()">Select broker</button>
-                        <div class="money-entry-brand-sub text-truncate" id="moneyEntryTopbarTitle">Add Transaction</div>
-                    </div>
-                </div>
-                <button type="button" class="money-entry-topbar-close" onclick="closeMoneyEntryPage()" aria-label="Close">
-                    <i class="fas fa-times" aria-hidden="true"></i>
-                </button>
-            </div>
-            <input type="hidden" id="moneyEntryEditId" value="" />
-            <input type="hidden" id="moneyEntryAccountId" value="" />
-            <input type="hidden" id="moneyEntryType" value="deposit" />
-            <span class="d-none" id="moneyEntryAccountTitle"></span>
-
-            <!-- Status strip -->
-            <div class="money-entry-status" id="moneyEntryHeader">
-                <div class="money-entry-status-item">
-                    <span class="money-entry-status-icon money-entry-status-icon--type" id="moneyEntryStatusTypeIcon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
-                    <div class="min-w-0">
-                        <div class="money-entry-status-label">Transaction</div>
-                        <div class="money-entry-status-value text-success" id="moneyEntryStatusType">Deposit</div>
-                    </div>
-                </div>
-                <div class="money-entry-status-item money-entry-status-item--date">
-                    <span class="money-entry-status-icon" aria-hidden="true"><i class="far fa-calendar"></i></span>
-                    <div class="min-w-0 flex-fill">
-                        <div id="moneyEntryDateTimeRow">
-                            <div class="money-entry-status-value" id="moneyEntryDateTimeDisplay">—</div>
-                        </div>
-                        <div class="d-none gap-2 mt-1" id="moneyEntryDateTimeFields">
-                            <input type="date" class="form-control form-control-sm flex-fill" id="moneyEntryDate" onchange="onMoneyEntryDateTimeChange()" />
-                            <input type="time" class="form-control form-control-sm flex-fill" id="moneyEntryTime" onchange="onMoneyEntryDateTimeChange()" />
+                <div class="money-entry-topbar">
+                    <div class="money-entry-brand" id="moneyEntryBrand">
+                        <span class="money-entry-brand-avatar" id="moneyEntryBrandAvatar" aria-hidden="true">?</span>
+                        <div class="money-entry-brand-text min-w-0">
+                            <button type="button" class="money-entry-brand-name text-truncate" id="moneyEntryBrandName"
+                                onclick="focusMoneyEntryBrokerPicker()">Select broker</button>
+                            <div class="money-entry-brand-sub text-truncate" id="moneyEntryTopbarTitle">Add Transaction
+                            </div>
                         </div>
                     </div>
-                    <button type="button" class="money-entry-icon-btn" id="moneyEntryDateTimeEditBtn" onclick="toggleMoneyEntryDateTimeEdit()" aria-label="Edit date and time"><i class="fas fa-pen"></i></button>
-                </div>
-                <div class="money-entry-status-item">
-                    <span class="money-entry-status-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
-                    <div class="min-w-0 flex-fill">
-                        <div class="money-entry-status-label">Available Balance</div>
-                        <div class="money-entry-status-value text-success" id="moneyEntryStatusBalance">₹0.00</div>
-                    </div>
-                    <button type="button" class="money-entry-icon-btn" id="moneyEntryBalanceEyeBtn" onclick="toggleMoneyEntryBalanceVisibility()" aria-label="Hide balance" title="Hide balance"><i class="far fa-eye"></i></button>
-                </div>
-            </div>
-
-            <!-- 1. Transaction Type -->
-            <section class="money-entry-section" id="moneyEntryTypeButtons">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">1</span> Transaction Type</h2>
-                <div class="money-entry-type-grid" role="tablist" aria-label="Transaction type">
-                    <button type="button" class="money-entry-type-btn is-active" data-money-entry-type="deposit" onclick="onMoneyEntryTypePick('deposit')">
-                        <span class="money-entry-type-icon" aria-hidden="true"><i class="fas fa-arrow-down"></i></span>
-                        <span>Deposit</span>
-                    </button>
-                    <button type="button" class="money-entry-type-btn" data-money-entry-type="withdraw" onclick="onMoneyEntryTypePick('withdraw')">
-                        <span class="money-entry-type-icon" aria-hidden="true"><i class="fas fa-arrow-up"></i></span>
-                        <span>Withdrawal</span>
-                    </button>
-                    <button type="button" class="money-entry-type-btn" data-money-entry-type="transfer" onclick="onMoneyEntryTypePick('transfer')">
-                        <span class="money-entry-type-icon" aria-hidden="true"><i class="fas fa-exchange-alt"></i></span>
-                        <span>Transfer</span>
-                    </button>
-                    <button type="button" class="money-entry-type-btn" data-money-entry-type="adjustment" onclick="onMoneyEntryTypePick('adjustment')">
-                        <span class="money-entry-type-icon" aria-hidden="true"><i class="fas fa-sliders-h"></i></span>
-                        <span>Adjustment</span>
+                    <button type="button" class="money-entry-topbar-close" onclick="closeMoneyEntryPage()"
+                        aria-label="Close">
+                        <i class="fas fa-times" aria-hidden="true"></i>
                     </button>
                 </div>
-            </section>
+                <input type="hidden" id="moneyEntryEditId" value="" />
+                <input type="hidden" id="moneyEntryAccountId" value="" />
+                <input type="hidden" id="moneyEntryType" value="deposit" />
+                <span class="d-none" id="moneyEntryAccountTitle"></span>
 
-            <!-- 2. Broker / Wallet -->
-            <section class="money-entry-section" id="moneyEntryAccountFields">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">2</span> Broker / Wallet</h2>
-                <div class="money-entry-broker-picker" id="moneyEntryBrokerPicker" role="listbox" aria-label="Select broker wallet"></div>
-                <select class="form-select money-entry-select d-none" id="moneyEntryBrokerSelect" onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
-                <div class="money-entry-wallet-balance" id="moneyEntryWalletBalanceHint">Available Balance: <strong id="moneyEntryWalletBalanceValue" class="text-success">₹0.00</strong></div>
-            </section>
-
-            <section class="money-entry-section d-none" id="moneyEntryTransferFields">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">2</span> Transfer Wallets</h2>
-                <label class="form-label money-entry-field-label" for="moneyEntryFromAccount">From</label>
-                <div class="money-entry-broker-picker mb-2" id="moneyEntryFromPicker" role="listbox" aria-label="From wallet"></div>
-                <select class="form-select money-entry-select mb-2 d-none" id="moneyEntryFromAccount" onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
-                <label class="form-label money-entry-field-label" for="moneyEntryToAccount">To</label>
-                <div class="money-entry-broker-picker" id="moneyEntryToPicker" role="listbox" aria-label="To wallet"></div>
-                <select class="form-select money-entry-select d-none" id="moneyEntryToAccount" onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
-            </section>
-
-            <section class="money-entry-section d-none" id="moneyEntryAdjustFields">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">2b</span> Adjustment Direction</h2>
-                <select class="form-select money-entry-select" id="moneyEntryAdjustSign" onchange="updateMoneyEntryAmountPreview()">
-                    <option value="1">Credit (+)</option>
-                    <option value="-1">Debit (−)</option>
-                </select>
-            </section>
-
-            <!-- 3. Amount -->
-            <section class="money-entry-section">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">3</span> Amount (₹)</h2>
-                <div class="money-entry-amount-field">
-                    <span class="money-entry-amount-prefix" aria-hidden="true">₹</span>
-                    <input type="number" class="form-control money-entry-amount-input" id="moneyEntryAmount" min="1" step="1" placeholder="Enter amount" inputmode="numeric" oninput="onMoneyEntryAmountInput()" />
-                    <span class="money-entry-amount-suffix" aria-hidden="true">.00</span>
-                </div>
-                <div class="money-entry-chip-row" id="moneyEntryAmountChips" aria-label="Quick amounts">
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(5000)">+ ₹5,000</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(10000)">+ ₹10,000</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(25000)">+ ₹25,000</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(50000)">+ ₹50,000</button>
-                    <button type="button" class="money-entry-chip" onclick="focusMoneyEntryAmountCustom()">Custom</button>
-                </div>
-                <div class="d-none mt-2" id="moneyEntryAmountPreview"></div>
-            </section>
-
-            <!-- 4. Remarks -->
-            <section class="money-entry-section">
-                <h2 class="money-entry-section-title"><span class="money-entry-step">4</span> Remarks <span class="money-entry-optional">(Optional)</span></h2>
-                <div class="money-entry-remarks-wrap">
-                    <textarea class="form-control money-entry-remarks" id="moneyEntryNote" rows="2" maxlength="100" placeholder="Enter remarks" oninput="onMoneyEntryNoteInput()"></textarea>
-                    <div class="money-entry-remarks-count" id="moneyEntryNoteCount">0 / 100</div>
-                </div>
-                <div class="money-entry-chip-row money-entry-chip-row--wrap" id="moneyEntryRemarkChips" aria-label="Remark suggestions">
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('Salary Added')"><i class="fas fa-money-bill-wave me-1" aria-hidden="true"></i>Salary Added</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('Trading Profit')"><i class="fas fa-chart-line me-1" aria-hidden="true"></i>Trading Profit</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('Bank Transfer')"><i class="fas fa-university me-1" aria-hidden="true"></i>Bank Transfer</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('UPI')"><i class="fas fa-mobile-alt me-1" aria-hidden="true"></i>UPI</button>
-                    <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('Bonus')"><i class="fas fa-gift me-1" aria-hidden="true"></i>Bonus</button>
-                    <button type="button" class="money-entry-chip" onclick="focusMoneyEntryRemarkCustom()"><i class="fas fa-ellipsis-h me-1" aria-hidden="true"></i>Other</button>
-                </div>
-            </section>
-
-            <!-- Transaction Preview -->
-            <section class="money-entry-preview" aria-label="Transaction preview">
-                <h2 class="money-entry-preview-title">Transaction Preview</h2>
-                <div class="money-entry-preview-grid">
-                    <div>
-                        <div class="money-entry-preview-label">Transaction Type</div>
-                        <div class="money-entry-preview-value text-success" id="moneyEntryPreviewType">Deposit</div>
-                        <div class="money-entry-preview-label mt-3">Broker / Wallet</div>
-                        <div class="money-entry-preview-value" id="moneyEntryPreviewBroker">—</div>
+                <!-- Status strip -->
+                <div class="money-entry-status" id="moneyEntryHeader">
+                    <div class="money-entry-status-item">
+                        <span class="money-entry-status-icon money-entry-status-icon--type"
+                            id="moneyEntryStatusTypeIcon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                        <div class="min-w-0">
+                            <div class="money-entry-status-label">Transaction</div>
+                            <div class="money-entry-status-value text-success" id="moneyEntryStatusType">Deposit</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="money-entry-preview-label">Amount</div>
-                        <div class="money-entry-preview-value text-success" id="moneyEntryPreviewAmount">₹0.00</div>
-                        <div class="money-entry-preview-label mt-3">Date &amp; Time</div>
-                        <div class="money-entry-preview-value" id="moneyEntryPreviewDateTime">—</div>
+                    <div class="money-entry-status-item money-entry-status-item--date">
+                        <span class="money-entry-status-icon" aria-hidden="true"><i class="far fa-calendar"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div id="moneyEntryDateTimeRow">
+                                <div class="money-entry-status-value" id="moneyEntryDateTimeDisplay">—</div>
+                            </div>
+                            <div class="d-none gap-2 mt-1" id="moneyEntryDateTimeFields">
+                                <input type="date" class="form-control form-control-sm flex-fill" id="moneyEntryDate"
+                                    onchange="onMoneyEntryDateTimeChange()" />
+                                <input type="time" class="form-control form-control-sm flex-fill" id="moneyEntryTime"
+                                    onchange="onMoneyEntryDateTimeChange()" />
+                            </div>
+                        </div>
+                        <button type="button" class="money-entry-icon-btn" id="moneyEntryDateTimeEditBtn"
+                            onclick="toggleMoneyEntryDateTimeEdit()" aria-label="Edit date and time"><i
+                                class="fas fa-pen"></i></button>
                     </div>
-                    <div class="money-entry-preview-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
-                    <div>
-                        <div class="money-entry-preview-label">Current Balance</div>
-                        <div class="money-entry-preview-value" id="moneyEntryPreviewCurrent">₹0.00</div>
-                        <div class="money-entry-preview-label mt-3">Balance After</div>
-                        <div class="money-entry-preview-value text-success fw-bold" id="moneyEntryPreviewAfter">₹0.00</div>
+                    <div class="money-entry-status-item">
+                        <span class="money-entry-status-icon" aria-hidden="true"><i class="fas fa-wallet"></i></span>
+                        <div class="min-w-0 flex-fill">
+                            <div class="money-entry-status-label">Available Balance</div>
+                            <div class="money-entry-status-value text-success" id="moneyEntryStatusBalance">₹0.00</div>
+                        </div>
+                        <button type="button" class="money-entry-icon-btn" id="moneyEntryBalanceEyeBtn"
+                            onclick="toggleMoneyEntryBalanceVisibility()" aria-label="Hide balance"
+                            title="Hide balance"><i class="far fa-eye"></i></button>
                     </div>
                 </div>
-                <div class="money-entry-preview-note">
-                    <i class="fas fa-info-circle" aria-hidden="true"></i>
-                    Balance after transaction is an estimate and will update after saving.
-                </div>
-            </section>
 
-            <div class="money-entry-actions" id="moneyEntryFooter"></div>
+                <!-- 1. Transaction Type -->
+                <section class="money-entry-section" id="moneyEntryTypeButtons">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">1</span> Transaction Type</h2>
+                    <div class="money-entry-type-grid" role="tablist" aria-label="Transaction type">
+                        <button type="button" class="money-entry-type-btn is-active" data-money-entry-type="deposit"
+                            onclick="onMoneyEntryTypePick('deposit')">
+                            <span class="money-entry-type-icon" aria-hidden="true"><i
+                                    class="fas fa-arrow-down"></i></span>
+                            <span>Deposit</span>
+                        </button>
+                        <button type="button" class="money-entry-type-btn" data-money-entry-type="withdraw"
+                            onclick="onMoneyEntryTypePick('withdraw')">
+                            <span class="money-entry-type-icon" aria-hidden="true"><i
+                                    class="fas fa-arrow-up"></i></span>
+                            <span>Withdrawal</span>
+                        </button>
+                        <button type="button" class="money-entry-type-btn" data-money-entry-type="transfer"
+                            onclick="onMoneyEntryTypePick('transfer')">
+                            <span class="money-entry-type-icon" aria-hidden="true"><i
+                                    class="fas fa-exchange-alt"></i></span>
+                            <span>Transfer</span>
+                        </button>
+                        <button type="button" class="money-entry-type-btn" data-money-entry-type="adjustment"
+                            onclick="onMoneyEntryTypePick('adjustment')">
+                            <span class="money-entry-type-icon" aria-hidden="true"><i
+                                    class="fas fa-sliders-h"></i></span>
+                            <span>Adjustment</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- 2. Broker / Wallet -->
+                <section class="money-entry-section" id="moneyEntryAccountFields">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">2</span> Broker / Wallet</h2>
+                    <div class="money-entry-broker-picker" id="moneyEntryBrokerPicker" role="listbox"
+                        aria-label="Select broker wallet"></div>
+                    <select class="form-select money-entry-select d-none" id="moneyEntryBrokerSelect"
+                        onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
+                    <div class="money-entry-wallet-balance" id="moneyEntryWalletBalanceHint">Available Balance: <strong
+                            id="moneyEntryWalletBalanceValue" class="text-success">₹0.00</strong></div>
+                </section>
+
+                <section class="money-entry-section d-none" id="moneyEntryTransferFields">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">2</span> Transfer Wallets</h2>
+                    <label class="form-label money-entry-field-label" for="moneyEntryFromAccount">From</label>
+                    <div class="money-entry-broker-picker mb-2" id="moneyEntryFromPicker" role="listbox"
+                        aria-label="From wallet"></div>
+                    <select class="form-select money-entry-select mb-2 d-none" id="moneyEntryFromAccount"
+                        onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
+                    <label class="form-label money-entry-field-label" for="moneyEntryToAccount">To</label>
+                    <div class="money-entry-broker-picker" id="moneyEntryToPicker" role="listbox"
+                        aria-label="To wallet"></div>
+                    <select class="form-select money-entry-select d-none" id="moneyEntryToAccount"
+                        onchange="onMoneyEntryBrokerSelectChange(this)" aria-hidden="true" tabindex="-1"></select>
+                </section>
+
+                <section class="money-entry-section d-none" id="moneyEntryAdjustFields">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">2b</span> Adjustment Direction
+                    </h2>
+                    <select class="form-select money-entry-select" id="moneyEntryAdjustSign"
+                        onchange="updateMoneyEntryAmountPreview()">
+                        <option value="1">Credit (+)</option>
+                        <option value="-1">Debit (−)</option>
+                    </select>
+                </section>
+
+                <!-- 3. Amount -->
+                <section class="money-entry-section">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">3</span> Amount (₹)</h2>
+                    <div class="money-entry-amount-field">
+                        <span class="money-entry-amount-prefix" aria-hidden="true">₹</span>
+                        <input type="number" class="form-control money-entry-amount-input" id="moneyEntryAmount" min="1"
+                            step="1" placeholder="Enter amount" inputmode="numeric"
+                            oninput="onMoneyEntryAmountInput()" />
+                        <span class="money-entry-amount-suffix" aria-hidden="true">.00</span>
+                    </div>
+                    <div class="money-entry-chip-row" id="moneyEntryAmountChips" aria-label="Quick amounts">
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(5000)">+
+                            ₹5,000</button>
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(10000)">+
+                            ₹10,000</button>
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(25000)">+
+                            ₹25,000</button>
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryAmountChip(50000)">+
+                            ₹50,000</button>
+                        <button type="button" class="money-entry-chip"
+                            onclick="focusMoneyEntryAmountCustom()">Custom</button>
+                    </div>
+                    <div class="d-none mt-2" id="moneyEntryAmountPreview"></div>
+                </section>
+
+                <!-- 4. Remarks -->
+                <section class="money-entry-section">
+                    <h2 class="money-entry-section-title"><span class="money-entry-step">4</span> Remarks <span
+                            class="money-entry-optional">(Optional)</span></h2>
+                    <div class="money-entry-remarks-wrap">
+                        <textarea class="form-control money-entry-remarks" id="moneyEntryNote" rows="2" maxlength="100"
+                            placeholder="Enter remarks" oninput="onMoneyEntryNoteInput()"></textarea>
+                        <div class="money-entry-remarks-count" id="moneyEntryNoteCount">0 / 100</div>
+                    </div>
+                    <div class="money-entry-chip-row money-entry-chip-row--wrap" id="moneyEntryRemarkChips"
+                        aria-label="Remark suggestions">
+                        <button type="button" class="money-entry-chip"
+                            onclick="applyMoneyEntryRemarkChip('Salary Added')"><i class="fas fa-money-bill-wave me-1"
+                                aria-hidden="true"></i>Salary Added</button>
+                        <button type="button" class="money-entry-chip"
+                            onclick="applyMoneyEntryRemarkChip('Trading Profit')"><i class="fas fa-chart-line me-1"
+                                aria-hidden="true"></i>Trading Profit</button>
+                        <button type="button" class="money-entry-chip"
+                            onclick="applyMoneyEntryRemarkChip('Bank Transfer')"><i class="fas fa-university me-1"
+                                aria-hidden="true"></i>Bank Transfer</button>
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('UPI')"><i
+                                class="fas fa-mobile-alt me-1" aria-hidden="true"></i>UPI</button>
+                        <button type="button" class="money-entry-chip" onclick="applyMoneyEntryRemarkChip('Bonus')"><i
+                                class="fas fa-gift me-1" aria-hidden="true"></i>Bonus</button>
+                        <button type="button" class="money-entry-chip" onclick="focusMoneyEntryRemarkCustom()"><i
+                                class="fas fa-ellipsis-h me-1" aria-hidden="true"></i>Other</button>
+                    </div>
+                </section>
+
+                <!-- Transaction Preview -->
+                <section class="money-entry-preview" aria-label="Transaction preview">
+                    <h2 class="money-entry-preview-title">Transaction Preview</h2>
+                    <div class="money-entry-preview-grid">
+                        <div>
+                            <div class="money-entry-preview-label">Transaction Type</div>
+                            <div class="money-entry-preview-value text-success" id="moneyEntryPreviewType">Deposit</div>
+                            <div class="money-entry-preview-label mt-3">Broker / Wallet</div>
+                            <div class="money-entry-preview-value" id="moneyEntryPreviewBroker">—</div>
+                        </div>
+                        <div>
+                            <div class="money-entry-preview-label">Amount</div>
+                            <div class="money-entry-preview-value text-success" id="moneyEntryPreviewAmount">₹0.00</div>
+                            <div class="money-entry-preview-label mt-3">Date &amp; Time</div>
+                            <div class="money-entry-preview-value" id="moneyEntryPreviewDateTime">—</div>
+                        </div>
+                        <div class="money-entry-preview-arrow" aria-hidden="true"><i class="fas fa-arrow-right"></i>
+                        </div>
+                        <div>
+                            <div class="money-entry-preview-label">Current Balance</div>
+                            <div class="money-entry-preview-value" id="moneyEntryPreviewCurrent">₹0.00</div>
+                            <div class="money-entry-preview-label mt-3">Balance After</div>
+                            <div class="money-entry-preview-value text-success fw-bold" id="moneyEntryPreviewAfter">
+                                ₹0.00</div>
+                        </div>
+                    </div>
+                    <div class="money-entry-preview-note">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i>
+                        Balance after transaction is an estimate and will update after saving.
+                    </div>
+                </section>
+
+                <div class="money-entry-actions" id="moneyEntryFooter"></div>
             </div>
         </div>
     </section>
@@ -433,35 +515,41 @@
             <div class="card settings-card bg-body rounded-3 border mb-3 overflow-hidden">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start gap-3 mb-3">
-                        <span class="settings-icon settings-icon--feed" aria-hidden="true"><i class="fas fa-satellite-dish"></i></span>
+                        <span class="settings-icon settings-icon--feed" aria-hidden="true"><i
+                                class="fas fa-satellite-dish"></i></span>
                         <div class="min-w-0 flex-fill">
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <h6 class="settings-card-title mb-0">Market Feed</h6>
-                                <span id="marketFeedStatusBadge" class="badge rounded-pill text-bg-light border">Not checked</span>
+                                <span id="marketFeedStatusBadge" class="badge rounded-pill text-bg-light border">Not
+                                    checked</span>
                             </div>
                             <p class="small text-muted mb-0 mt-1">Verify live stock prices from this device.</p>
                         </div>
                     </div>
-                    <div id="marketFeedCheckResult" class="settings-hint mb-3">Tap Check Feed to verify real-time market data.</div>
+                    <div id="marketFeedCheckResult" class="settings-hint mb-3">Tap Check Feed to verify real-time market
+                        data.</div>
                     <div id="settingsMarketFeedBtnHost"></div>
                 </div>
             </div>
             <div class="card settings-card bg-body rounded-3 border mb-3 overflow-hidden">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start gap-3 mb-3">
-                        <span class="settings-icon settings-icon--sync" aria-hidden="true"><i class="fas fa-cloud"></i></span>
+                        <span class="settings-icon settings-icon--sync" aria-hidden="true"><i
+                                class="fas fa-cloud"></i></span>
                         <div class="min-w-0 flex-fill">
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <h6 class="settings-card-title mb-0">Cloud Sync</h6>
                                 <span id="cloudSyncStatus" class="badge rounded-pill text-bg-light border">Off</span>
                             </div>
-                            <p class="small text-muted mb-0 mt-1">Same secret code on phone and web keeps trades in sync.</p>
+                            <p class="small text-muted mb-0 mt-1">Same secret code on phone and web keeps trades in
+                                sync.</p>
                         </div>
                     </div>
                     <label class="form-label small text-muted mb-1" for="syncCodeInput">Sync code</label>
                     <div class="input-group settings-sync-input mb-3">
                         <span class="input-group-text"><i class="fas fa-key" aria-hidden="true"></i></span>
-                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q" placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
+                        <input type="text" class="form-control" id="syncCodeInput" value="iliyas-mtf-9f3k2x7q"
+                            placeholder="e.g. iliyas-mtf-9f3k2x" autocomplete="off" spellcheck="false" />
                     </div>
                     <div class="d-flex gap-2" id="syncConnectRow"></div>
                     <div id="cloudSyncHint" class="settings-hint mt-3 mb-0"></div>
@@ -472,7 +560,8 @@
             <div class="card settings-card bg-body rounded-3 border overflow-hidden">
                 <div class="list-group list-group-flush settings-data-list">
                     <div class="list-group-item settings-data-row">
-                        <span class="settings-icon settings-icon--data" aria-hidden="true"><i class="fas fa-database"></i></span>
+                        <span class="settings-icon settings-icon--data" aria-hidden="true"><i
+                                class="fas fa-database"></i></span>
                         <div class="min-w-0 flex-fill">
                             <div class="settings-card-title">Total Transactions</div>
                             <div class="small text-muted" id="totalTxCount">0 records</div>
@@ -480,7 +569,8 @@
                         <span class="badge rounded-pill text-bg-light border" id="totalTxBadge">0</span>
                     </div>
                     <div class="list-group-item settings-data-row">
-                        <span class="settings-icon settings-icon--backup" aria-hidden="true"><i class="fas fa-clipboard"></i></span>
+                        <span class="settings-icon settings-icon--backup" aria-hidden="true"><i
+                                class="fas fa-clipboard"></i></span>
                         <div class="min-w-0 flex-fill">
                             <div class="settings-card-title">Backup &amp; JSON</div>
                             <div class="small text-muted">Copy, paste, restore, or visualize data</div>
@@ -488,7 +578,8 @@
                         <div id="settingsBackupBtnHost" class="flex-shrink-0"></div>
                     </div>
                     <div class="list-group-item settings-data-row settings-data-row--danger">
-                        <span class="settings-icon settings-icon--danger" aria-hidden="true"><i class="fas fa-trash-alt"></i></span>
+                        <span class="settings-icon settings-icon--danger" aria-hidden="true"><i
+                                class="fas fa-trash-alt"></i></span>
                         <div class="min-w-0 flex-fill">
                             <div class="settings-card-title text-danger">Reset All Data</div>
                             <div class="small text-muted">Permanently delete all transactions</div>
@@ -506,36 +597,53 @@
             <p class="text-muted small text-uppercase fw-medium mb-2">Tools and reports</p>
             <div class="card bg-body rounded-3 overflow-hidden border">
                 <div class="list-group list-group-flush" role="list">
-                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('money')">
-                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success" style="width:2.25rem;height:2.25rem"><i class="fas fa-coins"></i></span>
+                    <button type="button"
+                        class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+                        onclick="openMoreFeature('money')">
+                        <span
+                            class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success"
+                            style="width:2.25rem;height:2.25rem"><i class="fas fa-coins"></i></span>
                         <span class="flex-fill fw-semibold text-start">Money</span>
                         <i class="fas fa-chevron-right text-muted small"></i>
                     </button>
-                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openMoreFeature('mtf-calc')">
-                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success" style="width:2.25rem;height:2.25rem"><i class="fas fa-calculator"></i></span>
+                    <button type="button"
+                        class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+                        onclick="openMoreFeature('mtf-calc')">
+                        <span
+                            class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-success-subtle text-success"
+                            style="width:2.25rem;height:2.25rem"><i class="fas fa-calculator"></i></span>
                         <span class="flex-fill fw-semibold text-start">MTF Calculator</span>
                         <i class="fas fa-chevron-right text-muted small"></i>
                     </button>
-                    <button type="button" class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3" onclick="openSettingsPage()">
-                        <span class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-light text-body-secondary" style="width:2.25rem;height:2.25rem"><i class="fas fa-cog"></i></span>
+                    <button type="button"
+                        class="list-group-item list-group-item-action d-flex align-items-center gap-3 py-3"
+                        onclick="openSettingsPage()">
+                        <span
+                            class="d-inline-flex align-items-center justify-content-center rounded flex-shrink-0 bg-light text-body-secondary"
+                            style="width:2.25rem;height:2.25rem"><i class="fas fa-cog"></i></span>
                         <span class="flex-fill fw-semibold text-start">Settings</span>
                         <i class="fas fa-chevron-right text-muted small"></i>
                     </button>
                 </div>
             </div>
-            <p id="more-hub-build-meta" class="small text-muted text-center mt-3 mb-0 d-flex flex-column gap-1" aria-label="App version"></p>
+            <p id="more-hub-build-meta" class="small text-muted text-center mt-3 mb-0 d-flex flex-column gap-1"
+                aria-label="App version"></p>
         </div>
     </section>
 
     <!-- PAGE: MTF CALCULATOR -->
     <section id="page-mtf-calc" class="w-100 d-none">
         <div class="px-3 pt-3 w-100 d-flex flex-column gap-3 pb-3 calc-page">
-            <button type="button" class="calc-company-pick" onclick="openCompanySearchSheet('calc')" aria-label="Search and select a stock">
+            <button type="button" class="calc-company-pick" onclick="openCompanySearchSheet('calc')"
+                aria-label="Search and select a stock">
                 <div class="calc-company-pick-main min-w-0">
-                    <span class="calc-company-avatar trade-position-avatar trade-position-avatar--0 flex-shrink-0" id="calcCompanyAvatar" aria-hidden="true"><i class="fas fa-search"></i></span>
+                    <span class="calc-company-avatar trade-position-avatar trade-position-avatar--0 flex-shrink-0"
+                        id="calcCompanyAvatar" aria-hidden="true"><i class="fas fa-search"></i></span>
                     <div class="min-w-0 text-start">
-                        <div class="calc-company-title text-truncate" id="calcCompanyTitle">Search and select a stock</div>
-                        <div class="calc-company-sub text-truncate" id="calcCompanySub">NSE · Live fill qty, buy &amp; target</div>
+                        <div class="calc-company-title text-truncate" id="calcCompanyTitle">Search and select a stock
+                        </div>
+                        <div class="calc-company-sub text-truncate" id="calcCompanySub">NSE · Live fill qty, buy &amp;
+                            target</div>
                     </div>
                 </div>
                 <div class="calc-company-live text-end flex-shrink-0">
@@ -579,20 +687,23 @@
                         <span class="calc-date-label">Buy Date</span>
                         <span class="calc-date-value-row">
                             <i class="far fa-calendar" aria-hidden="true"></i>
-                            <input type="date" class="calc-date-input" id="calcBuyDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                            <input type="date" class="calc-date-input" id="calcBuyDate" oninput="onCalcDateInput()"
+                                onchange="onCalcDateInput()" />
                         </span>
                     </label>
                     <label class="calc-date-field" for="calcSellDate">
                         <span class="calc-date-label">Sell Date (Target)</span>
                         <span class="calc-date-value-row">
                             <i class="far fa-calendar" aria-hidden="true"></i>
-                            <input type="date" class="calc-date-input" id="calcSellDate" oninput="onCalcDateInput()" onchange="onCalcDateInput()" />
+                            <input type="date" class="calc-date-input" id="calcSellDate" oninput="onCalcDateInput()"
+                                onchange="onCalcDateInput()" />
                         </span>
                     </label>
                 </div>
                 <div class="calc-date-actions">
                     <button type="button" class="calc-chip-btn" onclick="setCalcSameDay()">Same day</button>
-                    <button type="button" class="calc-chip-btn calc-chip-btn--accent" onclick="setCalcTodayPair()">Today → Tomorrow</button>
+                    <button type="button" class="calc-chip-btn calc-chip-btn--accent" onclick="setCalcTodayPair()">Today
+                        → Tomorrow</button>
                 </div>
                 <div id="calcIntradayBanner" class="d-none"></div>
             </div>
@@ -600,14 +711,16 @@
             <div class="calc-summary-strip" aria-label="Trade summary">
                 <label class="calc-summary-cell" for="calcQty">
                     <span class="calc-summary-label">Quantity</span>
-                    <input type="number" class="calc-summary-input" id="calcQty" min="1" step="1" placeholder="0" value="" inputmode="numeric" oninput="updateMtfCalculator()" />
+                    <input type="number" class="calc-summary-input" id="calcQty" min="1" step="1" placeholder="0"
+                        value="" inputmode="numeric" oninput="updateMtfCalculator()" />
                     <span class="calc-summary-meta">Shares</span>
                 </label>
                 <label class="calc-summary-cell" for="calcBuyPrice">
                     <span class="calc-summary-label">Buy Price</span>
                     <span class="calc-summary-input-wrap">
                         <span aria-hidden="true">₹</span>
-                        <input type="number" class="calc-summary-input" id="calcBuyPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcBuyPriceInput()" />
+                        <input type="number" class="calc-summary-input" id="calcBuyPrice" min="0.01" step="0.01"
+                            placeholder="0.00" inputmode="decimal" oninput="onCalcBuyPriceInput()" />
                     </span>
                     <span class="calc-summary-meta">Per share</span>
                 </label>
@@ -615,7 +728,9 @@
                     <span class="calc-summary-label">Target Sell</span>
                     <span class="calc-summary-input-wrap calc-summary-input-wrap--up">
                         <span aria-hidden="true">₹</span>
-                        <input type="number" class="calc-summary-input calc-summary-input--up" id="calcSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" oninput="onCalcSellPriceInput()" />
+                        <input type="number" class="calc-summary-input calc-summary-input--up" id="calcSellPrice"
+                            min="0.01" step="0.01" placeholder="0.00" inputmode="decimal"
+                            oninput="onCalcSellPriceInput()" />
                     </span>
                     <span class="calc-summary-meta">Per share</span>
                 </label>
@@ -630,7 +745,8 @@
                 <div class="calc-section-title mb-2">Sell target (% on buy)</div>
                 <div class="d-flex flex-wrap gap-1 align-items-center" id="calcSellPctChips"></div>
                 <div class="d-flex gap-2 mt-2">
-                    <input type="number" class="form-control" id="calcSellPctCustom" min="0.01" step="0.1" placeholder="Custom %" />
+                    <input type="number" class="form-control" id="calcSellPctCustom" min="0.01" step="0.1"
+                        placeholder="Custom %" />
                     <span id="calcAddPctBtnHost" class="flex-shrink-0"></span>
                 </div>
             </div>
@@ -639,7 +755,8 @@
                 <div class="calc-section-title mb-2">Leverage (MTF)</div>
                 <div class="calc-leverage-cards" id="calcLeverageCards" role="listbox" aria-label="Leverage"></div>
                 <div class="calc-leverage-slider-row">
-                    <input type="range" class="calc-leverage-slider" id="calcLeverage" min="1" max="5" step="1" value="1" oninput="onCalcLeverageInput()" aria-label="Leverage slider" />
+                    <input type="range" class="calc-leverage-slider" id="calcLeverage" min="1" max="5" step="1"
+                        value="1" oninput="onCalcLeverageInput()" aria-label="Leverage slider" />
                     <div class="calc-leverage-selected" id="calcLeverageSelected">1x Selected</div>
                 </div>
             </div>
@@ -719,7 +836,9 @@
         <div id="appSheet" class="app-sheet-layout" aria-labelledby="appSheetTitle">
             <div class="app-sheet-header border-bottom d-flex align-items-center gap-2 min-w-0 w-100 px-3 py-2">
                 <h5 class="fw-semibold flex-grow-1 min-w-0 mb-0 overflow-hidden" id="appSheetTitle"></h5>
-                <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeSheet()" aria-label="Close">
+                <button type="button"
+                    class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                    style="width:2.75rem;height:2.75rem" onclick="closeSheet()" aria-label="Close">
                     <i class="fas fa-times text-muted" aria-hidden="true"></i>
                 </button>
             </div>
@@ -734,19 +853,33 @@
             </div>
             <div class="mb-3">
                 <label class="form-label small text-uppercase text-muted fw-medium">Date range</label>
-                <div class="d-flex flex-wrap gap-2" id="moneyPageRangeButtons" role="group" aria-label="Quick date range">
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('all')">
+                <div class="d-flex flex-wrap gap-2" id="moneyPageRangeButtons" role="group"
+                    aria-label="Quick date range">
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-all" data-range="all"
+                        autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('all')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-all">All</label>
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('today')">
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-today"
+                        data-range="today" autocomplete="off"
+                        onchange="if(this.checked)setMoneyPageRangeInForm('today')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-today">Today</label>
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('yesterday')">
-                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-yesterday">Yesterday</label>
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-week" data-range="week" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('week')">
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-yesterday"
+                        data-range="yesterday" autocomplete="off"
+                        onchange="if(this.checked)setMoneyPageRangeInForm('yesterday')">
+                    <label class="btn btn-outline-success btn-sm flex-fill"
+                        for="moneyPageRange-yesterday">Yesterday</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-week"
+                        data-range="week" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('week')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-week">This week</label>
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-month" data-range="month" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('month')">
-                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-month">This month</label>
-                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-lastMonth" data-range="lastMonth" autocomplete="off" onchange="if(this.checked)setMoneyPageRangeInForm('lastMonth')">
-                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-lastMonth">Last month</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-month"
+                        data-range="month" autocomplete="off"
+                        onchange="if(this.checked)setMoneyPageRangeInForm('month')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-month">This
+                        month</label>
+                    <input type="radio" class="btn-check" name="moneyPageRange" id="moneyPageRange-lastMonth"
+                        data-range="lastMonth" autocomplete="off"
+                        onchange="if(this.checked)setMoneyPageRangeInForm('lastMonth')">
+                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageRange-lastMonth">Last
+                        month</label>
                 </div>
             </div>
             <div class="mb-3">
@@ -760,13 +893,18 @@
             <div class="mb-0">
                 <label class="form-label small text-uppercase text-muted fw-medium">Sort</label>
                 <div class="d-flex flex-wrap gap-2" id="moneyPageSortButtons" role="group" aria-label="Amount sort">
-                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-newest" data-sort="newest" autocomplete="off" checked onchange="if(this.checked)setMoneyPageSort('newest')">
+                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-newest"
+                        data-sort="newest" autocomplete="off" checked
+                        onchange="if(this.checked)setMoneyPageSort('newest')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageSort-newest">Newest</label>
-                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-oldest" data-sort="oldest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('oldest')">
+                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-oldest"
+                        data-sort="oldest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('oldest')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageSort-oldest">Oldest</label>
-                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-highest" data-sort="highest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('highest')">
+                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-highest"
+                        data-sort="highest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('highest')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageSort-highest">Highest</label>
-                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-lowest" data-sort="lowest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('lowest')">
+                    <input type="radio" class="btn-check" name="moneyPageSort" id="moneyPageSort-lowest"
+                        data-sort="lowest" autocomplete="off" onchange="if(this.checked)setMoneyPageSort('lowest')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyPageSort-lowest">Lowest</label>
                 </div>
             </div>
@@ -774,16 +912,24 @@
         <div id="panelMoneyHistoryRange">
             <div class="mb-3">
                 <label class="form-label small text-uppercase text-muted fw-medium">Quick range</label>
-                <div class="d-flex flex-wrap gap-2" id="moneyHistoryRangeButtons" role="group" aria-label="Quick date range">
-                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange('all')">
+                <div class="d-flex flex-wrap gap-2" id="moneyHistoryRangeButtons" role="group"
+                    aria-label="Quick date range">
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-all"
+                        data-range="all" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange('all')">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-all">All</label>
-                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange('yesterday')">
-                    <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-yesterday">Yesterday</label>
-                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-7" data-range="7" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(7)">
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-yesterday"
+                        data-range="yesterday" autocomplete="off"
+                        onchange="if(this.checked)setMoneyHistoryRange('yesterday')">
+                    <label class="btn btn-outline-success btn-sm flex-fill"
+                        for="moneyHistoryRange-yesterday">Yesterday</label>
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-7"
+                        data-range="7" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(7)">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-7">1W</label>
-                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-30" data-range="30" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(30)">
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-30"
+                        data-range="30" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(30)">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-30">1M</label>
-                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-90" data-range="90" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(90)">
+                    <input type="radio" class="btn-check" name="moneyHistoryRange" id="moneyHistoryRange-90"
+                        data-range="90" autocomplete="off" onchange="if(this.checked)setMoneyHistoryRange(90)">
                     <label class="btn btn-outline-success btn-sm flex-fill" for="moneyHistoryRange-90">3M</label>
                 </div>
             </div>
@@ -802,46 +948,58 @@
                 <div class="trade-filter-header-row">
                     <h5 class="trade-filter-title mb-0">Filters</h5>
                     <div class="trade-filter-header-actions">
-                        <button type="button" class="trade-filter-reset-link" onclick="resetTradeFilterSheet()">Reset all</button>
-                        <button type="button" class="trade-filter-close" onclick="closeFilterSheet()" aria-label="Close">
+                        <button type="button" class="trade-filter-reset-link" onclick="resetTradeFilterSheet()">Reset
+                            all</button>
+                        <button type="button" class="trade-filter-close" onclick="closeFilterSheet()"
+                            aria-label="Close">
                             <i class="fas fa-times" aria-hidden="true"></i>
                         </button>
                     </div>
                 </div>
                 <div class="trade-filter-chips-row" id="tradeFilterChipsRow">
                     <div class="trade-filter-chips" id="tradeFilterChips" aria-live="polite"></div>
-                    <button type="button" class="trade-filter-clear-all d-none" id="tradeFilterClearAll" onclick="clearAllTradeFilterChips()">Clear all</button>
+                    <button type="button" class="trade-filter-clear-all d-none" id="tradeFilterClearAll"
+                        onclick="clearAllTradeFilterChips()">Clear all</button>
                 </div>
             </div>
             <div id="tradeFilterContent" class="trade-filter-scroll app-sheet-body">
                 <div id="panelPastFilter" class="trade-filters-split">
                     <nav class="trade-filter-nav" aria-label="Filter categories">
-                        <button type="button" class="trade-filter-nav-item is-active" data-filter-cat="status" onclick="setTradeFilterCategory('status')">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+                        <button type="button" class="trade-filter-nav-item is-active" data-filter-cat="status"
+                            onclick="setTradeFilterCategory('status')">
+                            <span class="trade-filter-nav-icon" aria-hidden="true"><i
+                                    class="fas fa-layer-group"></i></span>
                             <span class="trade-filter-nav-label">Status</span>
                             <span class="trade-filter-nav-badge d-none" data-filter-badge="status">0</span>
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="holding" onclick="setTradeFilterCategory('holding')">
+                        <button type="button" class="trade-filter-nav-item" data-filter-cat="holding"
+                            onclick="setTradeFilterCategory('holding')">
                             <span class="trade-filter-nav-icon" aria-hidden="true"><i class="fas fa-clock"></i></span>
                             <span class="trade-filter-nav-label">Holding days</span>
                             <span class="trade-filter-nav-badge d-none" data-filter-badge="holding">0</span>
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="performance" onclick="setTradeFilterCategory('performance')">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></span>
+                        <button type="button" class="trade-filter-nav-item" data-filter-cat="performance"
+                            onclick="setTradeFilterCategory('performance')">
+                            <span class="trade-filter-nav-icon" aria-hidden="true"><i
+                                    class="fas fa-chart-line"></i></span>
                             <span class="trade-filter-nav-label">Performance</span>
                             <span class="trade-filter-nav-badge d-none" data-filter-badge="performance">0</span>
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="sort" onclick="setTradeFilterCategory('sort')">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"><i class="fas fa-arrow-down-wide-short"></i></span>
+                        <button type="button" class="trade-filter-nav-item" data-filter-cat="sort"
+                            onclick="setTradeFilterCategory('sort')">
+                            <span class="trade-filter-nav-icon" aria-hidden="true"><i
+                                    class="fas fa-arrow-down-wide-short"></i></span>
                             <span class="trade-filter-nav-label">Sort by</span>
                             <span class="trade-filter-nav-badge d-none" data-filter-badge="sort">0</span>
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="dates" onclick="setTradeFilterCategory('dates')">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"><i class="fas fa-calendar-alt"></i></span>
+                        <button type="button" class="trade-filter-nav-item" data-filter-cat="dates"
+                            onclick="setTradeFilterCategory('dates')">
+                            <span class="trade-filter-nav-icon" aria-hidden="true"><i
+                                    class="fas fa-calendar-alt"></i></span>
                             <span class="trade-filter-nav-label">Date range</span>
                             <span class="trade-filter-nav-meta" data-filter-meta="dates">All dates</span>
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"></i>
@@ -854,71 +1012,93 @@
                             <div class="trade-filter-options" role="radiogroup" aria-label="Trade status">
                                 <label class="trade-filter-option" for="tradeFilterStatus-all">
                                     <span>All</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="all" id="tradeFilterStatus-all" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="all"
+                                        id="tradeFilterStatus-all" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterStatus-open">
                                     <span>Open</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="open" id="tradeFilterStatus-open" checked onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="open"
+                                        id="tradeFilterStatus-open" checked onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterStatus-closed">
                                     <span>Closed</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="closed" id="tradeFilterStatus-closed" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus"
+                                        value="closed" id="tradeFilterStatus-closed"
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterStatus-cancelled">
                                     <span>Cancelled</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus" value="cancelled" id="tradeFilterStatus-cancelled" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus"
+                                        value="cancelled" id="tradeFilterStatus-cancelled"
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                             </div>
-                            <p class="trade-filter-panel-hint" id="tradeFilterStatusHint"><i class="fas fa-info-circle me-1" aria-hidden="true"></i><span>Showing only open trades</span></p>
+                            <p class="trade-filter-panel-hint" id="tradeFilterStatusHint"><i
+                                    class="fas fa-info-circle me-1" aria-hidden="true"></i><span>Showing only open
+                                    trades</span></p>
                         </section>
 
-                        <section class="trade-filter-panel" data-filter-panel="holding" aria-label="Holding days" hidden>
+                        <section class="trade-filter-panel" data-filter-panel="holding" aria-label="Holding days"
+                            hidden>
                             <h4 class="trade-filter-panel-title">Holding days</h4>
                             <div class="trade-filter-options" role="radiogroup" aria-label="Holding days">
                                 <label class="trade-filter-option" for="tradeFilterHold-all">
                                     <span>All</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays" id="tradeFilterHold-all" value="all" checked onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
+                                        id="tradeFilterHold-all" value="all" checked
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterHold-1-3">
                                     <span>1–3 days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays" id="tradeFilterHold-1-3" value="1-3" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
+                                        id="tradeFilterHold-1-3" value="1-3" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterHold-4-7">
                                     <span>4–7 days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays" id="tradeFilterHold-4-7" value="4-7" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
+                                        id="tradeFilterHold-4-7" value="4-7" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterHold-8">
                                     <span>8+ days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays" id="tradeFilterHold-8" value="8+" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
+                                        id="tradeFilterHold-8" value="8+" onchange="updateTradeFilterSummary()">
                                 </label>
                             </div>
                         </section>
 
-                        <section class="trade-filter-panel" data-filter-panel="performance" aria-label="Performance" hidden>
+                        <section class="trade-filter-panel" data-filter-panel="performance" aria-label="Performance"
+                            hidden>
                             <h4 class="trade-filter-panel-title">Performance</h4>
-                            <div class="trade-filter-options trade-filters-checks" role="group" aria-label="Performance">
+                            <div class="trade-filter-options trade-filters-checks" role="group"
+                                aria-label="Performance">
                                 <label class="trade-filter-option" for="tradeFilterPerf-profit">
                                     <span>Profit</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-profit" value="profit" onchange="updateTradeFilterSummary()">
+                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-profit"
+                                        value="profit" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterPerf-loss">
                                     <span>Loss</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-loss" value="loss" onchange="updateTradeFilterSummary()">
+                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-loss"
+                                        value="loss" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterPerf-near">
                                     <span>Near target</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-near" value="near_target" onchange="updateTradeFilterSummary()">
+                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-near"
+                                        value="near_target" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterPerf-hit">
                                     <span>Target hit</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-hit" value="target_hit" onchange="updateTradeFilterSummary()">
+                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-hit"
+                                        value="target_hit" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterPerf-verified">
                                     <span>Verified</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-verified" value="verified" onchange="updateTradeFilterSummary()">
+                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-verified"
+                                        value="verified" onchange="updateTradeFilterSummary()">
                                 </label>
                             </div>
-                            <p class="trade-filter-panel-hint"><i class="fas fa-info-circle me-1" aria-hidden="true"></i><span>Match any selected — leave empty for all</span></p>
+                            <p class="trade-filter-panel-hint"><i class="fas fa-info-circle me-1"
+                                    aria-hidden="true"></i><span>Match any selected — leave empty for all</span></p>
                         </section>
 
                         <section class="trade-filter-panel" data-filter-panel="sort" aria-label="Sort by" hidden>
@@ -926,53 +1106,78 @@
                             <div class="trade-filter-options" role="radiogroup" aria-label="Sort by">
                                 <label class="trade-filter-option" for="tradeFilterSort-company">
                                     <span>Company</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="company" id="tradeFilterSort-company" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
+                                        value="company" id="tradeFilterSort-company"
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterSort-holding">
                                     <span>Holding days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="holding" id="tradeFilterSort-holding" checked onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
+                                        value="holding" id="tradeFilterSort-holding" checked
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterSort-buyDate">
                                     <span>Buy date</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="buyDate" id="tradeFilterSort-buyDate" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
+                                        value="buyDate" id="tradeFilterSort-buyDate"
+                                        onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterSort-pnl">
                                     <span>P&amp;L</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="pnl" id="tradeFilterSort-pnl" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="pnl"
+                                        id="tradeFilterSort-pnl" onchange="updateTradeFilterSummary()">
                                 </label>
                                 <label class="trade-filter-option" for="tradeFilterSort-return">
                                     <span>Current return</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="return" id="tradeFilterSort-return" onchange="updateTradeFilterSummary()">
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="return"
+                                        id="tradeFilterSort-return" onchange="updateTradeFilterSummary()">
                                 </label>
                             </div>
                         </section>
 
                         <section class="trade-filter-panel" data-filter-panel="dates" aria-label="Date range" hidden>
                             <h4 class="trade-filter-panel-title">Date range</h4>
-                            <div class="trade-filter-options trade-filter-options--wrap" id="pastRangeButtons" role="group" aria-label="Quick date range">
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)draftPastRange('all')">
+                            <div class="trade-filter-options trade-filter-options--wrap" id="pastRangeButtons"
+                                role="group" aria-label="Quick date range">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-all"
+                                    data-range="all" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('all')">
                                 <label class="trade-filters-pill" for="pastRange-all">All</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)draftPastRange('today')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-today"
+                                    data-range="today" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('today')">
                                 <label class="trade-filters-pill" for="pastRange-today">Today</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)draftPastRange('yesterday')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-yesterday"
+                                    data-range="yesterday" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('yesterday')">
                                 <label class="trade-filters-pill" for="pastRange-yesterday">Yesterday</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week" data-range="this-week" autocomplete="off" checked onchange="if(this.checked)draftPastRange('this-week')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-this-week"
+                                    data-range="this-week" autocomplete="off" checked
+                                    onchange="if(this.checked)draftPastRange('this-week')">
                                 <label class="trade-filters-pill" for="pastRange-this-week">This week</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)draftPastRange('last-week')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-last-week"
+                                    data-range="last-week" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('last-week')">
                                 <label class="trade-filters-pill" for="pastRange-last-week">Last week</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)draftPastRange('work-20')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-20"
+                                    data-range="work-20" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('work-20')">
                                 <label class="trade-filters-pill" for="pastRange-work-20">20 WD</label>
-                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)draftPastRange('work-30')">
+                                <input type="radio" class="btn-check" name="pastRange" id="pastRange-work-30"
+                                    data-range="work-30" autocomplete="off"
+                                    onchange="if(this.checked)draftPastRange('work-30')">
                                 <label class="trade-filters-pill" for="pastRange-work-30">30 WD</label>
                             </div>
                             <div class="trade-filters-dates">
                                 <div class="trade-filters-date-field">
                                     <label class="trade-filters-date-label" for="pastFrom">From</label>
-                                    <input type="date" class="form-control trade-filters-date-input" id="pastFrom" aria-label="From date" onchange="onPastFilterDateChange()" />
+                                    <input type="date" class="form-control trade-filters-date-input" id="pastFrom"
+                                        aria-label="From date" onchange="onPastFilterDateChange()" />
                                 </div>
                                 <div class="trade-filters-date-field">
                                     <label class="trade-filters-date-label" for="pastTo">To</label>
-                                    <input type="date" class="form-control trade-filters-date-input" id="pastTo" aria-label="To date" onchange="onPastFilterDateChange()" />
+                                    <input type="date" class="form-control trade-filters-date-input" id="pastTo"
+                                        aria-label="To date" onchange="onPastFilterDateChange()" />
                                 </div>
                             </div>
                         </section>
@@ -980,8 +1185,10 @@
                 </div>
             </div>
             <div class="trade-filter-footer app-sheet-footer">
-                <button type="button" class="btn btn-outline-secondary trade-filter-footer-btn" onclick="closeFilterSheet()">Cancel</button>
-                <button type="button" class="btn btn-success trade-filter-footer-btn trade-filter-footer-btn--apply" id="tradeFilterApplyBtn" onclick="applyTradeFilters()">
+                <button type="button" class="btn btn-outline-secondary trade-filter-footer-btn"
+                    onclick="closeFilterSheet()">Cancel</button>
+                <button type="button" class="btn btn-success trade-filter-footer-btn trade-filter-footer-btn--apply"
+                    id="tradeFilterApplyBtn" onclick="applyTradeFilters()">
                     Apply filters
                 </button>
             </div>
@@ -991,31 +1198,41 @@
                 <h4 class="small text-muted text-uppercase fw-medium mb-2">Quick range</h4>
                 <div class="row g-2" id="tradeRangeButtons" role="group" aria-label="Quick date range">
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-all" data-range="all" autocomplete="off" onchange="if(this.checked)setTradeRange('all')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-all" data-range="all"
+                            autocomplete="off" onchange="if(this.checked)setTradeRange('all')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-all">All</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-today" data-range="today" autocomplete="off" onchange="if(this.checked)setTradeRange('today')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-today" data-range="today"
+                            autocomplete="off" onchange="if(this.checked)setTradeRange('today')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-today">Today</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-yesterday" data-range="yesterday" autocomplete="off" onchange="if(this.checked)setTradeRange('yesterday')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-yesterday"
+                            data-range="yesterday" autocomplete="off"
+                            onchange="if(this.checked)setTradeRange('yesterday')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-yesterday">Yesterday</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-this-week" data-range="this-week" autocomplete="off" onchange="if(this.checked)setTradeRange('this-week')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-this-week"
+                            data-range="this-week" autocomplete="off"
+                            onchange="if(this.checked)setTradeRange('this-week')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-this-week">This Week</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-last-week" data-range="last-week" autocomplete="off" onchange="if(this.checked)setTradeRange('last-week')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-last-week"
+                            data-range="last-week" autocomplete="off"
+                            onchange="if(this.checked)setTradeRange('last-week')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-last-week">Last week</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-20" data-range="work-20" autocomplete="off" onchange="if(this.checked)setTradeRange('work-20')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-20"
+                            data-range="work-20" autocomplete="off" onchange="if(this.checked)setTradeRange('work-20')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-work-20">20 WD</label>
                     </div>
                     <div class="col-4">
-                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-30" data-range="work-30" autocomplete="off" onchange="if(this.checked)setTradeRange('work-30')">
+                        <input type="radio" class="btn-check" name="tradeRange" id="tradeRange-work-30"
+                            data-range="work-30" autocomplete="off" onchange="if(this.checked)setTradeRange('work-30')">
                         <label class="btn btn-sm btn-outline-success w-100" for="tradeRange-work-30">30 WD</label>
                     </div>
                 </div>
@@ -1025,12 +1242,14 @@
                 <div class="d-flex align-items-end gap-2">
                     <div class="flex-fill">
                         <label class="form-label small mb-1" for="tradeFrom">From</label>
-                        <input type="date" class="form-control" id="tradeFrom" aria-label="From date" onchange="onTradeFilterDateChange()" />
+                        <input type="date" class="form-control" id="tradeFrom" aria-label="From date"
+                            onchange="onTradeFilterDateChange()" />
                     </div>
                     <div class="pb-2 text-muted" aria-hidden="true"><i class="fas fa-arrow-right"></i></div>
                     <div class="flex-fill">
                         <label class="form-label small mb-1" for="tradeTo">To</label>
-                        <input type="date" class="form-control" id="tradeTo" aria-label="To date" onchange="onTradeFilterDateChange()" />
+                        <input type="date" class="form-control" id="tradeTo" aria-label="To date"
+                            onchange="onTradeFilterDateChange()" />
                     </div>
                 </div>
             </section>
@@ -1043,7 +1262,8 @@
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-shrink-0">
                     <div class="flex-shrink-0" id="moneyHistoryTypeHost"></div>
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="moneyHistoryRangeFilterBtn" onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="moneyHistoryRangeFilterBtn"
+                        onclick="openMoneyHistoryRangeSheet()" title="Date range" aria-label="Date range">
                         <i class="fas fa-filter"></i>
                     </button>
                 </div>
@@ -1056,33 +1276,37 @@
             <div id="moneyHistorySheetList" class="list-group"></div>
         </div>
         <div id="panelMoneyAccount"><input type="hidden" id="moneyAccountEditId" value="" />
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Broker <span class="text-danger">*</span></label>
-                        <select class="form-select w-100" id="moneyAccountBroker" onchange="onMoneyAccountBrokerChange()">
-                            <option value="Zerodha">Zerodha</option>
-                            <option value="Dhan">Dhan</option>
-                            <option value="Groww">Groww</option>
-                            <option value="Angel One">Angel One</option>
-                            <option value="__custom">Custom…</option>
-                        </select>
-                    </div>
-                    <div class="mb-3 d-none" id="moneyAccountCustomNameWrap">
-                        <label class="form-label text-muted">Custom broker name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control w-100" id="moneyAccountName" placeholder="e.g. Upstox" />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted" for="moneyAccountHolderName">Account Holder Name</label>
-                        <input type="text" class="form-control w-100" id="moneyAccountHolderName" name="moneyAccountHolderName" placeholder="e.g. Iliyas" autocomplete="name" inputmode="text" />
-                        <div class="form-text">Helps identify whose wallet this is.</div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Opening Balance</label>
-                        <input type="number" class="form-control w-100" id="moneyAccountOpeningBalance" min="0" step="1" placeholder="0" oninput="updateMoneyAccountOpeningPreview()" />
-                        <div class="form-text">Starting cash already in this wallet before tracked transactions.</div>
-                        <div class="d-none mt-2" id="moneyAccountOpeningPreview"></div>
-                    </div></div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Broker <span class="text-danger">*</span></label>
+                <select class="form-select w-100" id="moneyAccountBroker" onchange="onMoneyAccountBrokerChange()">
+                    <option value="Zerodha">Zerodha</option>
+                    <option value="Dhan">Dhan</option>
+                    <option value="Groww">Groww</option>
+                    <option value="Angel One">Angel One</option>
+                    <option value="__custom">Custom…</option>
+                </select>
+            </div>
+            <div class="mb-3 d-none" id="moneyAccountCustomNameWrap">
+                <label class="form-label text-muted">Custom broker name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control w-100" id="moneyAccountName" placeholder="e.g. Upstox" />
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted" for="moneyAccountHolderName">Account Holder Name</label>
+                <input type="text" class="form-control w-100" id="moneyAccountHolderName" name="moneyAccountHolderName"
+                    placeholder="e.g. Iliyas" autocomplete="name" inputmode="text" />
+                <div class="form-text">Helps identify whose wallet this is.</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Opening Balance</label>
+                <input type="number" class="form-control w-100" id="moneyAccountOpeningBalance" min="0" step="1"
+                    placeholder="0" oninput="updateMoneyAccountOpeningPreview()" />
+                <div class="form-text">Starting cash already in this wallet before tracked transactions.</div>
+                <div class="d-none mt-2" id="moneyAccountOpeningPreview"></div>
+            </div>
+        </div>
         <div id="panelBackup">
-            <p class="small text-muted mb-2">Copy this JSON backup anywhere (notes, email, chat). Paste to restore, or explore counts and structure below.</p>
+            <p class="small text-muted mb-2">Copy this JSON backup anywhere (notes, email, chat). Paste to restore, or
+                explore counts and structure below.</p>
             <div id="backupVizSummary"></div>
             <div class="json-viz-block mb-3">
                 <details class="json-viz-section" open>
@@ -1093,7 +1317,8 @@
             <div class="json-viz-block mb-0">
                 <details class="json-viz-section" open>
                     <summary class="json-viz-section-title">Raw JSON</summary>
-                    <textarea class="form-control w-100 font-monospace small mt-2" id="backupTextArea" rows="10" spellcheck="false" oninput="onBackupTextInput()"></textarea>
+                    <textarea class="form-control w-100 font-monospace small mt-2" id="backupTextArea" rows="10"
+                        spellcheck="false" oninput="onBackupTextInput()"></textarea>
                     <p class="small text-muted mb-0 mt-2" id="backupVizParseHint" aria-live="polite"></p>
                 </details>
             </div>
@@ -1104,16 +1329,23 @@
             <div class="app-sheet-header search-sheet-header border-bottom px-3 pt-2 pb-3">
                 <div class="d-flex align-items-center justify-content-between gap-2 mb-2">
                     <h5 class="fw-semibold mb-0" id="searchSheetTitle">Search</h5>
-                    <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeSearchPage()" aria-label="Close">
+                    <button type="button"
+                        class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                        style="width:2.75rem;height:2.75rem" onclick="closeSearchPage()" aria-label="Close">
                         <i class="fas fa-times text-muted" aria-hidden="true"></i>
                     </button>
                 </div>
                 <div class="d-flex align-items-center gap-2 bg-body-secondary rounded-pill px-3 py-1">
                     <span class="text-secondary flex-shrink-0" aria-hidden="true"><i class="fas fa-search"></i></span>
                     <div class="flex-grow-1 min-w-0">
-                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0" id="searchPageInput" placeholder="Search by company name..." oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters" spellcheck="false" />
+                        <input type="text" class="form-control border-0 bg-transparent shadow-none px-0"
+                            id="searchPageInput" placeholder="Search by company name..."
+                            oninput="runSearchPage(this.value)" autocomplete="off" autocapitalize="characters"
+                            spellcheck="false" />
                     </div>
-                    <button type="button" class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1" id="searchPageClear" onclick="clearSearchPage()" title="Clear" aria-label="Clear">
+                    <button type="button"
+                        class="btn btn-sm border-0 rounded-circle text-secondary d-none flex-shrink-0 p-1"
+                        id="searchPageClear" onclick="clearSearchPage()" title="Clear" aria-label="Clear">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1133,34 +1365,43 @@
         <!-- Trade add/edit sheet shell (Cupertino Pane) -->
         <div id="txModal" class="app-sheet-layout" aria-label="Trade form">
             <div class="app-sheet-header px-3 pt-3 pb-2" id="txModalHeader">
-                    <div class="tx-modal-top d-flex align-items-start gap-2">
-                        <div class="position-relative flex-grow-1 min-w-0" id="txCompanySearchWrap">
-                            <i class="fas fa-search tx-company-search-icon" aria-hidden="true"></i>
-                            <input type="text" class="form-control tx-company-input" id="txCompany" placeholder="Search company name or symbol" required autocomplete="off" form="txForm" readonly inputmode="none" onclick="openCompanySearchSheet('tx')" aria-label="Company" aria-haspopup="dialog" />
-                            <div class="tx-company-selected d-none" id="txCompanySelected">
-                                <span class="tx-company-selected-symbol" id="txCompanySelectedSymbol"></span>
-                            </div>
+                <div class="tx-modal-top d-flex align-items-start gap-2">
+                    <div class="position-relative flex-grow-1 min-w-0" id="txCompanySearchWrap">
+                        <i class="fas fa-search tx-company-search-icon" aria-hidden="true"></i>
+                        <input type="text" class="form-control tx-company-input" id="txCompany"
+                            placeholder="Search company name or symbol" required autocomplete="off" form="txForm"
+                            readonly inputmode="none" onclick="openCompanySearchSheet('tx')" aria-label="Company"
+                            aria-haspopup="dialog" />
+                        <div class="tx-company-selected d-none" id="txCompanySelected">
+                            <span class="tx-company-selected-symbol" id="txCompanySelectedSymbol"></span>
                         </div>
-                        <div class="tx-company-locked d-none flex-grow-1 min-w-0" id="txCompanyLocked" aria-live="polite">
-                            <div class="trade-detail-header tx-form-company-locked mb-0 pb-0">
-                                <span class="trade-detail-avatar trade-position-avatar--0" id="txCompanyLockedAvatar" aria-hidden="true">—</span>
-                                <div class="trade-detail-header-main min-w-0">
-                                    <div class="trade-detail-name text-truncate" id="txCompanyLockedName">—</div>
-                                    <div class="trade-detail-meta text-truncate" id="txCompanyLockedMeta">—</div>
-                                </div>
-                                <div class="trade-detail-aside flex-shrink-0">
-                                    <div class="trade-detail-pnl" id="txFormPnlWrap">
-                                        <div class="trade-detail-pnl-value text-body-secondary" id="txFormPnlValue">—</div>
-                                        <span class="badge rounded-pill border trade-detail-pnl-badge text-body-secondary" id="txFormPnlBadge">P&amp;L</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0" id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details" style="width:2.75rem;height:2.75rem"><i class="fas fa-eye"></i></button>
-                        <button type="button" class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0" style="width:2.75rem;height:2.75rem" onclick="closeTradeModal()" aria-label="Close">
-                            <i class="fas fa-times text-muted" aria-hidden="true"></i>
-                        </button>
                     </div>
+                    <div class="tx-company-locked d-none flex-grow-1 min-w-0" id="txCompanyLocked" aria-live="polite">
+                        <div class="trade-detail-header tx-form-company-locked mb-0 pb-0">
+                            <span class="trade-detail-avatar trade-position-avatar--0" id="txCompanyLockedAvatar"
+                                aria-hidden="true">—</span>
+                            <div class="trade-detail-header-main min-w-0">
+                                <div class="trade-detail-name text-truncate" id="txCompanyLockedName">—</div>
+                                <div class="trade-detail-meta text-truncate" id="txCompanyLockedMeta">—</div>
+                            </div>
+                            <div class="trade-detail-aside flex-shrink-0">
+                                <div class="trade-detail-pnl" id="txFormPnlWrap">
+                                    <div class="trade-detail-pnl-value text-body-secondary" id="txFormPnlValue">—</div>
+                                    <span class="badge rounded-pill border trade-detail-pnl-badge text-body-secondary"
+                                        id="txFormPnlBadge">P&amp;L</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle d-none flex-shrink-0"
+                        id="txViewBtn" onclick="openViewFromEditor()" aria-label="View trade details"
+                        style="width:2.75rem;height:2.75rem"><i class="fas fa-eye"></i></button>
+                    <button type="button"
+                        class="btn btn-light border rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0 p-0"
+                        style="width:2.75rem;height:2.75rem" onclick="closeTradeModal()" aria-label="Close">
+                        <i class="fas fa-times text-muted" aria-hidden="true"></i>
+                    </button>
+                </div>
             </div>
             <div class="app-sheet-body px-3 pb-3" id="txModalBody">
                 <form id="txForm" class="tx-form d-flex flex-column" novalidate>
@@ -1179,7 +1420,8 @@
                     <section class="tx-section tx-section--detail" data-tx-section="detail">
                         <div class="tx-broker-leverage-row mb-3">
                             <div class="tx-broker-col">
-                                <label class="form-label mb-1" for="txBrokerTrigger">Broker <span class="text-danger">*</span></label>
+                                <label class="form-label mb-1" for="txBrokerTrigger">Broker <span
+                                        class="text-danger">*</span></label>
                                 <input type="hidden" id="txBroker" value="" />
                                 <div id="txBrokerHost" class="w-100"></div>
                             </div>
@@ -1189,7 +1431,9 @@
                                     Leverage <span class="text-danger">*</span>
                                 </label>
                                 <div class="tx-leverage-field">
-                                    <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1" step="0.1" value="1" inputmode="decimal" aria-label="Leverage value" oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
+                                    <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1"
+                                        step="0.1" value="1" inputmode="decimal" aria-label="Leverage value"
+                                        oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
                                     <span class="tx-leverage-suffix" aria-hidden="true">x</span>
                                 </div>
                             </div>
@@ -1199,8 +1443,12 @@
                             <label class="trade-detail-price-cell" for="txQty">
                                 <span class="trade-detail-price-label">Quantity</span>
                                 <span class="trade-detail-price-row">
-                                    <input type="number" class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty" id="txQty" required min="1" step="1" placeholder="0" value="0" inputmode="numeric" />
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--qty" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                    <input type="number"
+                                        class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty"
+                                        id="txQty" required min="1" step="1" placeholder="0" value="0"
+                                        inputmode="numeric" />
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--qty"
+                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
                                 </span>
                             </label>
                             <label class="trade-detail-price-cell" for="txBuyPrice">
@@ -1208,9 +1456,11 @@
                                 <span class="trade-detail-price-row">
                                     <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
                                         <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                        <input type="number" class="tx-form-price-input" id="txBuyPrice" required min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                        <input type="number" class="tx-form-price-input" id="txBuyPrice" required
+                                            min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
                                     </span>
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--buy" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--buy"
+                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
                                 </span>
                             </label>
                             <label class="trade-detail-price-cell" for="txSellPrice">
@@ -1218,12 +1468,16 @@
                                 <span class="trade-detail-price-row">
                                     <span class="tx-form-price-value-wrap trade-detail-price-value--target">
                                         <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                        <input type="number" class="tx-form-price-input" id="txSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                        <input type="number" class="tx-form-price-input" id="txSellPrice" min="0.01"
+                                            step="0.01" placeholder="0.00" inputmode="decimal" />
                                     </span>
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--target" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                                    <span class="trade-detail-price-edit trade-detail-price-edit--target"
+                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
                                 </span>
                             </label>
-                            <button type="button" class="trade-detail-price-target-icon" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price">
+                            <button type="button" class="trade-detail-price-target-icon" id="txBuyPriceLiveBtn"
+                                onclick="fillTradeFormFromLivePrice()" title="Fill from live price"
+                                aria-label="Fill buy and sell from live price">
                                 <i class="fas fa-sync-alt trade-detail-bullseye" aria-hidden="true"></i>
                             </button>
                         </div>
@@ -1231,7 +1485,8 @@
                         <span class="d-none" id="txSellPriceHint" aria-hidden="true"></span>
 
                         <section class="trade-detail-costs mt-3">
-                            <div class="trade-detail-cost-card trade-detail-cost-card--interest" role="group" aria-label="Interest">
+                            <div class="trade-detail-cost-card trade-detail-cost-card--interest" role="group"
+                                aria-label="Interest">
                                 <span class="trade-detail-cost-head">
                                     <i class="fas fa-bullseye trade-detail-cost-icon" aria-hidden="true"></i>
                                     <span class="trade-detail-cost-label">Interest</span>
@@ -1239,7 +1494,8 @@
                                 <span class="trade-detail-cost-value" id="txCostInterest">₹0.00</span>
                                 <span class="trade-detail-cost-meta" id="txCostInterestMeta">0D</span>
                             </div>
-                            <div class="trade-detail-cost-card trade-detail-cost-card--charges" role="group" aria-label="Charges">
+                            <div class="trade-detail-cost-card trade-detail-cost-card--charges" role="group"
+                                aria-label="Charges">
                                 <span class="trade-detail-cost-head">
                                     <i class="fas fa-receipt trade-detail-cost-icon" aria-hidden="true"></i>
                                     <span class="trade-detail-cost-label">Charges</span>
@@ -1247,7 +1503,8 @@
                                 <span class="trade-detail-cost-value" id="txCostCharges">₹0.00</span>
                                 <span class="trade-detail-cost-meta">One-time</span>
                             </div>
-                            <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost">
+                            <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group"
+                                aria-label="Total cost">
                                 <span class="trade-detail-cost-head">
                                     <i class="fas fa-wallet trade-detail-cost-icon" aria-hidden="true"></i>
                                     <span class="trade-detail-cost-label">Total</span>
@@ -1260,29 +1517,38 @@
                         <section class="trade-detail-timeline-wrap mt-3">
                             <div class="trade-detail-timeline">
                                 <div class="trade-detail-timeline-step">
-                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-calendar-plus trade-detail-timeline-icon trade-detail-timeline-icon--buy" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                            class="fas fa-calendar-plus trade-detail-timeline-icon trade-detail-timeline-icon--buy"
+                                            aria-hidden="true"></i></span>
                                     <span class="trade-detail-timeline-copy">
                                         <span class="trade-detail-timeline-label">Bought On</span>
                                         <span class="trade-detail-timeline-value" id="txTimelineBuy">—</span>
                                     </span>
                                 </div>
                                 <span class="trade-detail-timeline-sep" aria-hidden="true">
-                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right"
+                                            aria-hidden="true"></i></span>
                                     <span class="trade-detail-timeline-vline"></span>
                                 </span>
                                 <div class="trade-detail-timeline-step">
-                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-hourglass-half trade-detail-timeline-icon trade-detail-timeline-icon--hold" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                            class="fas fa-hourglass-half trade-detail-timeline-icon trade-detail-timeline-icon--hold"
+                                            aria-hidden="true"></i></span>
                                     <span class="trade-detail-timeline-copy">
                                         <span class="trade-detail-timeline-label">Holding</span>
-                                        <span class="badge rounded-pill trade-detail-hold-badge" id="txTimelineHold">0 Days</span>
+                                        <span class="badge rounded-pill trade-detail-hold-badge" id="txTimelineHold">0
+                                            Days</span>
                                     </span>
                                 </div>
                                 <span class="trade-detail-timeline-sep" aria-hidden="true">
-                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right"
+                                            aria-hidden="true"></i></span>
                                     <span class="trade-detail-timeline-vline"></span>
                                 </span>
                                 <div class="trade-detail-timeline-step">
-                                    <span class="trade-detail-timeline-icon-wrap"><i class="fas fa-calendar-check trade-detail-timeline-icon trade-detail-timeline-icon--exit" aria-hidden="true"></i></span>
+                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                            class="fas fa-calendar-check trade-detail-timeline-icon trade-detail-timeline-icon--exit"
+                                            aria-hidden="true"></i></span>
                                     <span class="trade-detail-timeline-copy">
                                         <span class="trade-detail-timeline-label">Expected Exit</span>
                                         <span class="trade-detail-timeline-value" id="txTimelineExit">—</span>
@@ -1307,8 +1573,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <!-- Bootstrap JS (includes Popper) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cupertino-pane@1.5.4/dist/cupertino-pane.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cupertino-pane@1.5.4/dist/cupertino-pane.min.js"
+        crossorigin="anonymous"></script>
     <!-- COMPONENT SCRIPTS -->
     <script src="shared/lib/_registry.js"></script>
     <script src="shared/lib/format.js"></script>
@@ -1337,4 +1605,5 @@
     <script src="main.js"></script>
 
 </body>
+
 </html>

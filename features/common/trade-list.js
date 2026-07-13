@@ -575,6 +575,7 @@
                             ${spinnerHtml}
                         </span>
                         <span class="trade-position-change text-truncate ${liveToneClass(dayTone)}" data-live-change>${escapeHtml(formatDayChangeLabel(quote))}</span>
+                        <span class="trade-position-update-status small text-primary d-none" data-live-status></span>
                     </div>
                     <div class="trade-position-cell">
                         <span class="trade-position-label text-info">Buy</span>

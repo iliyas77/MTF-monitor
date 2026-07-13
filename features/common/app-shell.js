@@ -612,7 +612,7 @@
         const menuBtn = document.getElementById('appHeaderMenuBtn');
 
         if (searchBtn) searchBtn.classList.toggle('d-none', !(onTrades || onMarket));
-        if (refreshBtn) refreshBtn.classList.toggle('d-none', !onMarket);
+        if (refreshBtn) refreshBtn.classList.remove('d-none');
         if (reportBtn) reportBtn.classList.toggle('d-none', !onCalendar);
         if (filterBtn) filterBtn.classList.toggle('d-none', !onTrades);
         if (moreBtn) moreBtn.classList.toggle('d-none', !onTrades);
@@ -623,7 +623,7 @@
             if (typeof global.MTFComponents?.placeSyncIndicator === 'function') {
                 global.MTFComponents.placeSyncIndicator();
             }
-        } catch (_) {}
+        } catch (_) { }
     }
 
     global.MTFRegister({
