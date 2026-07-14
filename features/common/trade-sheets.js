@@ -757,7 +757,7 @@
             <p class="small text-muted mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
             <div class="mb-3">
                 <label class="form-label small text-muted mb-1">Leverage (X)</label>
-                <input type="number" class="form-control w-100" id="levModalInput" min="1" step="0.1" value="${lev}" oninput="onLeverageModalInput()" />
+                <input type="number" class="form-control w-100" id="levModalInput" min="1" step="any" value="${lev}" oninput="onLeverageModalInput()" />
                 <p class="form-text mb-0">Your margin = total investment ÷ leverage. Broker funds the rest.</p>
             </div>
             <div class="small text-muted" id="levModalBreakdown">
@@ -1034,7 +1034,7 @@
         }
     }
 
-        global.MTFRegister({
+    global.MTFRegister({
         openHoldModal,
         onHoldModalDateInput,
         onHoldModalDaysInput,
@@ -1043,4 +1043,282 @@
         setHoldModalSellDateToday,
         saveHoldDates
     });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+/* ========== Company info sheet (Yahoo Finance) ========== */
+/**
+ * Opens a bottom sheet that fetches the company's live details from Yahoo
+ * Finance (price, day change, 52-week range, volume, exchange) and shows
+ * them. Triggered by tapping the company name on a position card.
+ */
+(function (global) {
+    'use strict';
+
+    const { Sheet, showToast, renderIcon } = global.MTFComponents;
+
+    function tradePages() {
+        return (global.MTFAppHelpers || {}).tradePages || {};
+    }
+
+    function tradeSheets() {
+        return (global.MTFAppHelpers || {}).tradeSheets || {};
+    }
+
+    function escapeHtml(str) {
+        return String(str == null ? '' : str)
+            .replace(/&/g, '\x26amp;')
+            .replace(/</g, '\x26lt;')
+            .replace(/>/g, '\x26gt;')
+            .replace(/"/g, '\x26quot;')
+            .replace(/'/g, '\x26#39;');
+    }
+
+    function fmtINR(n) {
+        if (n == null || isNaN(Number(n))) return '—';
+        return '₹' + Number(n).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    }
+
+    function fmtNum(n) {
+        if (n == null || isNaN(Number(n))) return '—';
+        return Number(n).toLocaleString('en-IN');
+    }
+
+    function fmtMarketCap(n) {
+        if (n == null || isNaN(Number(n))) return '—';
+        const v = Number(n);
+        if (v >= 1e7) return '₹' + (v / 1e7).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' Cr';
+        if (v >= 1e5) return '₹' + (v / 1e5).toLocaleString('en-IN', { maximumFractionDigits: 2 }) + ' L';
+        return '₹' + v.toLocaleString('en-IN');
+    }
+
+    function fmtPct(n) {
+        if (n == null || isNaN(Number(n))) return '—';
+        const sign = n >= 0 ? '+' : '';
+        return `${sign}${Number(n).toFixed(2)}%`;
+    }
+
+    function fmtTime(ts) {
+        if (!ts) return '—';
+        try {
+            return new Date(ts * 1000).toLocaleString('en-IN', {
+                day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+            });
+        } catch (_) { return '—'; }
+    }
+
+    function changeTone(n) {
+        if (n == null || isNaN(Number(n))) return 'text-muted';
+        return Number(n) >= 0 ? 'text-success' : 'text-danger';
+    }
+
+    function changeToneBg(n) {
+        if (n == null || isNaN(Number(n))) return 'ci-hero--neutral';
+        return Number(n) >= 0 ? 'ci-hero--up' : 'ci-hero--down';
+    }
+
+    function changeArrowIcon(n) {
+        if (n == null || isNaN(Number(n))) return '';
+        return renderIcon(Number(n) >= 0 ? 'fa-caret-up' : 'fa-caret-down', { className: 'ci-hero-arrow' });
+    }
+
+    function infoCard(label, valueHtml, valueClass = '', icon = '') {
+        return `<div class="ci-card">
+            ${icon ? `<span class="ci-card-icon">${icon}</span>` : ''}
+            <span class="ci-card-label">${escapeHtml(label)}</span>
+            <span class="ci-card-value ${valueClass}">${valueHtml}</span>
+        </div>`;
+    }
+
+    function render52WeekBar(info) {
+        const low = Number(info.fiftyTwoWeekLow);
+        const high = Number(info.fiftyTwoWeekHigh);
+        const price = Number(info.price);
+        if (!(low > 0) || !(high > 0) || !(price > 0) || high < low) return '';
+        const pct = Math.max(0, Math.min(100, ((price - low) / (high - low)) * 100));
+        return `
+            <div class="ci-range">
+                <div class="ci-range-head">
+                    <span class="ci-range-label">52-Week Range</span>
+                </div>
+                <div class="ci-range-track">
+                    <span class="ci-range-fill" style="width:${pct.toFixed(2)}%"></span>
+                    <span class="ci-range-marker" style="left:${pct.toFixed(2)}%"></span>
+                </div>
+                <div class="ci-range-ends">
+                    <span class="ci-range-low">${fmtINR(low)}</span>
+                    <span class="ci-range-high">${fmtINR(high)}</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderCompanyInfoFooter(info) {
+        const yahooLink = info.yahooSymbol
+            ? `https://finance.yahoo.com/quote/${encodeURIComponent(info.yahooSymbol)}`
+            : '';
+        if (!yahooLink) return '';
+        return `<a href="${escapeHtml(yahooLink)}" target="_blank" rel="noopener noreferrer"
+              class="btn btn-outline-primary btn-sm w-100 ci-yahoo-btn d-flex align-items-center justify-content-center gap-2">
+              ${renderIcon('fa-arrow-up-right-from-square', { className: 'me-1' })}
+              Open on Yahoo Finance
+           </a>`;
+    }
+
+    function renderCompanyInfoBody(info, company) {
+        const price = info.price != null ? fmtINR(info.price) : '—';
+        const change = info.change != null ? Number(info.change) : null;
+        const changePct = info.changePct != null ? Number(info.changePct) : null;
+        const hasChange = change != null;
+        const tone = changeTone(change);
+        const heroTone = changeToneBg(change);
+        const arrow = changeArrowIcon(change);
+        const changeAbs = hasChange
+            ? `${change >= 0 ? '+' : '−'}${fmtINR(Math.abs(change)).replace('₹', '₹')}`
+            : '—';
+        const changePctText = (hasChange && changePct != null && !isNaN(changePct))
+            ? `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`
+            : '';
+        const rangeBar = render52WeekBar(info);
+
+        const cards = [
+            infoCard('Previous Close', info.previousClose != null ? fmtINR(info.previousClose) : '—', 'text-body', renderIcon('fa-clock-rotate-left')),
+            infoCard('Open', info.open != null ? fmtINR(info.open) : '—', 'text-body', renderIcon('fa-door-open')),
+            infoCard('Day High', info.dayHigh != null ? fmtINR(info.dayHigh) : '—', 'text-success', renderIcon('fa-arrow-up')),
+            infoCard('Day Low', info.dayLow != null ? fmtINR(info.dayLow) : '—', 'text-danger', renderIcon('fa-arrow-down')),
+            infoCard('Volume', fmtNum(info.regularMarketVolume), 'text-body', renderIcon('fa-chart-column')),
+            infoCard('Market Cap', fmtMarketCap(info.marketCap), 'text-body', renderIcon('fa-sack-dollar')),
+            infoCard('Symbol', escapeHtml(info.symbol || '—'), 'text-body', renderIcon('fa-hashtag')),
+            infoCard('Last Trade', fmtTime(info.regularMarketTime), 'text-body', renderIcon('fa-clock'))
+        ].join('');
+
+        return `
+            <div class="company-info">
+                <div class="ci-hero ${heroTone}">
+                    <div class="ci-hero-label">
+                        ${renderIcon('fa-bolt', { className: 'me-1 opacity-75' })}
+                        Current Price
+                    </div>
+                    <div class="ci-hero-price">${escapeHtml(price)}</div>
+                    <div class="ci-hero-change ${tone}">
+                        ${arrow}
+                        <span class="ci-hero-change-abs">${escapeHtml(changeAbs)}</span>
+                        ${changePctText ? `<span class="ci-hero-change-pct">(${escapeHtml(changePctText)})</span>` : ''}
+                    </div>
+                </div>
+
+                ${rangeBar}
+
+                <div class="ci-grid">${cards}</div>
+
+                <div class="ci-updated">
+                    ${renderIcon('fa-clock', { className: 'me-1 opacity-75' })}
+                    Updated ${escapeHtml(info.updatedAt ? new Date(info.updatedAt).toLocaleTimeString('en-IN') : '—')}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderCompanyInfoError(message) {
+        return `
+            <div class="text-center py-4">
+                <div class="mb-2">${renderIcon('fa-triangle-exclamation', { className: 'text-warning fs-2' })}</div>
+                <p class="small text-muted mb-0">${escapeHtml(message || 'Could not load company details.')}</p>
+            </div>
+        `;
+    }
+
+    function renderCompanyInfoLoading(company) {
+        return `
+            <div class="text-center py-4">
+                <div class="mb-2">${renderIcon('fa-spinner', { className: 'fa-spin fs-2 text-primary' })}</div>
+                <p class="small text-muted mb-0">Fetching ${escapeHtml(company)} details from Yahoo Finance…</p>
+            </div>
+        `;
+    }
+
+    let _companyInfoState = { id: null, tx: null, company: '', refreshing: false };
+
+    function buildCompanyInfoTitle(company, spinning = false) {
+        const iconClass = spinning ? 'ci-refresh-icon ci-refresh-icon--spin' : 'ci-refresh-icon';
+        const refreshBtn = `<button type="button" class="ci-refresh-btn${spinning ? ' ci-refresh-btn--busy' : ''}"
+            onclick="refreshCompanyInfoSheet()" aria-label="Refresh" title="Refresh"${spinning ? ' disabled' : ''}>
+            ${renderIcon('fa-rotate', { className: iconClass })}
+        </button>`;
+        return `${renderIcon('fa-building', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${escapeHtml(company)}</span>${refreshBtn}`;
+    }
+
+    async function refreshCompanyInfoSheet() {
+        if (_companyInfoState.refreshing || !_companyInfoState.tx) return;
+        _companyInfoState.refreshing = true;
+        const spinningTitle = buildCompanyInfoTitle(_companyInfoState.company, true);
+        // Update title to show spinning icon, keep current body intact
+        if (Sheet.titleEl()) {
+            Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${spinningTitle}</span>`;
+        }
+        try {
+            const fetcher = tradePages().fetchTradeCompanyInfo || tradeSheets().fetchTradeCompanyInfo;
+            const info = await fetcher(_companyInfoState.tx);
+            const title = buildCompanyInfoTitle(_companyInfoState.company, false);
+            if (Sheet.isOpen()) {
+                if (info && info.error) {
+                    Sheet.open(title, renderCompanyInfoError(info.error), '');
+                    showToast(info.error, 'danger');
+                } else if (info && !info.price && info.price !== 0) {
+                    Sheet.open(title, renderCompanyInfoError('No live data returned for this company.'), '');
+                    showToast('No live data returned for this company.', 'danger');
+                } else {
+                    Sheet.open(title, renderCompanyInfoBody(info, _companyInfoState.company), renderCompanyInfoFooter(info));
+                    showToast('Company information updated.', 'success');
+                }
+            }
+        } catch (e) {
+            const title = buildCompanyInfoTitle(_companyInfoState.company, false);
+            if (Sheet.isOpen()) {
+                Sheet.open(title, renderCompanyInfoError(e && e.message ? e.message : 'Network error.'), '');
+            }
+            showToast(e && e.message ? e.message : 'Network error.', 'danger');
+        } finally {
+            _companyInfoState.refreshing = false;
+        }
+    }
+
+    async function openCompanyInfoSheet(id) {
+        const { getTransaction, resolveTradeForDisplay, fetchTradeCompanyInfo } = Object.assign({}, tradeSheets(), tradePages());
+        const raw = getTransaction ? getTransaction(id) : null;
+        if (!raw) { showToast('Transaction not found.', 'danger'); return; }
+        const tx = resolveTradeForDisplay ? resolveTradeForDisplay(raw) : raw;
+        const company = tx.company || 'this company';
+        const fetcher = fetchTradeCompanyInfo || (tradePages().fetchTradeCompanyInfo);
+        if (typeof fetcher !== 'function') {
+            showToast('Company info is unavailable.', 'danger');
+            return;
+        }
+
+        _companyInfoState = { id, tx, company, refreshing: false };
+        const title = buildCompanyInfoTitle(company);
+        Sheet.open(title, renderCompanyInfoLoading(company), '');
+
+        try {
+            const info = await fetcher(tx);
+            if (Sheet.isOpen()) {
+                if (info && info.error) {
+                    Sheet.open(title, renderCompanyInfoError(info.error), '');
+                } else if (info && !info.price && info.price !== 0) {
+                    Sheet.open(title, renderCompanyInfoError('No live data returned for this company.'), '');
+                } else {
+                    Sheet.open(title, renderCompanyInfoBody(info, company), renderCompanyInfoFooter(info));
+                }
+            }
+        } catch (e) {
+            if (Sheet.isOpen()) {
+                Sheet.open(title, renderCompanyInfoError(e && e.message ? e.message : 'Network error.'), '');
+            }
+        }
+    }
+
+    global.MTFRegister({ openCompanyInfoSheet, refreshCompanyInfoSheet });
+    if (typeof window !== 'undefined') {
+        window.openCompanyInfoSheet = openCompanyInfoSheet;
+        window.refreshCompanyInfoSheet = refreshCompanyInfoSheet;
+    }
 })(typeof window !== 'undefined' ? window : globalThis);

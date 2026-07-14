@@ -118,6 +118,7 @@
         openCalcBreakdownSheet,
         openChargesModal,
         openInterestModal,
+        openCompanyInfoSheet,
         openTargetModal,
         setTargetSellPct,
         applyTargetSellPctCustom,
@@ -1772,6 +1773,136 @@
         return parseJinaJson(proxied);
     }
 
+    /**
+     * Parse a Yahoo abbreviated market-cap string (e.g. "17.497T", "2.3B",
+     * "500M") into an absolute number. Returns null if it cannot be parsed.
+     */
+    function parseYahooMarketCapText(text) {
+        if (!text) return null;
+        const m = String(text).trim().match(/([\d,.]+)\s*([TBMK]?)/i);
+        if (!m) return null;
+        const num = parseFloat(m[1].replace(/,/g, ''));
+        if (isNaN(num)) return null;
+        const suffix = (m[2] || '').toUpperCase();
+        const mult = { T: 1e12, B: 1e9, M: 1e6, K: 1e3 }[suffix] || 1;
+        return num * mult;
+    }
+
+    /**
+     * Fetch the Yahoo quote page HTML via Jina and extract the market cap.
+     * The chart API does not include marketCap, so we scrape the quote page.
+     * Returns an absolute number (in the quote currency) or null.
+     */
+    async function fetchYahooMarketCap(yahooSymbol) {
+        const url = `https://finance.yahoo.com/quote/${encodeURIComponent(yahooSymbol)}/`;
+        const html = await fetchViaJinaThrottled(url);
+        // Jina returns markdown; the market cap line looks like:
+        //   "Market Cap (intraday) 17.497T"  or  "Market Cap\n\n17.55T"
+        const match = html.match(/Market\s*Cap(?:\s*\(intraday\))?\s*[:\n]*\s*([\d.,]+\s*[TBMK]?)/i);
+        if (!match) return null;
+        return parseYahooMarketCapText(match[1]);
+    }
+
+    /**
+     * Richer parser for the company-info sheet — pulls extra meta fields
+     * (exchange, currency, 52-week range, volume) on top of the live quote.
+     */
+    function parseYahooCompanyInfo(data, fallbackSymbol, fallbackName) {
+        const result = data && data.chart && data.chart.result && data.chart.result[0];
+        if (!result || !result.meta) return null;
+        const meta = result.meta;
+        const price = Number(meta.regularMarketPrice);
+        const prev = Number(
+            meta.chartPreviousClose != null ? meta.chartPreviousClose : meta.previousClose
+        );
+        const change = !isNaN(prev) ? price - prev : NaN;
+        const changePct = !isNaN(prev) && prev !== 0 ? (change / prev) * 100 : NaN;
+        const sym = normalizeMarketSymbol(
+            (meta.symbol || fallbackSymbol || '').replace(/\.(NS|BO)$/i, '')
+        );
+        const num = (v) => {
+            const n = Number(v);
+            return isNaN(n) ? null : n;
+        };
+        // The chart meta does not include "open"; it lives in the indicators
+        // quote array. Day high/low are in meta as regularMarketDayHigh/Low.
+        const quoteInd = result.indicators && result.indicators.quote
+            ? result.indicators.quote[0] : null;
+        const firstVal = (arr) => {
+            if (!Array.isArray(arr) || arr.length === 0) return null;
+            return num(arr[0]);
+        };
+        return {
+            symbol: sym,
+            name: fallbackName || meta.longName || meta.shortName || sym,
+            shortName: meta.shortName || '',
+            longName: meta.longName || '',
+            exchange: meta.exchangeName || meta.fullExchangeName || '',
+            currency: meta.currency || '',
+            price: isNaN(price) ? null : price,
+            previousClose: isNaN(prev) ? null : prev,
+            open: firstVal(quoteInd && quoteInd.open),
+            dayHigh: num(meta.regularMarketDayHigh) || firstVal(quoteInd && quoteInd.high),
+            dayLow: num(meta.regularMarketDayLow) || firstVal(quoteInd && quoteInd.low),
+            change: isNaN(change) ? null : change,
+            changePct: isNaN(changePct) ? null : changePct,
+            fiftyTwoWeekHigh: num(meta.fiftyTwoWeekHigh),
+            fiftyTwoWeekLow: num(meta.fiftyTwoWeekLow),
+            regularMarketVolume: num(meta.regularMarketVolume),
+            regularMarketTime: num(meta.regularMarketTime),
+            marketCap: num(meta.marketCap),
+            updatedAt: new Date().toISOString()
+        };
+    }
+
+    /**
+     * Resolve a trade/company to a Yahoo symbol, fetch its chart meta, and
+     * return a rich company-info object (or { error }) for the info sheet.
+     * Reuses the same Jina-throttled path + .NS/.BO fallback as market quotes.
+     */
+    async function fetchTradeCompanyInfo(tradeOrCompany) {
+        const sym = resolveTradeLiveSymbol(tradeOrCompany);
+        if (!sym) return { error: 'Could not resolve a stock symbol for this company.' };
+        const companyName = (tradeOrCompany && typeof tradeOrCompany === 'object')
+            ? (tradeOrCompany.company || '')
+            : String(tradeOrCompany || '');
+        const remembered = yahooSuffixBySymbol[sym];
+        const primary = remembered ? (sym + remembered) : yahooSymbolForNse(sym);
+
+        async function attempt(yahooSym) {
+            const data = await fetchYahooChartJson(yahooSym);
+            const info = parseYahooCompanyInfo(data, sym, companyName);
+            if (!info) throw new Error('No data');
+            info.yahooSymbol = yahooSym;
+            // The chart API does not return marketCap — scrape it from the
+            // Yahoo quote page. Best-effort: failures just leave it null.
+            if (info.marketCap == null) {
+                try {
+                    info.marketCap = await fetchYahooMarketCap(yahooSym);
+                } catch (_) { /* ignore — market cap is optional */ }
+            }
+            return info;
+        }
+
+        try {
+            const info = await attempt(primary);
+            yahooSuffixBySymbol[sym] = primary.endsWith('.BO') ? '.BO' : '.NS';
+            return info;
+        } catch (e) {
+            if (isRateLimitError(e)) {
+                return { error: 'Yahoo rate limit reached. Please try again in a moment.' };
+            }
+            if (!remembered && primary.endsWith('.NS')) {
+                try {
+                    const info = await attempt(sym + '.BO');
+                    yahooSuffixBySymbol[sym] = '.BO';
+                    return info;
+                } catch (_) { /* fall through to generic error */ }
+            }
+            return { error: 'Could not fetch company details from Yahoo Finance.' };
+        }
+    }
+
     function isValidMarketQuote(quote) {
         return !!(quote && quote.symbol && quote.price != null && !isNaN(Number(quote.price)) && !quote.error);
     }
@@ -2337,10 +2468,9 @@
         return tradeDisplayedQuotes[key] || marketQuoteCache[key] || null;
     }
 
-    function setTradeLiveStatus(text) {
+    function setTradeLiveStatus(show) {
         document.querySelectorAll('[data-live-status]').forEach((slot) => {
-            slot.textContent = text || '';
-            slot.classList.toggle('d-none', !text);
+            slot.classList.toggle('is-hidden', !show);
         });
     }
 
@@ -2437,8 +2567,9 @@
             const change = Number(quote.change);
             const changePct = Number(quote.changePct);
             if (isNaN(change)) return '—';
+            const arrow = change >= 0 ? '▲' : '▼';
             const pctText = !isNaN(changePct)
-                ? `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`
+                ? `${arrow}${changePct.toFixed(2)}%`
                 : '';
             const abs = Math.abs(change).toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
@@ -2464,8 +2595,6 @@
             const quote = getTradeLiveQuote(symbol);
             const priceBtn = el.querySelector('[data-live-field="price"]');
             const changeEl = el.querySelector('[data-live-change]');
-            const progressPctEl = el.querySelector('[data-live-progress-pct]');
-            const progressBar = el.querySelector('[data-live-progress-bar]');
             const valueEl = priceBtn && priceBtn.querySelector('[data-live-value]');
             const loadingSlot = el.querySelector('[data-live-loading]');
             const statusSlot = el.querySelector('[data-live-status]');
@@ -2477,50 +2606,90 @@
                 : change >= 0 ? 'up' : 'down';
             const targetPrice = Number(el.dataset.targetPrice);
             const buyPrice = Number(el.dataset.buyPrice);
-            const progress = hasPrice ? targetProgressPct(livePrice, targetPrice, buyPrice) : null;
-            const fill = clampProgressFill(progress);
-            const band = progressBand(progress);
             const tx = tradeId ? getTransaction(tradeId) : null;
             const variant = el.dataset.tradeVariant || '';
             const liveReturn = hasPrice && tx ? estimateLiveSellReturn(tx, livePrice) : null;
+            // Track highest price seen during open trade
+            const status = el.dataset.tradeStatus || 'open';
+            const targetReachedBeforeClose = el.dataset.targetReachedBeforeClose === 'true';
+            if (hasPrice && tx && status === 'open') {
+                const currentHighest = Number(tx.highestPrice) || 0;
+                if (livePrice > currentHighest) {
+                    tx.highestPrice = livePrice;
+                    updateTransaction(tx.id, { highestPrice: livePrice });
+                }
+            }
+
             // Spinner only when this symbol has no local CMP yet.
             const showSpinner = !hasPrice && !!(tradeLiveRefreshing || tradeLiveRetryPending);
-
             const priceText = formatTradeLivePriceText(quote);
             const changeText = formatDayChange(quote, hasPrice);
-            const progressText = progress == null || isNaN(progress)
-                ? '—'
-                : `${Math.round(progress)}%`;
 
             setToneClasses(priceBtn, tone);
             setToneClasses(changeEl, tone);
             if (loadingSlot) loadingSlot.innerHTML = showSpinner ? spinnerHtml : '';
             if (statusSlot) {
                 const updating = !!(tradeLiveRefreshing || tradeLiveRetryPending);
-                statusSlot.textContent = updating ? 'This value is updated.' : '';
-                statusSlot.classList.toggle('d-none', !updating);
+                statusSlot.classList.toggle('is-hidden', !updating);
             }
             if (valueEl && valueEl.textContent !== priceText) valueEl.textContent = priceText;
             if (changeEl && changeEl.textContent !== changeText) changeEl.textContent = changeText;
 
-            if (progressPctEl) {
-                if (progressPctEl.textContent !== progressText) progressPctEl.textContent = progressText;
-                progressPctEl.classList.remove('text-success', 'text-danger', 'text-body-secondary', 'text-progress-mid');
-                progressPctEl.classList.add(progressBandTextClass(band));
-            }
-            if (progressBar) {
-                const width = `${fill}%`;
-                if (progressBar.style.width !== width) progressBar.style.width = width;
-                progressBar.classList.remove('bg-success', 'bg-warning', 'bg-danger', 'bg-secondary', 'bg-progress-mid');
-                progressBar.classList.add(progressBandBarClass(band));
-                const track = progressBar.closest('[role="progressbar"]')
-                    || el.querySelector('[data-live-progress-track]');
-                if (track) {
-                    track.classList.toggle('trade-position-progress--neg', band === 'neg');
-                    track.setAttribute(
-                        'aria-valuenow',
-                        String(Math.round(progress == null || isNaN(progress) ? 0 : progress))
-                    );
+            // Update Target Status
+            const targetStatusHost = el.querySelector('.trade-position-cell--target-status');
+            if (targetStatusHost) {
+                if (status === 'open' && hasPrice && targetPrice > 0) {
+                    const targetStatus = global.MTFComponents.TargetStatus(livePrice, targetPrice, status, targetReachedBeforeClose);
+
+                    const wasReached = targetStatusHost.querySelector('[data-target-status][data-reached="true"]') !== null;
+                    const isReached = targetStatus.isTargetReached;
+
+                    if (wasReached !== isReached) {
+                        targetStatusHost.style.transition = 'opacity 200ms ease, transform 200ms ease';
+                        targetStatusHost.style.opacity = '0';
+                        targetStatusHost.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            targetStatusHost.innerHTML = targetStatus.html;
+                            targetStatusHost.style.opacity = '1';
+                            targetStatusHost.style.transform = 'scale(1)';
+                        }, 200);
+                    } else {
+                        const leftEl = targetStatusHost.querySelector('[data-target-left]');
+                        const pctEl = targetStatusHost.querySelector('[data-target-pct-left]');
+                        const diffPctEl = targetStatusHost.querySelector('[data-target-pct-diff]');
+
+                        if (isReached) {
+                            if (diffPctEl) {
+                                const diffPct = ((livePrice - targetPrice) / targetPrice) * 100;
+                                const newDiffText = `+${diffPct.toFixed(2)}%`;
+                                if (diffPctEl.textContent !== newDiffText) diffPctEl.textContent = newDiffText;
+                            } else {
+                                targetStatusHost.innerHTML = targetStatus.html;
+                            }
+                        } else {
+                            if (leftEl) {
+                                const newLeftText = `₹${targetStatus.remainingAmount.toFixed(2)} Left`;
+                                if (leftEl.textContent !== newLeftText) leftEl.textContent = newLeftText;
+                            }
+                            if (pctEl) {
+                                const newPctText = `${targetStatus.remainingPercentage.toFixed(2)}% to target`;
+                                if (pctEl.textContent !== newPctText) pctEl.textContent = newPctText;
+                            }
+                            if (!leftEl && !pctEl) {
+                                targetStatusHost.innerHTML = targetStatus.html;
+                            }
+                        }
+                    }
+                } else if (status === 'closed') {
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    if (targetStatusHost.innerHTML !== targetStatus.html) {
+                        targetStatusHost.innerHTML = targetStatus.html;
+                    }
+                } else if (!hasPrice || !(targetPrice > 0)) {
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    if (targetStatusHost.innerHTML !== targetStatus.html) {
+                        targetStatusHost.innerHTML = targetStatus.html;
+                    }
                 }
             }
 
@@ -2535,7 +2704,26 @@
                         align: 'right',
                         pill: false
                     });
-                    if (pnlHost.innerHTML !== nextPnl) pnlHost.innerHTML = nextPnl;
+                    const pnlAmountEl = pnlHost.querySelector('.d-inline-flex.flex-column');
+                    if (pnlAmountEl && pnlAmountEl.outerHTML !== nextPnl) {
+                        pnlAmountEl.outerHTML = nextPnl;
+                    }
+                    // Update pnl percentage badge
+                    const investment = tx ? (Number(tx.totalInvestment) || 0) : 0;
+                    const pctBadge = pnlHost.querySelector('[data-trade-card-pnl-pct]');
+                    if (investment > 0) {
+                        const pct = (Number(liveReturn) / investment) * 100;
+                        const sign = pct >= 0 ? '+' : '';
+                        const tone = pct >= 0 ? 'positive' : 'negative';
+                        const nextText = `${sign}${pct.toFixed(2)}%`;
+                        if (pctBadge) {
+                            if (pctBadge.textContent !== nextText) pctBadge.textContent = nextText;
+                            pctBadge.className = `trade-position-pnl-pct trade-position-pnl-pct--${tone}`;
+                        } else {
+                            const badgeHtml = `<span class="trade-position-pnl-pct trade-position-pnl-pct--${tone}" data-trade-card-pnl-pct>${nextText}</span>`;
+                            pnlHost.insertAdjacentHTML('beforeend', badgeHtml);
+                        }
+                    }
                 }
             }
         });
@@ -2648,8 +2836,8 @@
                         if (slot.innerHTML) slot.innerHTML = '';
                     });
                 }
-                setTradeLiveStatus('This value is updated.');
-                setTimeout(() => setTradeLiveStatus(''), 2000);
+                setTradeLiveStatus(true);
+                setTimeout(() => setTradeLiveStatus(false), 2000);
                 observeQuoteRows();
                 if (stillMissing.length) scheduleTradeLiveRetry();
                 else clearTradeLiveRetry();
@@ -3529,6 +3717,7 @@
             company: 'Company',
             holding: 'Holding days',
             buyDate: 'Buy date',
+            sellDate: 'Sell date',
             pnl: 'P&L',
             return: 'Current return'
         })[sortBy] || 'Holding days';
@@ -4605,6 +4794,19 @@
                 if (ak !== bk) return ak < bk ? 1 : -1;
                 return cmpId(a, b);
             }
+            if (sortBy === 'sellDate') {
+                const ak = parseDateKey(a.sellDate) || '';
+                const bk = parseDateKey(b.sellDate) || '';
+                if (ak && bk) {
+                    if (ak !== bk) return ak < bk ? 1 : -1;
+                } else if (ak || bk) {
+                    return ak ? -1 : 1;
+                }
+                const abuy = parseDateKey(a.buyDate) || '';
+                const bbuy = parseDateKey(b.buyDate) || '';
+                if (abuy !== bbuy) return abuy < bbuy ? 1 : -1;
+                return cmpId(a, b);
+            }
             if (sortBy === 'pnl' || sortBy === 'return') {
                 const av = tradeCurrentReturn(a);
                 const bv = tradeCurrentReturn(b);
@@ -5672,9 +5874,23 @@
             onConfirm: async () => {
                 const sellPrice = getEffectiveSellPrice(tx);
                 const calc = calculateTrade({ ...tx, sellPrice, status: 'closed' });
+                const targetPrice = Number(tx.sellPrice) || Number(tx.buyPrice) || 0;
+                const quote = getTradeLiveQuote(tx.symbol || '');
+                const livePrice = quote && quote.price != null ? Number(quote.price) : 0;
+
+                const highestPriceDuringTrade = Math.max(
+                    Number(tx.highestPrice) || 0,
+                    Number(tx.buyPrice) || 0,
+                    sellPrice || 0,
+                    livePrice
+                );
+                const targetReachedBeforeClose = targetPrice > 0 && highestPriceDuringTrade >= targetPrice;
+
                 const saved = await updateTransaction(id, {
                     status: 'closed',
                     sellPrice,
+                    targetReachedBeforeClose,
+                    highestPrice: highestPriceDuringTrade,
                     grossProfit: calc.grossProfit,
                     interest: calc.interest,
                     charges: calc.totalCharges,
@@ -6121,7 +6337,8 @@
             getTradeLiveQuote,
             isTradeLiveRefreshing,
             getEffectiveSellPrice,
-            estimateLiveSellReturn
+            estimateLiveSellReturn,
+            fetchTradeCompanyInfo
         },
         marketPages: {
             getMarketQuotes,
@@ -6313,6 +6530,7 @@
     window.saveHoldDates = saveHoldDates;
     window.openChargesModal = openChargesModal;
     window.openInterestModal = openInterestModal;
+    window.openCompanyInfoSheet = openCompanyInfoSheet;
     window.renderCurrentView = renderCurrentView;
     window.renderPastTrades = renderPastTrades;
     window.renderMarketPage = renderMarketPage;

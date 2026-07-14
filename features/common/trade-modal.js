@@ -123,7 +123,7 @@
         if (raw === '') return;
         let lev = parseFloat(raw);
         if (!isFinite(lev) || lev < 1) lev = 1;
-        el.value = String(Math.round(lev * 10) / 10);
+        el.value = String(Math.round(lev * 100) / 100);
     }
 
     function onTxLeverageInput() {

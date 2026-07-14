@@ -1122,6 +1122,12 @@
                                         value="buyDate" id="tradeFilterSort-buyDate"
                                         onchange="updateTradeFilterSummary()">
                                 </label>
+                                <label class="trade-filter-option" for="tradeFilterSort-sellDate">
+                                    <span>Sell date</span>
+                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
+                                        value="sellDate" id="tradeFilterSort-sellDate"
+                                        onchange="updateTradeFilterSummary()">
+                                </label>
                                 <label class="trade-filter-option" for="tradeFilterSort-pnl">
                                     <span>P&amp;L</span>
                                     <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="pnl"
@@ -1432,7 +1438,7 @@
                                 </label>
                                 <div class="tx-leverage-field">
                                     <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1"
-                                        step="0.1" value="1" inputmode="decimal" aria-label="Leverage value"
+                                        step="any" value="1" inputmode="decimal" aria-label="Leverage value"
                                         oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
                                     <span class="tx-leverage-suffix" aria-hidden="true">x</span>
                                 </div>
