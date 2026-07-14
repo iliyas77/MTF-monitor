@@ -245,7 +245,7 @@
         return n >= 0 ? 'text-success' : 'text-danger';
     }
 
-    function renderHeader(tx, variant, pnlAmount) {
+    function renderHeader(tx, variant, pnlAmount, pnlPct) {
         const { appTag } = global.MTFComponents || {};
         const company = tx.company || 'Trade';
         const qty = Number(tx.quantity) || 0;
@@ -284,9 +284,9 @@
                     </div>
                 </div>
                 <div class="trade-detail-aside flex-shrink-0">
-                    <div class="trade-detail-pnl">
+                    <div class="trade-detail-pnl d-flex flex-column align-items-end gap-1">
                         <div class="trade-detail-pnl-value ${pnlTone}">${escapeHtml(signedMoney(pnlAmount, { compact: true }))}</div>
-                        <span class="badge rounded-pill border trade-detail-pnl-badge ${pnlTone}">P&amp;L</span>
+                        ${pnlPct != null ? `<span class="badge rounded-pill ${pnlTone === 'text-success' ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'} px-2 py-1" style="font-size: 0.65rem; font-weight: 600;">${escapeHtml(signedPct(pnlPct))}</span>` : ''}
                     </div>
                     <button type="button" class="trade-detail-close-btn"
                         onclick="backFromTradeDetail()" aria-label="Close">
@@ -297,102 +297,58 @@
         `;
     }
 
-    function renderCurrentMarket(tx, quote, livePrice, targetPrice, variant) {
-        const buyPrice = Number(tx.buyPrice) || 0;
-        const changeParts = formatDayChangeParts(quote);
-        const dayTone = !changeParts
-            ? 'text-body-secondary'
-            : changeParts.up ? 'text-success' : 'text-danger';
-        const dayIcon = !changeParts
-            ? ''
-            : changeParts.up
-                ? renderIcon('fa-caret-up', { className: 'me-1' })
-                : renderIcon('fa-caret-down', { className: 'me-1' });
-        const progress = targetProgressPct(livePrice, targetPrice, buyPrice);
-        const fill = clampProgressFill(progress);
-        const band = progressBand(progress);
-        const progressLabel = progress == null || isNaN(progress) ? '—' : `${Math.round(progress)}%`;
-        const remaining = remainingToTargetParts(livePrice, targetPrice);
-        const helpers = tradePages();
-        const symbol = helpers.resolveTradeLiveSymbol ? helpers.resolveTradeLiveSymbol(tx) : '';
-        const refreshAttr = symbol && variant !== 'past'
-            ? `onclick="refreshTradeLivePricesNow('${escapeHtml(symbol)}')"`
-            : '';
-        const sectionTitle = variant === 'past' ? 'Exit Price' : 'Current Market';
-        const dayChangeHtml = changeParts
-            ? `<span class="${dayTone}">${dayIcon}<span class="trade-detail-day-pct">${escapeHtml(changeParts.pctText)}</span></span>`
-                + (changeParts.absText
-                    ? ` <span class="trade-detail-day-abs text-body-secondary">${escapeHtml(changeParts.absText)}</span>`
-                    : '')
-            : (variant === 'past' ? '<span class="text-body-secondary">Closed trade</span>' : '—');
-        const remainingHtml = !remaining
-            ? '—'
-            : remaining.money == null
-                ? escapeHtml(remaining.label)
-                : `<span class="text-body-secondary">${escapeHtml(remaining.label)}:</span>`
-                    + ` <span class="fw-semibold text-body">${escapeHtml(remaining.money)}</span>`
-                    + ` <span class="${remaining.tone === 'above' ? 'text-success' : 'text-success'}">(${escapeHtml(remaining.pct)})</span>`;
 
-        return `
-            <section class="trade-detail-market">
-                <div class="trade-detail-market-col">
-                    <div class="trade-detail-section-label">
-                        ${renderIcon('fa-chart-line', { className: 'text-success me-1' })}
-                        ${escapeHtml(sectionTitle)}
-                    </div>
-                    <button type="button" class="btn border-0 bg-transparent text-start p-0 shadow-none w-100 ${dayTone}" ${refreshAttr} title="Tap to refresh live price">
-                        <div class="trade-detail-cmp text-body">${escapeHtml(formatLivePrice(livePrice))}</div>
-                        <div class="trade-detail-day-change small">${dayChangeHtml}</div>
-                    </button>
-                </div>
-                <div class="trade-detail-market-divider" aria-hidden="true"></div>
-                <div class="trade-detail-market-col">
-                    <div class="trade-detail-progress-head">
-                        <span class="trade-detail-progress-title">Progress to Target</span>
-                        ${renderIcon('fa-info-circle', { className: 'trade-detail-progress-info' })}
-                    </div>
-                    <div class="trade-detail-progress-row">
-                        <div class="progress trade-detail-progress-bar${band === 'neg' ? ' trade-position-progress--neg' : ''}" role="progressbar" aria-valuenow="${Math.round(progress == null || isNaN(progress) ? 0 : progress)}" aria-valuemin="0" aria-valuemax="100">
-                            <div class="progress-bar ${progressBandBarClass(band)}" style="width:${fill}%"></div>
-                        </div>
-                        <span class="trade-detail-progress-pct ${progressBandTextClass(band)}">${escapeHtml(progressLabel)}</span>
-                    </div>
-                    <div class="trade-detail-remaining small mt-1">${remainingHtml}</div>
-                </div>
-            </section>
-        `;
-    }
 
     function renderPriceInputs(tx, targetPrice) {
         const id = escapeHtml(tx.id || '');
         const buy = Number(tx.buyPrice) || 0;
+        const qty = Number(tx.quantity) || 0;
+        const targetGainPct = (buy > 0 && targetPrice > 0) ? ((targetPrice - buy) / buy) * 100 : null;
+        const targetGainHtml = targetGainPct != null
+            ? `<span class="trade-detail-price-badge trade-detail-price-badge--success">+${escapeHtml(targetGainPct.toFixed(2))}%</span>`
+            : '';
+
         return `
             <section class="trade-detail-prices">
-                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none"
+                <div class="trade-detail-price-cell d-flex flex-row align-items-center justify-content-start p-0 gap-3">
+                    <span class="d-inline-flex align-items-center justify-content-center text-success rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-accent-soft); flex-shrink: 0;">
+                        ${renderIcon('fa-cube', { style: 'font-size: 1.15rem;' })}
+                    </span>
+                    <div class="d-flex flex-column align-items-start justify-content-center">
+                        <span class="trade-detail-price-label" style="line-height: 1;">Quantity</span>
+                        <span class="trade-detail-price-value text-body" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${qty}</span>
+                        <span class="small text-muted" style="font-size: 0.75rem; font-weight: 500; line-height: 1;">Shares</span>
+                    </div>
+                </div>
+                <span class="trade-detail-price-divider"></span>
+                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-center gap-3"
                     onclick="openBuyPriceModal('${id}')" aria-label="Edit buy price">
-                    <span class="trade-detail-price-label">Buy Price</span>
-                    <span class="trade-detail-price-row">
-                        <span class="trade-detail-price-value trade-detail-price-value--buy">${fmtDec(buy)}</span>
-                        <span class="trade-detail-price-edit trade-detail-price-edit--buy" aria-hidden="true">${renderIcon('fa-pen-to-square')}</span>
+                    <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--blue500-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); flex-shrink: 0;">
+                        ${renderIcon('fa-wallet', { style: 'font-size: 1.15rem;' })}
                     </span>
+                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0">
+                        <span class="trade-detail-price-label" style="line-height: 1;">Buy Price</span>
+                        <span class="trade-detail-price-value trade-detail-price-value--buy" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${fmtDec(buy)}</span>
+                        <span class="trade-detail-price-badge trade-detail-price-badge--info mt-0">Avg. Entry</span>
+                    </div>
                 </button>
-                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none"
+                <span class="trade-detail-price-divider"></span>
+                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-end gap-3"
                     onclick="openTargetModal('${id}')" aria-label="Edit target price">
-                    <span class="trade-detail-price-label">Target Price</span>
-                    <span class="trade-detail-price-row">
-                        <span class="trade-detail-price-value trade-detail-price-value--target">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
-                        <span class="trade-detail-price-edit trade-detail-price-edit--target" aria-hidden="true">${renderIcon('fa-pen-to-square')}</span>
+                    <span class="d-inline-flex align-items-center justify-content-center text-danger rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-danger-soft, rgba(239, 68, 68, 0.1)); flex-shrink: 0;">
+                        ${renderIcon('fa-bullseye', { style: 'font-size: 1.15rem;' })}
                     </span>
-                </button>
-                <button type="button" class="trade-detail-price-target-icon btn border-0 bg-transparent shadow-none"
-                    onclick="openTargetModal('${id}')" aria-label="Edit target">
-                    ${renderIcon('fa-bullseye', { className: 'trade-detail-bullseye' })}
+                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0">
+                        <span class="trade-detail-price-label" style="line-height: 1;">Target Price</span>
+                        <span class="trade-detail-price-value trade-detail-price-value--target" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
+                        ${targetGainHtml ? targetGainHtml.replace('mt-1', 'mt-0') : ''}
+                    </div>
                 </button>
             </section>
         `;
     }
 
-    function renderIfSoldNow(tx, sellPrice, calc, variant, hasLiveQuote) {
+    function renderIfSoldNow(tx, sellPrice, calc, variant, hasLiveQuote, quote, livePrice) {
         const qty = Number(tx.quantity) || 0;
         const price = Number(sellPrice) || 0;
         const sellValue = price > 0 ? price * qty : 0;
@@ -404,12 +360,22 @@
             ? Number(calc.totalInvestment) || 0
             : (Number(tx.buyPrice) || 0) * qty;
         const netPct = investment > 0 ? (net / investment) * 100 : null;
-        const title = variant === 'past'
-            ? 'Sold Result'
-            : (hasLiveQuote ? 'If Sold Now' : 'At Target');
-        const subtitle = variant === 'past'
-            ? '(At Exit Price)'
-            : (hasLiveQuote ? '(At Current Market Price)' : '(At Target Price)');
+        const title = 'IF SOLD NOW';
+        const subtitle = '(At Current Market Price)';
+        
+        const changeParts = formatDayChangeParts(quote);
+        const dayTone = !changeParts ? 'text-body-secondary' : changeParts.up ? 'text-success' : 'text-danger';
+        const dayChangeHtml = changeParts
+            ? `<span class="${dayTone}">${escapeHtml(changeParts.pctText)}</span> <span class="text-muted">${escapeHtml(changeParts.absText)}</span>`
+            : '';
+            
+        const cmpHtml = `
+            <div class="trade-detail-ifsold-col">
+                <span class="trade-detail-ifsold-label">Current Market Price</span>
+                <span class="trade-detail-ifsold-value">${livePrice != null ? fmtDec(livePrice) : fmtDec(sellPrice)}</span>
+                ${dayChangeHtml ? `<div class="mt-1 text-center" style="font-size: 0.75rem; font-weight: 500; white-space: nowrap;">${dayChangeHtml}</div>` : ''}
+            </div>
+        `;
 
         return `
             <section class="trade-detail-ifsold">
@@ -421,16 +387,13 @@
                     <span class="trade-detail-ifsold-title-sub">${escapeHtml(subtitle)}</span>
                 </div>
                 <div class="trade-detail-ifsold-grid">
+                    ${cmpHtml}
+                    <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
                     <div class="trade-detail-ifsold-col">
                         <span class="trade-detail-ifsold-label">Sell Value</span>
-                        <span class="trade-detail-ifsold-value">${fmtDec(sellValue)}</span>
+                        <span class="trade-detail-ifsold-value text-body">${fmtDec(sellValue)}</span>
                     </div>
-                    <span class="trade-detail-ifsold-op" aria-hidden="true">−</span>
-                    <div class="trade-detail-ifsold-col">
-                        <span class="trade-detail-ifsold-label">Total Cost</span>
-                        <span class="trade-detail-ifsold-value text-danger">${fmtDec(totalCost)}</span>
-                    </div>
-                    <span class="trade-detail-ifsold-op" aria-hidden="true">=</span>
+                    <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
                     <div class="trade-detail-ifsold-col">
                         <span class="trade-detail-ifsold-label">Net P&amp;L</span>
                         <span class="trade-detail-ifsold-value ${toneClass(net)}">${escapeHtml(signedMoney(net))}</span>
@@ -464,28 +427,34 @@
                 <button type="button" class="trade-detail-cost-card trade-detail-cost-card--interest"
                     onclick="openInterestModal('${escapeHtml(tx.id)}')" aria-label="Interest details">
                     <span class="trade-detail-cost-head">
-                        ${renderIcon('fa-bullseye', { className: 'trade-detail-cost-icon' })}
+                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-percent', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Interest</span>
                     </span>
-                    <span class="trade-detail-cost-value">${fmtDec(interest)}</span>
-                    <span class="trade-detail-cost-meta">${interestBadge}</span>
+                    <span class="trade-detail-cost-body">
+                        <span class="trade-detail-cost-value">${fmtDec(interest)}</span>
+                        <span class="trade-detail-cost-meta">${interestBadge}</span>
+                    </span>
                 </button>
                 <button type="button" class="trade-detail-cost-card trade-detail-cost-card--charges"
                     onclick="openChargesModal('${escapeHtml(tx.id)}')" aria-label="Charges details">
                     <span class="trade-detail-cost-head">
-                        ${renderIcon('fa-receipt', { className: 'trade-detail-cost-icon' })}
+                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-receipt', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Charges</span>
                     </span>
-                    <span class="trade-detail-cost-value">${fmtDec(charges)}</span>
-                    <span class="trade-detail-cost-meta">One-time</span>
+                    <span class="trade-detail-cost-body">
+                        <span class="trade-detail-cost-value">${fmtDec(charges)}</span>
+                        <span class="trade-detail-cost-meta">One-time</span>
+                    </span>
                 </button>
                 <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost">
                     <span class="trade-detail-cost-head">
-                        ${renderIcon('fa-wallet', { className: 'trade-detail-cost-icon' })}
+                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-wallet', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Total</span>
                     </span>
-                    <span class="trade-detail-cost-value">${fmtDec(totalCost)}</span>
-                    <span class="trade-detail-cost-meta">Interest + Charges</span>
+                    <span class="trade-detail-cost-body">
+                        <span class="trade-detail-cost-value">${fmtDec(totalCost)}</span>
+                        <span class="trade-detail-cost-meta">Interest + Charges</span>
+                    </span>
                 </div>
             </section>
         `;
@@ -639,24 +608,17 @@
                </div>`
             : '';
 
-        const displayPrice = livePrice != null
-            ? livePrice
-            : (Number(tx.sellPrice) || null);
-        const marketBlock = renderCurrentMarket(
-            tx,
-            livePrice != null ? quote : null,
-            displayPrice,
-            targetPrice,
-            variant
-        );
+        const investment = calc
+            ? Number(calc.totalInvestment) || 0
+            : (Number(tx.buyPrice) || 0) * (Number(tx.quantity) || 0);
+        const pnlPct = investment > 0 ? (pnlAmount / investment) * 100 : null;
 
-        if (headerEl) headerEl.innerHTML = renderHeader(tx, variant, pnlAmount);
+        if (headerEl) headerEl.innerHTML = renderHeader(tx, variant, pnlAmount, pnlPct);
         container.innerHTML = `
             <div class="trade-detail-card w-100 d-flex flex-column gap-3">
                 <hr class="trade-detail-divider my-0">
-                ${marketBlock}
                 ${renderPriceInputs(tx, targetPrice)}
-                ${renderIfSoldNow(tx, sellPriceForCalc, calc, variant, livePrice != null)}
+                ${renderIfSoldNow(tx, sellPriceForCalc, calc, variant, livePrice != null, quote, livePrice)}
                 ${renderCostCards(tx, calc)}
                 ${renderTimeline(tx, variant)}
                 ${notesBlock}

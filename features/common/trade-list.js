@@ -54,11 +54,81 @@
         `;
     }
 
+    function TargetStatus(currentPrice, targetPrice, status, targetReachedBeforeClose) {
+        const isClosed = status === 'closed';
+
+        if (isClosed) {
+            const reached = !!targetReachedBeforeClose;
+            return {
+                remainingAmount: 0,
+                remainingPercentage: 0,
+                isTargetReached: reached,
+                html: `
+                    <div class="target-status-container" data-target-status data-reached="${reached}">
+                        <span class="trade-position-label ${reached ? 'text-success' : 'text-danger'}">Target</span>
+                        <span class="trade-position-value ${reached ? 'text-success' : 'text-danger'} fw-bold">${reached ? '✅ Reached' : '❌ Not Reached'}</span>
+                    </div>
+                `
+            };
+        }
+
+        const cp = currentPrice != null ? Number(currentPrice) : null;
+        const tp = targetPrice != null ? Number(targetPrice) : null;
+
+        if (cp == null || isNaN(cp) || cp <= 0 || tp == null || isNaN(tp) || tp <= 0) {
+            return {
+                remainingAmount: 0,
+                remainingPercentage: 0,
+                isTargetReached: false,
+                html: `
+                    <div class="target-status-container" data-target-status>
+                        <span class="trade-position-label text-secondary">Target</span>
+                        <span class="trade-position-value text-body">—</span>
+                    </div>
+                `
+            };
+        }
+
+        const isTargetReached = cp >= tp;
+        const remainingAmount = tp - cp;
+        const remainingPercentage = (remainingAmount / tp) * 100;
+        const differencePercentage = ((cp - tp) / tp) * 100;
+        const { renderIcon } = global.MTFComponents;
+
+        let html = '';
+        if (isTargetReached) {
+            html = `
+                <div class="target-status-container" data-target-status data-reached="true">
+                    <span class="trade-position-label text-success">Target</span>
+                    <span class="trade-position-value text-success fw-bold">✅ Reached</span>
+                    <span class="trade-position-subtitle text-success mt-1" data-target-pct-diff>+${differencePercentage.toFixed(2)}%</span>
+                </div>
+            `;
+        } else {
+            const iconHtml = typeof renderIcon === 'function' ? renderIcon('fa-bullseye', { className: 'text-target-purple me-1' }) : '';
+            html = `
+                <div class="target-status-container" data-target-status data-reached="false">
+                    <span class="trade-position-label text-target-purple d-flex align-items-center gap-1">${iconHtml}Target</span>
+                    <span class="trade-position-value text-target-purple fw-bold" data-target-left>₹${remainingAmount.toFixed(2)} Left</span>
+                    <span class="trade-position-subtitle text-target-purple mt-1" data-target-pct-left>${remainingPercentage.toFixed(2)}% to target</span>
+                </div>
+            `;
+        }
+
+        return {
+            remainingAmount,
+            remainingPercentage,
+            isTargetReached,
+            html
+        };
+    }
+
     global.MTFRegister({
         formatTradeLeverageLabel,
         renderTradeCardPnl,
         renderTradeListItemHoldMeta,
-        renderTradeListItemLeverageMeta
+        renderTradeListItemLeverageMeta,
+        TargetStatus
     });
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -469,8 +539,9 @@
         const change = Number(quote.change);
         const changePct = Number(quote.changePct);
         if (isNaN(change)) return '—';
+        const arrow = change >= 0 ? '▲' : '▼';
         const pctText = !isNaN(changePct)
-            ? `${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%`
+            ? `${arrow}${changePct.toFixed(2)}%`
             : '';
         const abs = Math.abs(change).toLocaleString('en-IN', {
             minimumFractionDigits: 2,
@@ -528,6 +599,7 @@
     }
 
     function renderPositionLiveBlock(t, variant) {
+        const { renderIcon } = global.MTFComponents || {};
         const helpers = (global.MTFAppHelpers || {}).tradePages || {};
         const resolveSymbol = helpers.resolveTradeLiveSymbol;
         const getQuote = helpers.getTradeLiveQuote;
@@ -544,9 +616,6 @@
             : change >= 0 ? 'up' : 'down';
         const buyPrice = Number(t.buyPrice) || 0;
         const targetPrice = getTradeTargetPrice(t);
-        const progress = targetProgressPct(price, targetPrice, buyPrice);
-        const fill = clampProgressFill(progress);
-        const band = progressBand(progress);
         const targetAttr = targetPrice != null && !isNaN(Number(targetPrice))
             ? String(Number(targetPrice))
             : '';
@@ -556,45 +625,103 @@
         const spinnerHtml = loading
             ? `<span data-live-loading class="ms-1">${renderIcon('fa-spinner', { className: 'fa-spin' })}</span>`
             : `<span data-live-loading class="ms-1"></span>`;
-        const progressLabel = progress == null || isNaN(progress)
-            ? '—'
-            : `${Math.round(progress)}%`;
+        const status = t.status || 'open';
+        let targetReachedBeforeClose = !!t.targetReachedBeforeClose;
+        if (t.targetReachedBeforeClose === undefined && status === 'closed') {
+            targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
+        }
 
+        const qty = Number(t.quantity) || 0;
+        const livePriceValue = price != null ? price : (quote && quote.price != null ? Number(quote.price) : 0);
+        let leftAmount = 0;
+        let leftText = '';
+        if (targetPrice > 0 && livePriceValue > 0) {
+            leftAmount = targetPrice - livePriceValue;
+            if (leftAmount > 0) {
+                leftText = `₹${leftAmount.toFixed(2)} Left`;
+            } else if (leftAmount < 0) {
+                leftText = `+₹${Math.abs(leftAmount).toFixed(2)}`;
+            } else {
+                leftText = `Reached`;
+            }
+        }
+
+        let targetPctText = '';
+        if (targetPrice > 0 && livePriceValue > 0) {
+            const targetPct = ((targetPrice - livePriceValue) / livePriceValue) * 100;
+            targetPctText = `${targetPct.toFixed(2)}% to Target`;
+        }
+
+        let avgEntryText = 'Avg. Entry';
+        if (targetPrice > 0 && buyPrice > 0) {
+            const diffPct = ((targetPrice - buyPrice) / buyPrice) * 100;
+            avgEntryText = `Target: ${diffPct > 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
+        }
         return `
-            <div class="trade-position-metrics"
+            <hr class="my-0 text-muted opacity-25" style="margin: 0.5rem 0 -0.25rem 0 !important;">
+            <div class="trade-position-metrics trade-position-grid"
                 data-live-symbol="${symbolAttr}"
                 data-quote-symbol="${symbolAttr}"
                 data-buy-price="${escapeHtml(buyAttr)}"
                 data-target-price="${escapeHtml(targetAttr)}"
                 data-trade-id="${tradeId}"
+                data-trade-status="${escapeHtml(status)}"
+                data-target-reached-before-close="${targetReachedBeforeClose}"
                 data-trade-variant="${escapeHtml(variant)}">
-                <div class="trade-position-grid">
-                    <div class="trade-position-cell ${liveToneClass(dayTone)}" data-live-field="price">
-                        <span class="d-flex align-items-center gap-1 min-w-0">
+                    <div class="trade-position-cell" data-live-field="price">
+                        <div class="trade-position-icon-box trade-position-icon-box--green">
+                            ${renderIcon('fa-arrow-trend-up')}
+                        </div>
+                        <div class="d-flex flex-column align-items-start gap-1 min-w-0">
+                            <span class="trade-position-label text-secondary">Current Price</span>
                             <span class="trade-position-price text-body text-truncate" data-live-value>${escapeHtml(formatLivePrice(price))}</span>
-                            ${spinnerHtml}
-                        </span>
-                        <span class="trade-position-change text-truncate ${liveToneClass(dayTone)}" data-live-change>${escapeHtml(formatDayChangeLabel(quote))}</span>
-                        <span class="trade-position-update-status small text-primary d-none" data-live-status></span>
+                            ${leftText ? `<span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: var(--gr-accent-soft, rgba(21, 155, 90, 0.12)); color: var(--gr-accent, #159b5a); display: inline-block;">${escapeHtml(leftText)}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="trade-position-cell justify-content-center">
+                        <div class="trade-position-icon-box trade-position-icon-box--orange">
+                            ${renderIcon('fa-cube')}
+                        </div>
+                        <div class="d-flex flex-column align-items-center text-center gap-1 min-w-0">
+                            <span class="trade-position-label text-secondary">Quantity</span>
+                            <span class="trade-position-value text-body text-truncate">${qty}</span>
+                            <span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: rgba(245, 158, 11, 0.12); color: #f59e0b; display: inline-block;">Shares</span>
+                        </div>
+                    </div>
+                    <div class="trade-position-cell justify-content-center">
+                        <div class="trade-position-icon-box trade-position-icon-box--blue">
+                            ${renderIcon('fa-tag')}
+                        </div>
+                        <div class="d-flex flex-column align-items-center text-center gap-1 min-w-0">
+                            <span class="trade-position-label text-secondary">Buy Price</span>
+                            <span class="trade-position-value text-body text-truncate">${fmtDec(buyPrice)}</span>
+                            <span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: var(--blue50-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); display: inline-block;">${escapeHtml(avgEntryText)}</span>
+                        </div>
                     </div>
                     <div class="trade-position-cell">
-                        <span class="trade-position-label text-info">Buy</span>
-                        <span class="trade-position-value text-body text-truncate">${fmtDec(buyPrice)}</span>
-                    </div>
-                    <div class="trade-position-cell">
-                        <span class="trade-position-label text-success">Target</span>
-                        <span class="trade-position-value trade-position-target-value text-truncate">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
-                    </div>
-                    <div class="trade-position-cell trade-position-cell--progress">
-                        <span class="trade-position-progress-pct ${progressBandTextClass(band)}" data-live-progress-pct>${escapeHtml(progressLabel)}</span>
-                        <div class="progress trade-position-progress${band === 'neg' ? ' trade-position-progress--neg' : ''}" role="progressbar" aria-valuenow="${Math.round(progress == null || isNaN(progress) ? 0 : progress)}" aria-valuemin="0" aria-valuemax="100" data-live-progress-track>
-                            <div class="progress-bar ${progressBandBarClass(band)}"
-                                data-live-progress-bar style="width:${fill}%"></div>
+                        <div class="trade-position-icon-box trade-position-icon-box--red">
+                            ${renderIcon('fa-bullseye')}
+                        </div>
+                        <div class="d-flex flex-column align-items-start gap-1 min-w-0">
+                            <span class="trade-position-label text-secondary">Target Price</span>
+                            <span class="trade-position-value trade-position-target-value text-truncate">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
+                            ${targetPctText ? `<span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: rgba(239, 68, 68, 0.12); color: var(--gr-danger, #ef4444); display: inline-block;">${escapeHtml(targetPctText)}</span>` : ''}
                         </div>
                     </div>
                 </div>
             </div>
         `;
+    }
+
+    function renderPnlPctBadge(pnlAmount, t) {
+        const investment = Number(t.totalInvestment) || 0;
+        if (!investment || pnlAmount == null || isNaN(Number(pnlAmount))) return '';
+        const pct = (Number(pnlAmount) / investment) * 100;
+        const isPositive = pct >= 0;
+        const arrow = isPositive ? '▲' : '▼';
+        const tone = isPositive ? 'green' : 'red';
+        const absPct = Math.abs(pct).toFixed(2);
+        return `<span class="trade-position-pill trade-position-pill--${tone}" data-trade-card-pnl-pct style="font-size: 0.75rem;">${arrow} ${isPositive ? '' : '-'}${absPct}%</span>`;
     }
 
     function renderTradeCardHeader(t, metrics, company, variant) {
@@ -636,19 +763,23 @@
                 <span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
                 <div class="min-w-0 flex-grow-1 overflow-hidden">
                     <div class="trade-position-title-row">
-                        <div class="trade-position-name" title="${escapeHtml(company)}">${escapeHtml(company)}</div>
+                        <div class="trade-position-name trade-position-name--link" title="${escapeHtml(company)}"
+                            role="button" tabindex="0"
+                            onclick="openCompanyInfoSheet('${escapeHtml(t.id || '')}');event.stopPropagation();"
+                            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCompanyInfoSheet('${escapeHtml(t.id || '')}');event.stopPropagation();}"
+                            aria-label="View ${escapeHtml(company)} company details">${escapeHtml(company)}</div>
                         ${tagsHtml}
                     </div>
-                    <div class="trade-position-meta">
-                        <span>Qty ${qty}</span>
-                        <span class="trade-position-meta-sep" aria-hidden="true">•</span>
-                        <span>${escapeHtml(leverage)} MTF</span>
-                        <span class="trade-position-meta-sep" aria-hidden="true">•</span>
+                    <div class="trade-position-meta" style="font-size: 0.85rem; font-weight: 500; color: var(--gr-text-muted); gap: 0.35rem; align-items: center; display: flex; margin-top: 0.25rem;">
+                        <span class="text-success" style="font-size: 1.25em; line-height: 1;">•</span>
+                        <span>${escapeHtml(leverage)}</span>
+                        <span class="text-success" style="font-size: 1.25em; line-height: 1;">•</span>
                         <span>${escapeHtml(daysLabel)}</span>
                     </div>
                 </div>
-                <div class="trade-position-pnl flex-shrink-0" data-trade-card-pnl>
+                <div class="trade-position-pnl flex-shrink-0 d-flex align-items-center gap-2" data-trade-card-pnl>
                     ${renderAmount(pnlAmount, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false })}
+                    ${renderPnlPctBadge(pnlAmount, t)}
                 </div>
             </div>
         `;
@@ -664,13 +795,13 @@
         const positionLive = renderPositionLiveBlock(t, variant);
 
         return `
-            <article class="card bg-body border rounded w-100 trade-position-card"
+            <article class="card bg-body border rounded w-100 trade-position-card mb-3"
                 data-trade-card data-trade-id="${tradeId}" data-trade-open-detail
                 role="button" tabindex="0"
                 onclick="openTradeDetail('${tradeId}')"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}"
                 aria-label="Open ${escapeHtml(company)} details">
-                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
+                <div class="card-body p-3 d-flex flex-column min-w-0">
                     ${renderTradeCardHeader(t, metrics, company, variant)}
                     ${positionLive}
                 </div>

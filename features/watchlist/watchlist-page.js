@@ -103,7 +103,7 @@
                             </div>
                             <div class="trade-position-cell">
                                 <span class="trade-position-label">Prev close</span>
-                                <span class="trade-position-value text-truncate" data-quote-prev>${escapeHtml(prevClose)}</span>
+                                <span class="trade-position-value text-truncate d-inline-flex align-items-center gap-1" data-quote-prev><i class="fas fa-clock-rotate-left text-muted" aria-hidden="true"></i>${escapeHtml(prevClose)}</span>
                             </div>
                         </div>
                     </div>

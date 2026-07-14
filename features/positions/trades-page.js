@@ -146,10 +146,11 @@
         }
 
         if (isAll) {
-            container.innerHTML = filtered.map((t, i) => {
+            const listHtml = filtered.map((t, i) => {
                 if (isActiveOpenTrade && isActiveOpenTrade(t)) return renderOpenTradeListItem(t, i + 1);
                 return renderPastTradeListItem(t, i + 1);
             }).join('');
+            container.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100">${listHtml}</div>`;
             return;
         }
 
