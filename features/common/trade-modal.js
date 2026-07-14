@@ -67,7 +67,7 @@
         const footer = document.getElementById('txModalFooter');
         if (!footer) return;
         const deleteBtn = isEdit
-            ? `<div class="mt-2">${renderAppButton('Delete Trade', { variant: 'danger', onclick: 'deleteTradeFromEditor()', icon: 'fa-trash-alt', fullWidth: true })}</div>`
+            ? `<div class="mt-2" data-ref="sheet.tx-modal.footer.delete-wrap">${renderAppButton('Delete Trade', { variant: 'danger', onclick: 'deleteTradeFromEditor()', icon: 'fa-trash-alt', fullWidth: true })}</div>`
             : '';
         footer.innerHTML = `${renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
             actionId: 'txSaveBtn',
@@ -421,7 +421,7 @@
         updatePreview();
 
         if (meta && fillTradeFormFromLivePrice) {
-            try { await fillTradeFormFromLivePrice(meta); } catch (_) {}
+            try { await fillTradeFormFromLivePrice(meta); } catch (_) { }
             updatePreview();
         }
     }

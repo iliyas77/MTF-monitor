@@ -1855,6 +1855,74 @@
         };
     }
 
+    // ---------- Company info cache (stale-while-revalidate) ----------
+    // Caches rich company-info objects by normalized symbol so the info
+    // sheet can render instantly on repeat opens instead of waiting for a
+    // fresh Yahoo fetch every time.
+    const companyInfoCache = {};
+    const COMPANY_INFO_FRESH_MS = 5 * 60 * 1000; // treat cached info as fresh for 5 min
+
+    /**
+     * Build a partial company-info object from an already-fetched live quote
+     * (the on-card CMP). This lets the info sheet show the current price +
+     * day change instantly while the full Yahoo fetch completes in the
+     * background. Returns null when no usable quote is available.
+     */
+    function buildCompanyInfoFromQuote(tradeOrCompany) {
+        const sym = resolveTradeLiveSymbol(tradeOrCompany);
+        if (!sym) return null;
+        const companyName = (tradeOrCompany && typeof tradeOrCompany === 'object')
+            ? (tradeOrCompany.company || '')
+            : String(tradeOrCompany || '');
+        const quote = getTradeLiveQuote(sym);
+        if (!quote || !isValidMarketQuote(quote)) return null;
+        return {
+            symbol: normalizeMarketSymbol(sym),
+            name: companyName || sym,
+            shortName: '',
+            longName: companyName || '',
+            exchange: '',
+            currency: 'INR',
+            price: Number(quote.price),
+            previousClose: quote.previousClose != null ? Number(quote.previousClose) : null,
+            open: null,
+            dayHigh: null,
+            dayLow: null,
+            change: quote.change != null ? Number(quote.change) : null,
+            changePct: quote.changePct != null ? Number(quote.changePct) : null,
+            fiftyTwoWeekHigh: null,
+            fiftyTwoWeekLow: null,
+            regularMarketVolume: null,
+            regularMarketTime: null,
+            marketCap: null,
+            updatedAt: quote.updatedAt || new Date().toISOString(),
+            yahooSymbol: '',
+            _partial: true
+        };
+    }
+
+    /**
+     * Return the best available company info for instant display: a cached
+     * entry (fresh or stale) or a partial built from the live quote. Returns
+     * null only when nothing is available at all. The `freshOut` object, when
+     * provided, is updated with `.value = true` when the cached entry is still
+     * fresh (no background refetch needed).
+     */
+    function getTradeCompanyInfoCached(tradeOrCompany, freshOut) {
+        const sym = resolveTradeLiveSymbol(tradeOrCompany);
+        if (!sym) {
+            if (freshOut) freshOut.value = false;
+            return null;
+        }
+        const entry = companyInfoCache[sym];
+        if (entry && entry.info) {
+            if (freshOut) freshOut.value = (Date.now() - (entry.cachedAt || 0)) < COMPANY_INFO_FRESH_MS;
+            return entry.info;
+        }
+        if (freshOut) freshOut.value = false;
+        return buildCompanyInfoFromQuote(tradeOrCompany);
+    }
+
     /**
      * Resolve a trade/company to a Yahoo symbol, fetch its chart meta, and
      * return a rich company-info object (or { error }) for the info sheet.
@@ -1887,6 +1955,7 @@
         try {
             const info = await attempt(primary);
             yahooSuffixBySymbol[sym] = primary.endsWith('.BO') ? '.BO' : '.NS';
+            companyInfoCache[sym] = { info, cachedAt: Date.now() };
             return info;
         } catch (e) {
             if (isRateLimitError(e)) {
@@ -1896,6 +1965,7 @@
                 try {
                     const info = await attempt(sym + '.BO');
                     yahooSuffixBySymbol[sym] = '.BO';
+                    companyInfoCache[sym] = { info, cachedAt: Date.now() };
                     return info;
                 } catch (_) { /* fall through to generic error */ }
             }
@@ -6338,7 +6408,8 @@
             isTradeLiveRefreshing,
             getEffectiveSellPrice,
             estimateLiveSellReturn,
-            fetchTradeCompanyInfo
+            fetchTradeCompanyInfo,
+            getTradeCompanyInfoCached
         },
         marketPages: {
             getMarketQuotes,

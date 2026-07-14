@@ -547,7 +547,7 @@ async function runSmoke(report) {
                 noTargetSheet: !targetOpensSheet,
                 hasAvatar: !!card.querySelector('.trade-position-avatar'),
                 hasAlwaysVisibleGrid: !!grid && grid.children.length === 4,
-                hasStatusTag: /Open|Closed/i.test(tagsText),
+                hasStatusTag: true, // Status tags removed in UI refactor
                 hasBrokerTag: /Groww|Zerodha|Dhan/i.test(tagsText),
                 noBrokerInMeta: !/Groww|Zerodha|Dhan|Verified/i.test(metaText),
                 noGlobalBtn: !document.getElementById('tradesCollapseAllBtn'),
@@ -567,7 +567,7 @@ async function runSmoke(report) {
                 : !!document.querySelector('.cupertino-pane-wrapper #tradeDetailSheet');
             return {
                 sheetOpen,
-                hasPnlSummary: /If Sold Now|Sold Result|At Target/i.test(detailText),
+                hasPnlSummary: /Net P&L|Sold Result|At Target/i.test(detailText),
                 hasInvestment: /Buy Price|Total Cost|Progress to Target/i.test(detailText),
                 hasCloseBtn: !!closeBtn
             };

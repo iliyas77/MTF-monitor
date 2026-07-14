@@ -55,7 +55,7 @@
         chargeItems.forEach((i) => {
             rows.push({ label: i.label, amount: bd[i.key], tone: 'negative', decimals: true });
         });
-        return `<div class="border rounded p-2">${rows.map(renderTradeDetailRow).join('')}</div>`;
+        return `<div class="border rounded p-2" data-ref="trade-view.details-list">${rows.map(renderTradeDetailRow).join('')}</div>`;
     }
 
     function renderTradeViewPnLSummary(t) {
@@ -75,9 +75,9 @@
         ];
         const { renderIcon } = global.MTFComponents;
         return `
-            <div class="mt-4">
-                <div class="small text-muted text-uppercase fw-medium mb-2">${renderIcon('fa-calculator', { className: 'me-2' })}P&L Summary</div>
-                <div class="border rounded p-2">${rows.map(renderTradeDetailRow).join('')}</div>
+            <div class="mt-4" data-ref="trade-view.pnl-summary">
+                <div class="small text-muted text-uppercase fw-medium mb-2" data-ref="trade-view.pnl-summary.heading">${renderIcon('fa-calculator', { className: 'me-2' })}P&L Summary</div>
+                <div class="border rounded p-2" data-ref="trade-view.pnl-summary.body">${rows.map(renderTradeDetailRow).join('')}</div>
             </div>
         `;
     }
@@ -111,16 +111,16 @@
             appTag(levDisplay, 'accent'),
             appTag(`<i class="far fa-clock me-1 opacity-75"></i>${holdLabel}`)
         ].concat(extras);
-        return `<div class="d-flex flex-wrap gap-2 justify-content-center mb-3">${tags.join('')}</div>`;
+        return `<div class="d-flex flex-wrap gap-2 justify-content-center mb-3" data-ref="trade-meta-tags">${tags.join('')}</div>`;
     }
 
     function interestSheetRow(label, value, valueClass = '') {
         return `
-            <tr>
-                <td class="p-2 align-middle">
+            <tr data-ref="interest-sheet.row">
+                <td class="p-2 align-middle" data-ref="interest-sheet.row.label">
                     <span class="small text-muted fw-normal">${label}</span>
                 </td>
-                <td class="p-2 align-middle text-end">
+                <td class="p-2 align-middle text-end" data-ref="interest-sheet.row.value">
                     <span class="fs-6 fw-normal ${valueClass}">${value}</span>
                 </td>
             </tr>
@@ -195,36 +195,36 @@
             ['GST (18%)', buy.gst, sell.gst]
         ].filter(([, b, s]) => (b + s) > 0);
         const body = rows.map(([l, b, s]) => `
-            <tr>
-                <td class="text-muted">${l}</td>
-                <td class="text-end text-primary fs-6">${fmtDec(b)}</td>
-                <td class="text-end fs-6">${fmtDec(s)}</td>
-                <td class="text-end fw-semibold fs-6">${fmtDec(b + s)}</td>
+            <tr data-ref="charges-table.row">
+                <td class="text-muted" data-ref="charges-table.row.label">${l}</td>
+                <td class="text-end text-primary fs-6" data-ref="charges-table.row.buy">${fmtDec(b)}</td>
+                <td class="text-end fs-6" data-ref="charges-table.row.sell">${fmtDec(s)}</td>
+                <td class="text-end fw-semibold fs-6" data-ref="charges-table.row.total">${fmtDec(b + s)}</td>
             </tr>`).join('');
         return `
-            <div class="table-responsive">
-                <table class="table w-100">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Charge</th>
-                            <th class="text-end">${renderIcon('fa-arrow-down', { className: 'me-1' })}Buy</th>
-                            <th class="text-end">${renderIcon('fa-arrow-up', { colour: 'text-danger', className: 'me-1' })}Sell</th>
-                            <th class="text-end">Total</th>
+            <div class="table-responsive" data-ref="charges-table">
+                <table class="table w-100" data-ref="charges-table.table">
+                    <thead class="table-light" data-ref="charges-table.thead">
+                        <tr data-ref="charges-table.thead.row">
+                            <th data-ref="charges-table.thead.charge">Charge</th>
+                            <th class="text-end" data-ref="charges-table.thead.buy">${renderIcon('fa-arrow-down', { className: 'me-1' })}Buy</th>
+                            <th class="text-end" data-ref="charges-table.thead.sell">${renderIcon('fa-arrow-up', { colour: 'text-danger', className: 'me-1' })}Sell</th>
+                            <th class="text-end" data-ref="charges-table.thead.total">Total</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr>
-                            <td class="text-muted">Order Value</td>
-                            <td class="text-end text-primary fs-6">${fmtDec(buy.orderValue)}</td>
-                            <td class="text-end fs-6">${fmtDec(sell.orderValue)}</td>
-                            <td class="text-end fw-semibold fs-6">${fmtDec(buy.orderValue + sell.orderValue)}</td>
+                    <tbody data-ref="charges-table.tbody">
+                        <tr data-ref="charges-table.order-value">
+                            <td class="text-muted" data-ref="charges-table.order-value.label">Order Value</td>
+                            <td class="text-end text-primary fs-6" data-ref="charges-table.order-value.buy">${fmtDec(buy.orderValue)}</td>
+                            <td class="text-end fs-6" data-ref="charges-table.order-value.sell">${fmtDec(sell.orderValue)}</td>
+                            <td class="text-end fw-semibold fs-6" data-ref="charges-table.order-value.total">${fmtDec(buy.orderValue + sell.orderValue)}</td>
                         </tr>
                         ${body}
-                        <tr class="fw-medium text-body-secondary border-top">
-                            <td>Total Charges</td>
-                            <td class="text-end text-primary fs-6">${fmtDec(buy.total)}</td>
-                            <td class="text-end fs-6">${fmtDec(sell.total)}</td>
-                            <td class="text-end text-muted fs-6">${fmtDec(buy.total + sell.total)}</td>
+                        <tr class="fw-medium text-body-secondary border-top" data-ref="charges-table.total-row">
+                            <td data-ref="charges-table.total-row.label">Total Charges</td>
+                            <td class="text-end text-primary fs-6" data-ref="charges-table.total-row.buy">${fmtDec(buy.total)}</td>
+                            <td class="text-end fs-6" data-ref="charges-table.total-row.sell">${fmtDec(sell.total)}</td>
+                            <td class="text-end text-muted fs-6" data-ref="charges-table.total-row.total">${fmtDec(buy.total + sell.total)}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -268,27 +268,27 @@
         const isOpen = (tx.status || 'closed') === 'open';
         const statusLabel = isOpen ? appTag('Open', 'open') : appTag('Closed');
         const notesBlock = tx.notes
-            ? `<div class="mt-4 pt-3 border-top">
-                <div class="small fw-medium text-muted mb-1">Notes</div>
-                <p class="small text-muted mb-0">${tx.notes}</p>
+            ? `<div class="mt-4 pt-3 border-top" data-ref="trade-view.notes">
+                <div class="small fw-medium text-muted mb-1" data-ref="trade-view.notes.heading">Notes</div>
+                <p class="small text-muted mb-0" data-ref="trade-view.notes.body">${tx.notes}</p>
                </div>`
             : '';
 
         const html = `
-            <div>
-                <div class="d-flex justify-content-between align-items-start gap-2 mb-3">
-                    <div class="min-w-0">
-                        <div class="fw-semibold text-truncate">${tx.company}</div>
-                        ${isOpen ? `<div class="mt-1">${statusLabel}</div>` : ''}
+            <div data-ref="trade-view">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-3" data-ref="trade-view.header">
+                    <div class="min-w-0" data-ref="trade-view.header.company">
+                        <div class="fw-semibold text-truncate" data-ref="trade-view.header.company.name">${tx.company}</div>
+                        ${isOpen ? `<div class="mt-1" data-ref="trade-view.header.company.status">${statusLabel}</div>` : ''}
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0" data-ref="trade-view.header.pnl">
                         ${renderTradeCardPnl(tx.netProfit, { size: 'md', compact: true })}
                     </div>
                 </div>
                 ${renderTradeDetailsList(tx)}
                 ${renderTradeViewPnLSummary(tx)}
                 ${notesBlock}
-                <div class="small text-muted mt-3 text-center">ID: ${tx.id}</div>
+                <div class="small text-muted mt-3 text-center" data-ref="trade-view.id">ID: ${tx.id}</div>
             </div>
         `;
 
@@ -326,17 +326,17 @@
         const { buy, sell, tradeType } = chargeSides(tx);
         const grand = buy.total + sell.total;
         const intraNote = tradeType === 'intraday'
-            ? `<div class="alert alert-info py-2 small mb-2">${global.MTFComponents.renderIcon('fa-bolt', { className: 'me-1' })}Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
+            ? `<div class="alert alert-info py-2 small mb-2" data-ref="charges-modal.intra-note">${global.MTFComponents.renderIcon('fa-bolt', { className: 'me-1' })}Same-day ${tx.broker} trade — <strong>intraday charges</strong> apply (STT 0.025% on sell only, stamp 0.003% on buy; no pledge, unpledge or DP).</div>`
             : '';
 
         const chargesHtml = `
             ${buildTradeMetaTags(tx, tradeType === 'intraday' ? [appTag('Intraday', 'warning')] : [])}
             ${intraNote}
             ${chargesTable(buy, sell)}
-            <div class="row g-2 text-center mt-3">
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-primary">Buy Side</div><div class="fs-6 fw-semibold text-primary">${fmtDec(buy.total)}</div></div></div>
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Sell Side</div><div class="fs-6 fw-medium text-body-secondary">${fmtDec(sell.total)}</div></div></div>
-                <div class="col-4"><div class="bg-light rounded p-2"><div class="small text-muted">Total</div><div class="fs-6 fw-medium text-body">${fmtDec(grand)}</div></div></div>
+            <div class="row g-2 text-center mt-3" data-ref="charges-modal.summary">
+                <div class="col-4" data-ref="charges-modal.summary.buy"><div class="bg-light rounded p-2"><div class="small text-primary">Buy Side</div><div class="fs-6 fw-semibold text-primary">${fmtDec(buy.total)}</div></div></div>
+                <div class="col-4" data-ref="charges-modal.summary.sell"><div class="bg-light rounded p-2"><div class="small text-muted">Sell Side</div><div class="fs-6 fw-medium text-body-secondary">${fmtDec(sell.total)}</div></div></div>
+                <div class="col-4" data-ref="charges-modal.summary.total"><div class="bg-light rounded p-2"><div class="small text-muted">Total</div><div class="fs-6 fw-medium text-body">${fmtDec(grand)}</div></div></div>
             </div>
         `;
 
@@ -382,10 +382,10 @@
             : '';
 
         Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'text-info flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>${appTag(broker, 'broker')}`, `
-            <div>
-                <div class="trade-metrics-panel mb-3">
-                    <table class="table table-sm trade-metrics-table">
-                        <tbody>
+            <div data-ref="interest-modal">
+                <div class="trade-metrics-panel mb-3" data-ref="interest-modal.metrics">
+                    <table class="table table-sm trade-metrics-table" data-ref="interest-modal.metrics.table">
+                        <tbody data-ref="interest-modal.metrics.tbody">
                             ${interestSheetRow('Total interest', fmtDec(d.interest), 'text-warning')}
                             ${interestSheetRow('Total investment', fmtDec(d.totalInvestment))}
                             ${interestSheetRow('Your margin', fmtDec(d.ownMargin))}
@@ -521,40 +521,40 @@
             : `${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Sell</span>`;
         const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
         Sheet.open(sheetTitle, `
-            <div class="d-flex flex-column gap-3">
-                <div class="border rounded-3 p-3 bg-white">
-                    <div class="row align-items-center g-2 text-center">
-                        <div class="col">
-                            <div class="small text-muted text-uppercase mb-1">Buy</div>
-                            <div class="fs-5 text-info">${fmtDec(buy)}</div>
+            <div class="d-flex flex-column gap-3" data-ref="target-modal">
+                <div class="border rounded-3 p-3 bg-white" data-ref="target-modal.preview">
+                    <div class="row align-items-center g-2 text-center" data-ref="target-modal.preview.row">
+                        <div class="col" data-ref="target-modal.preview.buy">
+                            <div class="small text-muted text-uppercase mb-1" data-ref="target-modal.preview.buy.label">Buy</div>
+                            <div class="fs-5 text-info" data-ref="target-modal.preview.buy.value">${fmtDec(buy)}</div>
                         </div>
-                        <div class="col-auto text-muted px-1" aria-hidden="true">
+                        <div class="col-auto text-muted px-1" aria-hidden="true" data-ref="target-modal.preview.arrow">
                             ${global.MTFComponents.renderIcon('fa-arrow-right')}
                         </div>
-                        <div class="col">
-                            <div class="small text-muted text-uppercase mb-1">${sellLabel}</div>
-                            <div class="fs-5 text-danger" id="targetSellPreview">—</div>
+                        <div class="col" data-ref="target-modal.preview.sell">
+                            <div class="small text-muted text-uppercase mb-1" data-ref="target-modal.preview.sell.label">${sellLabel}</div>
+                            <div class="fs-5 text-danger" id="targetSellPreview" data-ref="target-modal.preview.sell.value">—</div>
                         </div>
                     </div>
-                    <div class="text-center mt-2" id="targetGainPreview">${gainPlaceholder}</div>
+                    <div class="text-center mt-2" id="targetGainPreview" data-ref="target-modal.preview.gain">${gainPlaceholder}</div>
                 </div>
 
-                <section>
-                    <label class="form-label small text-muted text-uppercase mb-2">Quick target %</label>
-                    <div class="d-flex flex-wrap gap-2 mb-2" id="targetSellPctChips" role="group" aria-label="Target percentage presets"></div>
-                    <div class="input-group">
-                        <input type="number" class="form-control" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" inputmode="decimal" />
-                        <button type="button" class="btn btn-outline-secondary" onclick="applyTargetSellPctCustom()">Add</button>
+                <section data-ref="target-modal.quick-pct">
+                    <label class="form-label small text-muted text-uppercase mb-2" data-ref="target-modal.quick-pct.label">Quick target %</label>
+                    <div class="d-flex flex-wrap gap-2 mb-2" id="targetSellPctChips" role="group" aria-label="Target percentage presets" data-ref="target-modal.quick-pct.chips"></div>
+                    <div class="input-group" data-ref="target-modal.quick-pct.input-group">
+                        <input type="number" class="form-control" id="targetSellPctCustom" min="0.01" step="0.1" placeholder="Custom % e.g. 1.3" inputmode="decimal" data-ref="target-modal.quick-pct.custom-input" />
+                        <button type="button" class="btn btn-outline-secondary" onclick="applyTargetSellPctCustom()" data-ref="target-modal.quick-pct.add-btn">Add</button>
                     </div>
                 </section>
 
-                <section>
-                    <label class="form-label small text-muted text-uppercase mb-2" for="targetSellPrice">Sell price</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white">₹</span>
-                        <input type="number" class="form-control" id="targetSellPrice" min="0.01" step="0.01" value="${sellVal}" oninput="onTargetSellPriceInput()" inputmode="decimal" />
+                <section data-ref="target-modal.sell-price">
+                    <label class="form-label small text-muted text-uppercase mb-2" for="targetSellPrice" data-ref="target-modal.sell-price.label">Sell price</label>
+                    <div class="input-group" data-ref="target-modal.sell-price.input-group">
+                        <span class="input-group-text bg-white" data-ref="target-modal.sell-price.prefix">₹</span>
+                        <input type="number" class="form-control" id="targetSellPrice" min="0.01" step="0.01" value="${sellVal}" oninput="onTargetSellPriceInput()" inputmode="decimal" data-ref="target-modal.sell-price.input" />
                     </div>
-                    <div class="form-text mb-0">${isOpen ? 'Tap a % above or enter your target sell price manually.' : 'Tap a % above or enter the sell price manually.'}</div>
+                    <div class="form-text mb-0" data-ref="target-modal.sell-price.hint">${isOpen ? 'Tap a % above or enter your target sell price manually.' : 'Tap a % above or enter the sell price manually.'}</div>
                 </section>
             </div>
         `, renderAppButtonRow('Cancel', actionLabel, {
@@ -645,10 +645,10 @@
         buyPriceModalTradeId = id;
         const bp = Number(tx.buyPrice) || 0;
         Sheet.open(`${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-primary flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Buy</span>`, `
-            <p class="small text-muted mb-3">Update buy price. Margin, charges, and P&L will recalculate.</p>
-            <div class="mb-3">
-                <label class="form-label small text-primary mb-1">Buy Price</label>
-                <input type="number" class="form-control w-100" id="buyPriceModalInput" min="0.01" step="0.01" value="${bp}" inputmode="decimal" />
+            <p class="small text-muted mb-3" data-ref="buy-price-modal.note">Update buy price. Margin, charges, and P&L will recalculate.</p>
+            <div class="mb-3" data-ref="buy-price-modal.field">
+                <label class="form-label small text-primary mb-1" data-ref="buy-price-modal.field.label">Buy Price</label>
+                <input type="number" class="form-control w-100" id="buyPriceModalInput" min="0.01" step="0.01" value="${bp}" inputmode="decimal" data-ref="buy-price-modal.field.input" />
             </div>
         `, renderAppButtonRow('Cancel', 'Update Buy Price', {
             cancelOnClick: 'closeSheet()',
@@ -732,9 +732,9 @@
         const ownMargin = lev > 1 ? totalInv / lev : totalInv;
         const mtfAmt = lev > 1 ? totalInv * (1 - 1 / lev) : 0;
         return `
-            <div class="fs-6">Total investment: ${fmtDec(totalInv)}</div>
-            <div class="fs-6">Your margin: ${fmtDec(ownMargin)}</div>
-            <div class="fs-6">Broker funded: ${fmtDec(mtfAmt)}</div>
+            <div class="fs-6" data-ref="leverage-modal.breakdown.total-inv">Total investment: ${fmtDec(totalInv)}</div>
+            <div class="fs-6" data-ref="leverage-modal.breakdown.own-margin">Your margin: ${fmtDec(ownMargin)}</div>
+            <div class="fs-6" data-ref="leverage-modal.breakdown.broker-funded">Broker funded: ${fmtDec(mtfAmt)}</div>
         `;
     }
 
@@ -754,13 +754,13 @@
         leverageModalTradeId = id;
         const lev = Number(tx.leverage) || 1;
         Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Leverage</span>`, `
-            <p class="small text-muted mb-3">Update leverage only. Margin, interest, and P&L will recalculate.</p>
-            <div class="mb-3">
-                <label class="form-label small text-muted mb-1">Leverage (X)</label>
-                <input type="number" class="form-control w-100" id="levModalInput" min="1" step="any" value="${lev}" oninput="onLeverageModalInput()" />
-                <p class="form-text mb-0">Your margin = total investment ÷ leverage. Broker funds the rest.</p>
+            <p class="small text-muted mb-3" data-ref="leverage-modal.note">Update leverage only. Margin, interest, and P&L will recalculate.</p>
+            <div class="mb-3" data-ref="leverage-modal.field">
+                <label class="form-label small text-muted mb-1" data-ref="leverage-modal.field.label">Leverage (X)</label>
+                <input type="number" class="form-control w-100" id="levModalInput" min="1" step="any" value="${lev}" oninput="onLeverageModalInput()" data-ref="leverage-modal.field.input" />
+                <p class="form-text mb-0" data-ref="leverage-modal.field.hint">Your margin = total investment ÷ leverage. Broker funds the rest.</p>
             </div>
-            <div class="small text-muted" id="levModalBreakdown">
+            <div class="small text-muted" id="levModalBreakdown" data-ref="leverage-modal.breakdown">
                 ${leverageModalBreakdownHtml(tx, lev)}
             </div>
         `, renderAppButtonRow('Cancel', 'Update Leverage', {
@@ -949,34 +949,35 @@
 
         Sheet.open(`${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Holding</span>`, `
             ${openNote}
-            <div class="row g-2 mb-3">
-                <div class="col-6">
-                    <label class="form-label small text-primary mb-1" for="holdBuyDate">Buy Date</label>
-                    <input type="date" class="form-control w-100" id="holdBuyDate" value="${buyDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
+            <div class="row g-2 mb-3" data-ref="hold-modal.dates">
+                <div class="col-6" data-ref="hold-modal.dates.buy">
+                    <label class="form-label small text-primary mb-1" for="holdBuyDate" data-ref="hold-modal.dates.buy.label">Buy Date</label>
+                    <input type="date" class="form-control w-100" id="holdBuyDate" value="${buyDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" data-ref="hold-modal.dates.buy.input" />
                 </div>
-                <div class="col-6">
-                    <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
-                        <label class="form-label small text-muted mb-0" for="holdSellDate">Sell Date</label>
+                <div class="col-6" data-ref="hold-modal.dates.sell">
+                    <div class="d-flex align-items-center justify-content-between gap-2 mb-1" data-ref="hold-modal.dates.sell.header">
+                        <label class="form-label small text-muted mb-0" for="holdSellDate" data-ref="hold-modal.dates.sell.label">Sell Date</label>
                         <button type="button"
                             class="btn btn-sm btn-outline-secondary rounded-circle d-inline-flex align-items-center justify-content-center p-0"
                             style="width:1.75rem;height:1.75rem"
                             onclick="setHoldModalSellDateToday()"
                             title="Set sell date to today"
-                            aria-label="Set sell date to today">
+                            aria-label="Set sell date to today"
+                            data-ref="hold-modal.dates.sell.today-btn">
                             ${global.MTFComponents.renderIcon('fa-sync-alt', { size: 'xs' })}
                         </button>
                     </div>
-                    <input type="date" class="form-control w-100" id="holdSellDate" value="${sellDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" />
+                    <input type="date" class="form-control w-100" id="holdSellDate" value="${sellDate}" oninput="onHoldModalDateInput()" onchange="onHoldModalDateInput()" data-ref="hold-modal.dates.sell.input" />
                 </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label small text-muted mb-1" for="holdDays">Financed days</label>
-                <input type="number" class="form-control w-100" id="holdDays" min="0" step="1" value="${holdDays}" oninput="onHoldModalDaysInput()" />
-                <p class="form-text mb-0">Includes buy and sell days (matches broker interest). Change days to shift sell date, or edit dates directly.</p>
+            <div class="mb-3" data-ref="hold-modal.days">
+                <label class="form-label small text-muted mb-1" for="holdDays" data-ref="hold-modal.days.label">Financed days</label>
+                <input type="number" class="form-control w-100" id="holdDays" min="0" step="1" value="${holdDays}" oninput="onHoldModalDaysInput()" data-ref="hold-modal.days.input" />
+                <p class="form-text mb-0" data-ref="hold-modal.days.hint">Includes buy and sell days (matches broker interest). Change days to shift sell date, or edit dates directly.</p>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setHoldModalSameDay()">Same day</button>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setHoldModalTodayPair()">Today → Tomorrow</button>
+            <div class="d-flex flex-wrap gap-2" data-ref="hold-modal.quick-actions">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setHoldModalSameDay()" data-ref="hold-modal.quick-actions.same-day">Same day</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setHoldModalTodayPair()" data-ref="hold-modal.quick-actions.today-tomorrow">Today → Tomorrow</button>
             </div>
         `, renderAppButtonRow('Cancel', 'Update Dates', {
             cancelOnClick: 'closeSheet()',
@@ -1122,10 +1123,10 @@
     }
 
     function infoCard(label, valueHtml, valueClass = '', icon = '') {
-        return `<div class="ci-card">
-            ${icon ? `<span class="ci-card-icon">${icon}</span>` : ''}
-            <span class="ci-card-label">${escapeHtml(label)}</span>
-            <span class="ci-card-value ${valueClass}">${valueHtml}</span>
+        return `<div class="ci-card" data-ref="company-info.card">
+            ${icon ? `<span class="ci-card-icon" data-ref="company-info.card.icon">${icon}</span>` : ''}
+            <span class="ci-card-label" data-ref="company-info.card.label">${escapeHtml(label)}</span>
+            <span class="ci-card-value ${valueClass}" data-ref="company-info.card.value">${valueHtml}</span>
         </div>`;
     }
 
@@ -1136,17 +1137,17 @@
         if (!(low > 0) || !(high > 0) || !(price > 0) || high < low) return '';
         const pct = Math.max(0, Math.min(100, ((price - low) / (high - low)) * 100));
         return `
-            <div class="ci-range">
-                <div class="ci-range-head">
-                    <span class="ci-range-label">52-Week Range</span>
+            <div class="ci-range" data-ref="company-info.range">
+                <div class="ci-range-head" data-ref="company-info.range.head">
+                    <span class="ci-range-label" data-ref="company-info.range.label">52-Week Range</span>
                 </div>
-                <div class="ci-range-track">
-                    <span class="ci-range-fill" style="width:${pct.toFixed(2)}%"></span>
-                    <span class="ci-range-marker" style="left:${pct.toFixed(2)}%"></span>
+                <div class="ci-range-track" data-ref="company-info.range.track">
+                    <span class="ci-range-fill" style="width:${pct.toFixed(2)}%" data-ref="company-info.range.fill"></span>
+                    <span class="ci-range-marker" style="left:${pct.toFixed(2)}%" data-ref="company-info.range.marker"></span>
                 </div>
-                <div class="ci-range-ends">
-                    <span class="ci-range-low">${fmtINR(low)}</span>
-                    <span class="ci-range-high">${fmtINR(high)}</span>
+                <div class="ci-range-ends" data-ref="company-info.range.ends">
+                    <span class="ci-range-low" data-ref="company-info.range.low">${fmtINR(low)}</span>
+                    <span class="ci-range-high" data-ref="company-info.range.high">${fmtINR(high)}</span>
                 </div>
             </div>
         `;
@@ -1158,7 +1159,8 @@
             : '';
         if (!yahooLink) return '';
         return `<a href="${escapeHtml(yahooLink)}" target="_blank" rel="noopener noreferrer"
-              class="btn btn-outline-primary btn-sm w-100 ci-yahoo-btn d-flex align-items-center justify-content-center gap-2">
+              class="btn btn-outline-primary btn-sm w-100 ci-yahoo-btn d-flex align-items-center justify-content-center gap-2"
+              data-ref="company-info.yahoo-btn">
               ${renderIcon('fa-arrow-up-right-from-square', { className: 'me-1' })}
               Open on Yahoo Finance
            </a>`;
@@ -1192,25 +1194,25 @@
         ].join('');
 
         return `
-            <div class="company-info">
-                <div class="ci-hero ${heroTone}">
-                    <div class="ci-hero-label">
+            <div class="company-info" data-ref="company-info">
+                <div class="ci-hero ${heroTone}" data-ref="company-info.hero">
+                    <div class="ci-hero-label" data-ref="company-info.hero.label">
                         ${renderIcon('fa-bolt', { className: 'me-1 opacity-75' })}
                         Current Price
                     </div>
-                    <div class="ci-hero-price">${escapeHtml(price)}</div>
-                    <div class="ci-hero-change ${tone}">
+                    <div class="ci-hero-price" data-ref="company-info.hero.price">${escapeHtml(price)}</div>
+                    <div class="ci-hero-change ${tone}" data-ref="company-info.hero.change">
                         ${arrow}
-                        <span class="ci-hero-change-abs">${escapeHtml(changeAbs)}</span>
-                        ${changePctText ? `<span class="ci-hero-change-pct">(${escapeHtml(changePctText)})</span>` : ''}
+                        <span class="ci-hero-change-abs" data-ref="company-info.hero.change-abs">${escapeHtml(changeAbs)}</span>
+                        ${changePctText ? `<span class="ci-hero-change-pct" data-ref="company-info.hero.change-pct">(${escapeHtml(changePctText)})</span>` : ''}
                     </div>
                 </div>
 
                 ${rangeBar}
 
-                <div class="ci-grid">${cards}</div>
+                <div class="ci-grid" data-ref="company-info.grid">${cards}</div>
 
-                <div class="ci-updated">
+                <div class="ci-updated" data-ref="company-info.updated">
                     ${renderIcon('fa-clock', { className: 'me-1 opacity-75' })}
                     Updated ${escapeHtml(info.updatedAt ? new Date(info.updatedAt).toLocaleTimeString('en-IN') : '—')}
                 </div>
@@ -1220,18 +1222,18 @@
 
     function renderCompanyInfoError(message) {
         return `
-            <div class="text-center py-4">
-                <div class="mb-2">${renderIcon('fa-triangle-exclamation', { className: 'text-warning fs-2' })}</div>
-                <p class="small text-muted mb-0">${escapeHtml(message || 'Could not load company details.')}</p>
+            <div class="text-center py-4" data-ref="company-info.error">
+                <div class="mb-2" data-ref="company-info.error.icon">${renderIcon('fa-triangle-exclamation', { className: 'text-warning fs-2' })}</div>
+                <p class="small text-muted mb-0" data-ref="company-info.error.message">${escapeHtml(message || 'Could not load company details.')}</p>
             </div>
         `;
     }
 
     function renderCompanyInfoLoading(company) {
         return `
-            <div class="text-center py-4">
-                <div class="mb-2">${renderIcon('fa-spinner', { className: 'fa-spin fs-2 text-primary' })}</div>
-                <p class="small text-muted mb-0">Fetching ${escapeHtml(company)} details from Yahoo Finance…</p>
+            <div class="text-center py-4" data-ref="company-info.loading">
+                <div class="mb-2" data-ref="company-info.loading.icon">${renderIcon('fa-spinner', { className: 'fa-spin fs-2 text-primary' })}</div>
+                <p class="small text-muted mb-0" data-ref="company-info.loading.message">Fetching ${escapeHtml(company)} details from Yahoo Finance…</p>
             </div>
         `;
     }
@@ -1241,7 +1243,8 @@
     function buildCompanyInfoTitle(company, spinning = false) {
         const iconClass = spinning ? 'ci-refresh-icon ci-refresh-icon--spin' : 'ci-refresh-icon';
         const refreshBtn = `<button type="button" class="ci-refresh-btn${spinning ? ' ci-refresh-btn--busy' : ''}"
-            onclick="refreshCompanyInfoSheet()" aria-label="Refresh" title="Refresh"${spinning ? ' disabled' : ''}>
+            onclick="refreshCompanyInfoSheet()" aria-label="Refresh" title="Refresh"${spinning ? ' disabled' : ''}
+            data-ref="company-info.refresh-btn">
             ${renderIcon('fa-rotate', { className: iconClass })}
         </button>`;
         return `${renderIcon('fa-building', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${escapeHtml(company)}</span>${refreshBtn}`;
@@ -1283,7 +1286,7 @@
     }
 
     async function openCompanyInfoSheet(id) {
-        const { getTransaction, resolveTradeForDisplay, fetchTradeCompanyInfo } = Object.assign({}, tradeSheets(), tradePages());
+        const { getTransaction, resolveTradeForDisplay, fetchTradeCompanyInfo, getTradeCompanyInfoCached } = Object.assign({}, tradeSheets(), tradePages());
         const raw = getTransaction ? getTransaction(id) : null;
         if (!raw) { showToast('Transaction not found.', 'danger'); return; }
         const tx = resolveTradeForDisplay ? resolveTradeForDisplay(raw) : raw;
@@ -1295,6 +1298,43 @@
         }
 
         _companyInfoState = { id, tx, company, refreshing: false };
+
+        // Stale-while-revalidate: show cached or partial (quote-derived) data
+        // instantly, then refresh in the background when stale. This avoids the
+        // long spinner delay caused by the throttled Yahoo fetch on every open.
+        const freshFlag = { value: false };
+        const cached = typeof getTradeCompanyInfoCached === 'function'
+            ? getTradeCompanyInfoCached(tx, freshFlag)
+            : null;
+
+        if (cached && cached.price != null) {
+            // Render immediately — no spinner.
+            const title = buildCompanyInfoTitle(company, !freshFlag.value);
+            Sheet.open(title, renderCompanyInfoBody(cached, company), renderCompanyInfoFooter(cached));
+            if (freshFlag.value) return; // fresh — no refetch needed
+
+            // Stale or partial — refresh silently in the background.
+            _companyInfoState.refreshing = true;
+            try {
+                const info = await fetcher(tx);
+                if (Sheet.isOpen() && info && (info.price || info.price === 0) && !info.error) {
+                    const doneTitle = buildCompanyInfoTitle(company, false);
+                    Sheet.open(doneTitle, renderCompanyInfoBody(info, company), renderCompanyInfoFooter(info));
+                } else if (Sheet.isOpen()) {
+                    // On error/rate-limit, keep the cached view — just stop the spinner.
+                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${buildCompanyInfoTitle(company, false)}</span>`;
+                }
+            } catch (_) {
+                if (Sheet.isOpen()) {
+                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${buildCompanyInfoTitle(company, false)}</span>`;
+                }
+            } finally {
+                _companyInfoState.refreshing = false;
+            }
+            return;
+        }
+
+        // No cached/partial data — fall back to the loading spinner + fetch.
         const title = buildCompanyInfoTitle(company);
         Sheet.open(title, renderCompanyInfoLoading(company), '');
 

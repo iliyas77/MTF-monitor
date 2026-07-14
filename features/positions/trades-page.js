@@ -150,7 +150,7 @@
                 if (isActiveOpenTrade && isActiveOpenTrade(t)) return renderOpenTradeListItem(t, i + 1);
                 return renderPastTradeListItem(t, i + 1);
             }).join('');
-            container.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100">${listHtml}</div>`;
+            container.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100" data-ref="page.trades.all-list">${listHtml}</div>`;
             return;
         }
 

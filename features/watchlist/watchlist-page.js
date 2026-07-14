@@ -67,47 +67,47 @@
             : '—';
 
         const removeBtn = q.removable
-            ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill market-remove-btn" data-remove-symbol="${escapeHtml(q.symbol || '')}" aria-label="Remove from watchlist"><i class="fas fa-trash-alt me-1" aria-hidden="true"></i>Remove</button>`
+            ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill market-remove-btn" data-remove-symbol="${escapeHtml(q.symbol || '')}" aria-label="Remove from watchlist" data-ref="market.quote-card.remove"><i class="fas fa-trash-alt me-1" aria-hidden="true"></i>Remove</button>`
             : '';
-        const buyBtn = `<button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill market-buy-btn" data-buy-symbol="${escapeHtml(q.symbol || '')}" data-buy-name="${escapeHtml(name)}" aria-label="Buy ${escapeHtml(q.symbol || name || 'stock')}"><i class="fas fa-plus me-1" aria-hidden="true"></i>Buy</button>`;
+        const buyBtn = `<button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill market-buy-btn" data-buy-symbol="${escapeHtml(q.symbol || '')}" data-buy-name="${escapeHtml(name)}" aria-label="Buy ${escapeHtml(q.symbol || name || 'stock')}" data-ref="market.quote-card.buy"><i class="fas fa-plus me-1" aria-hidden="true"></i>Buy</button>`;
 
         return `
             <article class="card bg-body border rounded w-100 trade-position-card market-quote-card"
                 data-quote-symbol="${escapeHtml(q.symbol || '')}"
                 data-symbol="${escapeHtml(q.symbol || '')}"
                 role="listitem"
-                aria-label="${escapeHtml(sym)}">
-                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
-                    <div class="d-flex align-items-start gap-2 w-100 min-w-0">
-                        <span class="trade-position-avatar trade-position-avatar--${avatarTone} flex-shrink-0" data-quote-icon aria-hidden="true">${escapeHtml(symbolInitial(sym))}</span>
-                        <div class="min-w-0 flex-grow-1 overflow-hidden">
-                            <div class="trade-position-name" title="${escapeHtml(sym)}">${escapeHtml(sym)}</div>
-                            <div class="trade-position-meta">
-                                <span class="text-truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                aria-label="${escapeHtml(sym)}" data-ref="market.quote-card">
+                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0" data-ref="market.quote-card.body">
+                    <div class="d-flex align-items-start gap-2 w-100 min-w-0" data-ref="market.quote-card.header">
+                        <span class="trade-position-avatar trade-position-avatar--${avatarTone} flex-shrink-0" data-quote-icon aria-hidden="true" data-ref="market.quote-card.avatar">${escapeHtml(symbolInitial(sym))}</span>
+                        <div class="min-w-0 flex-grow-1 overflow-hidden" data-ref="market.quote-card.name-wrap">
+                            <div class="trade-position-name" title="${escapeHtml(sym)}" data-ref="market.quote-card.symbol">${escapeHtml(sym)}</div>
+                            <div class="trade-position-meta" data-ref="market.quote-card.name-meta">
+                                <span class="text-truncate" title="${escapeHtml(name)}" data-ref="market.quote-card.name">${escapeHtml(name)}</span>
                             </div>
                         </div>
-                        <div class="trade-position-pnl flex-shrink-0 text-end">
-                            <div class="text-nowrap fw-normal" data-quote-price>${priceText}</div>
-                            <div class="small text-truncate fw-normal ${changeToneClass}" data-quote-change title="${escapeHtml(changeCombo)}">${escapeHtml(changeCombo)}</div>
+                        <div class="trade-position-pnl flex-shrink-0 text-end" data-ref="market.quote-card.price-block">
+                            <div class="text-nowrap fw-normal" data-quote-price data-ref="market.quote-card.price">${priceText}</div>
+                            <div class="small text-truncate fw-normal ${changeToneClass}" data-quote-change title="${escapeHtml(changeCombo)}" data-ref="market.quote-card.change">${escapeHtml(changeCombo)}</div>
                         </div>
                     </div>
-                    <div class="trade-position-metrics">
-                        <div class="trade-position-grid">
-                            <div class="trade-position-cell">
+                    <div class="trade-position-metrics" data-ref="market.quote-card.metrics">
+                        <div class="trade-position-grid" data-ref="market.quote-card.metrics.grid">
+                            <div class="trade-position-cell" data-ref="market.quote-card.metrics.day-chg">
                                 <span class="trade-position-label">Day chg</span>
-                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-abs>${escapeHtml(changeAbsText)}</span>
+                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-abs data-ref="market.quote-card.metrics.day-chg.value">${escapeHtml(changeAbsText)}</span>
                             </div>
-                            <div class="trade-position-cell">
+                            <div class="trade-position-cell" data-ref="market.quote-card.metrics.day-pct">
                                 <span class="trade-position-label">Day %</span>
-                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-pct>${escapeHtml(changePctText)}</span>
+                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-pct data-ref="market.quote-card.metrics.day-pct.value">${escapeHtml(changePctText)}</span>
                             </div>
-                            <div class="trade-position-cell">
+                            <div class="trade-position-cell" data-ref="market.quote-card.metrics.prev-close">
                                 <span class="trade-position-label">Prev close</span>
-                                <span class="trade-position-value text-truncate d-inline-flex align-items-center gap-1" data-quote-prev><i class="fas fa-clock-rotate-left text-muted" aria-hidden="true"></i>${escapeHtml(prevClose)}</span>
+                                <span class="trade-position-value text-truncate d-inline-flex align-items-center gap-1" data-quote-prev data-ref="market.quote-card.metrics.prev-close.value"><i class="fas fa-clock-rotate-left text-muted" aria-hidden="true"></i>${escapeHtml(prevClose)}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex gap-2 w-100">
+                    <div class="d-flex gap-2 w-100" data-ref="market.quote-card.actions">
                         ${buyBtn}
                         ${removeBtn}
                     </div>
@@ -168,7 +168,7 @@
             return;
         }
 
-        listContainer.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100" role="list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
+        listContainer.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100" role="list" data-ref="page.market.list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
         if (typeof global.observeQuoteRows === 'function') {
             global.observeQuoteRows();
         }
