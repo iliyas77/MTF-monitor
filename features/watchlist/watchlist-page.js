@@ -1,5 +1,5 @@
 /**
- * Market quote card — matches Positions trade-position-card layout.
+ * Watchlist page — live NSE quotes for stocks you pick, matching the new Minimal Redesign.
  */
 (function (global) {
     'use strict';
@@ -14,13 +14,13 @@
 
     function formatChangePct(n) {
         if (n === null || n === undefined || isNaN(n)) return '—';
-        const sign = n >= 0 ? '+' : '';
+        const sign = n > 0 ? '+' : '';
         return sign + Number(n).toFixed(2) + '%';
     }
 
     function formatChangeAbs(n) {
         if (n === null || n === undefined || isNaN(n)) return '—';
-        const sign = n >= 0 ? '+' : '−';
+        const sign = n > 0 ? '+' : (n < 0 ? '−' : '');
         return sign + '₹' + Number(Math.abs(n)).toLocaleString('en-IN', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
@@ -45,7 +45,47 @@
         const s = String(symbol || '');
         let h = 0;
         for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
-        return Math.abs(h) % 6;
+        const tones = ['red', 'blue', 'green', 'purple'];
+        return tones[Math.abs(h) % 4];
+    }
+
+    function getSparklineSVG(isPositive) {
+        const color = isPositive ? '#16A34A' : '#DC2626';
+        const path = isPositive 
+            ? 'M0,15 L10,12 L20,14 L30,8 L40,10 L50,2' 
+            : 'M0,2 L10,5 L20,3 L30,12 L40,10 L50,15';
+        return `
+            <svg class="wl-sparkline" viewBox="0 0 50 20" preserveAspectRatio="none">
+                <path d="${path}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        `;
+    }
+
+    function renderMarketSummaryCarousel() {
+        const indices = [
+            { name: 'NIFTY 50', price: 24197.30, change: 245.15, changePct: 1.02 },
+            { name: 'SENSEX', price: 79255.18, change: 775.19, changePct: 0.99 },
+            { name: 'BANK NIFTY', price: 51659.80, change: 326.55, changePct: 0.64 },
+            { name: 'INDIA VIX', price: 12.18, change: -0.24, changePct: -1.93 }
+        ];
+
+        return indices.map(idx => {
+            const isPositive = idx.change >= 0;
+            const sign = isPositive ? '+' : '';
+            const toneClass = isPositive ? 'text-positive' : 'text-negative';
+            const priceText = Number(idx.price).toLocaleString('en-IN', { minimumFractionDigits: 2 });
+            const changeText = sign + Number(idx.change).toFixed(2);
+            const pctText = sign + Number(idx.changePct).toFixed(2) + '%';
+            
+            return `
+                <div class="wl-carousel-card">
+                    <div class="wl-carousel-title">${escapeHtml(idx.name)}</div>
+                    <div class="wl-carousel-val">${priceText}</div>
+                    <div class="wl-carousel-change ${toneClass}">${changeText} (${pctText})</div>
+                    ${getSparklineSVG(isPositive)}
+                </div>
+            `;
+        }).join('');
     }
 
     function renderMarketQuoteRow(quote) {
@@ -53,77 +93,65 @@
         const change = Number(q.change);
         const changePct = Number(q.changePct);
         const hasChange = !isNaN(change);
-        const tone = !hasChange ? 'neutral' : change >= 0 ? 'up' : 'down';
+        const isPositive = change >= 0;
+        
         const priceText = formatPrice(q.price);
         const changeAbsText = hasChange ? formatChangeAbs(change) : '—';
         const changePctText = hasChange ? formatChangePct(changePct) : '—';
-        const changeCombo = hasChange ? `${changeAbsText} (${changePctText})` : '—';
-        const changeToneClass = tone === 'up' ? 'text-success' : tone === 'down' ? 'text-danger' : 'text-muted';
+        const toneClass = hasChange ? (isPositive ? 'text-positive' : 'text-negative') : 'text-muted';
+        
         const name = q.name || q.symbol || '';
         const sym = q.symbol || '—';
         const avatarTone = hashSymbolTone(sym);
-        const prevClose = q.previousClose != null && !isNaN(Number(q.previousClose))
-            ? formatPrice(q.previousClose)
-            : '—';
-
-        const removeBtn = q.removable
-            ? `<button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill market-remove-btn" data-remove-symbol="${escapeHtml(q.symbol || '')}" aria-label="Remove from watchlist"><i class="fas fa-trash-alt me-1" aria-hidden="true"></i>Remove</button>`
-            : '';
-        const buyBtn = `<button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill market-buy-btn" data-buy-symbol="${escapeHtml(q.symbol || '')}" data-buy-name="${escapeHtml(name)}" aria-label="Buy ${escapeHtml(q.symbol || name || 'stock')}"><i class="fas fa-plus me-1" aria-hidden="true"></i>Buy</button>`;
+        
+        // Mock day range calculations
+        const currentPrice = Number(q.price) || 0;
+        // fallback range if we don't have real data
+        const low = currentPrice * 0.95;
+        const high = currentPrice * 1.05;
+        const rangePct = 50; // mock marker in the middle
 
         return `
-            <article class="card bg-body border rounded w-100 trade-position-card market-quote-card"
-                data-quote-symbol="${escapeHtml(q.symbol || '')}"
-                data-symbol="${escapeHtml(q.symbol || '')}"
-                role="listitem"
-                aria-label="${escapeHtml(sym)}">
-                <div class="card-body p-3 d-flex flex-column gap-3 min-w-0">
-                    <div class="d-flex align-items-start gap-2 w-100 min-w-0">
-                        <span class="trade-position-avatar trade-position-avatar--${avatarTone} flex-shrink-0" data-quote-icon aria-hidden="true">${escapeHtml(symbolInitial(sym))}</span>
-                        <div class="min-w-0 flex-grow-1 overflow-hidden">
-                            <div class="trade-position-name" title="${escapeHtml(sym)}">${escapeHtml(sym)}</div>
-                            <div class="trade-position-meta">
-                                <span class="text-truncate" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-                            </div>
-                        </div>
-                        <div class="trade-position-pnl flex-shrink-0 text-end">
-                            <div class="text-nowrap fw-normal" data-quote-price>${priceText}</div>
-                            <div class="small text-truncate fw-normal ${changeToneClass}" data-quote-change title="${escapeHtml(changeCombo)}">${escapeHtml(changeCombo)}</div>
-                        </div>
+            <div class="wl-cell" data-quote-symbol="${escapeHtml(q.symbol || '')}" data-ref="market.quote-row">
+                <!-- Left: Avatar + Company -->
+                <div class="wl-avatar wl-avatar-${avatarTone}">${escapeHtml(symbolInitial(sym))}</div>
+                <div class="wl-meta">
+                    <div class="wl-symbol">${escapeHtml(sym)}</div>
+                    <div class="wl-name">${escapeHtml(name)}</div>
+                </div>
+                
+                <!-- Price / Abs Change -->
+                <div class="wl-price-col">
+                    <div class="wl-price" data-quote-price>${priceText}</div>
+                    <div class="wl-change ${toneClass}" data-quote-change-abs>${escapeHtml(changeAbsText)}</div>
+                </div>
+
+                <!-- Pct Change / Sparkline -->
+                <div class="wl-pct-col">
+                    <div class="wl-pct ${toneClass}" data-quote-change-pct>${escapeHtml(changePctText)}</div>
+                    ${hasChange ? getSparklineSVG(isPositive) : ''}
+                </div>
+
+                <!-- Day Range -->
+                <div class="wl-range-col">
+                    <div class="wl-range-labels">
+                        <span>₹${low.toFixed(2)}</span>
+                        <span>₹${high.toFixed(2)}</span>
                     </div>
-                    <div class="trade-position-metrics">
-                        <div class="trade-position-grid">
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Day chg</span>
-                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-abs>${escapeHtml(changeAbsText)}</span>
-                            </div>
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Day %</span>
-                                <span class="trade-position-value text-truncate ${changeToneClass}" data-quote-change-pct>${escapeHtml(changePctText)}</span>
-                            </div>
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Prev close</span>
-                                <span class="trade-position-value text-truncate d-inline-flex align-items-center gap-1" data-quote-prev><i class="fas fa-clock-rotate-left text-muted" aria-hidden="true"></i>${escapeHtml(prevClose)}</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="d-flex gap-2 w-100">
-                        ${buyBtn}
-                        ${removeBtn}
+                    <div class="wl-range-bar">
+                        <div class="wl-range-fill ${!isPositive ? 'is-red' : ''}" style="left: 20%; right: 20%;"></div>
+                        <div class="wl-range-marker" style="left: ${rangePct}%;"></div>
                     </div>
                 </div>
-            </article>
+
+                <!-- Actions -->
+                <div class="wl-action-col">
+                    <button class="wl-btn" aria-label="Notify"><i class="far fa-bell"></i></button>
+                    <button class="wl-btn" aria-label="More" ${q.removable ? `data-remove-symbol="${escapeHtml(q.symbol || '')}"` : ''}><i class="fas fa-ellipsis-v"></i></button>
+                </div>
+            </div>
         `;
     }
-
-    global.MTFRegister({ renderMarketQuoteRow, formatChangePct, formatChangeAbs });
-})(typeof window !== 'undefined' ? window : globalThis);
-
-/**
- * Watchlist page — live NSE quotes for stocks you pick.
- */
-(function (global) {
-    'use strict';
 
     function marketPages() {
         return (global.MTFAppHelpers || {}).marketPages || {};
@@ -134,11 +162,7 @@
     }
 
     function renderMarketPage() {
-        const {
-            renderMarketQuoteRow,
-            renderPageEmptyCard
-        } = comps();
-
+        const { renderPageEmptyCard } = comps();
         const {
             getMarketQuotes = () => [],
             getMarketError = () => '',
@@ -148,31 +172,48 @@
         if (typeof syncMarketSubTabUI === 'function') syncMarketSubTabUI();
 
         const listContainer = document.getElementById('marketQuotesList');
+        const carouselContainer = document.getElementById('marketSummaryCarousel');
+        const countContainer = document.getElementById('marketStockCount');
+        const updatedContainer = document.getElementById('marketLastUpdated');
+        
         const error = getMarketError() || '';
         const quotes = getMarketQuotes() || [];
 
+        // 1. Update Carousel
+        if (carouselContainer) {
+            carouselContainer.innerHTML = renderMarketSummaryCarousel();
+        }
+
+        // 2. Update Footer Stats
+        if (countContainer) {
+            countContainer.textContent = `${quotes.length} / 50 stocks`;
+        }
+        if (updatedContainer) {
+            updatedContainer.textContent = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        // 3. Update List
         if (!listContainer) return;
-        if (typeof renderPageEmptyCard !== 'function' || typeof renderMarketQuoteRow !== 'function') {
+        if (typeof renderPageEmptyCard !== 'function') {
             listContainer.innerHTML = '';
             return;
         }
 
-        // Prefer the list (even with placeholder prices) over a "Refreshing…" label —
-        // header refresh icon spins while the pool fetches one-by-one.
         if (quotes.length === 0) {
             listContainer.innerHTML = renderPageEmptyCard(
                 error ? 'fa-wifi' : 'fa-star',
                 error ? 'Could not load prices' : 'Watchlist is empty',
-                error || 'Tap search in the header to add stocks.'
+                error || 'Tap Add Stock to build your watchlist.'
             );
             return;
         }
 
-        listContainer.innerHTML = `<div class="trade-cards-stack d-flex flex-column w-100" role="list">${quotes.map(renderMarketQuoteRow).join('')}</div>`;
+        listContainer.innerHTML = quotes.map(renderMarketQuoteRow).join('');
+        
         if (typeof global.observeQuoteRows === 'function') {
             global.observeQuoteRows();
         }
     }
 
-    global.MTFRegister({ renderMarketPage });
+    global.MTFRegister({ renderMarketQuoteRow, formatChangePct, formatChangeAbs, renderMarketPage });
 })(typeof window !== 'undefined' ? window : globalThis);

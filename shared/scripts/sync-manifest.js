@@ -36,6 +36,7 @@ function rel(file) {
 function discoverScripts() {
     const found = [
         ...walkJsFiles(path.join(ROOT, 'shared', 'lib')),
+        ...walkJsFiles(path.join(ROOT, 'components')),
         ...walkJsFiles(path.join(ROOT, 'features')),
         ...walkJsFiles(path.join(ROOT, 'shared', 'db'))
     ].map(rel);
@@ -49,6 +50,7 @@ function discoverScripts() {
 function groupKey(script) {
     if (script === 'main.js') return 'main';
     if (script.startsWith('shared/lib/')) return 'lib';
+    if (script.startsWith('components/')) return 'components';
     if (script.startsWith('features/')) return 'features';
     if (script.startsWith('shared/db/')) return 'db';
     return 'other';
@@ -76,6 +78,18 @@ function preferredDbOrder(scripts) {
     const ordered = preferred.filter((s) => set.has(s));
     const rest = [...set].filter((s) => !preferred.includes(s)).sort();
     return [...ordered, ...rest];
+}
+
+function preferredComponentsOrder(scripts) {
+    // Reusable UI components load after shared/lib helpers, before feature pages.
+    const preferred = [
+        'components/metrics-grid.js'
+    ];
+    const set = new Set(scripts);
+    const ordered = preferred.filter((s) => set.has(s));
+    const rest = [...set].filter((s) => !preferred.includes(s)).sort();
+    const restWithoutDup = rest.filter((s) => !ordered.includes(s));
+    return [...ordered, ...restWithoutDup];
 }
 
 function preferredFeaturesOrder(scripts) {
@@ -110,12 +124,14 @@ function repairScripts(existing, onDisk) {
     const orphans = [...onDisk].filter((s) => s !== 'main.js' && !keptSet.has(s));
 
     const allLib = [...kept, ...orphans].filter((s) => s.startsWith('shared/lib/'));
+    const allComponents = [...kept, ...orphans].filter((s) => s.startsWith('components/'));
     const allFeatures = [...kept, ...orphans].filter((s) => s.startsWith('features/'));
     const allDb = [...kept, ...orphans].filter((s) => s.startsWith('shared/db/'));
     const other = [...kept, ...orphans].filter((s) => groupKey(s) === 'other');
 
     const next = [
         ...preferredLibOrder(allLib),
+        ...preferredComponentsOrder(allComponents),
         ...preferredFeaturesOrder(allFeatures),
         ...preferredDbOrder(allDb),
         ...other.sort()

@@ -138,10 +138,31 @@
     function renderAmount(amount, opts = {}) {
         const {
             size = 'md', tone = 'auto', words = false, decimals = false, compact = false,
-            showSign = false, pill = true, align = 'inherit', id = '', className = '', icon = ''
+            showSign = false, pill = true, align = 'inherit', id = '', className = '', icon = '',
+            weight = '', fs = '', valueClass = ''
         } = opts;
         const resolvedTone = resolveAmountTone(amount, tone);
-        const cfg = AMOUNT_SIZES[size] || AMOUNT_SIZES.md;
+        const baseCfg = AMOUNT_SIZES[size] || AMOUNT_SIZES.md;
+        const cfg = {
+            shell: baseCfg.shell,
+            value: baseCfg.value,
+            words: baseCfg.words
+        };
+        if (weight) {
+            cfg.value = cfg.value.replace(/fw-\w+/g, weight);
+            if (!cfg.value.includes(weight)) {
+                cfg.value += ` ${weight}`;
+            }
+        }
+        if (fs) {
+            cfg.value = cfg.value.replace(/fs-\d/g, fs);
+            if (!cfg.value.includes(fs)) {
+                cfg.value += ` ${fs}`;
+            }
+        }
+        if (valueClass) {
+            cfg.value += ` ${valueClass}`;
+        }
         const shellTone = pill ? AMOUNT_TONE_SHELL[resolvedTone] : AMOUNT_TONE_TEXT[resolvedTone];
         const alignMap = { left: 'text-start align-items-start', center: 'text-center align-items-center', right: 'text-end align-items-end', inherit: '' };
         const formatted = formatAmountNumber(amount, { decimals, compact, showSign });

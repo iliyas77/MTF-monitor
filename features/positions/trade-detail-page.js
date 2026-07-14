@@ -268,14 +268,14 @@
             : '';
 
         return `
-            <div class="trade-detail-header">
-                <span class="trade-detail-avatar trade-position-avatar--${tone}" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
-                <div class="trade-detail-header-main min-w-0">
-                    <div class="trade-position-title-row">
-                        <div class="trade-detail-name text-truncate" title="${escapeHtml(company)}">${escapeHtml(company)}</div>
+            <div class="trade-detail-header" data-ref="trade-detail.header">
+                <span class="trade-detail-avatar trade-position-avatar--${tone}" aria-hidden="true" data-ref="trade-detail.header.avatar">${escapeHtml(companyInitial(company))}</span>
+                <div class="trade-detail-header-main min-w-0" data-ref="trade-detail.header.main">
+                    <div class="trade-position-title-row" data-ref="trade-detail.header.title-row">
+                        <div class="trade-detail-name text-truncate" title="${escapeHtml(company)}" data-ref="trade-detail.header.name">${escapeHtml(company)}</div>
                         ${tagsHtml}
                     </div>
-                    <div class="trade-detail-meta">
+                    <div class="trade-detail-meta" data-ref="trade-detail.header.meta">
                         <span>Qty <span class="trade-detail-meta-em">${qty}</span></span>
                         <span class="trade-position-meta-sep" aria-hidden="true">•</span>
                         <span class="trade-detail-meta-item">${renderIcon('fa-hand-holding-usd', { className: 'trade-detail-meta-icon' })}<span class="trade-detail-meta-em">${escapeHtml(leverage)}</span> MTF</span>
@@ -283,13 +283,13 @@
                         <span class="trade-detail-meta-item">${renderIcon('fa-clock', { className: 'trade-detail-meta-icon' })}Hold <span class="trade-detail-meta-em">${escapeHtml(daysLabel)}</span></span>
                     </div>
                 </div>
-                <div class="trade-detail-aside flex-shrink-0">
-                    <div class="trade-detail-pnl d-flex flex-column align-items-end gap-1">
-                        <div class="trade-detail-pnl-value ${pnlTone}">${escapeHtml(signedMoney(pnlAmount, { compact: true }))}</div>
-                        ${pnlPct != null ? `<span class="badge rounded-pill ${pnlTone === 'text-success' ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'} px-2 py-1" style="font-size: 0.65rem; font-weight: 600;">${escapeHtml(signedPct(pnlPct))}</span>` : ''}
+                <div class="trade-detail-aside flex-shrink-0" data-ref="trade-detail.header.aside">
+                    <div class="trade-detail-pnl d-flex flex-column align-items-end gap-1" data-ref="trade-detail.header.pnl">
+                        <div class="trade-detail-pnl-value ${pnlTone}" data-ref="trade-detail.header.pnl.value">${escapeHtml(signedMoney(pnlAmount, { compact: true }))}</div>
+                        ${pnlPct != null ? `<span class="badge rounded-pill ${pnlTone === 'text-success' ? 'bg-success bg-opacity-10 text-success' : 'bg-danger bg-opacity-10 text-danger'} px-2 py-1" style="font-size: 0.65rem; font-weight: 600;" data-ref="trade-detail.header.pnl.pct">${escapeHtml(signedPct(pnlPct))}</span>` : ''}
                     </div>
                     <button type="button" class="trade-detail-close-btn"
-                        onclick="backFromTradeDetail()" aria-label="Close">
+                        onclick="backFromTradeDetail()" aria-label="Close" data-ref="trade-detail.header.close-btn">
                         ${renderIcon('fa-times')}
                     </button>
                 </div>
@@ -309,38 +309,38 @@
             : '';
 
         return `
-            <section class="trade-detail-prices">
-                <div class="trade-detail-price-cell d-flex flex-row align-items-center justify-content-start p-0 gap-3">
-                    <span class="d-inline-flex align-items-center justify-content-center text-success rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-accent-soft); flex-shrink: 0;">
+            <section class="trade-detail-prices" data-ref="trade-detail.prices">
+                <div class="trade-detail-price-cell d-flex flex-row align-items-center justify-content-center p-0 gap-3" data-ref="trade-detail.prices.qty">
+                    <span class="d-inline-flex align-items-center justify-content-center text-success rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-accent-soft); flex-shrink: 0;" data-ref="trade-detail.prices.qty.icon">
                         ${renderIcon('fa-cube', { style: 'font-size: 1.15rem;' })}
                     </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center">
-                        <span class="trade-detail-price-label" style="line-height: 1;">Quantity</span>
-                        <span class="trade-detail-price-value text-body" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${qty}</span>
-                        <span class="small text-muted" style="font-size: 0.75rem; font-weight: 500; line-height: 1;">Shares</span>
+                    <div class="d-flex flex-column align-items-start justify-content-center" data-ref="trade-detail.prices.qty.body">
+                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.qty.label">Quantity</span>
+                        <span class="trade-detail-price-value text-body" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.qty.value">${qty}</span>
+                        <span class="small text-muted" style="font-size: 0.75rem; font-weight: 500; line-height: 1;" data-ref="trade-detail.prices.qty.unit">Shares</span>
                     </div>
                 </div>
-                <span class="trade-detail-price-divider"></span>
+                <span class="trade-detail-price-divider" data-ref="trade-detail.prices.divider-1"></span>
                 <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-center gap-3"
-                    onclick="openBuyPriceModal('${id}')" aria-label="Edit buy price">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--blue500-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); flex-shrink: 0;">
+                    onclick="openBuyPriceModal('${id}')" aria-label="Edit buy price" data-ref="trade-detail.prices.buy">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--blue500-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); flex-shrink: 0;" data-ref="trade-detail.prices.buy.icon">
                         ${renderIcon('fa-wallet', { style: 'font-size: 1.15rem;' })}
                     </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0">
-                        <span class="trade-detail-price-label" style="line-height: 1;">Buy Price</span>
-                        <span class="trade-detail-price-value trade-detail-price-value--buy" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${fmtDec(buy)}</span>
-                        <span class="trade-detail-price-badge trade-detail-price-badge--info mt-0">Avg. Entry</span>
+                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0" data-ref="trade-detail.prices.buy.body">
+                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.buy.label">Buy Price</span>
+                        <span class="trade-detail-price-value trade-detail-price-value--buy" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.buy.value">${fmtDec(buy)}</span>
+                        <span class="trade-detail-price-badge trade-detail-price-badge--info mt-0" data-ref="trade-detail.prices.buy.badge">Avg. Entry</span>
                     </div>
                 </button>
-                <span class="trade-detail-price-divider"></span>
-                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-end gap-3"
-                    onclick="openTargetModal('${id}')" aria-label="Edit target price">
-                    <span class="d-inline-flex align-items-center justify-content-center text-danger rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-danger-soft, rgba(239, 68, 68, 0.1)); flex-shrink: 0;">
+                <span class="trade-detail-price-divider" data-ref="trade-detail.prices.divider-2"></span>
+                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-center gap-3"
+                    onclick="openTargetModal('${id}')" aria-label="Edit target price" data-ref="trade-detail.prices.target">
+                    <span class="d-inline-flex align-items-center justify-content-center text-danger rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-danger-soft, rgba(239, 68, 68, 0.1)); flex-shrink: 0;" data-ref="trade-detail.prices.target.icon">
                         ${renderIcon('fa-bullseye', { style: 'font-size: 1.15rem;' })}
                     </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0">
-                        <span class="trade-detail-price-label" style="line-height: 1;">Target Price</span>
-                        <span class="trade-detail-price-value trade-detail-price-value--target" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
+                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0" data-ref="trade-detail.prices.target.body">
+                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.target.label">Target Price</span>
+                        <span class="trade-detail-price-value trade-detail-price-value--target" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.target.value">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
                         ${targetGainHtml ? targetGainHtml.replace('mt-1', 'mt-0') : ''}
                     </div>
                 </button>
@@ -362,46 +362,30 @@
         const netPct = investment > 0 ? (net / investment) * 100 : null;
         const title = 'IF SOLD NOW';
         const subtitle = '(At Current Market Price)';
-        
+
         const changeParts = formatDayChangeParts(quote);
         const dayTone = !changeParts ? 'text-body-secondary' : changeParts.up ? 'text-success' : 'text-danger';
         const dayChangeHtml = changeParts
             ? `<span class="${dayTone}">${escapeHtml(changeParts.pctText)}</span> <span class="text-muted">${escapeHtml(changeParts.absText)}</span>`
             : '';
-            
+
         const cmpHtml = `
-            <div class="trade-detail-ifsold-col">
-                <span class="trade-detail-ifsold-label">Current Market Price</span>
-                <span class="trade-detail-ifsold-value">${livePrice != null ? fmtDec(livePrice) : fmtDec(sellPrice)}</span>
-                ${dayChangeHtml ? `<div class="mt-1 text-center" style="font-size: 0.75rem; font-weight: 500; white-space: nowrap;">${dayChangeHtml}</div>` : ''}
+            <div class="trade-detail-ifsold-col" data-ref="trade-detail.ifsold.cmp">
+                <span class="trade-detail-ifsold-label" data-ref="trade-detail.ifsold.cmp.label">Current Market Price</span>
+                <span class="trade-detail-ifsold-value" data-ref="trade-detail.ifsold.cmp.value">${livePrice != null ? fmtDec(livePrice) : fmtDec(sellPrice)}</span>
+                ${dayChangeHtml ? `<div class="mt-1 text-center" style="font-size: 0.75rem; font-weight: 500; white-space: nowrap;" data-ref="trade-detail.ifsold.cmp.day-change">${dayChangeHtml}</div>` : ''}
             </div>
         `;
 
         return `
-            <section class="trade-detail-ifsold">
-                <div class="trade-detail-ifsold-title">
-                    <span class="trade-detail-ifsold-title-icon-wrap">
-                        ${renderIcon('fa-chart-line', { className: 'trade-detail-ifsold-title-icon' })}
-                    </span>
-                    <span class="trade-detail-ifsold-title-text">${escapeHtml(title)}</span>
-                    <span class="trade-detail-ifsold-title-sub">${escapeHtml(subtitle)}</span>
-                </div>
-                <div class="trade-detail-ifsold-grid">
+            <section class="trade-detail-ifsold" data-ref="trade-detail.ifsold">
+                <div class="trade-detail-ifsold-grid" data-ref="trade-detail.ifsold.grid">
                     ${cmpHtml}
-                    <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
-                    <div class="trade-detail-ifsold-col">
-                        <span class="trade-detail-ifsold-label">Sell Value</span>
-                        <span class="trade-detail-ifsold-value text-body">${fmtDec(sellValue)}</span>
-                    </div>
-                    <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
-                    <div class="trade-detail-ifsold-col">
+                    <span class="trade-detail-ifsold-vline" aria-hidden="true" data-ref="trade-detail.ifsold.vline"></span>
+                    <div class="trade-detail-ifsold-col" data-ref="trade-detail.ifsold.net">
                         <span class="trade-detail-ifsold-label">Net P&amp;L</span>
-                        <span class="trade-detail-ifsold-value ${toneClass(net)}">${escapeHtml(signedMoney(net))}</span>
-                    </div>
-                    <span class="trade-detail-ifsold-vline" aria-hidden="true"></span>
-                    <div class="trade-detail-ifsold-col trade-detail-ifsold-col--pct">
-                        <span class="trade-detail-ifsold-label">Net P&amp;L %</span>
-                        <span class="trade-detail-ifsold-value ${toneClass(netPct)}">${escapeHtml(signedPct(netPct))}</span>
+                        <span class="trade-detail-ifsold-value ${toneClass(net)}" data-ref="trade-detail.ifsold.net.value">${escapeHtml(signedMoney(net))}</span>
+                        <span class="trade-detail-ifsold-value ${toneClass(netPct)} ms-2" data-ref="trade-detail.ifsold.net.pct">${escapeHtml(signedPct(netPct))}</span>
                     </div>
                 </div>
             </section>
@@ -423,37 +407,37 @@
             : (days > 0 ? `${days}D` : '—');
 
         return `
-            <section class="trade-detail-costs">
+            <section class="trade-detail-costs" data-ref="trade-detail.costs">
                 <button type="button" class="trade-detail-cost-card trade-detail-cost-card--interest"
-                    onclick="openInterestModal('${escapeHtml(tx.id)}')" aria-label="Interest details">
+                    onclick="openInterestModal('${escapeHtml(tx.id)}')" aria-label="Interest details" data-ref="trade-detail.costs.interest">
                     <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-percent', { className: 'trade-detail-cost-icon' })}</span>
+                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.interest.head">${renderIcon('fa-percent', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Interest</span>
                     </span>
-                    <span class="trade-detail-cost-body">
-                        <span class="trade-detail-cost-value">${fmtDec(interest)}</span>
-                        <span class="trade-detail-cost-meta">${interestBadge}</span>
+                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.interest.body">
+                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.interest.value">${fmtDec(interest)}</span>
+                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.interest.meta">${interestBadge}</span>
                     </span>
                 </button>
                 <button type="button" class="trade-detail-cost-card trade-detail-cost-card--charges"
-                    onclick="openChargesModal('${escapeHtml(tx.id)}')" aria-label="Charges details">
+                    onclick="openChargesModal('${escapeHtml(tx.id)}')" aria-label="Charges details" data-ref="trade-detail.costs.charges">
                     <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-receipt', { className: 'trade-detail-cost-icon' })}</span>
+                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.charges.head">${renderIcon('fa-receipt', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Charges</span>
                     </span>
-                    <span class="trade-detail-cost-body">
-                        <span class="trade-detail-cost-value">${fmtDec(charges)}</span>
-                        <span class="trade-detail-cost-meta">One-time</span>
+                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.charges.body">
+                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.charges.value">${fmtDec(charges)}</span>
+                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.charges.meta">One-time</span>
                     </span>
                 </button>
-                <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost">
+                <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost" data-ref="trade-detail.costs.total">
                     <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box">${renderIcon('fa-wallet', { className: 'trade-detail-cost-icon' })}</span>
+                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.total.head">${renderIcon('fa-wallet', { className: 'trade-detail-cost-icon' })}</span>
                         <span class="trade-detail-cost-label">Total</span>
                     </span>
-                    <span class="trade-detail-cost-body">
-                        <span class="trade-detail-cost-value">${fmtDec(totalCost)}</span>
-                        <span class="trade-detail-cost-meta">Interest + Charges</span>
+                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.total.body">
+                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.total.value">${fmtDec(totalCost)}</span>
+                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.total.meta">Interest + Charges</span>
                     </span>
                 </div>
             </section>
@@ -470,48 +454,48 @@
         const id = escapeHtml(tx.id || '');
 
         return `
-            <section class="trade-detail-timeline-wrap">
-                <div class="trade-detail-timeline">
+            <section class="trade-detail-timeline-wrap" data-ref="trade-detail.timeline">
+                <div class="trade-detail-timeline" data-ref="trade-detail.timeline.track">
                     <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit bought date">
-                        <span class="trade-detail-timeline-icon-wrap">
+                        onclick="openHoldModal('${id}')" aria-label="Edit bought date" data-ref="trade-detail.timeline.buy">
+                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.buy.icon">
                             ${renderIcon('fa-calendar-plus', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--buy' })}
                         </span>
-                        <span class="trade-detail-timeline-copy">
+                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.buy.copy">
                             <span class="trade-detail-timeline-label">Bought On</span>
-                            <span class="trade-detail-timeline-value">${escapeHtml(buyDate)}</span>
+                            <span class="trade-detail-timeline-value" data-ref="trade-detail.timeline.buy.value">${escapeHtml(buyDate)}</span>
                         </span>
                     </button>
-                    <span class="trade-detail-timeline-sep" aria-hidden="true">
+                    <span class="trade-detail-timeline-sep" aria-hidden="true" data-ref="trade-detail.timeline.sep-1">
                         <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
                         <span class="trade-detail-timeline-vline"></span>
                     </span>
                     <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit holding period">
-                        <span class="trade-detail-timeline-icon-wrap">
+                        onclick="openHoldModal('${id}')" aria-label="Edit holding period" data-ref="trade-detail.timeline.hold">
+                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.hold.icon">
                             ${renderIcon('fa-hourglass-half', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--hold' })}
                         </span>
-                        <span class="trade-detail-timeline-copy">
+                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.hold.copy">
                             <span class="trade-detail-timeline-label">Holding</span>
-                            <span class="badge rounded-pill trade-detail-hold-badge">${escapeHtml(holdLabel)}</span>
+                            <span class="badge rounded-pill trade-detail-hold-badge" data-ref="trade-detail.timeline.hold.value">${escapeHtml(holdLabel)}</span>
                         </span>
                     </button>
-                    <span class="trade-detail-timeline-sep" aria-hidden="true">
+                    <span class="trade-detail-timeline-sep" aria-hidden="true" data-ref="trade-detail.timeline.sep-2">
                         <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
                         <span class="trade-detail-timeline-vline"></span>
                     </span>
                     <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit exit date">
-                        <span class="trade-detail-timeline-icon-wrap">
+                        onclick="openHoldModal('${id}')" aria-label="Edit exit date" data-ref="trade-detail.timeline.exit">
+                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.exit.icon">
                             ${renderIcon('fa-calendar-check', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--exit' })}
                         </span>
-                        <span class="trade-detail-timeline-copy">
+                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.exit.copy">
                             <span class="trade-detail-timeline-label">${escapeHtml(exitLabel)}</span>
-                            <span class="trade-detail-timeline-value">${escapeHtml(exitDate)}</span>
+                            <span class="trade-detail-timeline-value" data-ref="trade-detail.timeline.exit.value">${escapeHtml(exitDate)}</span>
                         </span>
                     </button>
                 </div>
-                <p class="trade-detail-timeline-hint mb-0">Tap dates to update buy or sell</p>
+                <p class="trade-detail-timeline-hint mb-0" data-ref="trade-detail.timeline.hint">Tap dates to update buy or sell</p>
             </section>
         `;
     }
@@ -520,7 +504,7 @@
         const id = escapeHtml(tx.id || '');
         const actionBtn = (label, onclick, kind, icon) => `
             <button type="button" class="trade-detail-action-btn trade-detail-action-btn--${kind}"
-                onclick="${onclick}">
+                onclick="${onclick}" data-ref="trade-detail.actions.btn-${kind}">
                 ${renderIcon(icon, { className: 'trade-detail-action-icon' })}
                 <span>${label}</span>
             </button>
@@ -542,7 +526,7 @@
         buttons.push(actionBtn('Edit', `openEditModal('${id}')`, 'edit', 'fa-pen-to-square'));
         buttons.push(actionBtn('Delete', `confirmDelete('${id}')`, 'delete', 'fa-trash-alt'));
 
-        return `<div class="trade-detail-actions">${buttons.join('')}</div>`;
+        return `<div class="trade-detail-actions" data-ref="trade-detail.actions">${buttons.join('')}</div>`;
     }
 
     function renderTradeDetailPage() {
@@ -565,8 +549,8 @@
         if (!raw) {
             if (headerEl) {
                 headerEl.innerHTML = `
-                    <div class="d-flex justify-content-end mb-1">
-                        <button type="button" class="trade-detail-close-btn" onclick="backFromTradeDetail()" aria-label="Close">
+                    <div class="d-flex justify-content-end mb-1" data-ref="trade-detail.not-found.header">
+                        <button type="button" class="trade-detail-close-btn" onclick="backFromTradeDetail()" aria-label="Close" data-ref="trade-detail.not-found.close-btn">
                             ${renderIcon('fa-times')}
                         </button>
                     </div>
@@ -602,9 +586,9 @@
             : (calc ? calc.netProfit : (tx.netProfit || 0));
 
         const notesBlock = tx.notes
-            ? `<div class="trade-detail-notes">
-                <div class="small fw-medium text-muted mb-1">Notes</div>
-                <p class="small text-body mb-0">${escapeHtml(tx.notes)}</p>
+            ? `<div class="trade-detail-notes" data-ref="trade-detail.notes">
+                <div class="small fw-medium text-muted mb-1" data-ref="trade-detail.notes.label">Notes</div>
+                <p class="small text-body mb-0" data-ref="trade-detail.notes.body">${escapeHtml(tx.notes)}</p>
                </div>`
             : '';
 
@@ -615,8 +599,8 @@
 
         if (headerEl) headerEl.innerHTML = renderHeader(tx, variant, pnlAmount, pnlPct);
         container.innerHTML = `
-            <div class="trade-detail-card w-100 d-flex flex-column gap-3">
-                <hr class="trade-detail-divider my-0">
+            <div class="trade-detail-card w-100 d-flex flex-column gap-3" data-ref="trade-detail.card">
+                <hr class="trade-detail-divider my-0" data-ref="trade-detail.divider">
                 ${renderPriceInputs(tx, targetPrice)}
                 ${renderIfSoldNow(tx, sellPriceForCalc, calc, variant, livePrice != null, quote, livePrice)}
                 ${renderCostCards(tx, calc)}

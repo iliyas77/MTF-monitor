@@ -598,191 +598,42 @@
         return 'bg-secondary';
     }
 
-    function renderPositionLiveBlock(t, variant) {
-        const { renderIcon } = global.MTFComponents || {};
-        const helpers = (global.MTFAppHelpers || {}).tradePages || {};
-        const resolveSymbol = helpers.resolveTradeLiveSymbol;
-        const getQuote = helpers.getTradeLiveQuote;
-        const isRefreshing = helpers.isTradeLiveRefreshing;
-        const symbol = resolveSymbol ? resolveSymbol(t) : '';
-        const quote = symbol && getQuote ? getQuote(symbol) : null;
-        const loading = isRefreshing ? !!isRefreshing() : false;
-        const price = quote && quote.price != null && !isNaN(Number(quote.price))
-            ? Number(quote.price)
-            : null;
-        const change = quote ? Number(quote.change) : NaN;
-        const dayTone = price == null || isNaN(change)
-            ? 'neutral'
-            : change >= 0 ? 'up' : 'down';
-        const buyPrice = Number(t.buyPrice) || 0;
-        const targetPrice = getTradeTargetPrice(t);
-        const targetAttr = targetPrice != null && !isNaN(Number(targetPrice))
-            ? String(Number(targetPrice))
-            : '';
-        const buyAttr = buyPrice > 0 ? String(buyPrice) : '';
-        const tradeId = escapeHtml(t.id || '');
-        const symbolAttr = escapeHtml(symbol || '');
-        const spinnerHtml = loading
-            ? `<span data-live-loading class="ms-1">${renderIcon('fa-spinner', { className: 'fa-spin' })}</span>`
-            : `<span data-live-loading class="ms-1"></span>`;
-        const status = t.status || 'open';
-        let targetReachedBeforeClose = !!t.targetReachedBeforeClose;
-        if (t.targetReachedBeforeClose === undefined && status === 'closed') {
-            targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
+    function getCompanyAvatarStyle(company) {
+        const hash = hashCompanyTone(company);
+        switch (hash % 4) {
+            case 0: return { bg: '#E8F4FF', color: '#1677FF' }; // Blue
+            case 1: return { bg: '#E9F9EF', color: '#16A34A' }; // Green
+            case 2: return { bg: '#FFF7E8', color: '#F59E0B' }; // Orange
+            case 3: default: return { bg: '#FDECEC', color: '#EF4444' }; // Red
         }
-
-        const qty = Number(t.quantity) || 0;
-        const livePriceValue = price != null ? price : (quote && quote.price != null ? Number(quote.price) : 0);
-        let leftAmount = 0;
-        let leftText = '';
-        if (targetPrice > 0 && livePriceValue > 0) {
-            leftAmount = targetPrice - livePriceValue;
-            if (leftAmount > 0) {
-                leftText = `₹${leftAmount.toFixed(2)} Left`;
-            } else if (leftAmount < 0) {
-                leftText = `+₹${Math.abs(leftAmount).toFixed(2)}`;
-            } else {
-                leftText = `Reached`;
-            }
-        }
-
-        let targetPctText = '';
-        if (targetPrice > 0 && livePriceValue > 0) {
-            const targetPct = ((targetPrice - livePriceValue) / livePriceValue) * 100;
-            targetPctText = `${targetPct.toFixed(2)}% to Target`;
-        }
-
-        let avgEntryText = 'Avg. Entry';
-        if (targetPrice > 0 && buyPrice > 0) {
-            const diffPct = ((targetPrice - buyPrice) / buyPrice) * 100;
-            avgEntryText = `Target: ${diffPct > 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
-        }
-        return `
-            <hr class="my-0 text-muted opacity-25" style="margin: 0.5rem 0 -0.25rem 0 !important;">
-            <div class="trade-position-metrics trade-position-grid"
-                data-live-symbol="${symbolAttr}"
-                data-quote-symbol="${symbolAttr}"
-                data-buy-price="${escapeHtml(buyAttr)}"
-                data-target-price="${escapeHtml(targetAttr)}"
-                data-trade-id="${tradeId}"
-                data-trade-status="${escapeHtml(status)}"
-                data-target-reached-before-close="${targetReachedBeforeClose}"
-                data-trade-variant="${escapeHtml(variant)}">
-                    <div class="trade-position-cell" data-live-field="price">
-                        <div class="trade-position-icon-box trade-position-icon-box--green">
-                            ${renderIcon('fa-arrow-trend-up')}
-                        </div>
-                        <div class="d-flex flex-column align-items-start gap-1 min-w-0">
-                            <span class="trade-position-label text-secondary">Current Price</span>
-                            <span class="trade-position-price text-body text-truncate" data-live-value>${escapeHtml(formatLivePrice(price))}</span>
-                            ${leftText ? `<span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: var(--gr-accent-soft, rgba(21, 155, 90, 0.12)); color: var(--gr-accent, #159b5a); display: inline-block;">${escapeHtml(leftText)}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="trade-position-cell justify-content-center">
-                        <div class="trade-position-icon-box trade-position-icon-box--orange">
-                            ${renderIcon('fa-cube')}
-                        </div>
-                        <div class="d-flex flex-column align-items-center text-center gap-1 min-w-0">
-                            <span class="trade-position-label text-secondary">Quantity</span>
-                            <span class="trade-position-value text-body text-truncate">${qty}</span>
-                            <span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: rgba(245, 158, 11, 0.12); color: #f59e0b; display: inline-block;">Shares</span>
-                        </div>
-                    </div>
-                    <div class="trade-position-cell justify-content-center">
-                        <div class="trade-position-icon-box trade-position-icon-box--blue">
-                            ${renderIcon('fa-tag')}
-                        </div>
-                        <div class="d-flex flex-column align-items-center text-center gap-1 min-w-0">
-                            <span class="trade-position-label text-secondary">Buy Price</span>
-                            <span class="trade-position-value text-body text-truncate">${fmtDec(buyPrice)}</span>
-                            <span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: var(--blue50-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); display: inline-block;">${escapeHtml(avgEntryText)}</span>
-                        </div>
-                    </div>
-                    <div class="trade-position-cell">
-                        <div class="trade-position-icon-box trade-position-icon-box--red">
-                            ${renderIcon('fa-bullseye')}
-                        </div>
-                        <div class="d-flex flex-column align-items-start gap-1 min-w-0">
-                            <span class="trade-position-label text-secondary">Target Price</span>
-                            <span class="trade-position-value trade-position-target-value text-truncate">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
-                            ${targetPctText ? `<span class="trade-position-subtitle px-2 py-1 rounded" style="background-color: rgba(239, 68, 68, 0.12); color: var(--gr-danger, #ef4444); display: inline-block;">${escapeHtml(targetPctText)}</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
     }
 
-    function renderPnlPctBadge(pnlAmount, t) {
-        const investment = Number(t.totalInvestment) || 0;
-        if (!investment || pnlAmount == null || isNaN(Number(pnlAmount))) return '';
-        const pct = (Number(pnlAmount) / investment) * 100;
-        const isPositive = pct >= 0;
-        const arrow = isPositive ? '▲' : '▼';
-        const tone = isPositive ? 'green' : 'red';
-        const absPct = Math.abs(pct).toFixed(2);
-        return `<span class="trade-position-pill trade-position-pill--${tone}" data-trade-card-pnl-pct style="font-size: 0.75rem;">${arrow} ${isPositive ? '' : '-'}${absPct}%</span>`;
+    function getBrokerAvatarStyle(broker) {
+        const name = String(broker || '').toLowerCase().trim();
+        if (/dhan/.test(name)) {
+            return { bg: '#E9F9EF', color: '#16A34A' };
+        }
+        if (/groww/.test(name)) {
+            return { bg: '#E5FAF5', color: '#00D09C' };
+        }
+        if (/zerodha|kite/.test(name)) {
+            return { bg: '#FFF0EC', color: '#E64A19' };
+        }
+        if (/upstox/.test(name)) {
+            return { bg: '#F3E8FF', color: '#7C3AED' };
+        }
+        if (/angel/.test(name)) {
+            return { bg: '#E6F0FF', color: '#0052CC' };
+        }
+        return null;
     }
 
-    function renderTradeCardHeader(t, metrics, company, variant) {
-        const { appTag } = global.MTFComponents || {};
-        const qty = Number(t.quantity) || 0;
-        const leverage = formatTradeLeverageLabel(t);
-        const getDaysHeld = (global.MTFAppHelpers || {}).getDaysHeld;
-        const daysHeld = getDaysHeld ? getDaysHeld(t) : 0;
-        const daysLabel = daysHeld === 1 ? '1 Day' : `${daysHeld} Days`;
-        const tone = hashCompanyTone(company);
-        const helpers = (global.MTFAppHelpers || {}).tradePages || {};
-        const resolveSymbol = helpers.resolveTradeLiveSymbol;
-        const getQuote = helpers.getTradeLiveQuote;
-        const symbol = resolveSymbol ? resolveSymbol(t) : '';
-        const quote = symbol && getQuote ? getQuote(symbol) : null;
-        const livePrice = quote && quote.price != null && !isNaN(Number(quote.price))
-            ? Number(quote.price)
-            : null;
-        const useLivePnl = variant !== 'past' && livePrice != null;
-        const liveReturn = useLivePnl ? estimateLiveReturn(t, livePrice) : null;
-        const pnlAmount = liveReturn != null && !isNaN(Number(liveReturn))
-            ? liveReturn
-            : metrics.netProfit;
 
-        const isOpen = variant === 'open' || (variant !== 'past' && (t.status || 'closed') === 'open');
-        const statusLabel = isOpen ? 'Open' : 'Closed';
-        const statusVariant = isOpen ? 'open' : 'secondary';
-        const broker = String(t.broker || '').trim();
-        const showBroker = broker && !/^none$/i.test(broker);
-        const tagsHtml = typeof appTag === 'function'
-            ? `<div class="trade-position-tags">
-                    ${appTag(escapeHtml(statusLabel), statusVariant)}
-                    ${showBroker ? appTag(escapeHtml(broker), 'broker') : ''}
-               </div>`
-            : '';
 
-        return `
-            <div class="d-flex align-items-start gap-2 w-100 min-w-0">
-                <span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true">${escapeHtml(companyInitial(company))}</span>
-                <div class="min-w-0 flex-grow-1 overflow-hidden">
-                    <div class="trade-position-title-row">
-                        <div class="trade-position-name trade-position-name--link" title="${escapeHtml(company)}"
-                            role="button" tabindex="0"
-                            onclick="openCompanyInfoSheet('${escapeHtml(t.id || '')}');event.stopPropagation();"
-                            onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCompanyInfoSheet('${escapeHtml(t.id || '')}');event.stopPropagation();}"
-                            aria-label="View ${escapeHtml(company)} company details">${escapeHtml(company)}</div>
-                        ${tagsHtml}
-                    </div>
-                    <div class="trade-position-meta" style="font-size: 0.85rem; font-weight: 500; color: var(--gr-text-muted); gap: 0.35rem; align-items: center; display: flex; margin-top: 0.25rem;">
-                        <span class="text-success" style="font-size: 1.25em; line-height: 1;">•</span>
-                        <span>${escapeHtml(leverage)}</span>
-                        <span class="text-success" style="font-size: 1.25em; line-height: 1;">•</span>
-                        <span>${escapeHtml(daysLabel)}</span>
-                    </div>
-                </div>
-                <div class="trade-position-pnl flex-shrink-0 d-flex align-items-center gap-2" data-trade-card-pnl>
-                    ${renderAmount(pnlAmount, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false })}
-                    ${renderPnlPctBadge(pnlAmount, t)}
-                </div>
-            </div>
-        `;
+    function tradeStripeClass(variant, t) {
+        if (variant === 'open') return 'trade-position-card--pnl-open';
+        if (variant === 'past') return 'trade-position-card--pnl-closed';
+        return 'trade-position-card--pnl-neutral';
     }
 
     function renderTradeListItem(t, serialNo, variant = 'open') {
@@ -792,19 +643,186 @@
             : { netProfit: 0, sellPrice: t.sellPrice || 0, charges: 0 };
         const company = t.company || 'trade';
         const tradeId = escapeHtml(t.id || '');
-        const positionLive = renderPositionLiveBlock(t, variant);
+        const status = t.status || 'open';
+        const isClosed = variant === 'past' || status === 'closed';
+        const statusClass = isClosed ? 'is-closed' : (variant === 'plan' ? 'is-plan' : 'is-open');
+
+        const { appTag, renderIcon, renderAmount } = global.MTFComponents || {};
+        const qty = Number(t.quantity) || 0;
+        const leverage = formatTradeLeverageLabel(t);
+        const getDaysHeld = (global.MTFAppHelpers || {}).getDaysHeld;
+        const daysHeld = getDaysHeld ? getDaysHeld(t) : 0;
+        const daysLabel = daysHeld === 1 ? '1 Day' : `${daysHeld} Days`;
+        const initial = escapeHtml(companyInitial(company));
+        
+        const helpers = (global.MTFAppHelpers || {}).tradePages || {};
+        const resolveSymbol = helpers.resolveTradeLiveSymbol;
+        const getQuote = helpers.getTradeLiveQuote;
+        const symbol = resolveSymbol ? resolveSymbol(t) : '';
+        const quote = symbol && getQuote ? getQuote(symbol) : null;
+        const livePrice = quote && quote.price != null && !isNaN(Number(quote.price)) ? Number(quote.price) : null;
+        
+        const useLivePnl = !isClosed && livePrice != null;
+        const liveReturn = useLivePnl ? estimateLiveReturn(t, livePrice) : null;
+        const pnlAmount = liveReturn != null && !isNaN(Number(liveReturn)) ? liveReturn : metrics.netProfit;
+        
+        const investment = Number(t.totalInvestment) || 0;
+        const pnlPct = investment > 0 ? (pnlAmount / investment) * 100 : 0;
+        const isPositive = pnlPct >= 0;
+        
+        const broker = String(t.broker || '').trim();
+        const showBroker = broker && !/^none$/i.test(broker);
+
+        const buyPrice = Number(t.buyPrice) || 0;
+        const targetPrice = getTradeTargetPrice(t);
+        
+        const livePriceValue = isClosed 
+            ? (Number(metrics.sellPrice) || Number(t.sellPrice) || 0)
+            : (livePrice != null ? livePrice : (quote && quote.price != null ? Number(quote.price) : 0));
+
+        let leftAmount = 0;
+        let targetBadgeText = '';
+        let targetBadgeTone = 'green';
+        if (targetPrice > 0 && livePriceValue > 0) {
+            leftAmount = targetPrice - livePriceValue;
+            if (leftAmount > 0) {
+                targetBadgeText = `₹${leftAmount.toFixed(2)} below Target`;
+                targetBadgeTone = 'green';
+            } else if (leftAmount < 0) {
+                targetBadgeText = `₹${Math.abs(leftAmount).toFixed(2)} above Target`;
+                targetBadgeTone = 'red';
+            } else {
+                targetBadgeText = 'Target Reached';
+                targetBadgeTone = 'green';
+            }
+        }
+
+        let targetPctText = '';
+        if (targetPrice > 0 && livePriceValue > 0) {
+            const targetPct = ((targetPrice - livePriceValue) / livePriceValue) * 100;
+            targetPctText = `Need +${targetPct.toFixed(2)}%`;
+        }
+
+        let avgEntryText = '';
+        if (targetPrice > 0 && buyPrice > 0) {
+            const diffPct = ((targetPrice - buyPrice) / buyPrice) * 100;
+            avgEntryText = `Target ${diffPct > 0 ? '+' : ''}${diffPct.toFixed(2)}%`;
+        }
+
+        const updatedTime = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const brokerAvatarStyle = showBroker ? getBrokerAvatarStyle(broker) : null;
+        const avatarStyle = brokerAvatarStyle || getCompanyAvatarStyle(company);
+
+        // Required attribute payload for live-updating scripts & smoke tests
+        const symbolAttr = escapeHtml(symbol || '');
+        const buyAttr = buyPrice > 0 ? String(buyPrice) : '';
+        const targetAttr = targetPrice != null && !isNaN(Number(targetPrice)) ? String(Number(targetPrice)) : '';
+        let targetReachedBeforeClose = !!t.targetReachedBeforeClose;
+        if (t.targetReachedBeforeClose === undefined && isClosed) {
+            targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
+        }
+        const { renderMetricsGrid } = global.MTFComponents || {};
+        const cells = [
+            {
+                label: 'Current Price',
+                value: livePriceValue > 0 ? `₹${livePriceValue.toFixed(2)}` : '—',
+                valueKind: 'price',
+                icon: 'fa-arrow-trend-up',
+                iconTone: 'green',
+                subtitle: targetBadgeText,
+                subtitleTone: targetBadgeTone,
+                live: { field: 'price', value: true },
+                refresh: !isClosed
+            },
+            {
+                label: 'Quantity',
+                value: qty,
+                icon: 'fa-cube',
+                iconTone: 'orange',
+                subtitle: 'Shares',
+                subtitleTone: 'orange',
+                align: 'center'
+            },
+            {
+                label: 'Buy Price',
+                value: buyPrice > 0 ? `₹${buyPrice.toFixed(2)}` : '—',
+                icon: 'fa-tag',
+                iconTone: 'blue',
+                subtitle: avgEntryText || '',
+                subtitleTone: 'blue',
+                align: 'center'
+            },
+            {
+                label: 'Target Price',
+                value: targetPrice > 0 ? `₹${targetPrice.toFixed(2)}` : '—',
+                icon: 'fa-bullseye',
+                iconTone: 'red',
+                subtitle: targetPctText || '',
+                subtitleTone: 'red'
+            }
+        ];
+
+        const gridAttrs = {
+            'data-live-symbol': symbolAttr,
+            'data-quote-symbol': symbolAttr,
+            'data-buy-price': buyAttr,
+            'data-target-price': targetAttr,
+            'data-trade-id': tradeId,
+            'data-trade-status': status,
+            'data-target-reached-before-close': String(targetReachedBeforeClose),
+            'data-trade-variant': variant
+        };
+
+        const metricsGridHtml = renderMetricsGrid ? renderMetricsGrid(cells, { gridAttrs }) : '';
 
         return `
-            <article class="card bg-body border rounded w-100 trade-position-card mb-3"
+            <article class="pf-card ${statusClass}"
                 data-trade-card data-trade-id="${tradeId}" data-trade-open-detail
                 role="button" tabindex="0"
                 onclick="openTradeDetail('${tradeId}')"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}"
-                aria-label="Open ${escapeHtml(company)} details">
-                <div class="card-body p-3 d-flex flex-column min-w-0">
-                    ${renderTradeCardHeader(t, metrics, company, variant)}
-                    ${positionLive}
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}">
+                
+                <div class="pf-header">
+                    <div class="pf-header-left">
+                        <div class="pf-avatar trade-position-avatar" style="background-color: ${avatarStyle.bg}; color: ${avatarStyle.color}">${initial}</div>
+                        <div class="pf-title-area">
+                            <div class="pf-symbol-row">
+                                <span class="pf-symbol">${escapeHtml(symbol || company)}</span>
+                                ${isClosed ? `
+                                    <span class="pf-live-badge text-secondary" style="font-size: 11px; padding: 2px 6px; background: #F3F4F6; border-radius: 4px; font-weight: 700;">
+                                        CLOSED
+                                    </span>
+                                ` : `
+                                    <span class="pf-live-badge" style="font-size: 11px; padding: 2px 6px; background: #EAF8EF; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #16A34A;">
+                                        <span class="pf-live-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #16A34A; display: inline-block;"></span> LIVE
+                                    </span>
+                                `}
+                                ${showBroker ? `<span class="trade-position-tags d-none">${escapeHtml(broker)}</span>` : ''}
+                            </div>
+                            <span class="pf-name">${escapeHtml(company)}</span>
+                            <div class="pf-meta trade-position-meta">
+                                <span>NSE</span>
+                                <span class="pf-bullet">•</span>
+                                <span>${escapeHtml(leverage)}</span>
+                                <span class="pf-bullet">•</span>
+                                <span>${escapeHtml(daysLabel)}</span>
+                                <span class="pf-bullet">•</span>
+                                <span>${isClosed ? `Sold ${t.sellDate ? new Date(t.sellDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}` : updatedTime}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pf-header-right" data-trade-card-pnl>
+                        <span class="pf-pnl-label">Overall P&L</span>
+                        ${renderAmount(pnlAmount, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false, className: 'pf-pnl-val-wrapper', fs: 'fs-6', weight: 'fw-bold' })}
+                        <div class="pf-pct-badge ${isPositive ? 'is-pos' : 'is-neg'}" data-trade-card-pnl-pct>
+                            ${isPositive ? '▲' : '▼'} ${isPositive ? '+' : '-'}${Math.abs(pnlPct).toFixed(2)}%
+                        </div>
+                    </div>
                 </div>
+
+                <div class="pf-h-divider"></div>
+
+                ${metricsGridHtml}
             </article>
         `;
     }
@@ -826,6 +844,7 @@
         renderOpenTradeListItem,
         renderPastTradeListItem,
         renderPlanTradeListItem,
+        tradeStripeClass,
         toggleTradeCardCollapse,
         isTradeCardCollapsed,
         setTradeCardCollapsed,

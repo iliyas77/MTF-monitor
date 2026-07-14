@@ -19,21 +19,21 @@
 
     function renderBottomBarItem(item) {
         const { renderIcon } = global.MTFComponents;
-        return `<button type="button" class="btn btn-link text-decoration-none text-muted flex-fill py-2" data-page="${item.id}" aria-label="${item.label}">
-            <div class="d-flex flex-column align-items-center gap-1">
+        return `<button type="button" class="btn btn-link text-decoration-none text-muted flex-fill py-2" data-page="${item.id}" aria-label="${item.label}" data-ref="bottom-bar.nav.item.${item.id}">
+            <div class="d-flex flex-column align-items-center gap-1" data-ref="bottom-bar.nav.item.${item.id}.body">
                 ${renderIcon(item.icon, { className: 'fs-5' })}
-                <span class="small">${item.label}</span>
+                <span class="small" data-ref="bottom-bar.nav.item.${item.id}.label">${item.label}</span>
             </div>
         </button>`;
     }
 
     function renderBottomBar(items = BOTTOM_BAR_ITEMS, fabLabel = 'Add trade') {
-        return `<div class="position-fixed bottom-0 border-top bg-body" id="bottomBar" style="z-index:1030">
-            <div class="position-relative">
-                <button type="button" class="btn btn-primary rounded-circle position-absolute shadow d-flex align-items-center justify-content-center" id="bottomBarFab" aria-label="${fabLabel}" style="bottom:calc(100% + 0.75rem);width:3.5rem;height:3.5rem;z-index:1">
+        return `<div class="position-fixed bottom-0 border-top bg-body" id="bottomBar" style="z-index:1030" data-ref="bottom-bar.bar">
+            <div class="position-relative" data-ref="bottom-bar.bar.inner">
+                <button type="button" class="btn btn-primary rounded-circle position-absolute shadow d-flex align-items-center justify-content-center" id="bottomBarFab" aria-label="${fabLabel}" style="bottom:calc(100% + 0.75rem);width:3.5rem;height:3.5rem;z-index:1" data-ref="bottom-bar.fab">
                     ${global.MTFComponents.renderIcon('fa-plus')}
                 </button>
-                <nav class="d-flex py-2" id="bottomBarNav" aria-label="Main navigation">
+                <nav class="d-flex py-2" id="bottomBarNav" aria-label="Main navigation" data-ref="bottom-bar.nav">
                     ${items.map(renderBottomBarItem).join('')}
                 </nav>
             </div>
@@ -554,7 +554,7 @@
         return TRADES_MORE_OPTIONS.map((o) => {
             const active = o.value === mode ? ' active' : '';
             const icon = renderIcon(o.icon, { className: `me-2 ${o.colorClass}` });
-            return `<li><button type="button" class="dropdown-item d-flex align-items-center${active}" onclick="setTradesViewMode('${o.value}')">${icon}<span class="${o.colorClass}">${escapeHtml(o.label)}</span></button></li>`;
+            return `<li data-ref="header.default.more-menu.item.${o.value}"><button type="button" class="dropdown-item d-flex align-items-center${active}" onclick="setTradesViewMode('${o.value}')" data-ref="header.default.more-menu.item.${o.value}.btn">${icon}<span class="${o.colorClass}" data-ref="header.default.more-menu.item.${o.value}.label">${escapeHtml(o.label)}</span></button></li>`;
         }).join('');
     }
 
