@@ -49,12 +49,12 @@
         if (filtered.length === 0) {
             const noun = isPast ? 'past trades' : 'open trades';
             container.innerHTML = q
-                ? `<div class="px-3">${renderPageEmptyCard('fa-search', `No ${noun} match "${getSearchQuery().trim()}"`, 'Try a different company name.')}</div>`
-                : `<div class="px-3">${renderPageEmptyCard('fa-keyboard', `Search ${noun}`, 'Start typing a company name.')}</div>`;
+                ? `<div class="px-3" data-ref="search.empty-no-match">${renderPageEmptyCard('fa-search', `No ${noun} match "${getSearchQuery().trim()}"`, 'Try a different company name.')}</div>`
+                : `<div class="px-3" data-ref="search.empty-prompt">${renderPageEmptyCard('fa-keyboard', `Search ${noun}`, 'Start typing a company name.')}</div>`;
             return;
         }
 
-        container.innerHTML = `<div class="px-3">${renderFlatTradesList(filtered, renderer, isPast ? 'past' : 'open')}</div>`;
+        container.innerHTML = `<div class="px-3" data-ref="search.results">${renderFlatTradesList(filtered, renderer, isPast ? 'past' : 'open')}</div>`;
     }
 
     global.MTFRegister({ renderSearchResults });

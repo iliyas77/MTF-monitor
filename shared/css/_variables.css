@@ -2291,6 +2291,41 @@ body:has(#appDialog.show) .modal-backdrop {
     max-width: 100%;
     overflow: hidden;
     cursor: pointer;
+    position: relative;
+}
+
+.trade-position-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    background: transparent;
+    transition: background 0.2s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.trade-position-card--pnl-open::before {
+    background: var(--blue500, #0a84ff);
+}
+
+.trade-position-card--pnl-closed::before {
+    background: var(--gr-danger, #ef4444);
+}
+
+.trade-position-card--pnl-positive::before {
+    background: var(--gr-accent, #159b5a);
+}
+
+.trade-position-card--pnl-negative::before {
+    background: var(--gr-danger, #ef4444);
+}
+
+.trade-position-card--pnl-neutral::before {
+    background: var(--gr-border-strong, #e4e6ea);
 }
 
 .trade-position-card:focus-visible {
@@ -2903,6 +2938,24 @@ body:has(#appDialog.show) .modal-backdrop {
     max-width: 100%;
 }
 
+/* Scoped metrics grid overrides to match mockup perfectly without breaking other components */
+.trade-position-grid .trade-position-label {
+    font-size: 13px !important;
+    font-weight: 500;
+}
+
+.trade-position-grid .trade-position-price,
+.trade-position-grid .trade-position-value {
+    font-size: 1.125rem !important;
+    /* ~18px */
+    font-weight: 700;
+}
+
+.trade-position-grid .trade-position-subtitle {
+    font-size: 14px !important;
+    font-weight: 400;
+}
+
 .trade-position-pill {
     display: inline-flex;
     align-items: center;
@@ -2995,23 +3048,6 @@ body:has(#appDialog.show) .modal-backdrop {
     max-width: 100%;
 }
 
-/* Scoped metrics grid overrides to match mockup perfectly without breaking other components */
-.trade-position-grid .trade-position-label {
-    font-size: 13px !important;
-    font-weight: 500;
-}
-
-.trade-position-grid .trade-position-price,
-.trade-position-grid .trade-position-value {
-    font-size: 1.125rem !important;
-    /* ~18px */
-    font-weight: 700;
-}
-
-.trade-position-grid .trade-position-subtitle {
-    font-size: 14px !important;
-    font-weight: 400;
-}
 
 .text-target-purple {
     color: #6f42c1 !important;
@@ -3039,6 +3075,17 @@ body:has(#appDialog.show) .modal-backdrop {
     overflow: hidden;
     white-space: nowrap;
     max-width: 100%;
+
+    /* Left align buy and qty bodies */
+    [data-ref="position-live.buy.body"] {
+        align-items: flex-start !important;
+        text-align: left !important;
+    }
+
+    [data-ref="position-live.qty.body"] {
+        align-items: flex-start !important;
+        text-align: left !important;
+    }
 }
 
 /* Live-update status icon: reserve a fixed box matching the change font so
@@ -3407,8 +3454,8 @@ body:has(#appDialog.show) .modal-backdrop {
 }
 
 .trade-detail-prices {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr) 1px minmax(0, 1fr);
     align-items: stretch;
     min-height: 4.25rem;
     background: #fff;
@@ -3426,13 +3473,14 @@ body:has(#appDialog.show) .modal-backdrop {
     padding: 0.5rem 0.75rem !important;
     border-radius: 0 !important;
     min-width: 0;
-    flex: 1 1 0%;
+    width: 100%;
 }
 
 .trade-detail-price-divider {
     width: 1px;
     background: #e4e6ea;
     margin: 0.25rem 0;
+    align-self: stretch;
 }
 
 .trade-detail-price-label {
@@ -3560,8 +3608,8 @@ body:has(#appDialog.show) .modal-backdrop {
 }
 
 .trade-detail-ifsold-grid {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr);
     align-items: stretch;
     width: 100%;
     gap: 0.25rem;
@@ -3574,7 +3622,7 @@ body:has(#appDialog.show) .modal-backdrop {
     text-align: center;
     gap: 0.35rem;
     min-width: 0;
-    flex: 1 1 0%;
+    width: 100%;
 }
 
 .trade-detail-ifsold-col--pct {

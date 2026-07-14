@@ -118,7 +118,7 @@
     function brokerAvatarHtml(name) {
         const tone = hashNameTone(name);
         const letter = escapeHtml(nameInitial(name));
-        return `<span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true">${letter}</span>`;
+        return `<span class="trade-position-avatar trade-position-avatar--${tone} flex-shrink-0" aria-hidden="true" data-ref="cal.broker-avatar">${letter}</span>`;
     }
 
     function brokerKey(raw) {
@@ -337,15 +337,15 @@
                 momHtml = `<span class="cal-mom ${up ? 'is-up' : 'is-down'}">${up ? '↗' : '↘'} ${formatPct(mom)}</span>`;
             }
             return `
-                <div class="cal-summary-broker-row">
+                <div class="cal-summary-broker-row" data-ref="cal.report.broker-row">
                     ${brokerAvatarHtml(row.broker)}
-                    <div class="cal-summary-broker-main min-w-0">
-                        <div class="cal-summary-broker-name text-truncate">${escapeHtml(row.broker)}</div>
-                        <div class="cal-summary-broker-meta">${row.trades} trade${row.trades === 1 ? '' : 's'} · ${row.wins}W / ${row.losses}L</div>
+                    <div class="cal-summary-broker-main min-w-0" data-ref="cal.report.broker-row.main">
+                        <div class="cal-summary-broker-name text-truncate" data-ref="cal.report.broker-row.name">${escapeHtml(row.broker)}</div>
+                        <div class="cal-summary-broker-meta" data-ref="cal.report.broker-row.meta">${row.trades} trade${row.trades === 1 ? '' : 's'} · ${row.wins}W / ${row.losses}L</div>
                     </div>
-                    <div class="cal-summary-broker-spark">${sparklineSvg(row.series, positive)}</div>
-                    <div class="cal-summary-broker-stats">
-                        <div class="cal-summary-broker-pnl ${toneCls}">${escapeHtml(formatDayPnl(row.net))}</div>
+                    <div class="cal-summary-broker-spark" data-ref="cal.report.broker-row.spark">${sparklineSvg(row.series, positive)}</div>
+                    <div class="cal-summary-broker-stats" data-ref="cal.report.broker-row.stats">
+                        <div class="cal-summary-broker-pnl ${toneCls}" data-ref="cal.report.broker-row.pnl">${escapeHtml(formatDayPnl(row.net))}</div>
                         ${momHtml}
                     </div>
                 </div>
@@ -376,64 +376,64 @@
             : `<span class="cal-mom is-up">${formatPct((summary.wins / decided) * 100)} Win Rate</span>`;
 
         return `
-            <div class="cal-month-report">
-                <div class="cal-report-head">
-                    <div class="cal-report-head-main min-w-0">
-                        <p class="cal-report-month-label mb-1">${escapeHtml(monthTitle)}</p>
-                        <div class="cal-summary-net-row">
-                            <div class="cal-summary-net ${tone}">${escapeHtml(pnlText)}</div>
-                            <span class="cal-summary-trend-icon ${trendCls}" aria-hidden="true">${trendIcon}</span>
+            <div class="cal-month-report" data-ref="cal.report">
+                <div class="cal-report-head" data-ref="cal.report.head">
+                    <div class="cal-report-head-main min-w-0" data-ref="cal.report.head.main">
+                        <p class="cal-report-month-label mb-1" data-ref="cal.report.head.month-label">${escapeHtml(monthTitle)}</p>
+                        <div class="cal-summary-net-row" data-ref="cal.report.head.net-row">
+                            <div class="cal-summary-net ${tone}" data-ref="cal.report.head.net">${escapeHtml(pnlText)}</div>
+                            <span class="cal-summary-trend-icon ${trendCls}" aria-hidden="true" data-ref="cal.report.head.trend-icon">${trendIcon}</span>
                         </div>
-                        <p class="cal-summary-net-label mb-0">
+                        <p class="cal-summary-net-label mb-0" data-ref="cal.report.head.net-label">
                             Net P&amp;L (closed)
                             <i class="fas fa-info-circle cal-summary-info" title="P&amp;L is calculated for closed trades only" aria-hidden="true"></i>
                         </p>
                     </div>
                 </div>
-                <div class="cal-summary-accent ${accentCls}" aria-hidden="true"></div>
-                <div class="cal-summary-metrics" aria-label="Month metrics">
-                    <div class="cal-summary-metric">
-                        <span class="cal-summary-metric-icon cal-summary-metric-icon--trades" aria-hidden="true"><i class="fas fa-chart-bar"></i></span>
-                        <div class="cal-summary-metric-body">
-                            <div class="cal-summary-metric-value">${summary.trades}</div>
-                            <div class="cal-summary-metric-label">Total Trades</div>
-                            <div class="cal-summary-metric-foot">${momFootHtml(pctChange(summary.trades, prev.trades), prevLabel)}</div>
+                <div class="cal-summary-accent ${accentCls}" aria-hidden="true" data-ref="cal.report.accent"></div>
+                <div class="cal-summary-metrics" aria-label="Month metrics" data-ref="cal.report.metrics">
+                    <div class="cal-summary-metric" data-ref="cal.report.metrics.trades">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--trades" aria-hidden="true" data-ref="cal.report.metrics.trades.icon"><i class="fas fa-chart-bar"></i></span>
+                        <div class="cal-summary-metric-body" data-ref="cal.report.metrics.trades.body">
+                            <div class="cal-summary-metric-value" data-ref="cal.report.metrics.trades.value">${summary.trades}</div>
+                            <div class="cal-summary-metric-label" data-ref="cal.report.metrics.trades.label">Total Trades</div>
+                            <div class="cal-summary-metric-foot" data-ref="cal.report.metrics.trades.foot">${momFootHtml(pctChange(summary.trades, prev.trades), prevLabel)}</div>
                         </div>
                     </div>
-                    <div class="cal-summary-metric">
-                        <span class="cal-summary-metric-icon cal-summary-metric-icon--wl" aria-hidden="true"><i class="fas fa-balance-scale"></i></span>
-                        <div class="cal-summary-metric-body">
-                            <div class="cal-summary-metric-value">${winLossValue}</div>
-                            <div class="cal-summary-metric-label">Win / Loss</div>
-                            <div class="cal-summary-metric-foot">${winRateFoot}</div>
+                    <div class="cal-summary-metric" data-ref="cal.report.metrics.win-loss">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--wl" aria-hidden="true" data-ref="cal.report.metrics.win-loss.icon"><i class="fas fa-balance-scale"></i></span>
+                        <div class="cal-summary-metric-body" data-ref="cal.report.metrics.win-loss.body">
+                            <div class="cal-summary-metric-value" data-ref="cal.report.metrics.win-loss.value">${winLossValue}</div>
+                            <div class="cal-summary-metric-label" data-ref="cal.report.metrics.win-loss.label">Win / Loss</div>
+                            <div class="cal-summary-metric-foot" data-ref="cal.report.metrics.win-loss.foot">${winRateFoot}</div>
                         </div>
                     </div>
-                    <div class="cal-summary-metric">
-                        <span class="cal-summary-metric-icon cal-summary-metric-icon--days" aria-hidden="true"><i class="far fa-calendar"></i></span>
-                        <div class="cal-summary-metric-body">
-                            <div class="cal-summary-metric-value">${summary.activeDays}</div>
-                            <div class="cal-summary-metric-label">Active Days</div>
-                            <div class="cal-summary-metric-foot">${momFootHtml(null, prevLabel, {
-                                preferAbsolute: true,
-                                absoluteDelta: summary.activeDays - prev.activeDays
-                            })}</div>
+                    <div class="cal-summary-metric" data-ref="cal.report.metrics.active-days">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--days" aria-hidden="true" data-ref="cal.report.metrics.active-days.icon"><i class="far fa-calendar"></i></span>
+                        <div class="cal-summary-metric-body" data-ref="cal.report.metrics.active-days.body">
+                            <div class="cal-summary-metric-value" data-ref="cal.report.metrics.active-days.value">${summary.activeDays}</div>
+                            <div class="cal-summary-metric-label" data-ref="cal.report.metrics.active-days.label">Active Days</div>
+                            <div class="cal-summary-metric-foot" data-ref="cal.report.metrics.active-days.foot">${momFootHtml(null, prevLabel, {
+            preferAbsolute: true,
+            absoluteDelta: summary.activeDays - prev.activeDays
+        })}</div>
                         </div>
                     </div>
-                    <div class="cal-summary-metric">
-                        <span class="cal-summary-metric-icon cal-summary-metric-icon--pnl" aria-hidden="true"><i class="fas fa-chart-pie"></i></span>
-                        <div class="cal-summary-metric-body">
-                            <div class="cal-summary-metric-value ${tone}">${escapeHtml(hasTrades ? formatCompactPnl(summary.net) : '—')}</div>
+                    <div class="cal-summary-metric" data-ref="cal.report.metrics.net-pnl">
+                        <span class="cal-summary-metric-icon cal-summary-metric-icon--pnl" aria-hidden="true" data-ref="cal.report.metrics.net-pnl.icon"><i class="fas fa-chart-pie"></i></span>
+                        <div class="cal-summary-metric-body" data-ref="cal.report.metrics.net-pnl.body">
+                            <div class="cal-summary-metric-value ${tone}" data-ref="cal.report.metrics.net-pnl.value">${escapeHtml(hasTrades ? formatCompactPnl(summary.net) : '—')}</div>
                             <div class="cal-summary-metric-label">Net P&amp;L</div>
-                            <div class="cal-summary-metric-foot">${momFootHtml(pctChange(summary.net, prev.net), prevLabel)}</div>
+                            <div class="cal-summary-metric-foot" data-ref="cal.report.metrics.net-pnl.foot">${momFootHtml(pctChange(summary.net, prev.net), prevLabel)}</div>
                         </div>
                     </div>
                 </div>
-                <div class="cal-summary-brokers">
-                    <p class="cal-summary-brokers-title">By broker</p>
-                    <div class="cal-summary-broker-list">${buildBrokerRowsHtml(summary)}</div>
+                <div class="cal-summary-brokers" data-ref="cal.report.brokers">
+                    <p class="cal-summary-brokers-title" data-ref="cal.report.brokers.title">By broker</p>
+                    <div class="cal-summary-broker-list" data-ref="cal.report.brokers.list">${buildBrokerRowsHtml(summary)}</div>
                 </div>
-                <p class="cal-summary-footnote mb-0">
-                    <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <p class="cal-summary-footnote mb-0" data-ref="cal.report.footnote">
+                    <i class="fas fa-info-circle" aria-hidden="true" data-ref="cal.report.footnote.icon"></i>
                     W = Win · L = Loss · P&amp;L is calculated for closed trades only
                 </p>
             </div>
@@ -510,17 +510,17 @@
         }).join('');
 
         return `
-            <div class="cal-month-picker px-1 pb-2">
-                <div class="cal-month-picker-year">
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarPickerYear(-1)" aria-label="Previous year">
+            <div class="cal-month-picker px-1 pb-2" data-ref="cal.month-picker">
+                <div class="cal-month-picker-year" data-ref="cal.month-picker.year">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarPickerYear(-1)" aria-label="Previous year" data-ref="cal.month-picker.year.prev">
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </button>
-                    <div class="cal-month-picker-year-label" id="calendarPickerYearLabel">${pickerYear}</div>
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarPickerYear(1)" aria-label="Next year">
+                    <div class="cal-month-picker-year-label" id="calendarPickerYearLabel" data-ref="cal.month-picker.year.label">${pickerYear}</div>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-circle" style="width:2.25rem;height:2.25rem" onclick="shiftCalendarPickerYear(1)" aria-label="Next year" data-ref="cal.month-picker.year.next">
                         <i class="fas fa-chevron-right" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="cal-month-picker-grid" role="listbox" aria-label="Months">${months}</div>
+                <div class="cal-month-picker-grid" role="listbox" aria-label="Months" data-ref="cal.month-picker.grid">${months}</div>
             </div>
         `;
     }
@@ -590,9 +590,9 @@
                 ? renderFlatTradesList(trades, renderPastTradeListItem, 'past')
                 : '';
             body = `
-                <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3 px-1">
-                    <span class="small text-muted">${escapeHtml(countLabel)}</span>
-                    <span class="fw-semibold ${netTone}">${escapeHtml(formatDayPnl(net))}</span>
+                <div class="d-flex justify-content-between align-items-baseline gap-2 mb-3 px-1" data-ref="cal.day-sheet.summary">
+                    <span class="small text-muted" data-ref="cal.day-sheet.summary.count">${escapeHtml(countLabel)}</span>
+                    <span class="fw-semibold ${netTone}" data-ref="cal.day-sheet.summary.net">${escapeHtml(formatDayPnl(net))}</span>
                 </div>
                 ${listHtml}
             `;
@@ -703,11 +703,11 @@
                 ? '<span class="cal-today-badge">Today</span>'
                 : '';
             cells.push(`
-                <div class="cal-cell cal-cell--${tone}${isToday ? ' cal-cell--today' : ''}${clickable ? ' cal-cell--clickable' : ''}${isToday && !count ? ' cal-cell--today-empty' : ''}" data-date="${escapeHtml(key)}" aria-label="${escapeHtml(key)}${count ? `, net ${pnlLabel}` : ''}${isToday ? ', today' : ''}"${clickAttrs}>
+                <div class="cal-cell cal-cell--${tone}${isToday ? ' cal-cell--today' : ''}${clickable ? ' cal-cell--clickable' : ''}${isToday && !count ? ' cal-cell--today-empty' : ''}" data-date="${escapeHtml(key)}" data-ref="cal.cell" aria-label="${escapeHtml(key)}${count ? `, net ${pnlLabel}` : ''}${isToday ? ', today' : ''}"${clickAttrs}>
                     ${todayBadge}
-                    <span class="cal-day">${day}</span>
-                    <span class="cal-pnl">${escapeHtml(pnlLabel)}</span>
-                    ${countLabel ? `<span class="cal-count">${escapeHtml(countLabel)}</span>` : ''}
+                    <span class="cal-day" data-ref="cal.cell.day">${day}</span>
+                    <span class="cal-pnl" data-ref="cal.cell.pnl">${escapeHtml(pnlLabel)}</span>
+                    ${countLabel ? `<span class="cal-count" data-ref="cal.cell.count">${escapeHtml(countLabel)}</span>` : ''}
                 </div>
             `);
         }

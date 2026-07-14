@@ -746,15 +746,11 @@
             ? liveReturn
             : metrics.netProfit;
 
-        const isOpen = variant === 'open' || (variant !== 'past' && (t.status || 'closed') === 'open');
-        const statusLabel = isOpen ? 'Open' : 'Closed';
-        const statusVariant = isOpen ? 'open' : 'secondary';
         const broker = String(t.broker || '').trim();
         const showBroker = broker && !/^none$/i.test(broker);
-        const tagsHtml = typeof appTag === 'function'
+        const tagsHtml = typeof appTag === 'function' && showBroker
             ? `<div class="trade-position-tags">
-                    ${appTag(escapeHtml(statusLabel), statusVariant)}
-                    ${showBroker ? appTag(escapeHtml(broker), 'broker') : ''}
+                    ${appTag(escapeHtml(broker), 'broker')}
                </div>`
             : '';
 
