@@ -149,9 +149,39 @@
     </section>
 
     <!-- PAGE: WATCHLIST (Market) -->
-    <section id="page-market" class="w-100 d-none" data-ref="page.market">
-        <div class="px-3 pt-3 w-100" data-ref="page.market.body">
-            <div id="marketQuotesList" class="w-100" data-ref="page.market.quotes-list"></div>
+    <section id="page-market" class="w-100 d-none bg-white" data-ref="page.market" style="padding-bottom: 80px;">
+        <!-- Market Summary Carousel -->
+        <div class="pt-3 px-3 w-100">
+            <div id="marketSummaryCarousel" class="wl-carousel w-100"></div>
+        </div>
+
+        <!-- Sticky Header -->
+        <div class="wl-header">
+            <div class="wl-col-symbol">Company</div>
+            <div class="wl-col-price">Price</div>
+            <div class="wl-col-pct">% Change</div>
+            <div class="wl-col-range">Day Range</div>
+            <div class="wl-col-action">Actions</div>
+        </div>
+
+        <!-- Watchlist Rows -->
+        <div id="marketQuotesList" class="w-100" data-ref="page.market.quotes-list"></div>
+
+        <!-- Add Stock Button -->
+        <div class="wl-footer">
+            <button class="wl-add-btn" id="btnAddStock" onclick="if(window.openMarketSearch) window.openMarketSearch()">
+                <i class="fas fa-plus"></i> Add Stock
+            </button>
+            <div class="wl-stock-count" id="marketStockCount">0 / 50 stocks</div>
+        </div>
+
+        <!-- Live Status Footer -->
+        <div class="wl-live-bar border-top">
+            <div><span class="wl-live-dot"></span><span class="text-positive fw-bold">Live</span></div>
+            <div class="d-flex align-items-center gap-2">
+                Last updated: <span id="marketLastUpdated">--</span>
+                <button class="btn btn-sm btn-link text-muted p-0" onclick="if(window.refreshMarketQuotes) window.refreshMarketQuotes()"><i class="fas fa-rotate-right"></i></button>
+            </div>
         </div>
     </section>
 
@@ -2077,11 +2107,14 @@
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/cupertino-pane@1.5.4/dist/cupertino-pane.min.js"
         crossorigin="anonymous"></script>
+    <!-- Page.js for Client-Side Routing -->
+    <script src="https://unpkg.com/page/page.js"></script>
     <!-- COMPONENT SCRIPTS -->
     <script src="shared/lib/_registry.js"></script>
     <script src="shared/lib/format.js"></script>
     <script src="shared/lib/bootstrap.js"></script>
     <script src="shared/lib/broker-logos.js"></script>
+    <script src="components/metrics-grid.js"></script>
     <script src="features/common/app-shell.js"></script>
     <script src="features/common/trade-list.js"></script>
     <script src="features/common/trade-sheets.js"></script>
@@ -2097,6 +2130,7 @@
     <script src="features/more/money-page.js"></script>
     <script src="features/more/mtf-calculator-page.js"></script>
     <script src="features/more/settings-page.js"></script>
+    <script src="features/common/router.js"></script>
     <script src="features/more/json-visualizer.js"></script>
     <!-- DB / SERVICE LAYER -->
     <script src="shared/db/_registry.js"></script>

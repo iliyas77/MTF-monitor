@@ -2772,7 +2772,10 @@
                         compact: true,
                         showSign: true,
                         align: 'right',
-                        pill: false
+                        pill: false,
+                        fs: 'fs-6',
+                        weight: 'fw-bold',
+                        className: 'pf-pnl-val-wrapper'
                     });
                     const pnlAmountEl = pnlHost.querySelector('.d-inline-flex.flex-column');
                     if (pnlAmountEl && pnlAmountEl.outerHTML !== nextPnl) {
@@ -4176,7 +4179,7 @@
         openMoreFeature('money');
     }
 
-    function navigateTo(page) {
+    function renderAppPage(page) {
         if (page === 'money') {
             openMoreFeature('money');
             return;
@@ -4219,6 +4222,14 @@
         }
         updateFabVisibility(page);
         saveNavState();
+    }
+
+    function navigateTo(pageId) {
+        if (typeof window.page === 'function') {
+            window.page('/' + pageId);
+        } else {
+            renderAppPage(pageId);
+        }
     }
 
     function openMoreFeature(feature) {
@@ -6544,6 +6555,7 @@
     window.closeDialog = closeDialog;
 
     window.navigateTo = navigateTo;
+    window.renderAppPage = renderAppPage;
     window.openTradeDetail = openTradeDetail;
     window.backFromTradeDetail = backFromTradeDetail;
     window.openMoreFeature = openMoreFeature;
