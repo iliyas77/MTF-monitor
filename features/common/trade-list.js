@@ -1009,6 +1009,44 @@
         const pctFormatted = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
         const pctClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-muted');
 
+        const { renderMetricsCell } = global.MTFComponents || {};
+
+        const pnlCell = renderMetricsCell ? renderMetricsCell({
+            label: 'Total P&L',
+            value: pnlFormatted,
+            valueClass: pnlToneClass,
+            icon: pnlIconClass,
+            iconTone: n >= 0 ? 'green' : 'red',
+            subtitle: `(${pctFormatted})`,
+            subtitleTone: n >= 0 ? 'green' : 'red',
+            cellClass: 'col ps-1',
+            dataRef: 'page.trades.portfolio-summary.pnl-card'
+        }) : '';
+
+        const investedCell = renderMetricsCell ? renderMetricsCell({
+            label: 'Total Invested',
+            value: fmtINR(inv),
+            valueClass: 'text-dark',
+            icon: 'fa-wallet',
+            iconTone: 'blue',
+            subtitle: '(100.00%)',
+            subtitleTone: 'blue',
+            cellClass: 'col px-2',
+            dataRef: 'page.trades.portfolio-summary.invested-card'
+        }) : '';
+
+        const holdingsCell = renderMetricsCell ? renderMetricsCell({
+            label: 'Total Holdings',
+            value: String(count),
+            valueClass: 'text-dark',
+            icon: 'fa-briefcase',
+            iconTone: 'orange',
+            subtitle: '(100.00%)',
+            subtitleTone: 'orange',
+            cellClass: 'col pe-1',
+            dataRef: 'page.trades.portfolio-summary.holdings-card'
+        }) : '';
+
         // Determine view mode for positions list header text
         const viewMode = (global.MTFAppHelpers?.tradePages?.getTradesViewMode?.() || 'trade');
         let section2Title = `Active Positions (${count})`;
@@ -1052,43 +1090,9 @@
             </div>
             
             <div class="portfolio-summary-cards row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
-                <!-- Total P&L -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 ps-1" data-ref="page.trades.portfolio-summary.pnl-card">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center ${pnlBgClass} flex-shrink-0" style="width: 40px; height: 40px;" data-ref="page.trades.portfolio-summary.pnl-card.icon-bg">
-                        <i class="fas ${pnlIconClass} ${pnlIconColor}" style="font-size: 16px;"></i>
-                    </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.pnl-card.body">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.label">Total P&L</span>
-                        <strong class="portfolio-stat-value ${pnlToneClass} text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.value">${pnlFormatted}</strong>
-                        <span class="${pctClass} text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.pct">(${pctFormatted})</span>
-                    </div>
-                </div>
-                <!-- Vertical Separator -->
-                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;" data-ref="page.trades.portfolio-summary.sep-1"></div>
-                <!-- Total Invested -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 px-2" data-ref="page.trades.portfolio-summary.invested-card">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(30, 64, 175, 0.08) !important;" data-ref="page.trades.portfolio-summary.invested-card.icon-bg">
-                        <i class="fas fa-wallet text-info" style="font-size: 16px; color: #1e40af !important;"></i>
-                    </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.invested-card.body">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.label">Total Invested</span>
-                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.value">${fmtINR(inv)}</strong>
-                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.pct">(100.00%)</span>
-                    </div>
-                </div>
-                <!-- Vertical Separator -->
-                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;" data-ref="page.trades.portfolio-summary.sep-2"></div>
-                <!-- Total Holdings -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 pe-1" data-ref="page.trades.portfolio-summary.holdings-card">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(202, 138, 4, 0.08) !important;" data-ref="page.trades.portfolio-summary.holdings-card.icon-bg">
-                        <i class="fas fa-briefcase text-warning" style="font-size: 16px; color: #ca8a04 !important;"></i>
-                    </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.holdings-card.body">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.holdings-card.label">Total Holdings</span>
-                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.holdings-card.value">${count}</strong>
-                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(100.00%)</span>
-                    </div>
-                </div>
+                ${pnlCell}
+                ${investedCell}
+                ${holdingsCell}
             </div>
         </div>
         

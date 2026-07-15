@@ -1,41 +1,6 @@
-/* ========== Brand tokens (source of truth for app colors) ========== */
+/* ========== Brand tokens (source of truth for app layout variables) ========== */
 
 :root {
-    /* Background */
-    --whole-bg: #fff;
-    --gr-bg: #fff;
-    --gr-bg-soft: #f4f5f7;
-    --gr-bg-ticker: #f8f9fb;
-    --gr-input-bg: #f9fafb;
-
-    /* Text */
-    --gr-text: #6b7280;
-    --gr-text1: #1f2937;
-    --gr-text-muted: #4b5563;
-
-    /* Borders — very light grey (soft edge on white cards) */
-    --gray150: #f0f1f3;
-    --gr-border: var(--gray150);
-    --gr-border-strong: #e4e6ea;
-
-    /* Accent / status */
-    --gr-accent: #159b5a;
-    --gr-accent-hover: #08653a;
-    --gr-accent-soft: #e6f5ec;
-    --gr-active-bg: #0a7d44;
-    --gr-danger: #ef4444;
-    --gr-danger-soft: #fce8e6;
-    --gr-pill-down-text: #ef4444;
-    --gr-warning: #ca8a04;
-    --gr-warning-bg: #fff8d6;
-    --gr-orange: #ea580c;
-    --gr-row-hover: #ededee;
-    --gr-calc-border: #bbf7d0;
-
-    /* Info (Bootstrap --bs-info) */
-    --blue500: #1e40af;
-    --blue500-soft: #dbeafe;
-
     /* Radius */
     --radius-xl: 1.25rem;
 }

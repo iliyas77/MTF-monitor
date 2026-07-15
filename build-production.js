@@ -23,8 +23,10 @@ const VERSION_JSON = path.join(ROOT, 'app-version.json');
 const VERSION_JS = path.join(ROOT, 'features', 'more', 'app-version.js');
 
 const htmlPath = path.join(ROOT, 'main.html');
+const colorsCssPath = path.join(ROOT, 'shared', 'css', 'colors.css');
 const themeCssPath = path.join(ROOT, 'shared', 'css', '_variables.css');
 const BOOTSTRAP_CSS_RE = /bootstrap@[\d.]+\/dist\/css\/bootstrap\.min\.css/;
+const COLORS_LINK_RE = /<link rel="stylesheet" href="shared\/css\/colors\.css"\s*\/?>/;
 const THEME_LINK_RE = /<link rel="stylesheet" href="shared\/css\/_variables\.css"\s*\/?>/;
 
 const MINIFY_OPTIONS = {
@@ -169,15 +171,22 @@ async function build() {
         console.error('main.html is missing Bootstrap CSS CDN link');
         process.exit(1);
     }
+    if (!COLORS_LINK_RE.test(html)) {
+        console.error('main.html is missing <link rel="stylesheet" href="shared/css/colors.css" />');
+        process.exit(1);
+    }
     if (!THEME_LINK_RE.test(html)) {
         console.error('main.html is missing <link rel="stylesheet" href="shared/css/_variables.css" />');
         process.exit(1);
     }
 
+    const colorsCss = fs.readFileSync(colorsCssPath, 'utf8');
     const themeCss = fs.readFileSync(themeCssPath, 'utf8');
+    const combinedCss = colorsCss + '\n' + themeCss;
     const js = bundleJs();
 
-    html = html.replace(THEME_LINK_RE, () => `<style>${themeCss}</style>`);
+    html = html.replace(COLORS_LINK_RE, '');
+    html = html.replace(THEME_LINK_RE, () => `<style>${combinedCss}</style>`);
 
     html = html.replace(
         /<!-- COMPONENT SCRIPTS -->[\s\S]*?<script src="main\.js"><\/script>/,
@@ -201,7 +210,7 @@ async function build() {
     const scriptCount = JSON.parse(fs.readFileSync(MANIFEST, 'utf8')).scripts.length;
 
     console.log(`✓ production.html (${sizeKb} KB, minified from ${unminKb} KB, −${saved}%)`);
-    console.log(`  Sources: main.html, shared/css/_variables.css, ${scriptCount} JS files (shared/scripts/manifest.json), Bootstrap CDN`);
+    console.log(`  Sources: main.html, shared/css/colors.css, shared/css/_variables.css, ${scriptCount} JS files (shared/scripts/manifest.json), Bootstrap CDN`);
     if (versionInfo.bumped) {
         console.log(`  Version: ${versionInfo.previous.version} → ${versionInfo.next.version} (${versionInfo.next.builtAt})`);
     } else {

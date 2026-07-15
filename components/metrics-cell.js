@@ -51,6 +51,22 @@
         red: { bg: 'rgba(239, 68, 68, 0.12)', color: 'var(--gr-danger, #ef4444)' }
     };
 
+    const CELL_BG_TONES = {
+        green: 'bg-gr-accent-soft text-gr-accent',
+        blue: 'bg-blue500-soft text-blue500',
+        orange: 'bg-gr-warning-bg text-gr-warning',
+        purple: 'bg-gr-soft text-gr-muted',
+        red: 'bg-gr-danger-soft text-gr-danger'
+    };
+
+    const CELL_SUBTITLE_TONES = {
+        green: 'bg-gr-accent-soft text-gr-accent border border-gr-calc',
+        blue: 'bg-blue500-soft text-blue500 border border-gr',
+        orange: 'bg-gr-warning-bg text-gr-warning border border-gr',
+        purple: 'bg-gr-soft text-gr-muted border border-gr',
+        red: 'bg-gr-danger-soft text-gr-danger border border-gr'
+    };
+
     /* ---------- helpers ---------- */
  
     function attrsToString(attrs, excludeKeys = []) {
@@ -63,26 +79,24 @@
  
     function iconBoxHtml(iconName, tone, baseRef) {
         if (!iconName) return '';
-        const t = ICON_TONES[tone] || ICON_TONES.green;
+        const toneClass = CELL_BG_TONES[tone] || CELL_BG_TONES.green;
         const refAttr = baseRef ? ` data-ref="${esc(baseRef)}.icon"` : '';
-        return `<div class="trade-position-icon-box trade-position-icon-box--${tone || 'green'}" style="background-color:${t.bg};color:${t.color}"${refAttr}>${icon(iconName)}</div>`;
+        return `<div class="d-flex align-items-center justify-content-center rounded-3 flex-shrink-0 ${toneClass}" style="width: 36px; height: 36px; font-size: 16px;"${refAttr}>${icon(iconName)}</div>`;
     }
  
     function subtitleHtml(text, tone, extraClass, baseRef) {
         if (text == null || text === '') return '';
-        const t = SUBTITLE_TONES[tone] || SUBTITLE_TONES.green;
+        const toneClass = CELL_SUBTITLE_TONES[tone] || CELL_SUBTITLE_TONES.green;
         const refAttr = baseRef ? ` data-ref="${esc(baseRef)}.subtitle"` : '';
-        return `<span class="trade-position-subtitle px-2 py-1 rounded ${extraClass || ''}" style="background-color:${t.bg};color:${t.color};display:inline-block"${refAttr}>${esc(text)}</span>`;
+        return `<span class="badge ${toneClass} font-size-10 px-2 py-1 fw-medium text-wrap ${extraClass || ''}"${refAttr}>${esc(text)}</span>`;
     }
  
     function progressHtml(pct, tone, baseRef) {
         const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
-        const neg = tone === 'neg';
-        const trackClass = `trade-position-progress${neg ? ' trade-position-progress--neg' : ''}`;
-        const barTone = neg ? 'bg-danger' : 'bg-success';
+        const barTone = tone === 'neg' ? 'bg-danger' : 'bg-success';
         const trackRef = baseRef ? ` data-ref="${esc(baseRef)}.progress"` : '';
         const barRef = baseRef ? ` data-ref="${esc(baseRef)}.progress.bar"` : '';
-        return `<div class="${trackClass}"${trackRef}><div class="progress-bar ${barTone}" style="width:${safePct}%"${barRef}></div></div>`;
+        return `<div class="progress w-100 bg-light-subtle border" style="height: 6px;"${trackRef}><div class="progress-bar ${barTone}" style="width:${safePct}%"${barRef}></div></div>`;
     }
 
     /* ---------- cell renderer ---------- */
@@ -90,11 +104,11 @@
     /**
      * Render a single metrics cell.
      * @param {Object} cell
-     * @param {string} [cell.label]            - small caption (trade-position-label)
-     * @param {string} [cell.value]            - main figure (trade-position-value / -price)
+     * @param {string} [cell.label]            - small caption
+     * @param {string} [cell.value]            - main figure
      * @param {string} [cell.valueClass]       - extra classes for the value span
      * @param {string} [cell.valueKind]        - 'value' (default) or 'price'
-     * @param {string} [cell.icon]             - FontAwesome icon name (e.g. 'fa-arrow-trend-up')
+     * @param {string} [cell.icon]             - FontAwesome icon name
      * @param {string} [cell.iconTone]         - green|blue|orange|purple|red
      * @param {string} [cell.subtitle]        - optional pill text under the value
      * @param {string} [cell.subtitleTone]    - green|blue|orange|purple|red
@@ -105,7 +119,7 @@
      * @param {Object} [cell.live]             - { field, value } -> data-live-field / data-live-value
      * @param {Object} [cell.progress]        - { pct, tone } for the 'progress' variant
      * @param {string} [cell.hostHtml]        - inner HTML for 'target-status' host slot
-     * @param {string} [cell.onclick]         - onclick handler; renders the cell as a <button> when set
+     * @param {string} [cell.onclick]         - onclick handler
      * @param {string} [cell.ariaLabel]       - accessible label for clickable cells
      * @returns {string}
      */
@@ -115,7 +129,6 @@
         const isCenter = align === 'center';
 
         const variant = cell.variant || '';
-        const variantClass = variant ? ` trade-position-cell--${variant}` : '';
         const extraClass = cell.cellClass ? ` ${cell.cellClass}` : '';
         const alignClass = isCenter ? ' justify-content-center' : '';
 
@@ -129,38 +142,43 @@
         const liveField = cell.live && cell.live.field ? ` data-live-field="${esc(cell.live.field)}"` : '';
         const liveValue = cell.live && cell.live.value != null ? ` data-live-value` : '';
         const refAttr = baseRef ? ` data-ref="${esc(baseRef)}"` : '';
- 
-        const valueKindClass = cell.valueKind === 'price' ? 'trade-position-price' : 'trade-position-value';
-        const valueClass = `${valueKindClass} text-truncate ${cell.valueClass || ''}`.trim();
- 
+
+        const valueKindClass = cell.valueKind === 'price' ? 'font-monospace' : '';
+        const valueClass = `fw-bold text-dark text-truncate ${valueKindClass} ${cell.valueClass || ''}`.trim();
+
         // Clickable cells render as a <button> (semantically correct + accessible).
         const isClickable = !!cell.onclick;
         const tag = isClickable ? 'button' : 'div';
-        const clickableClass = isClickable ? ' trade-position-cell--btn' : '';
+        
+        let baseCellClasses = 'd-flex align-items-start gap-2 flex-fill min-w-0 px-2 border-end overflow-hidden';
+        if (isClickable) {
+            baseCellClasses = 'btn btn-link text-decoration-none p-0 bg-transparent text-start border-0 border-end ' + baseCellClasses;
+        }
+
         const typeAttr = isClickable ? ' type="button"' : '';
         const onclickAttr = isClickable ? ` onclick="${esc(cell.onclick)}"` : '';
         const ariaAttr = isClickable && cell.ariaLabel ? ` aria-label="${esc(cell.ariaLabel)}"` : '';
- 
-        // ---- target-status host slot (content injected/updated externally) ----
+
+        // ---- target-status host slot ----
         if (variant === 'target-status') {
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
+            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
         }
- 
+
         // ---- progress variant ----
         if (variant === 'progress') {
             const p = cell.progress || {};
             const pctText = p.pct != null ? `${Number(p.pct).toFixed(p.pctDecimals == null ? 0 : p.pctDecimals)}%` : '';
             const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
             const pctRef = baseRef ? ` data-ref="${esc(baseRef)}.progress-pct"` : '';
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>
+            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>
                 <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
-                    ${cell.label ? `<span class="trade-position-label text-secondary"${labelRef}>${esc(cell.label)}</span>` : ''}
-                    ${pctText ? `<span class="trade-position-progress-pct"${pctRef}>${esc(pctText)}</span>` : ''}
+                    ${cell.label ? `<span class="text-secondary text-truncate fw-medium" style="font-size: 11px; max-width: 100%;"${labelRef}>${esc(cell.label)}</span>` : ''}
+                    ${pctText ? `<span class="text-dark fw-bold text-truncate" style="font-size: 12px;"${pctRef}>${esc(pctText)}</span>` : ''}
                     ${progressHtml(p.pct, p.tone, baseRef)}
                 </div>
             </${tag}>`;
         }
- 
+
         // ---- rich / simple cell ----
         const iconHtml = cell.icon ? iconBoxHtml(cell.icon, cell.iconTone, baseRef) : '';
         const bodyAlign = isCenter ? 'align-items-center text-center' : 'align-items-start';
@@ -169,17 +187,17 @@
         const valWrapperRef = baseRef ? ` data-ref="${esc(baseRef)}.value-wrapper"` : '';
         const valRef = baseRef ? ` data-ref="${esc(baseRef)}.value"` : '';
         const bodyHtml = `
-            <div class="d-flex flex-column ${bodyAlign} gap-1 min-w-0"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
-                ${cell.label ? `<span class="trade-position-label text-secondary"${labelRef}>${esc(cell.label)}</span>` : ''}
-                <div class="d-flex align-items-center"${valWrapperRef}>
-                    ${cell.value != null ? `<span class="${valueClass}"${liveValue}${valRef}>${esc(cell.value)}</span>` : ''}
+            <div class="d-flex flex-column ${bodyAlign} gap-1 min-w-0 w-100"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
+                ${cell.label ? `<span class="text-secondary text-truncate fw-medium" style="font-size: 11px; max-width: 100%;"${labelRef}>${esc(cell.label)}</span>` : ''}
+                <div class="d-flex align-items-center w-100 justify-content-${isCenter ? 'center' : 'start'}"${valWrapperRef}>
+                    ${cell.value != null ? `<span class="${valueClass}" style="font-size: 15px;"${liveValue}${valRef}>${esc(cell.value)}</span>` : ''}
                     ${refreshHtml}
                 </div>
                 ${subtitleHtml(cell.subtitle, cell.subtitleTone, cell.subtitleClass, baseRef)}
             </div>
         `;
- 
-        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
+
+        return `<${tag} class="${baseCellClasses}${alignClass}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
     }
 
     /* ---------- live-update helper ---------- */

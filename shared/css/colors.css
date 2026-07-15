@@ -1,0 +1,69 @@
+/* ========== Brand color tokens (source of truth for app colors) ========== */
+
+:root {
+    /* Background */
+    --whole-bg: #fff;
+    --gr-bg: #fff;
+    --gr-bg-soft: #f4f5f7;
+    --gr-bg-ticker: #f8f9fb;
+    --gr-input-bg: #f9fafb;
+
+    /* Text */
+    --gr-text: #6b7280;
+    --gr-text1: #1f2937;
+    --gr-text-muted: #4b5563;
+
+    /* Borders — very light grey (soft edge on white cards) */
+    --gray150: #f0f1f3;
+    --gr-border: var(--gray150);
+    --gr-border-strong: #e4e6ea;
+
+    /* Accent / status */
+    --gr-accent: #159b5a;
+    --gr-accent-hover: #08653a;
+    --gr-accent-soft: #e6f5ec;
+    --gr-active-bg: #0a7d44;
+    --gr-danger: #ef4444;
+    --gr-danger-soft: #fce8e6;
+    --gr-pill-down-text: #ef4444;
+    --gr-warning: #ca8a04;
+    --gr-warning-bg: #fff8d6;
+    --gr-orange: #ea580c;
+    --gr-row-hover: #ededee;
+    --gr-calc-border: #bbf7d0;
+
+    /* Info (Bootstrap --bs-info) */
+    --blue500: #1e40af;
+    --blue500-soft: #dbeafe;
+}
+
+/* ========== Color Utility Classes ========== */
+
+/* Backgrounds */
+.bg-whole { background-color: var(--whole-bg) !important; }
+.bg-gr { background-color: var(--gr-bg) !important; }
+.bg-gr-soft { background-color: var(--gr-bg-soft) !important; }
+.bg-gr-ticker { background-color: var(--gr-bg-ticker) !important; }
+.bg-gr-input { background-color: var(--gr-input-bg) !important; }
+.bg-gr-accent-soft { background-color: var(--gr-accent-soft) !important; }
+.bg-gr-active { background-color: var(--gr-active-bg) !important; }
+.bg-gr-danger-soft { background-color: var(--gr-danger-soft) !important; }
+.bg-gr-warning-bg { background-color: var(--gr-warning-bg) !important; }
+.bg-blue500-soft { background-color: var(--blue500-soft) !important; }
+
+/* Texts */
+.text-gr { color: var(--gr-text) !important; }
+.text-gr1 { color: var(--gr-text1) !important; }
+.text-gr-muted { color: var(--gr-text-muted) !important; }
+.text-gr-accent { color: var(--gr-accent) !important; }
+.text-gr-accent-hover { color: var(--gr-accent-hover) !important; }
+.text-gr-danger { color: var(--gr-danger) !important; }
+.text-gr-pill-down { color: var(--gr-pill-down-text) !important; }
+.text-gr-warning { color: var(--gr-warning) !important; }
+.text-gr-orange { color: var(--gr-orange) !important; }
+.text-blue500 { color: var(--blue500) !important; }
+
+/* Borders */
+.border-gr { border-color: var(--gr-border) !important; }
+.border-gr-strong { border-color: var(--gr-border-strong) !important; }
+.border-gr-calc { border-color: var(--gr-calc-border) !important; }
