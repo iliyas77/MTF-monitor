@@ -4139,6 +4139,12 @@
         BottomBar.setFabVisible(false);
     }
 
+    function openPositionBySymbol(symbol, name) {
+        const sym = normalizeMarketSymbol(symbol);
+        if (!sym) return;
+        openBuyTradeFromMarket(sym, name || sym);
+    }
+
     function backFromTradeDetail(opts = {}) {
         const { fromPane = false } = opts || {};
         tradeDetailId = null;
@@ -5042,6 +5048,11 @@
         }
         openStockSearchSheet(mode);
     }
+
+    function openMarketSearch() {
+        openStockSearchSheet('watchlist');
+    }
+    window.openMarketSearch = openMarketSearch;
 
     function closeSearchPage() {
         const pane = getSearchSheetPane();
@@ -6564,6 +6575,7 @@
     window.navigateTo = navigateTo;
     window.renderAppPage = renderAppPage;
     window.openTradeDetail = openTradeDetail;
+    window.openPositionBySymbol = openPositionBySymbol;
     window.backFromTradeDetail = backFromTradeDetail;
     window.openMoreFeature = openMoreFeature;
     window.backToMoreHub = backToMoreHub;
