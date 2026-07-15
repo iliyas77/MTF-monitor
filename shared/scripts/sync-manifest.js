@@ -83,7 +83,7 @@ function preferredDbOrder(scripts) {
 function preferredComponentsOrder(scripts) {
     // Reusable UI components load after shared/lib helpers, before feature pages.
     const preferred = [
-        'components/metrics-grid.js'
+        'components/metrics-cell.js'
     ];
     const set = new Set(scripts);
     const ordered = preferred.filter((s) => set.has(s));

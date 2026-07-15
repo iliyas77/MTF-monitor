@@ -2715,12 +2715,13 @@
             // Update Target Status
             const targetStatusHost = el.querySelector('.trade-position-cell--target-status');
             if (targetStatusHost) {
+                const baseRef = targetStatusHost.getAttribute('data-ref');
                 if (status === 'open' && hasPrice && targetPrice > 0) {
-                    const targetStatus = global.MTFComponents.TargetStatus(livePrice, targetPrice, status, targetReachedBeforeClose);
-
+                    const targetStatus = global.MTFComponents.TargetStatus(livePrice, targetPrice, status, targetReachedBeforeClose, baseRef);
+ 
                     const wasReached = targetStatusHost.querySelector('[data-target-status][data-reached="true"]') !== null;
                     const isReached = targetStatus.isTargetReached;
-
+ 
                     if (wasReached !== isReached) {
                         targetStatusHost.style.transition = 'opacity 200ms ease, transform 200ms ease';
                         targetStatusHost.style.opacity = '0';
@@ -2734,7 +2735,7 @@
                         const leftEl = targetStatusHost.querySelector('[data-target-left]');
                         const pctEl = targetStatusHost.querySelector('[data-target-pct-left]');
                         const diffPctEl = targetStatusHost.querySelector('[data-target-pct-diff]');
-
+ 
                         if (isReached) {
                             if (diffPctEl) {
                                 const diffPct = ((livePrice - targetPrice) / targetPrice) * 100;
@@ -2758,12 +2759,12 @@
                         }
                     }
                 } else if (status === 'closed') {
-                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose, baseRef);
                     if (targetStatusHost.innerHTML !== targetStatus.html) {
                         targetStatusHost.innerHTML = targetStatus.html;
                     }
                 } else if (!hasPrice || !(targetPrice > 0)) {
-                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose, baseRef);
                     if (targetStatusHost.innerHTML !== targetStatus.html) {
                         targetStatusHost.innerHTML = targetStatus.html;
                     }

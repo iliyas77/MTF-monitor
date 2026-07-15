@@ -54,9 +54,17 @@
         `;
     }
 
-    function TargetStatus(currentPrice, targetPrice, status, targetReachedBeforeClose) {
+    function TargetStatus(currentPrice, targetPrice, status, targetReachedBeforeClose, baseRef) {
         const isClosed = status === 'closed';
-
+        const esc = (val) => {
+            const e = (global.MTFComponents || {}).escapeHtml;
+            return typeof e === 'function' ? e(val) : String(val == null ? '' : val);
+        };
+        const refAttr = baseRef ? ` data-ref="${esc(baseRef)}"` : '';
+        const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
+        const valRef = baseRef ? ` data-ref="${esc(baseRef)}.value"` : '';
+        const subRef = baseRef ? ` data-ref="${esc(baseRef)}.subtitle"` : '';
+ 
         if (isClosed) {
             const reached = !!targetReachedBeforeClose;
             return {
@@ -64,57 +72,57 @@
                 remainingPercentage: 0,
                 isTargetReached: reached,
                 html: `
-                    <div class="target-status-container" data-target-status data-reached="${reached}">
-                        <span class="trade-position-label ${reached ? 'text-success' : 'text-danger'}">Target</span>
-                        <span class="trade-position-value ${reached ? 'text-success' : 'text-danger'} fw-bold">${reached ? '✅ Reached' : '❌ Not Reached'}</span>
+                    <div class="target-status-container" data-target-status data-reached="${reached}"${refAttr}>
+                        <span class="trade-position-label ${reached ? 'text-success' : 'text-danger'}"${labelRef}>Target</span>
+                        <span class="trade-position-value ${reached ? 'text-success' : 'text-danger'} fw-bold"${valRef}>${reached ? '✅ Reached' : '❌ Not Reached'}</span>
                     </div>
                 `
             };
         }
-
+ 
         const cp = currentPrice != null ? Number(currentPrice) : null;
         const tp = targetPrice != null ? Number(targetPrice) : null;
-
+ 
         if (cp == null || isNaN(cp) || cp <= 0 || tp == null || isNaN(tp) || tp <= 0) {
             return {
                 remainingAmount: 0,
                 remainingPercentage: 0,
                 isTargetReached: false,
                 html: `
-                    <div class="target-status-container" data-target-status>
-                        <span class="trade-position-label text-secondary">Target</span>
-                        <span class="trade-position-value text-body">—</span>
+                    <div class="target-status-container" data-target-status${refAttr}>
+                        <span class="trade-position-label text-secondary"${labelRef}>Target</span>
+                        <span class="trade-position-value text-body"${valRef}>—</span>
                     </div>
                 `
             };
         }
-
+ 
         const isTargetReached = cp >= tp;
         const remainingAmount = tp - cp;
         const remainingPercentage = (remainingAmount / tp) * 100;
         const differencePercentage = ((cp - tp) / tp) * 100;
         const { renderIcon } = global.MTFComponents;
-
+ 
         let html = '';
         if (isTargetReached) {
             html = `
-                <div class="target-status-container" data-target-status data-reached="true">
-                    <span class="trade-position-label text-success">Target</span>
-                    <span class="trade-position-value text-success fw-bold">✅ Reached</span>
-                    <span class="trade-position-subtitle text-success mt-1" data-target-pct-diff>+${differencePercentage.toFixed(2)}%</span>
+                <div class="target-status-container" data-target-status data-reached="true"${refAttr}>
+                    <span class="trade-position-label text-success"${labelRef}>Target</span>
+                    <span class="trade-position-value text-success fw-bold"${valRef}>✅ Reached</span>
+                    <span class="trade-position-subtitle text-success mt-1" data-target-pct-diff${subRef}>+${differencePercentage.toFixed(2)}%</span>
                 </div>
             `;
         } else {
             const iconHtml = typeof renderIcon === 'function' ? renderIcon('fa-bullseye', { className: 'text-target-purple me-1' }) : '';
             html = `
-                <div class="target-status-container" data-target-status data-reached="false">
-                    <span class="trade-position-label text-target-purple d-flex align-items-center gap-1">${iconHtml}Target</span>
-                    <span class="trade-position-value text-target-purple fw-bold" data-target-left>₹${remainingAmount.toFixed(2)} Left</span>
-                    <span class="trade-position-subtitle text-target-purple mt-1" data-target-pct-left>${remainingPercentage.toFixed(2)}% to target</span>
+                <div class="target-status-container" data-target-status data-reached="false"${refAttr}>
+                    <span class="trade-position-label text-target-purple d-flex align-items-center gap-1"${labelRef}>${iconHtml}Target</span>
+                    <span class="trade-position-value text-target-purple fw-bold" data-target-left${valRef}>₹${remainingAmount.toFixed(2)} Left</span>
+                    <span class="trade-position-subtitle text-target-purple mt-1" data-target-pct-left${subRef}>${remainingPercentage.toFixed(2)}% to target</span>
                 </div>
             `;
         }
-
+ 
         return {
             remainingAmount,
             remainingPercentage,
@@ -722,6 +730,7 @@
             targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
         }
         const { renderMetricsCell, escapeHtml: esc } = global.MTFComponents || {};
+        const baseRef = variant === 'open' ? 'page.trades.list.item' : 'page.past.list.item';
         const cells = [
             {
                 label: 'Current Price',
@@ -732,7 +741,8 @@
                 subtitle: targetBadgeText,
                 subtitleTone: targetBadgeTone,
                 live: { field: 'price', value: true },
-                refresh: !isClosed
+                refresh: !isClosed,
+                data: { ref: `${baseRef}.metrics.current` }
             },
             {
                 label: 'Quantity',
@@ -741,7 +751,8 @@
                 iconTone: 'orange',
                 subtitle: 'Shares',
                 subtitleTone: 'orange',
-                align: 'center'
+                align: 'center',
+                data: { ref: `${baseRef}.metrics.qty` }
             },
             {
                 label: 'Buy Price',
@@ -750,7 +761,8 @@
                 iconTone: 'blue',
                 subtitle: avgEntryText || '',
                 subtitleTone: 'blue',
-                align: 'center'
+                align: 'center',
+                data: { ref: `${baseRef}.metrics.buy` }
             },
             {
                 label: 'Target Price',
@@ -758,10 +770,11 @@
                 icon: 'fa-bullseye',
                 iconTone: 'red',
                 subtitle: targetPctText || '',
-                subtitleTone: 'red'
+                subtitleTone: 'red',
+                data: { ref: `${baseRef}.metrics.target` }
             }
         ];
-
+ 
         const gridAttrs = {
             'data-live-symbol': symbolAttr,
             'data-quote-symbol': symbolAttr,
@@ -772,59 +785,60 @@
             'data-target-reached-before-close': String(targetReachedBeforeClose),
             'data-trade-variant': variant
         };
-
+ 
         const attrsStr = Object.keys(gridAttrs).map(k => ` ${k}="${(esc || escapeHtml)(gridAttrs[k])}"`).join('');
         const metricsGridHtml = renderMetricsCell
-            ? `<div class="trade-position-metrics"><div class="trade-position-grid"${attrsStr}>${cells.map(renderMetricsCell).join('')}</div></div>`
+            ? `<div class="trade-position-metrics" data-ref="${baseRef}.metrics"><div class="trade-position-grid" data-ref="${baseRef}.metrics.grid"${attrsStr}>${cells.map(renderMetricsCell).join('')}</div></div>`
             : '';
-
+ 
         return `
             <article class="pf-card ${statusClass}"
                 data-trade-card data-trade-id="${tradeId}" data-trade-open-detail
                 role="button" tabindex="0"
                 onclick="openTradeDetail('${tradeId}')"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}">
+                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openTradeDetail('${tradeId}');}"
+                data-ref="${baseRef}">
                 
-                <div class="pf-header">
-                    <div class="pf-header-left">
-                        <div class="pf-avatar trade-position-avatar" style="background-color: ${avatarStyle.bg}; color: ${avatarStyle.color}">${initial}</div>
-                        <div class="pf-title-area">
-                            <div class="pf-symbol-row">
-                                <span class="pf-symbol">${escapeHtml(symbol || company)}</span>
+                <div class="pf-header" data-ref="${baseRef}.header">
+                    <div class="pf-header-left" data-ref="${baseRef}.header-left">
+                        <div class="pf-avatar trade-position-avatar" style="background-color: ${avatarStyle.bg}; color: ${avatarStyle.color}" data-ref="${baseRef}.avatar">${initial}</div>
+                        <div class="pf-title-area" data-ref="${baseRef}.title-area">
+                            <div class="pf-symbol-row" data-ref="${baseRef}.symbol-row">
+                                <span class="pf-symbol" data-ref="${baseRef}.symbol">${escapeHtml(symbol || company)}</span>
                                 ${isClosed ? `
-                                    <span class="pf-live-badge text-secondary" style="font-size: 11px; padding: 2px 6px; background: #F3F4F6; border-radius: 4px; font-weight: 700;">
+                                    <span class="pf-live-badge text-secondary" style="font-size: 11px; padding: 2px 6px; background: #F3F4F6; border-radius: 4px; font-weight: 700;" data-ref="${baseRef}.closed-badge">
                                         CLOSED
                                     </span>
                                 ` : `
-                                    <span class="pf-live-badge" style="font-size: 11px; padding: 2px 6px; background: #EAF8EF; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #16A34A;">
-                                        <span class="pf-live-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #16A34A; display: inline-block;"></span> LIVE
+                                    <span class="pf-live-badge" style="font-size: 11px; padding: 2px 6px; background: #EAF8EF; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; color: #16A34A;" data-ref="${baseRef}.live-badge">
+                                        <span class="pf-live-dot" style="width: 6px; height: 6px; border-radius: 50%; background: #16A34A; display: inline-block;" data-ref="${baseRef}.live-dot"></span> LIVE
                                     </span>
                                 `}
-                                ${showBroker ? `<span class="trade-position-tags d-none">${escapeHtml(broker)}</span>` : ''}
+                                ${showBroker ? `<span class="trade-position-tags d-none" data-ref="${baseRef}.tags">${escapeHtml(broker)}</span>` : ''}
                             </div>
-                            <span class="pf-name">${escapeHtml(company)}</span>
-                            <div class="pf-meta trade-position-meta">
-                                <span>NSE</span>
-                                <span class="pf-bullet">•</span>
-                                <span>${escapeHtml(leverage)}</span>
-                                <span class="pf-bullet">•</span>
-                                <span>${escapeHtml(daysLabel)}</span>
-                                <span class="pf-bullet">•</span>
-                                <span>${isClosed ? `Sold ${t.sellDate ? new Date(t.sellDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}` : updatedTime}</span>
+                            <span class="pf-name" data-ref="${baseRef}.name">${escapeHtml(company)}</span>
+                            <div class="pf-meta trade-position-meta" data-ref="${baseRef}.meta">
+                                <span data-ref="${baseRef}.meta.nse">NSE</span>
+                                <span class="pf-bullet" data-ref="${baseRef}.meta.bullet-1">•</span>
+                                <span data-ref="${baseRef}.meta.leverage">${escapeHtml(leverage)}</span>
+                                <span class="pf-bullet" data-ref="${baseRef}.meta.bullet-2">•</span>
+                                <span data-ref="${baseRef}.meta.days">${escapeHtml(daysLabel)}</span>
+                                <span class="pf-bullet" data-ref="${baseRef}.meta.bullet-3">•</span>
+                                <span data-ref="${baseRef}.meta.updated">${isClosed ? `Sold ${t.sellDate ? new Date(t.sellDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}` : updatedTime}</span>
                             </div>
                         </div>
                     </div>
-                    <div class="pf-header-right" data-trade-card-pnl>
-                        <span class="pf-pnl-label">Overall P&L</span>
+                    <div class="pf-header-right" data-trade-card-pnl data-ref="${baseRef}.header-right">
+                        <span class="pf-pnl-label" data-ref="${baseRef}.pnl-label">Overall P&L</span>
                         ${renderAmount(pnlAmount, { size: 'sm', compact: true, showSign: true, align: 'right', pill: false, className: 'pf-pnl-val-wrapper', fs: 'fs-6', weight: 'fw-bold' })}
-                        <div class="pf-pct-badge ${isPositive ? 'is-pos' : 'is-neg'}" data-trade-card-pnl-pct>
+                        <div class="pf-pct-badge ${isPositive ? 'is-pos' : 'is-neg'}" data-trade-card-pnl-pct data-ref="${baseRef}.pnl-pct">
                             ${isPositive ? '▲' : '▼'} ${isPositive ? '+' : '-'}${Math.abs(pnlPct).toFixed(2)}%
                         </div>
                     </div>
                 </div>
-
-                <div class="pf-h-divider"></div>
-
+ 
+                <div class="pf-h-divider" data-ref="${baseRef}.divider"></div>
+ 
                 ${metricsGridHtml}
             </article>
         `;
@@ -1028,50 +1042,50 @@
 
         return `
         <!-- Portfolio Summary Card -->
-        <div class="card bg-white border shadow-none p-3 mb-4" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+        <div class="card bg-white border shadow-none p-3 mb-4" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;" data-ref="page.trades.portfolio-summary">
             <!-- Section 1 Title -->
-            <div class="d-flex align-items-center mb-3" style="font-size: 18px; font-weight: 600; color: #1f2937;">
-                <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;">
+            <div class="d-flex align-items-center mb-3" style="font-size: 18px; font-weight: 600; color: #1f2937;" data-ref="page.trades.portfolio-summary.title-wrapper">
+                <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;" data-ref="page.trades.portfolio-summary.title-icon">
                     <i class="fas fa-chart-simple" style="font-size: 14px;"></i>
                 </span>
-                <span>Portfolio Summary</span>
+                <span data-ref="page.trades.portfolio-summary.title">Portfolio Summary</span>
             </div>
             
-            <div class="portfolio-summary-cards row align-items-center w-100 g-0">
+            <div class="portfolio-summary-cards row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
                 <!-- Total P&L -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 ps-1">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center ${pnlBgClass} flex-shrink-0" style="width: 40px; height: 40px;">
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 ps-1" data-ref="page.trades.portfolio-summary.pnl-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center ${pnlBgClass} flex-shrink-0" style="width: 40px; height: 40px;" data-ref="page.trades.portfolio-summary.pnl-card.icon-bg">
                         <i class="fas ${pnlIconClass} ${pnlIconColor}" style="font-size: 16px;"></i>
                     </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total P&L</span>
-                        <strong class="portfolio-stat-value ${pnlToneClass} text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${pnlFormatted}</strong>
-                        <span class="${pctClass} text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(${pctFormatted})</span>
+                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.pnl-card.body">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.label">Total P&L</span>
+                        <strong class="portfolio-stat-value ${pnlToneClass} text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.value">${pnlFormatted}</strong>
+                        <span class="${pctClass} text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.pnl-card.pct">(${pctFormatted})</span>
                     </div>
                 </div>
                 <!-- Vertical Separator -->
-                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;"></div>
+                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;" data-ref="page.trades.portfolio-summary.sep-1"></div>
                 <!-- Total Invested -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 px-2">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(30, 64, 175, 0.08) !important;">
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 px-2" data-ref="page.trades.portfolio-summary.invested-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(30, 64, 175, 0.08) !important;" data-ref="page.trades.portfolio-summary.invested-card.icon-bg">
                         <i class="fas fa-wallet text-info" style="font-size: 16px; color: #1e40af !important;"></i>
                     </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total Invested</span>
-                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${fmtINR(inv)}</strong>
-                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(100.00%)</span>
+                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.invested-card.body">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.label">Total Invested</span>
+                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.value">${fmtINR(inv)}</strong>
+                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.invested-card.pct">(100.00%)</span>
                     </div>
                 </div>
                 <!-- Vertical Separator -->
-                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;"></div>
+                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;" data-ref="page.trades.portfolio-summary.sep-2"></div>
                 <!-- Total Holdings -->
-                <div class="portfolio-stat-card col d-flex align-items-center gap-2 pe-1">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(202, 138, 4, 0.08) !important;">
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 pe-1" data-ref="page.trades.portfolio-summary.holdings-card">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(202, 138, 4, 0.08) !important;" data-ref="page.trades.portfolio-summary.holdings-card.icon-bg">
                         <i class="fas fa-briefcase text-warning" style="font-size: 16px; color: #ca8a04 !important;"></i>
                     </div>
-                    <div class="d-flex flex-column min-w-0 align-items-start">
-                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total Holdings</span>
-                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${count}</strong>
+                    <div class="d-flex flex-column min-w-0 align-items-start" data-ref="page.trades.portfolio-summary.holdings-card.body">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;" data-ref="page.trades.portfolio-summary.holdings-card.label">Total Holdings</span>
+                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;" data-ref="page.trades.portfolio-summary.holdings-card.value">${count}</strong>
                         <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(100.00%)</span>
                     </div>
                 </div>
@@ -1079,22 +1093,22 @@
         </div>
         
         <!-- Active Positions Header Card -->
-        <div class="card bg-white border shadow-none p-3 mb-3" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+        <div class="card bg-white border shadow-none p-3 mb-0" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;" data-ref="page.trades.header-card">
             <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
-                    <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;">
+                    <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;" data-ref="page.trades.header-card.icon">
                         <i class="fas ${section2Icon}" style="font-size: 14px;"></i>
                     </span>
                     <div class="d-flex flex-column">
-                        <h2 class="fs-6 fw-bold text-dark mb-0">${section2Title}</h2>
-                        <span class="text-muted" style="font-size: 11px;">${section2Subtitle}</span>
+                        <h2 class="fs-6 fw-bold text-dark mb-0" data-ref="page.trades.header-card.title">${section2Title}</h2>
+                        <span class="text-muted" style="font-size: 11px;" data-ref="page.trades.header-card.subtitle">${section2Subtitle}</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;" data-ref="page.trades.header-card.sort-btn">
                         <i class="fas fa-arrow-down-wide-short text-muted" style="font-size: 11px;"></i> Sort <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;" data-ref="page.trades.header-card.filter-btn">
                         <i class="fas fa-filter text-muted" style="font-size: 11px;"></i> Filter <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
                     </button>
                 </div>

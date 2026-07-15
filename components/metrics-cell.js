@@ -52,32 +52,37 @@
     };
 
     /* ---------- helpers ---------- */
-
-    function attrsToString(attrs) {
+ 
+    function attrsToString(attrs, excludeKeys = []) {
         if (!attrs || typeof attrs !== 'object') return '';
         return Object.keys(attrs)
+            .filter((k) => !excludeKeys.includes(k))
             .map((k) => ` ${esc(k)}="${esc(attrs[k])}"`)
             .join('');
     }
-
-    function iconBoxHtml(iconName, tone) {
+ 
+    function iconBoxHtml(iconName, tone, baseRef) {
         if (!iconName) return '';
         const t = ICON_TONES[tone] || ICON_TONES.green;
-        return `<div class="trade-position-icon-box trade-position-icon-box--${tone || 'green'}" style="background-color:${t.bg};color:${t.color}">${icon(iconName)}</div>`;
+        const refAttr = baseRef ? ` data-ref="${esc(baseRef)}.icon"` : '';
+        return `<div class="trade-position-icon-box trade-position-icon-box--${tone || 'green'}" style="background-color:${t.bg};color:${t.color}"${refAttr}>${icon(iconName)}</div>`;
     }
-
-    function subtitleHtml(text, tone, extraClass) {
+ 
+    function subtitleHtml(text, tone, extraClass, baseRef) {
         if (text == null || text === '') return '';
         const t = SUBTITLE_TONES[tone] || SUBTITLE_TONES.green;
-        return `<span class="trade-position-subtitle px-2 py-1 rounded ${extraClass || ''}" style="background-color:${t.bg};color:${t.color};display:inline-block">${esc(text)}</span>`;
+        const refAttr = baseRef ? ` data-ref="${esc(baseRef)}.subtitle"` : '';
+        return `<span class="trade-position-subtitle px-2 py-1 rounded ${extraClass || ''}" style="background-color:${t.bg};color:${t.color};display:inline-block"${refAttr}>${esc(text)}</span>`;
     }
-
-    function progressHtml(pct, tone) {
+ 
+    function progressHtml(pct, tone, baseRef) {
         const safePct = Math.max(0, Math.min(100, Number(pct) || 0));
         const neg = tone === 'neg';
         const trackClass = `trade-position-progress${neg ? ' trade-position-progress--neg' : ''}`;
         const barTone = neg ? 'bg-danger' : 'bg-success';
-        return `<div class="${trackClass}"><div class="progress-bar ${barTone}" style="width:${safePct}%"></div></div>`;
+        const trackRef = baseRef ? ` data-ref="${esc(baseRef)}.progress"` : '';
+        const barRef = baseRef ? ` data-ref="${esc(baseRef)}.progress.bar"` : '';
+        return `<div class="${trackClass}"${trackRef}><div class="progress-bar ${barTone}" style="width:${safePct}%"${barRef}></div></div>`;
     }
 
     /* ---------- cell renderer ---------- */
@@ -115,13 +120,19 @@
         const alignClass = isCenter ? ' justify-content-center' : '';
 
         // data attributes
-        const dataStr = attrsToString(cell.data);
+        let baseRef = cell.dataRef || cell.ref;
+        if (!baseRef && cell.data) {
+            baseRef = cell.data['data-ref'] || cell.data.ref;
+        }
+
+        const dataStr = attrsToString(cell.data, ['ref', 'data-ref']);
         const liveField = cell.live && cell.live.field ? ` data-live-field="${esc(cell.live.field)}"` : '';
         const liveValue = cell.live && cell.live.value != null ? ` data-live-value` : '';
-
+        const refAttr = baseRef ? ` data-ref="${esc(baseRef)}"` : '';
+ 
         const valueKindClass = cell.valueKind === 'price' ? 'trade-position-price' : 'trade-position-value';
         const valueClass = `${valueKindClass} text-truncate ${cell.valueClass || ''}`.trim();
-
+ 
         // Clickable cells render as a <button> (semantically correct + accessible).
         const isClickable = !!cell.onclick;
         const tag = isClickable ? 'button' : 'div';
@@ -129,41 +140,46 @@
         const typeAttr = isClickable ? ' type="button"' : '';
         const onclickAttr = isClickable ? ` onclick="${esc(cell.onclick)}"` : '';
         const ariaAttr = isClickable && cell.ariaLabel ? ` aria-label="${esc(cell.ariaLabel)}"` : '';
-
+ 
         // ---- target-status host slot (content injected/updated externally) ----
         if (variant === 'target-status') {
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
         }
-
+ 
         // ---- progress variant ----
         if (variant === 'progress') {
             const p = cell.progress || {};
             const pctText = p.pct != null ? `${Number(p.pct).toFixed(p.pctDecimals == null ? 0 : p.pctDecimals)}%` : '';
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>
-                <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100">
-                    ${cell.label ? `<span class="trade-position-label text-secondary">${esc(cell.label)}</span>` : ''}
-                    ${pctText ? `<span class="trade-position-progress-pct">${esc(pctText)}</span>` : ''}
-                    ${progressHtml(p.pct, p.tone)}
+            const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
+            const pctRef = baseRef ? ` data-ref="${esc(baseRef)}.progress-pct"` : '';
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>
+                <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
+                    ${cell.label ? `<span class="trade-position-label text-secondary"${labelRef}>${esc(cell.label)}</span>` : ''}
+                    ${pctText ? `<span class="trade-position-progress-pct"${pctRef}>${esc(pctText)}</span>` : ''}
+                    ${progressHtml(p.pct, p.tone, baseRef)}
                 </div>
             </${tag}>`;
         }
-
+ 
         // ---- rich / simple cell ----
-        const iconHtml = cell.icon ? iconBoxHtml(cell.icon, cell.iconTone) : '';
+        const iconHtml = cell.icon ? iconBoxHtml(cell.icon, cell.iconTone, baseRef) : '';
         const bodyAlign = isCenter ? 'align-items-center text-center' : 'align-items-start';
-        const refreshHtml = cell.refresh ? ` ${icon('fa-redo-alt', 'pf-refresh-icon ms-1 text-secondary')}` : '';
+        const refreshHtml = cell.refresh ? ` <i class="fas fa-redo-alt pf-refresh-icon ms-1 text-secondary" aria-hidden="true"${baseRef ? ` data-ref="${esc(baseRef)}.refresh"` : ''}></i>` : '';
+        const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
+        const valWrapperRef = baseRef ? ` data-ref="${esc(baseRef)}.value-wrapper"` : '';
+        const valRef = baseRef ? ` data-ref="${esc(baseRef)}.value"` : '';
         const bodyHtml = `
-            <div class="d-flex flex-column ${bodyAlign} gap-1 min-w-0">
-                ${cell.label ? `<span class="trade-position-label text-secondary">${esc(cell.label)}</span>` : ''}
-                <div class="d-flex align-items-center">
-                    ${cell.value != null ? `<span class="${valueClass}"${liveValue}>${esc(cell.value)}</span>` : ''}
+            <div class="d-flex flex-column ${bodyAlign} gap-1 min-w-0"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
+                ${cell.label ? `<span class="trade-position-label text-secondary"${labelRef}>${esc(cell.label)}</span>` : ''}
+                <div class="d-flex align-items-center"${valWrapperRef}>
+                    ${cell.value != null ? `<span class="${valueClass}"${liveValue}${valRef}>${esc(cell.value)}</span>` : ''}
                     ${refreshHtml}
                 </div>
-                ${subtitleHtml(cell.subtitle, cell.subtitleTone, cell.subtitleClass)}
+                ${subtitleHtml(cell.subtitle, cell.subtitleTone, cell.subtitleClass, baseRef)}
             </div>
         `;
-
-        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
+ 
+        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
     }
 
     /* ---------- live-update helper ---------- */
