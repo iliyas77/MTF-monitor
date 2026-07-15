@@ -5985,7 +5985,8 @@
                 );
                 const targetReachedBeforeClose = targetPrice > 0 && highestPriceDuringTrade >= targetPrice;
 
-                const saved = await updateTransaction(id, {
+                const closedTx = {
+                    ...tx,
                     status: 'closed',
                     sellPrice,
                     targetReachedBeforeClose,
@@ -5999,9 +6000,26 @@
                     ownMargin: calc.ownMargin,
                     totalInvestment: calc.totalInvestment,
                     breakdown: calc.breakdown
-                });
+                };
+                
+                const pb = document.createElement('div');
+                pb.innerHTML = `<div class="progress" style="height: 4px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1055;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div></div>`;
+                document.body.appendChild(pb);
+                
+                const db = global.MTFDb;
+                let saved = false;
+                if (db && typeof db.archiveTradeToCloud === 'function') {
+                    saved = await db.archiveTradeToCloud(closedTx);
+                } else {
+                    // Fallback to local storage if offline or not configured
+                    saved = await updateTransaction(id, closedTx);
+                }
+                
+                if (pb.parentNode) pb.parentNode.removeChild(pb);
+
                 if (saved) {
-                    showToast('Trade moved to Past Trades.', 'success');
+                    showToast('Update is happened successfully in the database.', 'success');
+                    closeTradeDetail();
                     refreshTradeListViews();
                     renderMoney();
                     refreshActiveMoreView();
