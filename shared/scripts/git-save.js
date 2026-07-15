@@ -72,7 +72,7 @@ function readAppVersion() {
 function bumpBuildBeforeSave() {
     console.log('Bumping version + building production.html…');
     try {
-        const output = runNpm(['run', 'build'], { stdio: ['ignore', 'pipe', 'pipe'] });
+        const output = runNpm(['run', 'build', '--', '--bump'], { stdio: ['ignore', 'pipe', 'pipe'] });
         process.stdout.write(output);
     } catch (e) {
         const msg = (e && (e.stderr || e.stdout || e.message)) || String(e);

@@ -1,12 +1,12 @@
 /**
  * App version + build stamp shown on the More page.
- * Bumped automatically by `npm run build` / `npm run save`.
+ * Bumped automatically by `npm run build -- --bump` / `npm run save`.
  */
 (function (global) {
     'use strict';
 
-    const APP_VERSION = "1.0.358";
-    const APP_BUILT_AT = "15 Jul 2026 · 9:18 pm";
+    const APP_VERSION = "1.0.360";
+    const APP_BUILT_AT = "15 Jul 2026 · 9:22 pm";
 
     function paintMoreHubBuildMeta() {
         const el = document.getElementById('more-hub-build-meta');

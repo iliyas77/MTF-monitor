@@ -3,8 +3,8 @@
  * Bundles and minifies main.html + brand theme CSS + component/page scripts + main.js
  * into production.html. Bootstrap CSS/JS stay as external CDN links.
  *
- * Run:  npm run build          (bumps patch version + stamps builtAt)
- *       node build-production.js --no-bump   (rebuild without bumping)
+ * Run:  npm run build          (rebuilds production.html, NO version bump)
+ *       npm run build -- --bump (rebuilds production.html and bumps patch version)
  *
  * Always repairs shared/scripts/manifest.json + main.html script tags first
  * (same as `npm run repair`).
@@ -91,7 +91,7 @@ function writeVersionFiles(state) {
     fs.writeFileSync(VERSION_JSON, `${JSON.stringify(state, null, 2)}\n`, 'utf8');
     const js = `/**
  * App version + build stamp shown on the More page.
- * Bumped automatically by \`npm run build\` / \`npm run save\`.
+ * Bumped automatically by \`npm run build -- --bump\` / \`npm run save\`.
  */
 (function (global) {
     'use strict';
@@ -133,10 +133,10 @@ function prepareVersion({ bump }) {
 }
 
 function shouldBumpVersion(argv) {
-    // Default: bump. Opt out with --no-bump (used by agent rebuild hooks).
-    if (argv.includes('--no-bump')) return false;
+    // Default: no bump. Opt in with --bump (used by npm run save / save-local).
     if (argv.includes('--bump')) return true;
-    return true;
+    if (argv.includes('--no-bump')) return false;
+    return false;
 }
 
 function bundleJs() {
