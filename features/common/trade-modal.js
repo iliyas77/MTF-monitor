@@ -567,8 +567,71 @@
     }
 
     function initTradeModal() {
-        const { setTxBroker, resetCompanyAutocomplete } = tradeModal();
+        const { setTxBroker, resetCompanyAutocomplete, renderMetricsGrid } = tradeModal();
         if (!document.getElementById('txModal')) return;
+
+        const pricesContainer = document.getElementById('txModalPricesContainer');
+        const cellRenderer = global.MTFComponents.renderMetricsCell;
+        if (pricesContainer && cellRenderer) {
+            pricesContainer.innerHTML = [
+                {
+                    variant: 'target-status',
+                    align: 'start',
+                    hostHtml: `
+                        <label class="w-100 mb-0 trade-detail-price-cell" for="txQty" data-ref="sheet.tx-modal.body.form.detail.prices.qty">
+                            <div class="trade-position-label text-secondary">Quantity</div>
+                            <div class="trade-detail-price-row mt-1">
+                                <input type="number" class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty" id="txQty" required min="1" step="1" placeholder="0" value="0" inputmode="numeric" />
+                                <span class="trade-detail-price-edit trade-detail-price-edit--qty" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                            </div>
+                        </label>
+                    `
+                },
+                {
+                    variant: 'target-status',
+                    align: 'start',
+                    hostHtml: `
+                        <label class="w-100 mb-0 trade-detail-price-cell" for="txBuyPrice" data-ref="sheet.tx-modal.body.form.detail.prices.buy">
+                            <div class="trade-position-label text-secondary">Buy Price</div>
+                            <div class="trade-detail-price-row mt-1">
+                                <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
+                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                    <input type="number" class="tx-form-price-input" id="txBuyPrice" required min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                </span>
+                                <span class="trade-detail-price-edit trade-detail-price-edit--buy" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                            </div>
+                        </label>
+                    `
+                },
+                {
+                    variant: 'target-status',
+                    align: 'start',
+                    hostHtml: `
+                        <label class="w-100 mb-0 trade-detail-price-cell" for="txSellPrice" data-ref="sheet.tx-modal.body.form.detail.prices.sell">
+                            <div class="trade-position-label text-secondary">Target Price</div>
+                            <div class="trade-detail-price-row mt-1">
+                                <span class="tx-form-price-value-wrap trade-detail-price-value--target">
+                                    <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
+                                    <input type="number" class="tx-form-price-input" id="txSellPrice" min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
+                                </span>
+                                <span class="trade-detail-price-edit trade-detail-price-edit--target" aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
+                            </div>
+                        </label>
+                    `
+                },
+                {
+                    variant: 'target-status',
+                    align: 'center',
+                    cellClass: 'p-0',
+                    hostHtml: `
+                        <button type="button" class="trade-detail-price-target-icon w-100 h-100 d-flex align-items-center justify-content-center border-0 bg-transparent" id="txBuyPriceLiveBtn" onclick="fillTradeFormFromLivePrice()" title="Fill from live price" aria-label="Fill buy and sell from live price" data-ref="sheet.tx-modal.body.form.detail.prices.live-btn">
+                            <i class="fas fa-sync-alt trade-detail-bullseye text-primary" aria-hidden="true"></i>
+                        </button>
+                    `
+                }
+            ].map(cellRenderer).join('');
+        }
+
         onHiddenReset = () => {
             document.getElementById('txEditId').value = '';
             document.getElementById('txForm').reset();

@@ -721,7 +721,7 @@
         if (t.targetReachedBeforeClose === undefined && isClosed) {
             targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
         }
-        const { renderMetricsGrid } = global.MTFComponents || {};
+        const { renderMetricsCell, escapeHtml: esc } = global.MTFComponents || {};
         const cells = [
             {
                 label: 'Current Price',
@@ -773,7 +773,10 @@
             'data-trade-variant': variant
         };
 
-        const metricsGridHtml = renderMetricsGrid ? renderMetricsGrid(cells, { gridAttrs }) : '';
+        const attrsStr = Object.keys(gridAttrs).map(k => ` ${k}="${(esc || escapeHtml)(gridAttrs[k])}"`).join('');
+        const metricsGridHtml = renderMetricsCell
+            ? `<div class="trade-position-metrics"><div class="trade-position-grid"${attrsStr}>${cells.map(renderMetricsCell).join('')}</div></div>`
+            : '';
 
         return `
             <article class="pf-card ${statusClass}"
