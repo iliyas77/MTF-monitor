@@ -21,6 +21,8 @@
     "features/more/mtf-calculator-page.js",
     "features/more/settings-page.js",
     "features/common/router.js",
+    "features/gold/gold-page.js",
+    "features/gold/gold-services.js",
     "features/more/json-visualizer.js",
     "shared/db/_registry.js",
     "shared/db/firebase-config.js",

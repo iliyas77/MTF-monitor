@@ -2410,6 +2410,13 @@
             refreshTradeLivePrices({ force: true, manual: true });
             return;
         }
+        const goldPage = document.getElementById('page-gold');
+        if (goldPage && !goldPage.classList.contains('d-none')) {
+            if (typeof window.refreshGoldPageData === 'function') {
+                window.refreshGoldPageData(true);
+            }
+            return;
+        }
         onMarketRefreshClick();
     }
 
@@ -4144,7 +4151,7 @@
     }
 
     // ---------- NAVIGATION ----------
-    const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', calendar: 'page-calendar', more: 'page-more' };
+    const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', gold: 'page-gold', calendar: 'page-calendar', more: 'page-more' };
     const moreFeatureMap = { money: 'page-money', 'money-entry': 'page-money-entry', 'mtf-calc': 'page-mtf-calc' };
     let activeMoreFeature = null;
 
@@ -4192,22 +4199,25 @@
         activeMoreFeature = null;
         showPage(pageMap[page]);
         setBottomNavActive(page);
+        if (page !== 'market') stopMarketRefresh();
+        if (page !== 'trades' && page !== 'past') stopTradeLiveRefresh();
+        if (page !== 'gold') {
+            try { if (typeof window.stopGoldPageRefresh === 'function') window.stopGoldPageRefresh(); } catch (_) {}
+        }
+
         if (page === 'market') {
-            stopTradeLiveRefresh();
             try { renderMarketPage(); } catch (_) { }
             startMarketRefresh();
+        } else if (page === 'gold') {
+            try { if (typeof window.renderGoldPage === 'function') window.renderGoldPage(); } catch (_) {}
         } else if (page === 'calendar') {
-            stopMarketRefresh();
-            stopTradeLiveRefresh();
             try { renderCalendarPage(); } catch (_) { }
         } else if (page === 'trades') {
-            stopMarketRefresh();
             // Trades tab always opens current open trades (not Plan/Past).
             setTradesViewMode('trade');
             startTradeLiveRefresh();
         } else if (page === 'past') {
             // Past lives under Trades dropdown — no separate bottom tab.
-            stopMarketRefresh();
             activeMoreFeature = null;
             showPage(pageMap['trades']);
             setBottomNavActive('trades');
@@ -4216,9 +4226,6 @@
             startTradeLiveRefresh();
             saveNavState();
             return;
-        } else {
-            stopMarketRefresh();
-            stopTradeLiveRefresh();
         }
         updateFabVisibility(page);
         saveNavState();

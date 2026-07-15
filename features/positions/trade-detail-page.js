@@ -11,7 +11,8 @@
         renderPageEmptyCard,
         formatTradeLeverageLabel,
         createAppPane,
-        Sheet
+        Sheet,
+        renderMetricsGrid
     } = global.MTFComponents;
 
     let detailPane = null;
@@ -304,48 +305,59 @@
         const buy = Number(tx.buyPrice) || 0;
         const qty = Number(tx.quantity) || 0;
         const targetGainPct = (buy > 0 && targetPrice > 0) ? ((targetPrice - buy) / buy) * 100 : null;
-        const targetGainHtml = targetGainPct != null
-            ? `<span class="trade-detail-price-badge trade-detail-price-badge--success">+${escapeHtml(targetGainPct.toFixed(2))}%</span>`
+        const targetGainLabel = targetGainPct != null ? `+${targetGainPct.toFixed(2)}%` : '';
+
+        // Build the three price cells via the shared MetricsGrid component so the
+        // detail page reuses the exact same cell design system as the list cards.
+        // Buy Price and Target Price are clickable (open their edit modals); the
+        // pencil affordance is shown via the [data-editable] hover state in CSS.
+        const cells = [
+            {
+                label: 'Quantity',
+                value: String(qty),
+                icon: 'fa-cube',
+                iconTone: 'green',
+                subtitle: 'Shares',
+                subtitleTone: 'green',
+                align: 'center',
+                data: { ref: 'trade-detail.prices.qty' }
+            },
+            {
+                label: 'Buy Price',
+                value: fmtDec(buy),
+                valueClass: 'trade-detail-price-value--buy',
+                icon: 'fa-wallet',
+                iconTone: 'blue',
+                subtitle: 'Avg. Entry',
+                subtitleTone: 'blue',
+                align: 'center',
+                onclick: `openBuyPriceModal('${id}')`,
+                ariaLabel: 'Edit buy price',
+                data: { ref: 'trade-detail.prices.buy', editable: '' }
+            },
+            {
+                label: 'Target Price',
+                value: targetPrice != null ? fmtDec(targetPrice) : '—',
+                valueClass: 'trade-detail-price-value--target',
+                icon: 'fa-bullseye',
+                iconTone: 'red',
+                subtitle: targetGainLabel,
+                subtitleTone: 'green',
+                align: 'center',
+                onclick: `openTargetModal('${id}')`,
+                ariaLabel: 'Edit target price',
+                data: { ref: 'trade-detail.prices.target', editable: '' }
+            }
+        ];
+
+        const gridHtml = renderMetricsGrid
+            ? renderMetricsGrid(cells, {
+                gridClass: 'trade-detail-prices-grid',
+                gridAttrs: { 'data-ref': 'trade-detail.prices' }
+            })
             : '';
 
-        return `
-            <section class="trade-detail-prices" data-ref="trade-detail.prices">
-                <div class="trade-detail-price-cell d-flex flex-row align-items-center justify-content-center p-0 gap-3" data-ref="trade-detail.prices.qty">
-                    <span class="d-inline-flex align-items-center justify-content-center text-success rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-accent-soft); flex-shrink: 0;" data-ref="trade-detail.prices.qty.icon">
-                        ${renderIcon('fa-cube', { style: 'font-size: 1.15rem;' })}
-                    </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center" data-ref="trade-detail.prices.qty.body">
-                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.qty.label">Quantity</span>
-                        <span class="trade-detail-price-value text-body" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.qty.value">${qty}</span>
-                        <span class="small text-muted" style="font-size: 0.75rem; font-weight: 500; line-height: 1;" data-ref="trade-detail.prices.qty.unit">Shares</span>
-                    </div>
-                </div>
-                <span class="trade-detail-price-divider" data-ref="trade-detail.prices.divider-1"></span>
-                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-center gap-3"
-                    onclick="openBuyPriceModal('${id}')" aria-label="Edit buy price" data-ref="trade-detail.prices.buy">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--blue500-soft, rgba(10, 132, 255, 0.12)); color: var(--blue500, #0a84ff); flex-shrink: 0;" data-ref="trade-detail.prices.buy.icon">
-                        ${renderIcon('fa-wallet', { style: 'font-size: 1.15rem;' })}
-                    </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0" data-ref="trade-detail.prices.buy.body">
-                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.buy.label">Buy Price</span>
-                        <span class="trade-detail-price-value trade-detail-price-value--buy" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.buy.value">${fmtDec(buy)}</span>
-                        <span class="trade-detail-price-badge trade-detail-price-badge--info mt-0" data-ref="trade-detail.prices.buy.badge">Avg. Entry</span>
-                    </div>
-                </button>
-                <span class="trade-detail-price-divider" data-ref="trade-detail.prices.divider-2"></span>
-                <button type="button" class="trade-detail-price-cell btn border-0 bg-transparent text-start shadow-none p-0 d-flex flex-row align-items-center justify-content-center gap-3"
-                    onclick="openTargetModal('${id}')" aria-label="Edit target price" data-ref="trade-detail.prices.target">
-                    <span class="d-inline-flex align-items-center justify-content-center text-danger rounded" style="width: 2.25rem; height: 2.25rem; background-color: var(--gr-danger-soft, rgba(239, 68, 68, 0.1)); flex-shrink: 0;" data-ref="trade-detail.prices.target.icon">
-                        ${renderIcon('fa-bullseye', { style: 'font-size: 1.15rem;' })}
-                    </span>
-                    <div class="d-flex flex-column align-items-start justify-content-center min-w-0" data-ref="trade-detail.prices.target.body">
-                        <span class="trade-detail-price-label" style="line-height: 1;" data-ref="trade-detail.prices.target.label">Target Price</span>
-                        <span class="trade-detail-price-value trade-detail-price-value--target" style="font-size: 1.25rem; line-height: 1.1; margin: 0.4rem 0;" data-ref="trade-detail.prices.target.value">${targetPrice != null ? fmtDec(targetPrice) : '—'}</span>
-                        ${targetGainHtml ? targetGainHtml.replace('mt-1', 'mt-0') : ''}
-                    </div>
-                </button>
-            </section>
-        `;
+        return `<section class="trade-detail-prices-section" data-ref="trade-detail.prices.section">${gridHtml}</section>`;
     }
 
     function renderIfSoldNow(tx, sellPrice, calc, variant, hasLiveQuote, quote, livePrice) {
@@ -393,6 +405,7 @@
     }
 
     function renderCostCards(tx, calc) {
+        const id = escapeHtml(tx.id || '');
         const interestDetails = (global.MTFAppHelpers || {}).interestDetails;
         const interest = calc ? Number(calc.interest) || 0 : Number(tx.interest) || 0;
         const charges = calc ? Number(calc.totalCharges) || 0 : Number(tx.charges) || 0;
@@ -406,42 +419,54 @@
             ? `${fmtDec(perDay)} × ${days}D`
             : (days > 0 ? `${days}D` : '—');
 
-        return `
-            <section class="trade-detail-costs" data-ref="trade-detail.costs">
-                <button type="button" class="trade-detail-cost-card trade-detail-cost-card--interest"
-                    onclick="openInterestModal('${escapeHtml(tx.id)}')" aria-label="Interest details" data-ref="trade-detail.costs.interest">
-                    <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.interest.head">${renderIcon('fa-percent', { className: 'trade-detail-cost-icon' })}</span>
-                        <span class="trade-detail-cost-label">Interest</span>
-                    </span>
-                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.interest.body">
-                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.interest.value">${fmtDec(interest)}</span>
-                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.interest.meta">${interestBadge}</span>
-                    </span>
-                </button>
-                <button type="button" class="trade-detail-cost-card trade-detail-cost-card--charges"
-                    onclick="openChargesModal('${escapeHtml(tx.id)}')" aria-label="Charges details" data-ref="trade-detail.costs.charges">
-                    <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.charges.head">${renderIcon('fa-receipt', { className: 'trade-detail-cost-icon' })}</span>
-                        <span class="trade-detail-cost-label">Charges</span>
-                    </span>
-                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.charges.body">
-                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.charges.value">${fmtDec(charges)}</span>
-                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.charges.meta">One-time</span>
-                    </span>
-                </button>
-                <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group" aria-label="Total cost" data-ref="trade-detail.costs.total">
-                    <span class="trade-detail-cost-head">
-                        <span class="trade-detail-cost-icon-box" data-ref="trade-detail.costs.total.head">${renderIcon('fa-wallet', { className: 'trade-detail-cost-icon' })}</span>
-                        <span class="trade-detail-cost-label">Total</span>
-                    </span>
-                    <span class="trade-detail-cost-body" data-ref="trade-detail.costs.total.body">
-                        <span class="trade-detail-cost-value" data-ref="trade-detail.costs.total.value">${fmtDec(totalCost)}</span>
-                        <span class="trade-detail-cost-meta" data-ref="trade-detail.costs.total.meta">Interest + Charges</span>
-                    </span>
-                </div>
-            </section>
-        `;
+        // Build the three cost cells via the shared MetricsGrid component so the
+        // detail page reuses the same cell design system. Interest and Charges
+        // are clickable (open their detail modals); Total is a static cell.
+        const cells = [
+            {
+                label: 'Interest',
+                value: fmtDec(interest),
+                icon: 'fa-percent',
+                iconTone: 'orange',
+                subtitle: interestBadge,
+                subtitleTone: 'orange',
+                align: 'center',
+                onclick: `openInterestModal('${id}')`,
+                ariaLabel: 'Interest details',
+                data: { ref: 'trade-detail.costs.interest', editable: '' }
+            },
+            {
+                label: 'Charges',
+                value: fmtDec(charges),
+                icon: 'fa-receipt',
+                iconTone: 'red',
+                subtitle: 'One-time',
+                subtitleTone: 'red',
+                align: 'center',
+                onclick: `openChargesModal('${id}')`,
+                ariaLabel: 'Charges details',
+                data: { ref: 'trade-detail.costs.charges', editable: '' }
+            },
+            {
+                label: 'Total',
+                value: fmtDec(totalCost),
+                icon: 'fa-wallet',
+                iconTone: 'purple',
+                subtitle: 'Interest + Charges',
+                subtitleTone: 'purple',
+                align: 'center',
+                data: { ref: 'trade-detail.costs.total' }
+            }
+        ];
+
+        const gridHtml = renderMetricsGrid
+            ? renderMetricsGrid(cells, {
+                gridClass: 'trade-detail-costs-grid',
+                gridAttrs: { 'data-ref': 'trade-detail.costs' }
+            })
+            : '';
+
+        return `<section class="trade-detail-costs-section" data-ref="trade-detail.costs.section">${gridHtml}</section>`;
     }
 
     function renderTimeline(tx, variant) {
@@ -453,51 +478,52 @@
         const exitDate = tx.sellDate ? fmtDateShort(tx.sellDate) : '—';
         const id = escapeHtml(tx.id || '');
 
-        return `
-            <section class="trade-detail-timeline-wrap" data-ref="trade-detail.timeline">
-                <div class="trade-detail-timeline" data-ref="trade-detail.timeline.track">
-                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit bought date" data-ref="trade-detail.timeline.buy">
-                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.buy.icon">
-                            ${renderIcon('fa-calendar-plus', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--buy' })}
-                        </span>
-                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.buy.copy">
-                            <span class="trade-detail-timeline-label">Bought On</span>
-                            <span class="trade-detail-timeline-value" data-ref="trade-detail.timeline.buy.value">${escapeHtml(buyDate)}</span>
-                        </span>
-                    </button>
-                    <span class="trade-detail-timeline-sep" aria-hidden="true" data-ref="trade-detail.timeline.sep-1">
-                        <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
-                        <span class="trade-detail-timeline-vline"></span>
-                    </span>
-                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit holding period" data-ref="trade-detail.timeline.hold">
-                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.hold.icon">
-                            ${renderIcon('fa-hourglass-half', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--hold' })}
-                        </span>
-                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.hold.copy">
-                            <span class="trade-detail-timeline-label">Holding</span>
-                            <span class="badge rounded-pill trade-detail-hold-badge" data-ref="trade-detail.timeline.hold.value">${escapeHtml(holdLabel)}</span>
-                        </span>
-                    </button>
-                    <span class="trade-detail-timeline-sep" aria-hidden="true" data-ref="trade-detail.timeline.sep-2">
-                        <span class="trade-detail-timeline-arrow">${renderIcon('fa-arrow-right')}</span>
-                        <span class="trade-detail-timeline-vline"></span>
-                    </span>
-                    <button type="button" class="trade-detail-timeline-step btn border-0 bg-transparent shadow-none p-0"
-                        onclick="openHoldModal('${id}')" aria-label="Edit exit date" data-ref="trade-detail.timeline.exit">
-                        <span class="trade-detail-timeline-icon-wrap" data-ref="trade-detail.timeline.exit.icon">
-                            ${renderIcon('fa-calendar-check', { className: 'trade-detail-timeline-icon trade-detail-timeline-icon--exit' })}
-                        </span>
-                        <span class="trade-detail-timeline-copy" data-ref="trade-detail.timeline.exit.copy">
-                            <span class="trade-detail-timeline-label">${escapeHtml(exitLabel)}</span>
-                            <span class="trade-detail-timeline-value" data-ref="trade-detail.timeline.exit.value">${escapeHtml(exitDate)}</span>
-                        </span>
-                    </button>
-                </div>
-                <p class="trade-detail-timeline-hint mb-0" data-ref="trade-detail.timeline.hint">Tap dates to update buy or sell</p>
-            </section>
-        `;
+        // Build the three timeline cells via the shared MetricsGrid component so
+        // the detail page reuses the same cell design system. Each step is
+        // clickable (opens the hold/edit modal); the middle step shows the
+        // holding-days badge as its subtitle.
+        const cells = [
+            {
+                label: 'Bought On',
+                value: buyDate,
+                icon: 'fa-calendar-plus',
+                iconTone: 'blue',
+                align: 'center',
+                onclick: `openHoldModal('${id}')`,
+                ariaLabel: 'Edit bought date',
+                data: { ref: 'trade-detail.timeline.buy', editable: '' }
+            },
+            {
+                label: 'Holding',
+                value: holdLabel,
+                valueClass: 'trade-detail-hold-badge',
+                icon: 'fa-hourglass-half',
+                iconTone: 'blue',
+                align: 'center',
+                onclick: `openHoldModal('${id}')`,
+                ariaLabel: 'Edit holding period',
+                data: { ref: 'trade-detail.timeline.hold', editable: '' }
+            },
+            {
+                label: exitLabel,
+                value: exitDate,
+                icon: 'fa-calendar-check',
+                iconTone: 'purple',
+                align: 'center',
+                onclick: `openHoldModal('${id}')`,
+                ariaLabel: 'Edit exit date',
+                data: { ref: 'trade-detail.timeline.exit', editable: '' }
+            }
+        ];
+
+        const gridHtml = renderMetricsGrid
+            ? renderMetricsGrid(cells, {
+                gridClass: 'trade-detail-timeline-grid',
+                gridAttrs: { 'data-ref': 'trade-detail.timeline.track' }
+            })
+            : '';
+
+        return `<section class="trade-detail-timeline-section" data-ref="trade-detail.timeline">${gridHtml}<p class="trade-detail-timeline-hint mb-0" data-ref="trade-detail.timeline.hint">Tap dates to update buy or sell</p></section>`;
     }
 
     function renderPrimaryActions(tx, variant) {

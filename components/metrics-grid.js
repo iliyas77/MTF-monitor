@@ -105,6 +105,8 @@
      * @param {Object} [cell.live]             - { field, value } -> data-live-field / data-live-value
      * @param {Object} [cell.progress]        - { pct, tone } for the 'progress' variant
      * @param {string} [cell.hostHtml]        - inner HTML for 'target-status' host slot
+     * @param {string} [cell.onclick]         - onclick handler; renders the cell as a <button> when set
+     * @param {string} [cell.ariaLabel]       - accessible label for clickable cells
      * @returns {string}
      */
     function renderMetricsCell(cell) {
@@ -125,22 +127,30 @@
         const valueKindClass = cell.valueKind === 'price' ? 'trade-position-price' : 'trade-position-value';
         const valueClass = `${valueKindClass} text-truncate ${cell.valueClass || ''}`.trim();
 
+        // Clickable cells render as a <button> (semantically correct + accessible).
+        const isClickable = !!cell.onclick;
+        const tag = isClickable ? 'button' : 'div';
+        const clickableClass = isClickable ? ' trade-position-cell--btn' : '';
+        const typeAttr = isClickable ? ' type="button"' : '';
+        const onclickAttr = isClickable ? ` onclick="${esc(cell.onclick)}"` : '';
+        const ariaAttr = isClickable && cell.ariaLabel ? ` aria-label="${esc(cell.ariaLabel)}"` : '';
+
         // ---- target-status host slot (content injected/updated externally) ----
         if (variant === 'target-status') {
-            return `<div class="trade-position-cell${variantClass}${extraClass}"${dataStr}${liveField}>${cell.hostHtml || ''}</div>`;
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
         }
 
         // ---- progress variant ----
         if (variant === 'progress') {
             const p = cell.progress || {};
             const pctText = p.pct != null ? `${Number(p.pct).toFixed(p.pctDecimals == null ? 0 : p.pctDecimals)}%` : '';
-            return `<div class="trade-position-cell${variantClass}${extraClass}"${dataStr}${liveField}>
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>
                 <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100">
                     ${cell.label ? `<span class="trade-position-label text-secondary">${esc(cell.label)}</span>` : ''}
                     ${pctText ? `<span class="trade-position-progress-pct">${esc(pctText)}</span>` : ''}
                     ${progressHtml(p.pct, p.tone)}
                 </div>
-            </div>`;
+            </${tag}>`;
         }
 
         // ---- rich / simple cell ----
@@ -158,7 +168,7 @@
             </div>
         `;
 
-        return `<div class="trade-position-cell${variantClass}${alignClass}${extraClass}"${dataStr}${liveField}>${iconHtml}${bodyHtml}</div>`;
+        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
     }
 
     /* ---------- grid renderer ---------- */
