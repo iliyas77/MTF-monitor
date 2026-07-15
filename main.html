@@ -2092,53 +2092,7 @@
                             </div>
                         </div>
 
-                        <div class="trade-detail-prices tx-form-prices"
-                            data-ref="sheet.tx-modal.body.form.detail.prices">
-                            <label class="trade-detail-price-cell" for="txQty"
-                                data-ref="sheet.tx-modal.body.form.detail.prices.qty">
-                                <span class="trade-detail-price-label">Quantity</span>
-                                <span class="trade-detail-price-row">
-                                    <input type="number"
-                                        class="tx-form-price-input trade-detail-price-value trade-detail-price-value--qty"
-                                        id="txQty" required min="1" step="1" placeholder="0" value="0"
-                                        inputmode="numeric" />
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--qty"
-                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
-                                </span>
-                            </label>
-                            <label class="trade-detail-price-cell" for="txBuyPrice"
-                                data-ref="sheet.tx-modal.body.form.detail.prices.buy">
-                                <span class="trade-detail-price-label">Buy Price</span>
-                                <span class="trade-detail-price-row">
-                                    <span class="tx-form-price-value-wrap trade-detail-price-value--buy">
-                                        <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                        <input type="number" class="tx-form-price-input" id="txBuyPrice" required
-                                            min="0.01" step="0.01" placeholder="0.00" inputmode="decimal" />
-                                    </span>
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--buy"
-                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
-                                </span>
-                            </label>
-                            <label class="trade-detail-price-cell" for="txSellPrice"
-                                data-ref="sheet.tx-modal.body.form.detail.prices.sell">
-                                <span class="trade-detail-price-label">Target Price</span>
-                                <span class="trade-detail-price-row">
-                                    <span class="tx-form-price-value-wrap trade-detail-price-value--target">
-                                        <span class="tx-form-price-prefix" aria-hidden="true">₹</span>
-                                        <input type="number" class="tx-form-price-input" id="txSellPrice" min="0.01"
-                                            step="0.01" placeholder="0.00" inputmode="decimal" />
-                                    </span>
-                                    <span class="trade-detail-price-edit trade-detail-price-edit--target"
-                                        aria-hidden="true"><i class="fas fa-pen-to-square"></i></span>
-                                </span>
-                            </label>
-                            <button type="button" class="trade-detail-price-target-icon" id="txBuyPriceLiveBtn"
-                                onclick="fillTradeFormFromLivePrice()" title="Fill from live price"
-                                aria-label="Fill buy and sell from live price"
-                                data-ref="sheet.tx-modal.body.form.detail.prices.live-btn">
-                                <i class="fas fa-sync-alt trade-detail-bullseye" aria-hidden="true"></i>
-                            </button>
-                        </div>
+                        <div class="trade-detail-prices tx-form-prices" id="txModalPricesContainer" data-ref="sheet.tx-modal.body.form.detail.prices"></div>
                         <span class="d-none" id="txSellPriceRequired" aria-hidden="true"></span>
                         <span class="d-none" id="txSellPriceHint" aria-hidden="true"></span>
 

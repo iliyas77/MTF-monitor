@@ -12,18 +12,13 @@
  *   - Live-update data attributes (data-live-field / data-live-value / data-quote-*, etc.)
  *   - Scoped grid typography overrides (label 13px, value 18px bold, subtitle 14px)
  *
- * Registration: global.MTFComponents.renderMetricsGrid / renderMetricsCell
+ * Registration: global.MTFComponents.renderMetricsCell
  * Dependencies: global.MTFComponents.renderIcon, global.MTFComponents.escapeHtml
  *
  * Usage:
- *   const { renderMetricsGrid } = global.MTFComponents;
- *   renderMetricsGrid([
- *     { label: 'Current Price', value: '₹123.45', icon: 'fa-arrow-trend-up', iconTone: 'green',
- *       subtitle: '+2.3%', subtitleTone: 'green', live: { field: 'price' } },
- *     { label: 'Quantity', value: '100', icon: 'fa-cube', iconTone: 'orange',
- *       subtitle: 'Shares', subtitleTone: 'orange', align: 'center' },
- *     { label: 'Day %', value: '+1.2%', valueClass: 'text-success' }
- *   ], { gridAttrs: { 'data-live-symbol': 'RELIANCE' } });
+ *   const { renderMetricsCell } = global.MTFComponents;
+ *   const cellHtml = renderMetricsCell({ label: 'Current Price', value: '₹123.45', icon: 'fa-arrow-trend-up', iconTone: 'green' });
+ *   const { renderMetricsCell } = global.MTFComponents;
  */
 (function (global) {
     'use strict';
@@ -137,14 +132,14 @@
 
         // ---- target-status host slot (content injected/updated externally) ----
         if (variant === 'target-status') {
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
         }
 
         // ---- progress variant ----
         if (variant === 'progress') {
             const p = cell.progress || {};
             const pctText = p.pct != null ? `${Number(p.pct).toFixed(p.pctDecimals == null ? 0 : p.pctDecimals)}%` : '';
-            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>
+            return `<${tag} class="trade-position-cell${variantClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>
                 <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100">
                     ${cell.label ? `<span class="trade-position-label text-secondary">${esc(cell.label)}</span>` : ''}
                     ${pctText ? `<span class="trade-position-progress-pct">${esc(pctText)}</span>` : ''}
@@ -168,33 +163,7 @@
             </div>
         `;
 
-        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
-    }
-
-    /* ---------- grid renderer ---------- */
-
-    /**
-     * Render a complete metrics grid (metrics + grid wrapper + cells).
-     * @param {Array<Object>} cells   - array of cell configs (see renderMetricsCell)
-     * @param {Object} [opts]
-     * @param {Object} [opts.gridAttrs]   - data-* attributes for the grid wrapper
-     * @param {Object} [opts.metricsAttrs] - data-* attributes for the metrics wrapper
-     * @param {string} [opts.gridClass]   - extra classes on the grid
-     * @param {string} [opts.metricsClass]- extra classes on the metrics wrapper
-     * @returns {string}
-     */
-    function renderMetricsGrid(cells, opts) {
-        cells = Array.isArray(cells) ? cells : [];
-        opts = opts || {};
-
-        const metricsAttrs = attrsToString(opts.metricsAttrs);
-        const gridAttrs = attrsToString(opts.gridAttrs);
-        const metricsClass = `trade-position-metrics${opts.metricsClass ? ` ${opts.metricsClass}` : ''}`;
-        const gridClass = `trade-position-grid${opts.gridClass ? ` ${opts.gridClass}` : ''}`;
-
-        const cellsHtml = cells.map(renderMetricsCell).join('');
-
-        return `<div class="${metricsClass}"${metricsAttrs}><div class="${gridClass}"${gridAttrs}>${cellsHtml}</div></div>`;
+        return `<${tag} class="trade-position-cell${variantClass}${alignClass}${clickableClass}${extraClass}" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
     }
 
     /* ---------- live-update helper ---------- */
@@ -220,7 +189,6 @@
     }
 
     global.MTFRegister({
-        renderMetricsGrid,
         renderMetricsCell,
         updateLiveField,
         METRICS_ICON_TONES: ICON_TONES,

@@ -12,7 +12,7 @@
         formatTradeLeverageLabel,
         createAppPane,
         Sheet,
-        renderMetricsGrid
+        renderMetricsCell
     } = global.MTFComponents;
 
     let detailPane = null;
@@ -350,11 +350,8 @@
             }
         ];
 
-        const gridHtml = renderMetricsGrid
-            ? renderMetricsGrid(cells, {
-                gridClass: 'trade-detail-prices-grid',
-                gridAttrs: { 'data-ref': 'trade-detail.prices' }
-            })
+        const gridHtml = renderMetricsCell
+            ? `<div class="trade-position-metrics"><div class="trade-detail-prices-grid trade-position-grid" data-ref="trade-detail.prices">${cells.map(renderMetricsCell).join('')}</div></div>`
             : '';
 
         return `<section class="trade-detail-prices-section" data-ref="trade-detail.prices.section">${gridHtml}</section>`;
@@ -459,11 +456,8 @@
             }
         ];
 
-        const gridHtml = renderMetricsGrid
-            ? renderMetricsGrid(cells, {
-                gridClass: 'trade-detail-costs-grid',
-                gridAttrs: { 'data-ref': 'trade-detail.costs' }
-            })
+        const gridHtml = renderMetricsCell
+            ? `<div class="trade-position-metrics"><div class="trade-detail-costs-grid trade-position-grid" data-ref="trade-detail.costs">${cells.map(renderMetricsCell).join('')}</div></div>`
             : '';
 
         return `<section class="trade-detail-costs-section" data-ref="trade-detail.costs.section">${gridHtml}</section>`;
@@ -516,11 +510,8 @@
             }
         ];
 
-        const gridHtml = renderMetricsGrid
-            ? renderMetricsGrid(cells, {
-                gridClass: 'trade-detail-timeline-grid',
-                gridAttrs: { 'data-ref': 'trade-detail.timeline.track' }
-            })
+        const gridHtml = renderMetricsCell
+            ? `<div class="trade-position-metrics"><div class="trade-detail-timeline-grid trade-position-grid" data-ref="trade-detail.timeline.track">${cells.map(renderMetricsCell).join('')}</div></div>`
             : '';
 
         return `<section class="trade-detail-timeline-section" data-ref="trade-detail.timeline">${gridHtml}<p class="trade-detail-timeline-hint mb-0" data-ref="trade-detail.timeline.hint">Tap dates to update buy or sell</p></section>`;
