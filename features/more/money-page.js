@@ -68,19 +68,20 @@
         const accountChip = showAccount && acc
             ? appTag(`${renderIcon('fa-university', { className: 'me-1' })}${acc.name}`)
             : '';
-        const noteLine = e.note ? `<div class="small text-muted text-truncate mt-1">${e.note}</div>` : '';
+        const baseRef = 'page.money.list.item';
+        const noteLine = e.note ? `<div class="small text-muted text-truncate mt-1" data-ref="${baseRef}.note">${e.note}</div>` : '';
         const topRow = (accountChip || typeBadge)
-            ? `<div class="d-flex flex-wrap gap-2 mb-1">${accountChip}${typeBadge}</div>`
+            ? `<div class="d-flex flex-wrap gap-2 mb-1" data-ref="${baseRef}.top-row">${accountChip}${typeBadge}</div>`
             : '';
         return `
-            <button type="button" class="btn btn-link text-decoration-none text-body text-start w-100 p-0" onclick="openEditMoneyEntryModal('${e.id}')">
-                <div class="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom">
-                    <div class="min-w-0 flex-fill">
+            <button type="button" class="btn btn-link text-decoration-none text-body text-start w-100 p-0" onclick="openEditMoneyEntryModal('${e.id}')" data-ref="${baseRef}">
+                <div class="d-flex justify-content-between align-items-start gap-3 py-3 border-bottom" data-ref="${baseRef}.inner">
+                    <div class="min-w-0 flex-fill" data-ref="${baseRef}.left">
                         ${topRow}
-                        <div class="small text-muted d-flex flex-wrap align-items-center gap-1">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                        <div class="small text-muted d-flex flex-wrap align-items-center gap-1" data-ref="${baseRef}.details">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
                         ${noteLine}
                     </div>
-                    <div class="d-flex flex-column align-items-end text-end flex-shrink-0 min-w-0">
+                    <div class="d-flex flex-column align-items-end text-end flex-shrink-0 min-w-0" data-ref="${baseRef}.right">
                         ${renderAmount(e.amount, { size: 'md', tone, align: 'right' })}
                         ${renderMoneyAmountWords(e.amount, 'right')}
                     </div>
@@ -143,99 +144,100 @@
         const broker = (acc.broker && acc.broker !== name) ? acc.broker : '';
         const holder = acc.holderName || '';
         const metaBits = [broker, holder].filter(Boolean);
+        const baseRef = 'page.money.wallet-card';
         const metaLine = metaBits.length
-            ? `<div class="money-wallet-meta text-truncate" title="${esc(metaBits.join(' · '))}">${esc(metaBits.join(' · '))}</div>`
-            : `<div class="money-wallet-meta text-muted">Broker wallet</div>`;
+            ? `<div class="money-wallet-meta text-truncate" title="${esc(metaBits.join(' · '))}" data-ref="${baseRef}.meta">${esc(metaBits.join(' · '))}</div>`
+            : `<div class="money-wallet-meta text-muted" data-ref="${baseRef}.meta">Broker wallet</div>`;
         const tone = walletAvatarTone(name);
         const initial = esc(walletInitial(name));
         const safeName = esc(name);
         const logoKey = (normalizeBrokerKey && (normalizeBrokerKey(acc.broker) || normalizeBrokerKey(name))) || name;
         const logoHtml = typeof renderBrokerLogo === 'function'
-            ? renderBrokerLogo(logoKey, { size: 'md', className: 'money-wallet-avatar flex-shrink-0' })
-            : `<span class="trade-position-avatar trade-position-avatar--${tone} money-wallet-avatar flex-shrink-0" aria-hidden="true">${initial}</span>`;
+            ? renderBrokerLogo(logoKey, { size: 'md', className: 'money-wallet-avatar flex-shrink-0', dataRef: `${baseRef}.avatar` })
+            : `<span class="trade-position-avatar trade-position-avatar--${tone} money-wallet-avatar flex-shrink-0" aria-hidden="true" data-ref="${baseRef}.avatar">${initial}</span>`;
         const cashTone = (Number(stats.totalValue) || 0) >= 0 ? 'positive' : 'negative';
         const actionBtnSm = ui().actionBtnSm || 'btn btn-sm rounded-3 p-0 d-flex align-items-center justify-content-center';
         const txLabel = historyCount === 1 ? '1 txn' : `${historyCount || 0} txns`;
-
+ 
         return `
-            <article class="card money-wallet-card border-0 shadow-sm" data-money-account-card role="listitem" aria-label="${safeName}">
-                <div class="card-body p-0">
-                    <div class="money-wallet-top">
-                        <button type="button" class="money-wallet-open btn btn-link text-decoration-none text-body text-start p-0 min-w-0 flex-fill" onclick="openAccountHistorySheet('${acc.id}')">
+            <article class="card money-wallet-card border-0 shadow-sm" data-money-account-card role="listitem" aria-label="${safeName}" data-ref="${baseRef}">
+                <div class="card-body p-0" data-ref="${baseRef}.body">
+                    <div class="money-wallet-top" data-ref="${baseRef}.top">
+                        <button type="button" class="money-wallet-open btn btn-link text-decoration-none text-body text-start p-0 min-w-0 flex-fill" onclick="openAccountHistorySheet('${acc.id}')" data-ref="${baseRef}.open-btn">
                             ${logoHtml}
-                            <span class="money-wallet-identity min-w-0">
-                                <span class="money-wallet-name text-truncate" title="${safeName}">${safeName}</span>
+                            <span class="money-wallet-identity min-w-0" data-ref="${baseRef}.identity">
+                                <span class="money-wallet-name text-truncate" title="${safeName}" data-ref="${baseRef}.name">${safeName}</span>
                                 ${metaLine}
                             </span>
                         </button>
-                        <div class="money-wallet-balance flex-shrink-0 text-end">
-                            <button type="button" class="btn btn-link text-decoration-none p-0" onclick="openAccountHistorySheet('${acc.id}')" aria-label="Cash in ${safeName}">
+                        <div class="money-wallet-balance flex-shrink-0 text-end" data-ref="${baseRef}.balance">
+                            <button type="button" class="btn btn-link text-decoration-none p-0" onclick="openAccountHistorySheet('${acc.id}')" aria-label="Cash in ${safeName}" data-ref="${baseRef}.balance.btn">
                                 ${renderAmount(stats.totalValue, { size: 'md', align: 'right', tone: cashTone, pill: false })}
                             </button>
-                            <div class="money-wallet-balance-label">Available</div>
+                            <div class="money-wallet-balance-label" data-ref="${baseRef}.balance.label">Available</div>
                         </div>
-                        <div class="dropdown flex-shrink-0">
-                            <button type="button" class="${actionBtnSm} money-wallet-more btn-outline-secondary" style="width:2rem;height:2rem" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More for ${safeName}">
+                        <div class="dropdown flex-shrink-0" data-ref="${baseRef}.dropdown">
+                            <button type="button" class="${actionBtnSm} money-wallet-more btn-outline-secondary" style="width:2rem;height:2rem" data-bs-toggle="dropdown" aria-expanded="false" title="More" aria-label="More for ${safeName}" data-ref="${baseRef}.dropdown.toggle">
                                 ${global.MTFComponents.renderIcon('fa-ellipsis-v', { size: 'sm' })}
                             </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" data-ref="${baseRef}.dropdown.menu">
                                 <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
-                                        <span class="${menuIconClass('deposit')}">${global.MTFComponents.renderIcon('fa-plus')}</span>
-                                        <span class="flex-fill text-start">Deposit</span>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" data-ref="${baseRef}.dropdown.menu.deposit">
+                                        <span class="${menuIconClass('deposit')}" data-ref="${baseRef}.dropdown.menu.deposit.icon">${global.MTFComponents.renderIcon('fa-plus')}</span>
+                                        <span class="flex-fill text-start" data-ref="${baseRef}.dropdown.menu.deposit.text">Deposit</span>
                                     </button>
                                 </li>
                                 <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
-                                        <span class="${menuIconClass('withdraw')}">${global.MTFComponents.renderIcon('fa-minus')}</span>
-                                        <span class="flex-fill text-start">Withdrawal</span>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" data-ref="${baseRef}.dropdown.menu.withdraw">
+                                        <span class="${menuIconClass('withdraw')}" data-ref="${baseRef}.dropdown.menu.withdraw.icon">${global.MTFComponents.renderIcon('fa-minus')}</span>
+                                        <span class="flex-fill text-start" data-ref="${baseRef}.dropdown.menu.withdraw.text">Withdrawal</span>
                                     </button>
                                 </li>
                                 <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'transfer')">
-                                        <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-exchange-alt')}</span>
-                                        <span class="flex-fill text-start">Transfer</span>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyEntryModal('${acc.id}', 'transfer')" data-ref="${baseRef}.dropdown.menu.transfer">
+                                        <span class="${menuIconClass('history')}" data-ref="${baseRef}.dropdown.menu.transfer.icon">${global.MTFComponents.renderIcon('fa-exchange-alt')}</span>
+                                        <span class="flex-fill text-start" data-ref="${baseRef}.dropdown.menu.transfer.text">Transfer</span>
                                     </button>
                                 </li>
                                 <li><hr class="dropdown-divider my-0"></li>
                                 <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openAccountHistorySheet('${acc.id}')">
-                                        <span class="${menuIconClass('history')}">${global.MTFComponents.renderIcon('fa-history')}</span>
-                                        <span class="flex-fill text-start">History</span>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openAccountHistorySheet('${acc.id}')" data-ref="${baseRef}.dropdown.menu.history">
+                                        <span class="${menuIconClass('history')}" data-ref="${baseRef}.dropdown.menu.history.icon">${global.MTFComponents.renderIcon('fa-history')}</span>
+                                        <span class="flex-fill text-start" data-ref="${baseRef}.dropdown.menu.history.text">History</span>
                                         ${historyCount ? appTag(String(historyCount), 'accent') : ''}
                                     </button>
                                 </li>
                                 <li>
-                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyAccountModal('${acc.id}')">
-                                        <span class="${menuIconClass('edit')}">${global.MTFComponents.renderIcon('fa-pen')}</span>
-                                        <span class="flex-fill text-start">Edit wallet</span>
+                                    <button type="button" class="dropdown-item d-flex align-items-center gap-3" onclick="openMoneyAccountModal('${acc.id}')" data-ref="${baseRef}.dropdown.menu.edit">
+                                        <span class="${menuIconClass('edit')}" data-ref="${baseRef}.dropdown.menu.edit.icon">${global.MTFComponents.renderIcon('fa-pen')}</span>
+                                        <span class="flex-fill text-start" data-ref="${baseRef}.dropdown.menu.edit.text">Edit wallet</span>
                                     </button>
                                 </li>
                             </ul>
                         </div>
                     </div>
-                    <div class="money-wallet-metrics" aria-label="Wallet summary">
-                        <div class="money-wallet-metric">
-                            <span class="money-wallet-metric-label">Deposited</span>
-                            <span class="money-wallet-metric-value text-primary">${global.MTFComponents.fmtINR(stats.deposited)}</span>
+                    <div class="money-wallet-metrics" aria-label="Wallet summary" data-ref="${baseRef}.metrics">
+                        <div class="money-wallet-metric" data-ref="${baseRef}.metrics.deposited">
+                            <span class="money-wallet-metric-label" data-ref="${baseRef}.metrics.deposited.label">Deposited</span>
+                            <span class="money-wallet-metric-value text-primary" data-ref="${baseRef}.metrics.deposited.value">${global.MTFComponents.fmtINR(stats.deposited)}</span>
                         </div>
-                        <div class="money-wallet-metric">
-                            <span class="money-wallet-metric-label">Withdrawn</span>
-                            <span class="money-wallet-metric-value text-danger">${global.MTFComponents.fmtINR(stats.withdrawn)}</span>
+                        <div class="money-wallet-metric" data-ref="${baseRef}.metrics.withdrawn">
+                            <span class="money-wallet-metric-label" data-ref="${baseRef}.metrics.withdrawn.label">Withdrawn</span>
+                            <span class="money-wallet-metric-value text-danger" data-ref="${baseRef}.metrics.withdrawn.value">${global.MTFComponents.fmtINR(stats.withdrawn)}</span>
                         </div>
-                        <div class="money-wallet-metric">
-                            <span class="money-wallet-metric-label">Activity</span>
-                            <span class="money-wallet-metric-value">${txLabel}</span>
+                        <div class="money-wallet-metric" data-ref="${baseRef}.metrics.activity">
+                            <span class="money-wallet-metric-label" data-ref="${baseRef}.metrics.activity.label">Activity</span>
+                            <span class="money-wallet-metric-value" data-ref="${baseRef}.metrics.activity.value">${txLabel}</span>
                         </div>
                     </div>
-                    <div class="money-wallet-actions">
-                        <button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'deposit')">
+                    <div class="money-wallet-actions" data-ref="${baseRef}.actions">
+                        <button type="button" class="btn btn-sm btn-primary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'deposit')" data-ref="${baseRef}.actions.deposit">
                             <i class="fas fa-plus me-1" aria-hidden="true"></i>Deposit
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openMoneyEntryModal('${acc.id}', 'withdraw')" data-ref="${baseRef}.actions.withdraw">
                             <i class="fas fa-minus me-1" aria-hidden="true"></i>Withdraw
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openAccountHistorySheet('${acc.id}')">
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-3 flex-fill" onclick="openAccountHistorySheet('${acc.id}')" data-ref="${baseRef}.actions.history">
                             <i class="fas fa-history me-1" aria-hidden="true"></i>History
                         </button>
                     </div>
@@ -353,7 +355,7 @@
         }
         const dateText = fmtDateDisplay(date);
         const timeText = formatMoneyEntryTimeDisplay(time);
-        el.innerHTML = `<span class="money-entry-status-date">${dateText}</span><span class="money-entry-status-time">${timeText}</span>`;
+        el.innerHTML = `<span class="money-entry-status-date" data-ref="page.money-entry.form.datetime-display.date">${dateText}</span><span class="money-entry-status-time" data-ref="page.money-entry.form.datetime-display.time">${timeText}</span>`;
         const previewDt = document.getElementById('moneyEntryPreviewDateTime');
         if (previewDt) previewDt.textContent = `${dateText}, ${timeText}`;
     }
@@ -461,19 +463,20 @@
     function renderMoneyEntryPickerCards(accounts, selectedId, target, disabled) {
         const cards = (accounts || []).map((a) => {
             const logoLabel = brokerLogoLabelForAccount(a);
-            const logo = renderBrokerLogo(logoLabel || a.name, { size: 'md', className: 'money-entry-broker-logo' });
+            const baseRef = `page.money-entry.form.picker.${target}.card`;
+            const logo = renderBrokerLogo(logoLabel || a.name, { size: 'md', className: 'money-entry-broker-logo', dataRef: `${baseRef}.logo` });
             const active = a.id === selectedId ? ' is-selected' : '';
             const dis = disabled ? ' disabled' : '';
             return `<button type="button" class="money-entry-broker-card${active}" role="option" aria-selected="${a.id === selectedId ? 'true' : 'false'}" ${dis}
-                onclick="pickMoneyEntryWallet('${a.id}', '${target}')">
+                onclick="pickMoneyEntryWallet('${a.id}', '${target}')" data-ref="${baseRef}">
                 ${logo}
-                <span class="money-entry-broker-card-name text-truncate">${a.name}</span>
+                <span class="money-entry-broker-card-name text-truncate" data-ref="${baseRef}.name">${a.name}</span>
             </button>`;
         }).join('');
         const addCard = disabled ? '' : `<button type="button" class="money-entry-broker-card money-entry-broker-card--add" role="option" aria-selected="false"
-            onclick="pickMoneyEntryWallet('__add_wallet__', '${target}')">
-            <span class="broker-logo broker-logo--fallback broker-logo--md money-entry-broker-logo" aria-hidden="true"><i class="fas fa-plus"></i></span>
-            <span class="money-entry-broker-card-name">Add wallet</span>
+            onclick="pickMoneyEntryWallet('__add_wallet__', '${target}')" data-ref="page.money-entry.form.picker.${target}.add-card">
+            <span class="broker-logo broker-logo--fallback broker-logo--md money-entry-broker-logo" aria-hidden="true" data-ref="page.money-entry.form.picker.${target}.add-card.icon"><i class="fas fa-plus"></i></span>
+            <span class="money-entry-broker-card-name" data-ref="page.money-entry.form.picker.${target}.add-card.name">Add wallet</span>
         </button>`;
         return cards + addCard;
     }
@@ -1200,62 +1203,63 @@
         const txLabel = txCount === 1 ? '1 txn' : `${txCount} txns`;
         const { fmtINR } = global.MTFComponents;
 
+        const baseRef = 'page.money.month-flow';
         host.innerHTML = `
-            <div class="money-month-hero">
-                <div class="money-month-nav">
-                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(-1)" aria-label="Previous month">
+            <div class="money-month-hero" data-ref="${baseRef}.hero">
+                <div class="money-month-nav" data-ref="${baseRef}.nav">
+                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(-1)" aria-label="Previous month" data-ref="${baseRef}.nav.prev-btn">
                         <i class="fas fa-chevron-left" aria-hidden="true"></i>
                     </button>
-                    <div class="money-month-label-wrap">
-                        <label class="money-month-picker-label" for="moneyMonthPicker">
-                            <span class="money-month-kicker">Monthly flow</span>
-                            <span class="money-month-label">
+                    <div class="money-month-label-wrap" data-ref="${baseRef}.nav.label-wrap">
+                        <label class="money-month-picker-label" for="moneyMonthPicker" data-ref="${baseRef}.nav.picker-label">
+                            <span class="money-month-kicker" data-ref="${baseRef}.nav.kicker">Monthly flow</span>
+                            <span class="money-month-label" data-ref="${baseRef}.nav.label">
                                 <span>${label}</span>
                                 <i class="fas fa-chevron-down money-month-label-caret" aria-hidden="true"></i>
                             </span>
-                            <input type="month" class="money-month-picker" id="moneyMonthPicker" value="${key}" onchange="setMoneyMonthKey(this.value)" aria-label="Jump to month" />
+                            <input type="month" class="money-month-picker" id="moneyMonthPicker" value="${key}" onchange="setMoneyMonthKey(this.value)" aria-label="Jump to month" data-ref="${baseRef}.nav.picker-input" />
                         </label>
                     </div>
-                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(1)" aria-label="Next month">
+                    <button type="button" class="btn money-month-nav-btn" onclick="shiftMoneyMonthChart(1)" aria-label="Next month" data-ref="${baseRef}.nav.next-btn">
                         <i class="fas fa-chevron-right" aria-hidden="true"></i>
                     </button>
                 </div>
-                <div class="money-month-net">
-                    <div class="money-month-net-label">Net this month</div>
-                    <div class="money-month-net-value ${netClass}">${netSign}${fmtINR(net)}</div>
-                    <div class="money-month-net-meta">${txLabel}</div>
+                <div class="money-month-net" data-ref="${baseRef}.net-wrapper">
+                    <div class="money-month-net-label" data-ref="${baseRef}.net-label">Net this month</div>
+                    <div class="money-month-net-value ${netClass}" data-ref="${baseRef}.net-value">${netSign}${fmtINR(net)}</div>
+                    <div class="money-month-net-meta" data-ref="${baseRef}.net-meta">${txLabel}</div>
                 </div>
             </div>
-            <div class="money-month-metrics" role="group" aria-label="Month cash flow">
-                <div class="money-month-metric">
-                    <span class="money-month-metric-label">Deposited</span>
-                    <span class="money-month-metric-value text-primary">${fmtINR(summary.deposited)}</span>
+            <div class="money-month-metrics" role="group" aria-label="Month cash flow" data-ref="${baseRef}.metrics">
+                <div class="money-month-metric" data-ref="${baseRef}.metrics.deposited">
+                    <span class="money-month-metric-label" data-ref="${baseRef}.metrics.deposited.label">Deposited</span>
+                    <span class="money-month-metric-value text-primary" data-ref="${baseRef}.metrics.deposited.value">${fmtINR(summary.deposited)}</span>
                 </div>
-                <div class="money-month-metric">
-                    <span class="money-month-metric-label">Withdrawn</span>
-                    <span class="money-month-metric-value text-danger">${fmtINR(summary.withdrawn)}</span>
+                <div class="money-month-metric" data-ref="${baseRef}.metrics.withdrawn">
+                    <span class="money-month-metric-label" data-ref="${baseRef}.metrics.withdrawn.label">Withdrawn</span>
+                    <span class="money-month-metric-value text-danger" data-ref="${baseRef}.metrics.withdrawn.value">${fmtINR(summary.withdrawn)}</span>
                 </div>
-                <div class="money-month-metric">
-                    <span class="money-month-metric-label">Activity</span>
-                    <span class="money-month-metric-value">${txCount}</span>
+                <div class="money-month-metric" data-ref="${baseRef}.metrics.activity">
+                    <span class="money-month-metric-label" data-ref="${baseRef}.metrics.activity.label">Activity</span>
+                    <span class="money-month-metric-value" data-ref="${baseRef}.metrics.activity.value">${txCount}</span>
                 </div>
             </div>
-            <div class="money-month-bars ${hasFlow ? '' : 'money-month-bars--empty'}">
-                <div class="money-month-bar-row">
-                    <span class="money-month-bar-dot money-month-bar-dot--in" aria-hidden="true"></span>
-                    <span class="money-month-bar-name">In</span>
-                    <div class="money-month-bar-track" aria-hidden="true">
-                        <div class="money-month-bar-fill money-month-bar-fill--in" style="width:${hasFlow ? depPct : 0}%"></div>
+            <div class="money-month-bars ${hasFlow ? '' : 'money-month-bars--empty'}" data-ref="${baseRef}.bars">
+                <div class="money-month-bar-row" data-ref="${baseRef}.bars.in">
+                    <span class="money-month-bar-dot money-month-bar-dot--in" aria-hidden="true" data-ref="${baseRef}.bars.in.dot"></span>
+                    <span class="money-month-bar-name" data-ref="${baseRef}.bars.in.name">In</span>
+                    <div class="money-month-bar-track" aria-hidden="true" data-ref="${baseRef}.bars.in.track">
+                        <div class="money-month-bar-fill money-month-bar-fill--in" style="width:${hasFlow ? depPct : 0}%" data-ref="${baseRef}.bars.in.fill"></div>
                     </div>
                 </div>
-                <div class="money-month-bar-row">
-                    <span class="money-month-bar-dot money-month-bar-dot--out" aria-hidden="true"></span>
-                    <span class="money-month-bar-name">Out</span>
-                    <div class="money-month-bar-track" aria-hidden="true">
-                        <div class="money-month-bar-fill money-month-bar-fill--out" style="width:${hasFlow ? wdrPct : 0}%"></div>
+                <div class="money-month-bar-row" data-ref="${baseRef}.bars.out">
+                    <span class="money-month-bar-dot money-month-bar-dot--out" aria-hidden="true" data-ref="${baseRef}.bars.out.dot"></span>
+                    <span class="money-month-bar-name" data-ref="${baseRef}.bars.out.name">Out</span>
+                    <div class="money-month-bar-track" aria-hidden="true" data-ref="${baseRef}.bars.out.track">
+                        <div class="money-month-bar-fill money-month-bar-fill--out" style="width:${hasFlow ? wdrPct : 0}%" data-ref="${baseRef}.bars.out.fill"></div>
                     </div>
                 </div>
-                ${hasFlow ? '' : '<div class="money-month-empty-hint">No cash movement this month</div>'}
+                ${hasFlow ? '' : `<div class="money-month-empty-hint" data-ref="${baseRef}.empty-hint">No cash movement this month</div>`}
             </div>
         `;
     }
@@ -1319,24 +1323,25 @@
 
         if (document.getElementById('moneyPageFilterTypeHost')) syncMoneyTypeDropdowns();
 
+        const baseRef = 'page.money.filter-summary';
         summaryEl.innerHTML = `
-            <div class="row g-2 text-center">
-                <div class="col-6 d-flex flex-column align-items-center">
-                    <div class="${statLabel()} text-primary">Deposits</div>
-                    <div>${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}</div>
+            <div class="row g-2 text-center" data-ref="${baseRef}.grid">
+                <div class="col-6 d-flex flex-column align-items-center" data-ref="${baseRef}.deposits-col">
+                    <div class="${statLabel()} text-primary" data-ref="${baseRef}.deposits-label">Deposits</div>
+                    <div data-ref="${baseRef}.deposits-value">${renderAmount(displayPortfolio.deposited, { size: 'md', tone: 'deposit', align: 'center' })}</div>
                     ${renderMoneyAmountWords(displayPortfolio.deposited, 'center')}
                 </div>
-                <div class="col-6 d-flex flex-column align-items-center">
-                    <div class="${statLabel()}">Withdrawals</div>
-                    <div>${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}</div>
+                <div class="col-6 d-flex flex-column align-items-center" data-ref="${baseRef}.withdrawals-col">
+                    <div class="${statLabel()}" data-ref="${baseRef}.withdrawals-label">Withdrawals</div>
+                    <div data-ref="${baseRef}.withdrawals-value">${renderAmount(displayPortfolio.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}</div>
                     ${renderMoneyAmountWords(displayPortfolio.withdrawn, 'center')}
                 </div>
             </div>
-            <div class="small text-muted mt-2">${entries.length} transaction${entries.length === 1 ? '' : 's'}</div>
+            <div class="small text-muted mt-2" data-ref="${baseRef}.count">${entries.length} transaction${entries.length === 1 ? '' : 's'}</div>
         `;
-
+ 
         if (entries.length === 0) {
-            listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-2">No entries match your filter.</p><button type="button" class="btn btn-sm btn-outline-secondary" onclick="openMoneyPageFilterSheet()">Change filter</button></div>`;
+            listEl.innerHTML = `<div class="text-center text-muted py-4" data-ref="${baseRef}.empty">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-2" data-ref="${baseRef}.empty.hint">No entries match your filter.</p><button type="button" class="btn btn-sm btn-outline-secondary" onclick="openMoneyPageFilterSheet()" data-ref="${baseRef}.empty.change-filter-btn">Change filter</button></div>`;
             return;
         }
 
@@ -1392,62 +1397,63 @@
 
         if (summaryEl) {
             summaryEl.innerHTML = `
-                <div class="text-center mb-3">
-                    <div class="${statLabel()}">Current Balance</div>
-                    <div>${renderAmount(balance, { size: 'lg', tone: 'positive', align: 'center' })}</div>
+                <div class="text-center mb-3" data-ref="sheet.wallet-history.summary.balance">
+                    <div class="${statLabel()}" data-ref="sheet.wallet-history.summary.balance.label">Current Balance</div>
+                    <div data-ref="sheet.wallet-history.summary.balance.value">${renderAmount(balance, { size: 'lg', tone: 'positive', align: 'center' })}</div>
                     ${renderMoneyAmountWords(balance, 'center')}
                 </div>
-                <div class="row g-2 text-center">
-                    <div class="col-6 d-flex flex-column align-items-center">
-                        <div class="${statLabel()} text-primary">Deposited</div>
+                <div class="row g-2 text-center" data-ref="sheet.wallet-history.summary.grid">
+                    <div class="col-6 d-flex flex-column align-items-center" data-ref="sheet.wallet-history.summary.deposited-col">
+                        <div class="${statLabel()} text-primary" data-ref="sheet.wallet-history.summary.deposited-label">Deposited</div>
                         <div>${renderAmount(summary.deposited, { size: 'md', tone: 'deposit', align: 'center' })}</div>
                     </div>
-                    <div class="col-6 d-flex flex-column align-items-center">
-                        <div class="${statLabel()}">Withdrawn</div>
+                    <div class="col-6 d-flex flex-column align-items-center" data-ref="sheet.wallet-history.summary.withdrawn-col">
+                        <div class="${statLabel()}" data-ref="sheet.wallet-history.summary.withdrawn-label">Withdrawn</div>
                         <div>${renderAmount(summary.withdrawn, { size: 'md', tone: 'withdraw', align: 'center' })}</div>
                     </div>
                 </div>
             `;
         }
-
+ 
         if (allEntries.length === 0) {
-            listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-inbox', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0">No transactions yet.</p></div>`;
+            listEl.innerHTML = `<div class="text-center text-muted py-4" data-ref="sheet.wallet-history.list.empty">${global.MTFComponents.renderIcon('fa-inbox', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0" data-ref="sheet.wallet-history.list.empty.hint">No transactions yet.</p></div>`;
             return;
         }
-
+ 
         if (entries.length === 0) {
-            listEl.innerHTML = `<div class="text-center text-muted py-4">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0">No entries match your filters.</p><button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearMoneyHistoryFilters()">Clear filters</button></div>`;
+            listEl.innerHTML = `<div class="text-center text-muted py-4" data-ref="sheet.wallet-history.list.empty-filtered">${global.MTFComponents.renderIcon('fa-filter', { className: 'mb-2 opacity-25' })}<p class="small text-muted mb-0" data-ref="sheet.wallet-history.list.empty-filtered.hint">No entries match your filters.</p><button type="button" class="btn btn-sm btn-outline-secondary mt-2" onclick="clearMoneyHistoryFilters()" data-ref="sheet.wallet-history.list.empty-filtered.clear-btn">Clear filters</button></div>`;
             return;
         }
-
+ 
         const accounts = getMoneyAccounts();
+        const baseRef = 'sheet.wallet-history.list.item';
         listEl.innerHTML = entries.map((e) => {
             const tone = moneyEntryTone(e);
             const typeBadge = appTag(moneyEntryTypeLabel(e), tone === 'deposit' ? 'secondary' : 'error');
-            const note = e.note ? `<div class="small text-muted mt-1">${e.note}</div>` : '';
+            const note = e.note ? `<div class="small text-muted mt-1" data-ref="${baseRef}.note">${e.note}</div>` : '';
             let peer = '';
             if (e.type === 'transfer' && e.transferPeerAccountId) {
                 const p = accounts.find((a) => a.id === e.transferPeerAccountId);
-                if (p) peer = `<div class="small text-muted mt-1">${e.transferLeg === 'out' ? 'To' : 'From'} ${p.name}</div>`;
+                if (p) peer = `<div class="small text-muted mt-1" data-ref="${baseRef}.peer">${e.transferLeg === 'out' ? 'To' : 'From'} ${p.name}</div>`;
             }
             const balAfter = running[e.id];
             const balLine = balAfter != null
-                ? `<div class="small text-muted mt-1">Balance ${global.MTFComponents.fmtINR(balAfter)}</div>`
+                ? `<div class="small text-muted mt-1" data-ref="${baseRef}.running-balance">Balance ${global.MTFComponents.fmtINR(balAfter)}</div>`
                 : '';
             return `
-                <div class="border-bottom pb-3 mb-3">
-                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                        <button type="button" class="btn btn-link text-decoration-none text-body text-start p-0 flex-fill" onclick="openEditMoneyEntryModal('${e.id}')">
+                <div class="border-bottom pb-3 mb-3" data-ref="${baseRef}">
+                    <div class="d-flex justify-content-between align-items-start gap-2 mb-2" data-ref="${baseRef}.inner">
+                        <button type="button" class="btn btn-link text-decoration-none text-body text-start p-0 flex-fill" onclick="openEditMoneyEntryModal('${e.id}')" data-ref="${baseRef}.edit-btn">
                             <div>${typeBadge}</div>
-                            <div class="small text-muted d-flex flex-wrap align-items-center gap-1 mt-2">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
+                            <div class="small text-muted d-flex flex-wrap align-items-center gap-1 mt-2" data-ref="${baseRef}.details">${renderDateChip(fmtDateDisplay(e.date), { size: 'sm' })}<span>·</span><span>${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1' })}${formatMoneyEntryTimeDisplay(e.time)}</span></div>
                             ${note}${peer}${balLine}
                         </button>
-                        <div class="d-flex align-items-start gap-2">
-                            <div class="d-flex flex-column align-items-end text-end">
+                        <div class="d-flex align-items-start gap-2" data-ref="${baseRef}.actions">
+                            <div class="d-flex flex-column align-items-end text-end" data-ref="${baseRef}.amount-wrapper">
                                 ${renderAmount(e.amount, { size: 'md', tone, align: 'right' })}
                                 ${renderMoneyAmountWords(e.amount, 'right')}
                             </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle text-danger" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry">${global.MTFComponents.renderIcon('fa-trash-alt')}</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle text-danger" onclick="confirmDeleteMoneyEntry('${e.id}')" title="Delete" aria-label="Delete entry" data-ref="${baseRef}.delete-btn">${global.MTFComponents.renderIcon('fa-trash-alt')}</button>
                         </div>
                     </div>
                 </div>
@@ -1551,13 +1557,13 @@
         if (accountList) {
             if (visibleAccounts.length === 0) {
                 accountList.innerHTML = `
-                    <div class="money-wallet-empty text-center py-5 px-3">
-                        <div class="money-wallet-empty-icon" aria-hidden="true">
+                    <div class="money-wallet-empty text-center py-5 px-3" data-ref="page.money.wallet-list.empty">
+                        <div class="money-wallet-empty-icon" aria-hidden="true" data-ref="page.money.wallet-list.empty.icon">
                             ${global.MTFComponents.renderIcon('fa-university', { size: 'lg' })}
                         </div>
-                        <h6 class="fw-semibold text-body mb-1">No broker wallets yet</h6>
-                        <p class="small text-muted mb-3">Add Zerodha, Dhan, Groww, or any custom broker to start tracking cash.</p>
-                        <button type="button" class="btn btn-primary rounded-3 px-3" onclick="openAddMoneyAccountModal()">
+                        <h6 class="fw-semibold text-body mb-1" data-ref="page.money.wallet-list.empty.title">No broker wallets yet</h6>
+                        <p class="small text-muted mb-3" data-ref="page.money.wallet-list.empty.desc">Add Zerodha, Dhan, Groww, or any custom broker to start tracking cash.</p>
+                        <button type="button" class="btn btn-primary rounded-3 px-3" onclick="openAddMoneyAccountModal()" data-ref="page.money.wallet-list.empty.add-btn">
                             <i class="fas fa-plus me-1"></i>Add Wallet
                         </button>
                     </div>`;

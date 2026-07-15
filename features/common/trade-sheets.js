@@ -118,10 +118,10 @@
         return `
             <tr data-ref="interest-sheet.row">
                 <td class="p-2 align-middle" data-ref="interest-sheet.row.label">
-                    <span class="small text-muted fw-normal">${label}</span>
+                    <span class="small text-muted fw-normal" data-ref="interest-sheet.row.label.text">${label}</span>
                 </td>
                 <td class="p-2 align-middle text-end" data-ref="interest-sheet.row.value">
-                    <span class="fs-6 fw-normal ${valueClass}">${value}</span>
+                    <span class="fs-6 fw-normal ${valueClass}" data-ref="interest-sheet.row.value.text">${value}</span>
                 </td>
             </tr>
         `;
@@ -292,7 +292,7 @@
             </div>
         `;
 
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-eye', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>`, html, '');
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-eye', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.view-trade.header.title.company">${tx.company}</span>`, html, '');
     }
 
     global.MTFRegister({ openViewModal });
@@ -334,13 +334,13 @@
             ${intraNote}
             ${chargesTable(buy, sell)}
             <div class="row g-2 text-center mt-3" data-ref="charges-modal.summary">
-                <div class="col-4" data-ref="charges-modal.summary.buy"><div class="bg-light rounded p-2"><div class="small text-primary">Buy Side</div><div class="fs-6 fw-semibold text-primary">${fmtDec(buy.total)}</div></div></div>
-                <div class="col-4" data-ref="charges-modal.summary.sell"><div class="bg-light rounded p-2"><div class="small text-muted">Sell Side</div><div class="fs-6 fw-medium text-body-secondary">${fmtDec(sell.total)}</div></div></div>
-                <div class="col-4" data-ref="charges-modal.summary.total"><div class="bg-light rounded p-2"><div class="small text-muted">Total</div><div class="fs-6 fw-medium text-body">${fmtDec(grand)}</div></div></div>
+                <div class="col-4" data-ref="charges-modal.summary.buy"><div class="bg-light rounded p-2" data-ref="charges-modal.summary.buy.card"><div class="small text-primary" data-ref="charges-modal.summary.buy.label">Buy Side</div><div class="fs-6 fw-semibold text-primary" data-ref="charges-modal.summary.buy.value">${fmtDec(buy.total)}</div></div></div>
+                <div class="col-4" data-ref="charges-modal.summary.sell"><div class="bg-light rounded p-2" data-ref="charges-modal.summary.sell.card"><div class="small text-muted" data-ref="charges-modal.summary.sell.label">Sell Side</div><div class="fs-6 fw-medium text-body-secondary" data-ref="charges-modal.summary.sell.value">${fmtDec(sell.total)}</div></div></div>
+                <div class="col-4" data-ref="charges-modal.summary.total"><div class="bg-light rounded p-2" data-ref="charges-modal.summary.total.card"><div class="small text-muted" data-ref="charges-modal.summary.total.label">Total</div><div class="fs-6 fw-medium text-body" data-ref="charges-modal.summary.total.value">${fmtDec(grand)}</div></div></div>
             </div>
         `;
-
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Charges</span>`, chargesHtml, '');
+ 
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.charges.header.title.company">${tx.company} Charges</span>`, chargesHtml, '');
     }
 
     global.MTFRegister({ openChargesModal });
@@ -375,13 +375,13 @@
         const broker = tx.broker || '—';
         const noLeverage = d.mtf <= 0;
         const sameDayNote = d.sameDay
-            ? '<p class="small text-muted mb-0">Same-day trade — no MTF interest. Broker charges use intraday rates.</p>'
+            ? '<p class="small text-muted mb-0" data-ref="sheet.interest.same-day-note">Same-day trade — no MTF interest. Broker charges use intraday rates.</p>'
             : '';
         const noLevNote = noLeverage && !d.sameDay
-            ? '<p class="small text-muted mb-0">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
+            ? '<p class="small text-muted mb-0" data-ref="sheet.interest.no-lev-note">No leverage on this trade — broker funded amount is zero, so no MTF interest applies.</p>'
             : '';
-
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'text-info flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>${appTag(broker, 'broker')}`, `
+ 
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-percent', { className: 'text-info flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.interest.header.title.company">${tx.company}</span>${appTag(broker, 'broker')}`, `
             <div data-ref="interest-modal">
                 <div class="trade-metrics-panel mb-3" data-ref="interest-modal.metrics">
                     <table class="table table-sm trade-metrics-table" data-ref="interest-modal.metrics.table">
@@ -438,7 +438,7 @@
         wrap.innerHTML = presets.map((p) => {
             const active = targetActiveSellPct != null && Math.abs(targetActiveSellPct - p) < 0.0001;
             const cls = active ? 'btn-success' : 'btn-outline-success';
-            return `<button type="button" class="btn btn-sm ${cls} rounded-pill flex-fill px-3" onclick="setTargetSellPct(${p})" aria-pressed="${active}">${fmtCalcPctLabel(p)}</button>`;
+            return `<button type="button" class="btn btn-sm ${cls} rounded-pill flex-fill px-3" onclick="setTargetSellPct(${p})" aria-pressed="${active}" data-ref="sheet.target-modal.presets.chip">${fmtCalcPctLabel(p)}</button>`;
         }).join('');
     }
 
@@ -458,7 +458,7 @@
             const sign = pct >= 0 ? '+' : '';
             const tone = pct >= 0 ? 'text-success' : 'text-danger';
             gainEl.className = `small ${tone}`;
-            gainEl.innerHTML = `${sign}${pct.toFixed(2)}% <span class="text-muted">·</span> ${sign}${fmtDec(Math.abs(diff))} per share`;
+            gainEl.innerHTML = `${sign}${pct.toFixed(2)}% <span class="text-muted" data-ref="sheet.target-modal.preview.gain.bullet">·</span> ${sign}${fmtDec(Math.abs(diff))} per share`;
         } else {
             gainEl.className = 'small text-muted';
             const tx2 = getTransaction(targetModalTradeId);
@@ -466,7 +466,7 @@
             gainEl.textContent = isOpen ? 'Set a target sell price' : 'Set a sell price';
         }
     }
-
+ 
     function setTargetSellPct(pct) {
         const { getTransaction } = tradeSheets();
         targetActiveSellPct = pct;
@@ -481,7 +481,7 @@
         renderTargetSellPctChips();
         updateTargetModalPreview();
     }
-
+ 
     function applyTargetSellPctCustom() {
         const el = document.getElementById('targetSellPctCustom');
         const pct = parseFloat(el?.value);
@@ -498,13 +498,13 @@
         if (el) el.value = '';
         setTargetSellPct(pct);
     }
-
+ 
     function onTargetSellPriceInput() {
         targetActiveSellPct = null;
         renderTargetSellPctChips();
         updateTargetModalPreview();
     }
-
+ 
     function openTargetModal(id) {
         const { getTransaction, getEffectiveSellPrice } = tradeSheets();
         const tx = getTransaction ? getTransaction(id) : null;
@@ -517,8 +517,8 @@
         const sellLabel = isOpen ? 'Target sell' : 'Sell';
         const gainPlaceholder = isOpen ? 'Set a target sell price' : 'Set a sell price';
         const sheetTitle = isOpen
-            ? `${global.MTFComponents.renderIcon('fa-bullseye', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company}</span>`
-            : `${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Sell</span>`;
+            ? `${global.MTFComponents.renderIcon('fa-bullseye', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.target-modal.header.title.company">${tx.company}</span>`
+            : `${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-danger flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.target-modal.header.title.company">${tx.company} Sell</span>`;
         const actionLabel = isOpen ? 'Update Sell' : 'Update Sell Price';
         Sheet.open(sheetTitle, `
             <div class="d-flex flex-column gap-3" data-ref="target-modal">
@@ -644,7 +644,7 @@
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
         buyPriceModalTradeId = id;
         const bp = Number(tx.buyPrice) || 0;
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-primary flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Buy</span>`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-tag', { className: 'me-1 text-primary flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.buy-price.header.title.company">${tx.company} Buy</span>`, `
             <p class="small text-muted mb-3" data-ref="buy-price-modal.note">Update buy price. Margin, charges, and P&L will recalculate.</p>
             <div class="mb-3" data-ref="buy-price-modal.field">
                 <label class="form-label small text-primary mb-1" data-ref="buy-price-modal.field.label">Buy Price</label>
@@ -753,7 +753,7 @@
         if (!tx) { showToast('Transaction not found.', 'danger'); return; }
         leverageModalTradeId = id;
         const lev = Number(tx.leverage) || 1;
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Leverage</span>`, `
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-layer-group', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.leverage.header.title.company">${tx.company} Leverage</span>`, `
             <p class="small text-muted mb-3" data-ref="leverage-modal.note">Update leverage only. Margin, interest, and P&L will recalculate.</p>
             <div class="mb-3" data-ref="leverage-modal.field">
                 <label class="form-label small text-muted mb-1" data-ref="leverage-modal.field.label">Leverage (X)</label>
@@ -944,10 +944,10 @@
             ? calcInterestDays(buyDate, sellDate)
             : (getDaysHeld ? getDaysHeld(tx) : 0);
         const openNote = isOpen
-            ? '<p class="small text-muted mb-3">Open trade — dates below drive interest and charge estimates.</p>'
+            ? '<p class="small text-muted mb-3" data-ref="sheet.hold.open-note">Open trade — dates below drive interest and charge estimates.</p>'
             : '';
-
-        Sheet.open(`${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${tx.company} Holding</span>`, `
+ 
+        Sheet.open(`${global.MTFComponents.renderIcon('fa-clock', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.hold.header.title.company">${tx.company} Holding</span>`, `
             ${openNote}
             <div class="row g-2 mb-3" data-ref="hold-modal.dates">
                 <div class="col-6" data-ref="hold-modal.dates.buy">
@@ -1247,16 +1247,16 @@
             data-ref="company-info.refresh-btn">
             ${renderIcon('fa-rotate', { className: iconClass })}
         </button>`;
-        return `${renderIcon('fa-building', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1">${escapeHtml(company)}</span>${refreshBtn}`;
+        return `${renderIcon('fa-building', { className: 'me-1 flex-shrink-0' })}<span class="text-truncate min-w-0 flex-grow-1" data-ref="sheet.company-info.header.title.company">${escapeHtml(company)}</span>${refreshBtn}`;
     }
-
+ 
     async function refreshCompanyInfoSheet() {
         if (_companyInfoState.refreshing || !_companyInfoState.tx) return;
         _companyInfoState.refreshing = true;
         const spinningTitle = buildCompanyInfoTitle(_companyInfoState.company, true);
         // Update title to show spinning icon, keep current body intact
         if (Sheet.titleEl()) {
-            Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${spinningTitle}</span>`;
+            Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100" data-ref="sheet.company-info.header.title.wrapper">${spinningTitle}</span>`;
         }
         try {
             const fetcher = tradePages().fetchTradeCompanyInfo || tradeSheets().fetchTradeCompanyInfo;
@@ -1322,11 +1322,11 @@
                     Sheet.open(doneTitle, renderCompanyInfoBody(info, company), renderCompanyInfoFooter(info));
                 } else if (Sheet.isOpen()) {
                     // On error/rate-limit, keep the cached view — just stop the spinner.
-                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${buildCompanyInfoTitle(company, false)}</span>`;
+                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100" data-ref="sheet.company-info.header.title.wrapper">${buildCompanyInfoTitle(company, false)}</span>`;
                 }
             } catch (_) {
                 if (Sheet.isOpen()) {
-                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100">${buildCompanyInfoTitle(company, false)}</span>`;
+                    Sheet.titleEl().innerHTML = `<span class="d-flex align-items-center min-w-0 gap-2 overflow-hidden w-100" data-ref="sheet.company-info.header.title.wrapper">${buildCompanyInfoTitle(company, false)}</span>`;
                 }
             } finally {
                 _companyInfoState.refreshing = false;

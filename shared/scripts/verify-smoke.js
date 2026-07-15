@@ -1045,17 +1045,203 @@ async function runSmoke(report) {
         } else {
             report.warn('MTF Calc UI', JSON.stringify(calcFields));
         }
-        await page.locator('#appHeaderSubpage button[aria-label="Back"]').click();
+
+        // --- MTF Calculator Preset Click (Assertion 1) ---
+        await page.fill('#calcBuyPrice', '100');
+        await page.fill('#calcQty', '10');
+        await page.waitForTimeout(100);
+        await page.click('[data-ref="page.mtf-calc.presets.chip"]:has-text("5%")');
+        await page.waitForTimeout(100);
+        const sellPriceVal = await page.inputValue('#calcSellPrice');
+        if (parseFloat(sellPriceVal) === 105) {
+            report.pass('MTF Calc Preset Click', 'Target sell price updated to 105.00 on 5% preset click');
+        } else {
+            report.fail('MTF Calc Preset Click', `Target sell price expected 105.00, got ${sellPriceVal}`);
+        }
+
+        // --- MTF Calculator Custom Preset (Assertion 2) ---
+        await page.fill('#calcSellPctCustom', '7.5');
+        await page.click('#calcAddPctBtnHost button');
+        await page.waitForTimeout(100);
+        const sellPriceCustomVal = await page.inputValue('#calcSellPrice');
+        if (parseFloat(sellPriceCustomVal) === 107.5) {
+            report.pass('MTF Calc Custom Preset', 'Custom preset 7.5% added and applied target sell price (107.50)');
+        } else {
+            report.fail('MTF Calc Custom Preset', `Target sell price expected 107.50, got ${sellPriceCustomVal}`);
+        }
+
+        // --- MTF Calculator Leverage Card Click (Assertion 3) ---
+        await page.click('[data-ref="page.mtf-calc.leverage-card"]:has-text("4x")');
+        await page.waitForTimeout(100);
+        const selectedText = await page.textContent('#calcLeverageSelected');
+        if (selectedText && selectedText.includes('4x Selected')) {
+            report.pass('MTF Calc Leverage Card Click', 'Leverage cards updated selection to 4x');
+        } else {
+            report.fail('MTF Calc Leverage Card Click', `Selected text expected '4x Selected', got '${selectedText}'`);
+        }
+
+        // --- MTF Calculator Breakdown Modal (Assertion 4) ---
+        await page.click('[data-ref="page.mtf-calc.broker-card"]:has-text("Zerodha")');
+        await page.waitForTimeout(250);
+        const breakdownTitle = await page.textContent('.sheet-header-title');
+        if (breakdownTitle && breakdownTitle.includes('Zerodha Breakdown')) {
+            report.pass('MTF Calc Breakdown Modal', 'Breakdown sheet opened for Zerodha');
+        } else {
+            report.fail('MTF Calc Breakdown Modal', `Expected title to contain 'Zerodha Breakdown', got '${breakdownTitle}'`);
+        }
+
+        // --- MTF Calculator Breakdown Refs (Assertion 5) ---
+        const breakdownRefs = await page.evaluate(() => {
+            const list = document.querySelectorAll('[data-ref^="sheet.calc-breakdown."]');
+            return Array.from(list).map(el => el.getAttribute('data-ref'));
+        });
+        if (breakdownRefs.length > 5) {
+            report.pass('MTF Calc Breakdown Refs', `Verified ${breakdownRefs.length} sheet.calc-breakdown data-ref keys`);
+        } else {
+            report.fail('MTF Calc Breakdown Refs', `Only found ${breakdownRefs.length} sheet.calc-breakdown keys`);
+        }
+        // Close breakdown sheet
+        await page.evaluate(() => {
+            if (typeof window.closeSheet === 'function') window.closeSheet();
+        });
         await page.waitForTimeout(200);
 
-        // --- Settings ---
-        await page.locator('#page-more .list-group-item', { hasText: 'Settings' }).click();
+        // --- Gold Page Nav & Visibility (Assertion 6) ---
+        await page.evaluate(() => {
+            if (window.page) window.page('/gold');
+        });
+        await page.waitForTimeout(250);
+        if (!(await pageVisible(page, 'page-gold'))) {
+            report.fail('Gold Page Nav', '#page-gold not visible');
+        } else {
+            report.pass('Gold Page Nav', 'Gold Page shown via routing');
+        }
+
+        // --- Gold Page Header Title (Assertion 7) ---
+        const goldHeaderTitle = await page.textContent('[data-ref="page.gold"] h4, [data-ref="page.gold"] .header-title, #page-gold h4');
+        if (goldHeaderTitle && goldHeaderTitle.trim().length > 0) {
+            report.pass('Gold Page Title', `Gold Page header title is visible: "${goldHeaderTitle.trim()}"`);
+        } else {
+            report.fail('Gold Page Title', 'Gold Page header title is missing or empty');
+        }
+
+        // --- Money Page Month Flow Hero Chart Ref (Assertion 8) ---
+        await page.evaluate(() => {
+            if (window.page) window.page('/money');
+        });
+        await page.waitForTimeout(250);
+        const monthFlowRef = await page.locator('[data-ref="page.money.month-flow"]').count();
+        if (monthFlowRef > 0) {
+            report.pass('Money Month Flow Ref', 'Money page month flow hero chart contains data-ref="page.money.month-flow"');
+        } else {
+            report.fail('Money Month Flow Ref', 'Money month flow hero chart data-ref is missing');
+        }
+
+        // --- Money Page Wallet Card Refs (Assertion 9) ---
+        const walletCardRefs = await page.evaluate(() => {
+            const list = document.querySelectorAll('[data-ref^="page.money.wallet-card"]');
+            return Array.from(list).map(el => el.getAttribute('data-ref'));
+        });
+        if (walletCardRefs.length > 0) {
+            report.pass('Money Wallet Card Refs', `Verified presence of ${walletCardRefs.length} money wallet card references`);
+        } else {
+            report.fail('Money Wallet Card Refs', 'Broker wallet card references are missing on money page');
+        }
+
+        // --- Money Filter Click (Assertion 10) ---
+        const hasFilterItem = await page.locator('[data-ref="page.money.filters.all"], [data-ref^="page.money.filters."]').count();
+        if (hasFilterItem > 0) {
+            report.pass('Money Filter Ref', 'Verified presence of Money Page active/filters data-ref list items');
+        } else {
+            report.fail('Money Filter Ref', 'Money Page filter references are missing');
+        }
+
+        // --- Calendar Month Navigation (Assertion 11) ---
+        await page.evaluate(() => {
+            if (window.page) window.page('/calendar');
+        });
+        await page.waitForTimeout(250);
+        const initialCalendarHeader = await page.textContent('[data-ref="page.calendar.header.title"], #page-calendar .calendar-header-title, #page-calendar h4');
+        await page.click('[data-ref="page.calendar.header.next-btn"], #page-calendar .btn-next, #page-calendar button:has(.fa-chevron-right)');
+        await page.waitForTimeout(200);
+        const nextCalendarHeader = await page.textContent('[data-ref="page.calendar.header.title"], #page-calendar .calendar-header-title, #page-calendar h4');
+        if (initialCalendarHeader !== nextCalendarHeader) {
+            report.pass('Calendar Month Nav', `Navigated calendar month successfully from "${initialCalendarHeader?.trim()}" to "${nextCalendarHeader?.trim()}"`);
+        } else {
+            report.fail('Calendar Month Nav', 'Calendar month header did not update after navigating');
+        }
+
+        // --- Watchlist Header Search Toggle (Assertion 12) ---
+        await page.evaluate(() => {
+            if (window.page) window.page('/market');
+        });
+        await page.waitForTimeout(250);
+        await page.click('[data-ref="page.market.header.search-btn"], #page-market button:has(.fa-search)');
+        await page.waitForTimeout(100);
+        const searchInputVisible = await page.locator('[data-ref="page.market.header.search-input"], #marketSearchInput').isVisible();
+        if (searchInputVisible) {
+            report.pass('Watchlist Search Toggle', 'Watchlist header search input toggled visible on click');
+        } else {
+            report.fail('Watchlist Search Toggle', 'Watchlist header search input did not toggle visible');
+        }
+
+        // --- Watchlist element refs (Assertion 13) ---
+        const watchlistCardRefs = await page.locator('[data-ref="page.market.list.item"]').count();
+        if (watchlistCardRefs > 0) {
+            report.pass('Watchlist Element Refs', `Verified presence of ${watchlistCardRefs} watchlist market items`);
+        } else {
+            report.fail('Watchlist Element Refs', 'Watchlist items data-ref is missing');
+        }
+
+        // --- Settings Page Container Ref (Assertion 14) ---
+        await page.evaluate(() => {
+            if (window.page) window.page('/settings');
+        });
         await page.waitForTimeout(250);
         if (!(await pageVisible(page, 'page-settings'))) {
             report.fail('Settings', '#page-settings not shown');
         } else {
             report.pass('Settings', 'Settings page shown');
         }
+        const settingsContainerRef = await page.locator('[data-ref="page.settings.container"]').count();
+        if (settingsContainerRef > 0) {
+            report.pass('Settings Page Ref', 'Settings page container contains data-ref="page.settings.container"');
+        } else {
+            report.fail('Settings Page Ref', 'Settings container data-ref is missing');
+        }
+
+        // --- Settings Page Title (Assertion 15) ---
+        const settingsTitle = await page.textContent('[data-ref="page.settings.container"] h4, #page-settings h4');
+        if (settingsTitle && settingsTitle.trim().length > 0) {
+            report.pass('Settings Title', `Settings header title is visible: "${settingsTitle.trim()}"`);
+        } else {
+            report.fail('Settings Title', 'Settings header title is missing');
+        }
+
+        // --- Global data-ref Rule Audit (Assertion 16 - Bonus!) ---
+        const refAuditResult = await page.evaluate(() => {
+            const elements = document.querySelectorAll('[data-ref]');
+            const invalid = [];
+            const validPattern = /^(page\.[a-z0-9-]+(\.[a-z0-9-]+)*|component\.[a-z0-9-]+(\.[a-z0-9-]+)*|sheet\.[a-z0-9-]+(\.[a-z0-9-]+)*)$/;
+            elements.forEach(el => {
+                const ref = el.getAttribute('data-ref');
+                if (!validPattern.test(ref)) {
+                    invalid.push(ref);
+                }
+            });
+            return { total: elements.length, invalid };
+        });
+        if (refAuditResult.invalid.length === 0 && refAuditResult.total > 20) {
+            report.pass('Global Reference Rules', `Exhaustively audited ${refAuditResult.total} DOM elements; 100% compliant with hierarchical dot-separated data-ref naming rules`);
+        } else {
+            report.fail('Global Reference Rules', `Audited ${refAuditResult.total} elements; invalid formats: ${refAuditResult.invalid.slice(0, 5).join(', ')}`);
+        }
+
+        // Return to more page before restoring default behavior
+        await page.evaluate(() => {
+            if (window.page) window.page('/more');
+        });
+        await page.waitForTimeout(200);
 
         // --- Chrome still present ---
         const chrome = await page.evaluate(() => ({

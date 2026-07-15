@@ -537,30 +537,67 @@
         }
     }
 
-    function getTransactions() { return getStorage().transactions || []; }
+    function getOpenTransactions() { return getStorage().transactions || []; }
+    function getClosedTransactions() {
+        const db = global.MTFDb;
+        return (db && typeof db.getClosedTradesCache === 'function') ? db.getClosedTradesCache() : [];
+    }
+    function getTransactions() { return [...getOpenTransactions(), ...getClosedTransactions()]; }
+    
     function setTransactions(txs) {
+        const openTxs = txs.filter(t => t.status !== 'closed');
+        return setOpenTransactions(openTxs);
+    }
+    
+    function setOpenTransactions(txs) {
         const data = getStorage();
         data.transactions = txs;
         return saveStorage(data);
     }
+    
     function addTransaction(tx) {
-        const txs = getTransactions();
+        const txs = getOpenTransactions();
         tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
         txs.push(tx);
-        return setTransactions(txs).then(() => tx);
+        return setOpenTransactions(txs).then(() => tx);
     }
+    
     function updateTransaction(id, updated) {
-        const txs = getTransactions();
-        const idx = txs.findIndex(t => t.id === id);
-        if (idx === -1) return Promise.resolve(null);
-        txs[idx] = { ...txs[idx], ...updated };
-        return setTransactions(txs).then(() => txs[idx]);
+        const openTxs = getOpenTransactions();
+        const openIdx = openTxs.findIndex(t => t.id === id);
+        if (openIdx !== -1) {
+            openTxs[openIdx] = { ...openTxs[openIdx], ...updated };
+            return setOpenTransactions(openTxs).then(() => openTxs[openIdx]);
+        }
+        
+        const closedTxs = getClosedTransactions();
+        const closedIdx = closedTxs.findIndex(t => t.id === id);
+        if (closedIdx !== -1) {
+            const db = global.MTFDb;
+            if (db && typeof db.archiveTradeToCloud === 'function') {
+                const updatedTx = { ...closedTxs[closedIdx], ...updated };
+                return db.archiveTradeToCloud(updatedTx).then(() => updatedTx);
+            }
+        }
+        return Promise.resolve(null);
     }
+    
     function deleteTransaction(id) {
-        let txs = getTransactions();
-        txs = txs.filter(t => t.id !== id);
-        return setTransactions(txs);
+        const openTxs = getOpenTransactions();
+        if (openTxs.find(t => t.id === id)) {
+            return setOpenTransactions(openTxs.filter(t => t.id !== id));
+        }
+        
+        const closedTxs = getClosedTransactions();
+        if (closedTxs.find(t => t.id === id)) {
+            const db = global.MTFDb;
+            if (db && typeof db.deleteClosedTradeFromCloud === 'function') {
+                return db.deleteClosedTradeFromCloud(id);
+            }
+        }
+        return Promise.resolve(false);
     }
+    
     function getTransaction(id) {
         return getTransactions().find(t => t.id === id) || null;
     }
@@ -663,9 +700,15 @@
     let fbDb = null;
     let syncCode = null;
     let syncUnsub = null;
+    let closedTradesUnsub = null;
+    let closedTradesCache = [];
     let syncStatus = 'off';
     let syncPushPending = 0;
     let localDataVersion = parseInt(localStorage.getItem('mtf_data_version') || '0', 10);
+
+    function getClosedTradesCache() {
+        return closedTradesCache;
+    }
 
     const hooks = {
         showToast: function () {},
@@ -782,6 +825,53 @@
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
         }).finally(() => { syncPushPending--; hooks.hideLoading(); });
+    }
+
+    async function archiveTradeToCloud(tx) {
+        if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
+        const id = tx.id;
+        hooks.showLoading();
+        try {
+            await fbDb.collection('syncs').doc(syncCode).collection('closed_trades').doc(id).set({
+                ...tx,
+                archivedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+            
+            const localData = getStorage();
+            if (localData && localData.transactions) {
+                localData.transactions = localData.transactions.filter(t => t.id !== id);
+                saveStorageLocal(localData); // bypass full sync push to prevent race condition
+                bumpLocalVersionAndPush(localData);
+            }
+            return true;
+        } catch (err) {
+            console.error('Failed to archive trade:', err);
+            return false;
+        } finally {
+            hooks.hideLoading();
+        }
+    }
+
+    async function fetchClosedTradesFromCloud() {
+        if (!fbDb || !syncCode) return [];
+        try {
+            const snap = await fbDb.collection('syncs').doc(syncCode).collection('closed_trades').get();
+            return snap.docs.map(doc => doc.data());
+        } catch (err) {
+            console.error('Failed to fetch closed trades:', err);
+            return [];
+        }
+    }
+
+    async function deleteClosedTradeFromCloud(id) {
+        if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
+        try {
+            await fbDb.collection('syncs').doc(syncCode).collection('closed_trades').doc(id).delete();
+            return true;
+        } catch (err) {
+            console.error('Failed to delete closed trade:', err);
+            return false;
+        }
     }
 
     function mergeTransactions(localTxs, remoteTxs) {
@@ -942,6 +1032,7 @@
 
     function startSyncListener() {
         if (!fbDb || !syncCode) return;
+        
         if (syncUnsub) { try { syncUnsub(); } catch (_) {} }
         syncUnsub = fbDb.collection('syncs').doc(syncCode).onSnapshot(snap => {
             syncStatus = 'connected';
@@ -969,10 +1060,21 @@
             syncStatus = 'error';
             hooks.renderSettings();
         });
+
+        if (closedTradesUnsub) { try { closedTradesUnsub(); } catch (_) {} }
+        closedTradesUnsub = fbDb.collection('syncs').doc(syncCode).collection('closed_trades').onSnapshot(snap => {
+            closedTradesCache = snap.docs.map(doc => doc.data());
+            hooks.refreshAllViews();
+        }, err => {
+            console.warn('closed trades listener error', err);
+        });
     }
 
     function disconnectSync() {
         if (syncUnsub) { try { syncUnsub(); } catch (_) {} syncUnsub = null; }
+        if (closedTradesUnsub) { try { closedTradesUnsub(); } catch (_) {} closedTradesUnsub = null; }
+        closedTradesCache = [];
+        
         if (typeof db.onMoneySyncDisconnected === 'function') {
             try { db.onMoneySyncDisconnected(); } catch (_) {}
         }
@@ -995,6 +1097,10 @@
         isFirebaseConfigured,
         initFirebase,
         cloudPush,
+        archiveTradeToCloud,
+        fetchClosedTradesFromCloud,
+        getClosedTradesCache,
+        deleteClosedTradeFromCloud,
         bumpLocalVersionAndPush,
         applyRemoteVersion,
         getLocalDataVersion,

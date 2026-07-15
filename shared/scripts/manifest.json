@@ -4,7 +4,7 @@
     "shared/lib/format.js",
     "shared/lib/bootstrap.js",
     "shared/lib/broker-logos.js",
-    "components/metrics-grid.js",
+    "components/metrics-cell.js",
     "features/common/app-shell.js",
     "features/common/trade-list.js",
     "features/common/trade-sheets.js",

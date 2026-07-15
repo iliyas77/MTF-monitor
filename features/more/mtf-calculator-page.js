@@ -47,7 +47,7 @@
         const presets = getCalcSellPctPresets();
         wrap.innerHTML = presets.map((p) => {
             const active = calcActiveSellPct != null && Math.abs(calcActiveSellPct - p) < 0.0001;
-            return `<button type="button" class="calc-pct-chip${active ? ' is-active' : ''}" onclick="setCalcSellPct(${p})">${fmtCalcPctLabel(p)}</button>`;
+            return `<button type="button" class="calc-pct-chip${active ? ' is-active' : ''}" onclick="setCalcSellPct(${p})" data-ref="page.mtf-calc.presets.chip">${fmtCalcPctLabel(p)}</button>`;
         }).join('');
     }
 
@@ -82,10 +82,10 @@
             const active = n === selected ? ' is-active' : '';
             const title = n === 1 ? '1x · No leverage' : `${n}x`;
             return `
-                <button type="button" class="calc-lev-card${active}" role="option" aria-selected="${n === selected}" onclick="setCalcLeverage(${n})">
-                    <div class="calc-lev-card-title">${title}</div>
-                    <div class="calc-lev-card-row"><span>Own Margin</span><strong>${investment ? fmtINR(own) : '—'}</strong></div>
-                    <div class="calc-lev-card-row"><span>Broker Funds</span><strong>${investment ? fmtINR(broker) : '—'}</strong></div>
+                <button type="button" class="calc-lev-card${active}" role="option" aria-selected="${n === selected}" onclick="setCalcLeverage(${n})" data-ref="page.mtf-calc.leverage-card">
+                    <div class="calc-lev-card-title" data-ref="page.mtf-calc.leverage-card.title">${title}</div>
+                    <div class="calc-lev-card-row" data-ref="page.mtf-calc.leverage-card.margin-row"><span data-ref="page.mtf-calc.leverage-card.margin-row.label">Own Margin</span><strong data-ref="page.mtf-calc.leverage-card.margin-row.value">${investment ? fmtINR(own) : '—'}</strong></div>
+                    <div class="calc-lev-card-row" data-ref="page.mtf-calc.leverage-card.funds-row"><span data-ref="page.mtf-calc.leverage-card.funds-row.label">Broker Funds</span><strong data-ref="page.mtf-calc.leverage-card.funds-row.value">${investment ? fmtINR(broker) : '—'}</strong></div>
                 </button>
             `;
         }).join('');
@@ -293,9 +293,10 @@
         const stampLabel = isIntraday ? '0.003% buy only' : `${(chargeCfg.stampPct * 100).toFixed(4)}% buy`;
         const typeBadge = isIntraday ? appTag('Intraday', 'warning') : appTag('MTF');
         const { renderIcon } = global.MTFComponents;
+        const baseRef = 'page.mtf-calc.rates';
         return `
-            <h6 class="fw-semibold text-body-secondary mb-2 d-flex flex-wrap align-items-center gap-2">${renderIcon('fa-info-circle', { className: 'me-1' })}${cfg.label} Broker Rates ${typeBadge}</h6>
-            <table class="table table-sm w-100">
+            <h6 class="fw-semibold text-body-secondary mb-2 d-flex flex-wrap align-items-center gap-2" data-ref="${baseRef}.title">${renderIcon('fa-info-circle', { className: 'me-1' })}${cfg.label} Broker Rates ${typeBadge}</h6>
+            <table class="table table-sm w-100" data-ref="${baseRef}.table">
                 <tbody>
                     <tr><td class="text-muted">Interest</td><td class="text-end small">${isIntraday ? 'None (same-day)' : interestLine}</td></tr>
                     <tr><td class="text-muted">Brokerage</td><td class="text-end small">${brkLabel}</td></tr>
@@ -401,33 +402,34 @@
         const { buy, sell, tradeType } = chargeSides(mockTx);
         const levDisplay = result.leverage > 1 ? `${result.leverage}x` : '1x';
         const isIntraday = tradeType === 'intraday' || result.tradeType === 'intraday';
+        const baseRef = 'sheet.calc-breakdown';
         const sameDayNote = intDet.sameDay
-            ? `<div class="alert alert-info py-2 small mb-3">${global.MTFComponents.renderIcon('fa-bolt', { className: 'me-1' })}Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
+            ? `<div class="alert alert-info py-2 small mb-3" data-ref="${baseRef}.alert.same-day">${global.MTFComponents.renderIcon('fa-bolt', { className: 'me-1' })}Same-day trade — <strong>intraday charges</strong> for ${broker} (no MTF interest; STT 0.025% sell only; stamp 0.003% buy; no pledge/DP).</div>`
             : '';
 
         return `
             ${sameDayNote}
             ${renderBrokerRatesPanel(broker, result.mtfAmount, inp.buyDate, inp.sellDate)}
             <hr class="my-3" />
-            <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-hand-holding-usd', { className: 'me-2' })}Funding</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Total Investment</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.totalInvestment)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Your Margin</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.ownMargin)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Broker Funded</span><span class="fs-6 fw-semibold text-end">${fmtDec(result.mtfAmount)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Leverage</span><span class="fs-6 fw-semibold text-end">${levDisplay}</span></div>
-            <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-clock', { className: 'me-2' })}Holding</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="fs-6 fw-semibold text-end">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
-            <div class="small text-uppercase fw-medium text-muted mb-2">${global.MTFComponents.renderIcon('fa-calculator', { className: 'me-2' })}P&L</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">MTF Interest</span><span class="fs-6 fw-semibold text-end text-warning">- ${fmtDec(result.interest)}</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom border-top fw-medium text-body-secondary pt-2 mt-1"><span class="small text-muted">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
-            <div class="small text-uppercase fw-medium text-muted mb-2 mt-3">${global.MTFComponents.renderIcon('fa-percent', { className: 'me-2' })}Interest Detail</div>
-            <div class="bg-light rounded-3 p-2 my-2 fs-6 text-center">
+            <div class="small text-uppercase fw-medium text-muted mb-2" data-ref="${baseRef}.section.funding.title">${global.MTFComponents.renderIcon('fa-hand-holding-usd', { className: 'me-2' })}Funding</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.funding.total-inv.row"><span class="small text-muted" data-ref="${baseRef}.section.funding.total-inv.label">Total Investment</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.funding.total-inv.value">${fmtDec(result.totalInvestment)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.funding.margin.row"><span class="small text-muted" data-ref="${baseRef}.section.funding.margin.label">Your Margin</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.funding.margin.value">${fmtDec(result.ownMargin)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.funding.funded.row"><span class="small text-muted" data-ref="${baseRef}.section.funding.funded.label">Broker Funded</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.funding.funded.value">${fmtDec(result.mtfAmount)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.funding.leverage.row"><span class="small text-muted" data-ref="${baseRef}.section.funding.leverage.label">Leverage</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.funding.leverage.value">${levDisplay}</span></div>
+            <div class="small text-uppercase fw-medium text-muted mb-2" data-ref="${baseRef}.section.holding.title">${global.MTFComponents.renderIcon('fa-clock', { className: 'me-2' })}Holding</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.holding.days.row"><span class="small text-muted" data-ref="${baseRef}.section.holding.days.label">${isIntraday ? 'Trade type' : 'Days Financed'}</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.holding.days.value">${isIntraday ? 'Same day (intraday)' : result.holdingDays + ' day(s)'}</span></div>
+            <div class="small text-uppercase fw-medium text-muted mb-2" data-ref="${baseRef}.section.pnl.title">${global.MTFComponents.renderIcon('fa-calculator', { className: 'me-2' })}P&L</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.pnl.gross.row"><span class="small text-muted" data-ref="${baseRef}.section.pnl.gross.label">Gross Profit</span>${renderAmount(result.grossProfit, { size: 'sm', decimals: true, tone: 'positive', align: 'right' })}</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.pnl.interest.row"><span class="small text-muted" data-ref="${baseRef}.section.pnl.interest.label">MTF Interest</span><span class="fs-6 fw-semibold text-end text-warning" data-ref="${baseRef}.section.pnl.interest.value">- ${fmtDec(result.interest)}</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.pnl.charges.row"><span class="small text-muted" data-ref="${baseRef}.section.pnl.charges.label">Total Charges</span>${renderAmount(result.totalCharges, { size: 'sm', decimals: true, tone: 'negative', align: 'right', showSign: false })}</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom border-top fw-medium text-body-secondary pt-2 mt-1" data-ref="${baseRef}.section.pnl.net.row"><span class="small text-muted" data-ref="${baseRef}.section.pnl.net.label">Net Profit</span>${renderAmount(result.netProfit, { size: 'sm', decimals: true, align: 'right' })}</div>
+            <div class="small text-uppercase fw-medium text-muted mb-2 mt-3" data-ref="${baseRef}.section.interest-detail.title">${global.MTFComponents.renderIcon('fa-percent', { className: 'me-2' })}Interest Detail</div>
+            <div class="bg-light rounded-3 p-2 my-2 fs-6 text-center" data-ref="${baseRef}.section.interest-detail.formula">
                 ${intDet.sameDay ? 'No interest (0 days)' : `${fmtDec(intDet.mtf)} &times; ${(intDet.dailyRate * 100).toFixed(4)}% &times; ${intDet.days}`}
             </div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / day</span><span class="fs-6 fw-semibold text-end">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
-            <div class="d-flex justify-content-between gap-4 py-2 border-bottom"><span class="small text-muted">Rate / year</span><span class="fs-6 fw-semibold text-end">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
-            <div class="small text-uppercase fw-medium text-muted mb-2 mt-3">${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-2' })}Charges Breakdown</div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.interest-detail.rate-day.row"><span class="small text-muted" data-ref="${baseRef}.section.interest-detail.rate-day.label">Rate / day</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.interest-detail.rate-day.value">${(intDet.dailyRate * 100).toFixed(4)}%</span></div>
+            <div class="d-flex justify-content-between gap-4 py-2 border-bottom" data-ref="${baseRef}.section.interest-detail.rate-year.row"><span class="small text-muted" data-ref="${baseRef}.section.interest-detail.rate-year.label">Rate / year</span><span class="fs-6 fw-semibold text-end" data-ref="${baseRef}.section.interest-detail.rate-year.value">${(intDet.annualRate * 100).toFixed(2)}%</span></div>
+            <div class="small text-uppercase fw-medium text-muted mb-2 mt-3" data-ref="${baseRef}.section.charges-breakdown.title">${global.MTFComponents.renderIcon('fa-receipt', { className: 'me-2' })}Charges Breakdown</div>
             ${chargesTable(buy, sell)}
         `;
     }
@@ -482,34 +484,34 @@
             <article class="card bg-body border rounded w-100 trade-position-card calc-broker-card" role="button" tabindex="0"
                 onclick="openCalcBreakdownSheet('${broker}')"
                 onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openCalcBreakdownSheet('${broker}');}"
-                aria-label="${broker} breakdown">
-                <div class="card-body p-3 min-w-0">
-                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
-                        <div class="d-flex align-items-center gap-2 min-w-0">
-                            <span class="trade-position-avatar trade-position-avatar--0" aria-hidden="true">${initial}</span>
-                            <div class="min-w-0">
-                                <div class="fw-semibold text-truncate">${broker}</div>
-                                <div class="mt-1">${typeBadge}</div>
+                aria-label="${broker} breakdown" data-ref="page.mtf-calc.broker-card">
+                <div class="card-body p-3 min-w-0" data-ref="page.mtf-calc.broker-card.body">
+                    <div class="d-flex align-items-start justify-content-between gap-2 mb-2" data-ref="page.mtf-calc.broker-card.header">
+                        <div class="d-flex align-items-center gap-2 min-w-0" data-ref="page.mtf-calc.broker-card.header.left">
+                            <span class="trade-position-avatar trade-position-avatar--0" aria-hidden="true" data-ref="page.mtf-calc.broker-card.header.left.avatar">${initial}</span>
+                            <div class="min-w-0" data-ref="page.mtf-calc.broker-card.header.left.title-wrap">
+                                <div class="fw-semibold text-truncate" data-ref="page.mtf-calc.broker-card.header.left.name">${broker}</div>
+                                <div class="mt-1" data-ref="page.mtf-calc.broker-card.header.left.badge-wrap">${typeBadge}</div>
                             </div>
                         </div>
-                        <div class="text-end flex-shrink-0">
-                            <div class="small text-muted">Net P&amp;L</div>
-                            <div class="fw-semibold ${netTone}">${netLabel}</div>
+                        <div class="text-end flex-shrink-0" data-ref="page.mtf-calc.broker-card.header.right">
+                            <div class="small text-muted" data-ref="page.mtf-calc.broker-card.header.right.net-label">Net P&amp;L</div>
+                            <div class="fw-semibold ${netTone}" data-ref="page.mtf-calc.broker-card.header.right.net-value">${netLabel}</div>
                         </div>
                     </div>
-                    <div class="trade-position-metrics">
-                        <div class="trade-position-grid">
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Interest</span>
-                                <span class="trade-position-value">${fmtDec(result.interest)}</span>
+                    <div class="trade-position-metrics" data-ref="page.mtf-calc.broker-card.metrics">
+                        <div class="trade-position-grid" data-ref="page.mtf-calc.broker-card.metrics.grid">
+                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.interest">
+                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.interest.label">Interest</span>
+                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.interest.value">${fmtDec(result.interest)}</span>
                             </div>
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Charges</span>
-                                <span class="trade-position-value">${fmtDec(result.totalCharges)}</span>
+                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.charges">
+                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.charges.label">Charges</span>
+                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.charges.value">${fmtDec(result.totalCharges)}</span>
                             </div>
-                            <div class="trade-position-cell">
-                                <span class="trade-position-label">Margin</span>
-                                <span class="trade-position-value">${fmtDec(result.ownMargin)}</span>
+                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.margin">
+                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.margin.label">Margin</span>
+                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.margin.value">${fmtDec(result.ownMargin)}</span>
                             </div>
                         </div>
                     </div>
@@ -543,7 +545,7 @@
             paintCalcSummary(null);
             if (totalHost) totalHost.innerHTML = '';
             if (comparePanel) {
-                comparePanel.innerHTML = '<p class="small text-muted mb-0 px-1">Fill in all fields to compare brokers.</p>';
+                comparePanel.innerHTML = '<p class="small text-muted mb-0 px-1" data-ref="page.mtf-calc.compare-panel.empty-hint">Fill in all fields to compare brokers.</p>';
             }
             return;
         }
@@ -568,7 +570,7 @@
             ? `${global.MTFComponents.renderIcon('fa-bolt', { className: 'me-1' })}Same-day — intraday charge rules. Tap a broker for full breakdown.`
             : `${global.MTFComponents.renderIcon('fa-circle-info', { className: 'me-1' })}Overnight — MTF/delivery charges. Tap a broker for full breakdown.`;
         if (comparePanel) {
-            comparePanel.innerHTML = `${cards}<p class="text-muted small mt-2 mb-0 px-1">${footnote}</p>`;
+            comparePanel.innerHTML = `${cards}<p class="text-muted small mt-2 mb-0 px-1" data-ref="page.mtf-calc.compare-panel.footnote">${footnote}</p>`;
         }
     }
 
