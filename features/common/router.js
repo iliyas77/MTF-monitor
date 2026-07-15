@@ -66,6 +66,7 @@
     page('/trades', withLoading, () => renderPage('trades'));
     page('/past', withLoading, () => renderPage('past'));
     page('/market', withLoading, () => renderPage('market'));
+    page('/gold', withLoading, () => renderPage('gold'));
     page('/calendar', withLoading, () => renderPage('calendar'));
     page('/more', withLoading, () => renderPage('more'));
     page('/money', withLoading, () => renderPage('money'));

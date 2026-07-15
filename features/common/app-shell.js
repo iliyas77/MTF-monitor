@@ -13,6 +13,7 @@
     const BOTTOM_BAR_ITEMS = [
         { id: 'trades', label: 'Positions', icon: 'fa-briefcase' },
         { id: 'market', label: 'Watchlist', icon: 'fa-star' },
+        { id: 'gold', label: 'Gold', icon: 'fa-coins' },
         { id: 'calendar', label: 'Calendar', icon: 'fa-calendar-alt' },
         { id: 'more', label: 'More', icon: 'fa-ellipsis-h' }
     ];
@@ -512,6 +513,7 @@
         plan: 'My Positions',
         past: 'My Positions',
         market: 'Watchlist',
+        gold: 'Gold Market',
         calendar: 'Calendar',
         more: 'More'
     };
@@ -541,6 +543,7 @@
     function renderDefaultTitle(pageId) {
         let key = 'trades';
         if (pageId === 'page-market') key = 'market';
+        else if (pageId === 'page-gold') key = 'gold';
         else if (pageId === 'page-calendar') key = 'calendar';
         else if (pageId === 'page-more') key = 'more';
         else if (pageId === 'page-trades' || pageId === 'page-plan' || pageId === 'page-past') {
@@ -573,6 +576,7 @@
         const onSubpage = !!moreFeature;
         const onTrades = pageId === 'page-trades' || pageId === 'page-past' || pageId === 'page-plan';
         const onMarket = pageId === 'page-market';
+        const onGold = pageId === 'page-gold';
         const onCalendar = pageId === 'page-calendar';
         const hideDefault = onSettings || onSubpage;
 
