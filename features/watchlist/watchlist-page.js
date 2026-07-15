@@ -112,7 +112,7 @@
         const rangePct = 50; // mock marker in the middle
 
         return `
-            <div class="wl-cell" data-quote-symbol="${escapeHtml(q.symbol || '')}" data-ref="market.quote-row">
+            <div class="wl-cell cursor-pointer" data-quote-symbol="${escapeHtml(q.symbol || '')}" data-ref="market.quote-row" role="button" tabindex="0" onclick="openPositionBySymbol('${escapeHtml(q.symbol || '')}','${escapeHtml(name).replace(/'/g, "\\'")}')" onkeydown="if(event.key==='Enter'||event.key===' ') {event.preventDefault(); openPositionBySymbol('${escapeHtml(q.symbol || '')}','${escapeHtml(name).replace(/'/g, "\\'")}');}">
                 <!-- Left: Avatar + Company -->
                 <div class="wl-avatar wl-avatar-${avatarTone}">${escapeHtml(symbolInitial(sym))}</div>
                 <div class="wl-meta">
@@ -146,8 +146,8 @@
 
                 <!-- Actions -->
                 <div class="wl-action-col">
-                    <button class="wl-btn" aria-label="Notify"><i class="far fa-bell"></i></button>
-                    <button class="wl-btn" aria-label="More" ${q.removable ? `data-remove-symbol="${escapeHtml(q.symbol || '')}"` : ''}><i class="fas fa-ellipsis-v"></i></button>
+                    <button class="wl-btn" aria-label="Notify" onclick="event.stopPropagation();"><i class="far fa-bell"></i></button>
+                    <button class="wl-btn" aria-label="More" ${q.removable ? `data-remove-symbol="${escapeHtml(q.symbol || '')}"` : ''} onclick="event.stopPropagation();"><i class="fas fa-ellipsis-v"></i></button>
                 </div>
             </div>
         `;
