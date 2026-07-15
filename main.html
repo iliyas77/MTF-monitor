@@ -52,25 +52,24 @@
                     onclick="openSearchPage()" aria-label="Search" data-ref="header.default.search-btn">
                     <i class="fas fa-search" aria-hidden="true" data-ref="header.default.search-btn.icon"></i>
                 </button>
+                <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none"
+                    onclick="openFilterSheet()" aria-label="Filter trades" data-ref="header.default.filter-btn">
+                    <i class="fas fa-filter" aria-hidden="true" data-ref="header.default.filter-btn.icon"></i>
+                </button>
+                <div id="appHeaderMoreBtn" class="dropdown d-none" data-ref="header.default.more">
+                    <button type="button" class="app-header-icon-btn dropdown-toggle" data-bs-toggle="dropdown"
+                        aria-expanded="false" aria-label="Trade view" data-ref="header.default.more-btn">
+                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"
+                            data-ref="header.default.more-btn.icon"></i>
+                    </button>
+                    <ul id="appHeaderMoreMenu" class="dropdown-menu dropdown-menu-end"
+                        data-ref="header.default.more-menu"></ul>
+                </div>
                 <button type="button" id="appHeaderReportBtn" class="app-header-icon-btn d-none"
                     onclick="openCalendarMonthReport()" aria-label="Monthly report"
                     data-ref="header.default.report-btn">
                     <i class="fas fa-file-alt" aria-hidden="true" data-ref="header.default.report-btn.icon"></i>
                 </button>
-                <button type="button" id="appHeaderFilterBtn" class="app-header-icon-btn d-none"
-                    onclick="openFilterSheet()" aria-label="Filter" data-ref="header.default.filter-btn">
-                    <i class="fas fa-filter" aria-hidden="true" data-ref="header.default.filter-btn.icon"></i>
-                </button>
-                <div class="dropdown" id="appHeaderMoreWrap" data-ref="header.default.more-wrap">
-                    <button type="button" id="appHeaderMoreBtn" class="app-header-icon-btn d-none"
-                        data-bs-toggle="dropdown" aria-expanded="false" aria-label="More options"
-                        data-ref="header.default.more-btn">
-                        <i class="fas fa-ellipsis-vertical" aria-hidden="true"
-                            data-ref="header.default.more-btn.icon"></i>
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" id="appHeaderMoreMenu"
-                        data-ref="header.default.more-menu"></ul>
-                </div>
             </div>
         </div>
         <div id="appHeaderSettings" class="d-none d-flex align-items-center gap-2 w-100" data-ref="header.settings">
@@ -180,8 +179,147 @@
             <div><span class="wl-live-dot"></span><span class="text-positive fw-bold">Live</span></div>
             <div class="d-flex align-items-center gap-2">
                 Last updated: <span id="marketLastUpdated">--</span>
-                <button class="btn btn-sm btn-link text-muted p-0" onclick="if(window.refreshMarketQuotes) window.refreshMarketQuotes()"><i class="fas fa-rotate-right"></i></button>
+                <button class="btn btn-sm btn-link text-muted p-0"
+                    onclick="if(window.refreshMarketQuotes) window.refreshMarketQuotes()"><i
+                        class="fas fa-rotate-right"></i></button>
             </div>
+        </div>
+    </section>
+
+    <!-- PAGE: GOLD -->
+    <section id="page-gold" class="w-100 d-none bg-body" data-ref="page.gold" style="padding-bottom: 80px;">
+        <!-- Two Tab Bars: Gold / Silver -->
+        <ul class="nav nav-tabs border-bottom mb-2 px-3 pt-2" id="goldSilverNavTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active px-4 py-2 fw-semibold" id="tab-gold-toggle" data-tab="gold" type="button"
+                    role="tab" aria-selected="true">Gold</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link px-4 py-2 fw-semibold" id="tab-silver-toggle" data-tab="silver" type="button"
+                    role="tab" aria-selected="false">Silver</button>
+            </li>
+        </ul>
+
+        <div class="w-100 d-flex flex-column gap-3">
+            <!-- Filter Row: City / Date / Refresh -->
+            <div class="px-3">
+                <div class="row g-2 align-items-center">
+                    <div class="col-10">
+                        <input type="date" class="form-control form-control-sm" id="goldLookDate"
+                            aria-label="Date Selector" />
+                    </div>
+                    <div class="col-2 d-flex justify-content-end align-items-center gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" id="btnGoldLookRefresh"
+                            aria-label="Refresh rates">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                        <span class="badge bg-light text-muted border py-1 px-2 font-monospace" id="goldCountdownBadge"
+                            style="font-size: 10px;">60s</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loader Skeletons -->
+            <div id="goldLookLoadingState" class="px-3" aria-busy="true" aria-label="Loading prices">
+                <div class="row g-2">
+                    <div class="col-4">
+                        <div class="card bg-body border rounded-3 p-3 text-center">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card bg-body border rounded-3 p-3 text-center">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="card bg-body border rounded-3 p-3 text-center">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error State -->
+            <div id="goldLookErrorState" class="error-state d-none text-center py-5 px-3">
+                <div class="fs-1 mb-2">⚠️</div>
+                <p class="text-danger fw-semibold">Failed to fetch prices.</p>
+                <button type="button" class="btn btn-dark btn-sm mt-2 px-3 py-1" id="btnGoldLookRetry">
+                    <i class="fas fa-redo-alt me-1"></i> Retry
+                </button>
+            </div>
+
+            <!-- Price Summary Cards Grid -->
+            <div class="px-3 d-none" id="goldLookCardsGrid">
+                <div class="row g-2 justify-content-between" id="goldLookSummaryHost">
+                    <!-- Dynamic Summary Cards -->
+                </div>
+            </div>
+
+            <!-- Compact Calculator Component -->
+            <div class="px-3">
+                <div class="card border rounded-3 p-3 bg-light-subtle">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fs-6 fw-bold text-secondary"><i
+                                class="fas fa-calculator text-muted me-1"></i>Calculator</span>
+                        <strong class="text-primary font-monospace fw-bold fs-5" id="calcLookResult">$0.00</strong>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-4">
+                            <select class="form-select form-select-sm" id="calcLookPurity" aria-label="Type selector">
+                                <!-- Dynamic options loaded by JS -->
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <select class="form-select form-select-sm" id="calcLookUnit" aria-label="Unit factor">
+                                <option value="1">Gram</option>
+                                <option value="10">10 Grams</option>
+                                <option value="1000">Kilogram</option>
+                            </select>
+                        </div>
+                        <div class="col-4">
+                            <input type="number" class="form-control form-control-sm" id="calcLookWeight" value="1"
+                                min="0" step="any" aria-label="Weight input" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 30-Day Historical Data Table -->
+            <div class="px-3">
+                <div class="card border rounded-3 p-3 bg-body">
+                    <h3 class="fs-6 fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i>Historical Prices
+                    </h3>
+                    <div class="table-responsive border rounded-3" style="max-height: 280px; overflow-y: auto;">
+                        <table class="table table-sm table-striped table-hover align-middle mb-0"
+                            id="historicalPricesTable">
+                            <thead class="table-light sticky-top" style="z-index: 1;">
+                                <tr id="historicalPricesHeader">
+                                    <!-- Dynamic table headings -->
+                                </tr>
+                            </thead>
+                            <tbody id="historicalPricesBody">
+                                <!-- Dynamic table rows -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer Notes footer -->
+            <div class="px-3">
+                <div class="card bg-body border rounded-3 p-3 text-muted" style="font-size: 11px;">
+                    <p class="mb-0 leading-normal">
+                        <strong>Disclaimer:</strong> Prices are indicative only and do not include GST/making charges.
+                        Table represents daily valuations ending on the selected lookup date. Historical rates are
+                        simulated based on international market pricing index.
+                    </p>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -2131,6 +2269,8 @@
     <script src="features/more/mtf-calculator-page.js"></script>
     <script src="features/more/settings-page.js"></script>
     <script src="features/common/router.js"></script>
+    <script src="features/gold/gold-page.js"></script>
+    <script src="features/gold/gold-services.js"></script>
     <script src="features/more/json-visualizer.js"></script>
     <!-- DB / SERVICE LAYER -->
     <script src="shared/db/_registry.js"></script>

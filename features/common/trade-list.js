@@ -654,29 +654,29 @@
         const daysHeld = getDaysHeld ? getDaysHeld(t) : 0;
         const daysLabel = daysHeld === 1 ? '1 Day' : `${daysHeld} Days`;
         const initial = escapeHtml(companyInitial(company));
-        
+
         const helpers = (global.MTFAppHelpers || {}).tradePages || {};
         const resolveSymbol = helpers.resolveTradeLiveSymbol;
         const getQuote = helpers.getTradeLiveQuote;
         const symbol = resolveSymbol ? resolveSymbol(t) : '';
         const quote = symbol && getQuote ? getQuote(symbol) : null;
         const livePrice = quote && quote.price != null && !isNaN(Number(quote.price)) ? Number(quote.price) : null;
-        
+
         const useLivePnl = !isClosed && livePrice != null;
         const liveReturn = useLivePnl ? estimateLiveReturn(t, livePrice) : null;
         const pnlAmount = liveReturn != null && !isNaN(Number(liveReturn)) ? liveReturn : metrics.netProfit;
-        
+
         const investment = Number(t.totalInvestment) || 0;
         const pnlPct = investment > 0 ? (pnlAmount / investment) * 100 : 0;
         const isPositive = pnlPct >= 0;
-        
+
         const broker = String(t.broker || '').trim();
         const showBroker = broker && !/^none$/i.test(broker);
 
         const buyPrice = Number(t.buyPrice) || 0;
         const targetPrice = getTradeTargetPrice(t);
-        
-        const livePriceValue = isClosed 
+
+        const livePriceValue = isClosed
             ? (Number(metrics.sellPrice) || Number(t.sellPrice) || 0)
             : (livePrice != null ? livePrice : (quote && quote.price != null ? Number(quote.price) : 0));
 
@@ -979,13 +979,126 @@
         const n = Number(net) || 0;
         const inv = Number(invested) || 0;
         const count = Number(holdings) || 0;
+
+        // P&L Formatted
         const pnlFormatted = n > 0 ? '+' + fmtINR(n) : fmtINR(n);
         const pnlToneClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-body');
-        return `<div class="portfolio-summary-cards" role="group" aria-label="Portfolio summary">
-            ${renderPortfolioStatCard('Total P&L', pnlFormatted, pnlToneClass)}
-            ${renderPortfolioStatCard('Total Invested', fmtINR(inv), 'text-body')}
-            ${renderPortfolioStatCard('Total Holdings', String(count), 'text-body')}
-        </div>`;
+        const pnlBgClass = n > 0 ? 'bg-success-subtle' : (n < 0 ? 'bg-danger-subtle' : 'bg-light');
+        const pnlIconClass = n >= 0 ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+        const pnlIconColor = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-secondary');
+
+        // Percentage for P&L
+        const pct = inv > 0 ? (n / inv) * 100 : 0;
+        const pctFormatted = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
+        const pctClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-muted');
+
+        // Determine view mode for positions list header text
+        const viewMode = (global.MTFAppHelpers?.tradePages?.getTradesViewMode?.() || 'trade');
+        let section2Title = `Active Positions (${count})`;
+        let section2Subtitle = 'Live market updates';
+        let section2Icon = 'fa-chart-line';
+        let section2IconBg = 'bg-info-subtle text-info';
+
+        if (viewMode === 'past') {
+            section2Title = `Past Positions (${count})`;
+            section2Subtitle = 'Closed trade history';
+            section2Icon = 'fa-history';
+            section2IconBg = 'bg-secondary-subtle text-secondary';
+        } else if (viewMode === 'all') {
+            section2Title = `All Positions (${count})`;
+            section2Subtitle = 'Open & closed history';
+            section2Icon = 'fa-database';
+            section2IconBg = 'bg-primary-subtle text-primary';
+        }
+
+        // Register window-level sort helper
+        if (typeof window !== 'undefined' && !window.openSortSheet) {
+            window.openSortSheet = function () {
+                if (typeof window.openFilterSheet === 'function') {
+                    window.openFilterSheet();
+                    if (typeof window.setTradeFilterCategory === 'function') {
+                        window.setTradeFilterCategory('sort');
+                    }
+                }
+            };
+        }
+
+        return `
+        <!-- Section 1 Title -->
+        <div class="d-flex align-items-center mb-2 px-1" style="font-size: 18px; font-weight: 600; color: #1f2937;">
+            <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;">
+                <i class="fas fa-chart-simple" style="font-size: 14px;"></i>
+            </span>
+            <span>Portfolio Summary</span>
+        </div>
+        
+        <!-- ONE White Summary Card -->
+        <div class="card bg-white border shadow-none p-3 mb-2" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+            <div class="portfolio-summary-cards row align-items-center w-100 g-0">
+                <!-- Total P&L -->
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 ps-1">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center ${pnlBgClass} flex-shrink-0" style="width: 40px; height: 40px;">
+                        <i class="fas ${pnlIconClass} ${pnlIconColor}" style="font-size: 16px;"></i>
+                    </div>
+                    <div class="d-flex flex-column min-w-0 align-items-start">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total P&L</span>
+                        <strong class="portfolio-stat-value ${pnlToneClass} text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${pnlFormatted}</strong>
+                        <span class="${pctClass} text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(${pctFormatted})</span>
+                    </div>
+                </div>
+                <!-- Vertical Separator -->
+                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;"></div>
+                <!-- Total Invested -->
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 px-2">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-info-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(30, 64, 175, 0.08) !important;">
+                        <i class="fas fa-wallet text-info" style="font-size: 16px; color: #1e40af !important;"></i>
+                    </div>
+                    <div class="d-flex flex-column min-w-0 align-items-start">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total Invested</span>
+                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${fmtINR(inv)}</strong>
+                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(100.00%)</span>
+                    </div>
+                </div>
+                <!-- Vertical Separator -->
+                <div class="col-auto border-start" style="height: 48px; border-color: #E8E8E8 !important;"></div>
+                <!-- Total Holdings -->
+                <div class="portfolio-stat-card col d-flex align-items-center gap-2 pe-1">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle flex-shrink-0" style="width: 40px; height: 40px; background-color: rgba(202, 138, 4, 0.08) !important;">
+                        <i class="fas fa-briefcase text-warning" style="font-size: 16px; color: #ca8a04 !important;"></i>
+                    </div>
+                    <div class="d-flex flex-column min-w-0 align-items-start">
+                        <span class="portfolio-stat-label text-muted text-truncate" style="font-size: 11px; font-weight: 500; line-height: 1.2;">Total Holdings</span>
+                        <strong class="portfolio-stat-value text-dark text-truncate" style="font-size: 15px; font-weight: 700; line-height: 1.2;">${count}</strong>
+                        <span class="text-muted text-truncate" style="font-size: 10px; font-weight: 500; line-height: 1.2;">(100.00%)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 32px Empty Space -->
+        <div style="height: 30px;"></div>
+        
+        <!-- Section 2 Title + Subtitle and Sort/Filter Buttons -->
+        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
+            <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;">
+                    <i class="fas ${section2Icon}" style="font-size: 14px;"></i>
+                </span>
+                <div class="d-flex flex-column">
+                    <h2 class="fs-6 fw-bold text-dark mb-0">${section2Title}</h2>
+                    <span class="text-muted" style="font-size: 11px;">${section2Subtitle}</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;">
+                    <i class="fas fa-arrow-down-wide-short text-muted" style="font-size: 11px;"></i> Sort <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;">
+                    <i class="fas fa-filter text-muted" style="font-size: 11px;"></i> Filter <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                </button>
+            </div>
+        </div>
+        `;
     }
 
     function renderTradeSummaryRow(net, count, countLabel) {

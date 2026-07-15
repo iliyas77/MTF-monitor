@@ -177,11 +177,11 @@ async function build() {
     const themeCss = fs.readFileSync(themeCssPath, 'utf8');
     const js = bundleJs();
 
-    html = html.replace(THEME_LINK_RE, `<style>${themeCss}</style>`);
+    html = html.replace(THEME_LINK_RE, () => `<style>${themeCss}</style>`);
 
     html = html.replace(
         /<!-- COMPONENT SCRIPTS -->[\s\S]*?<script src="main\.js"><\/script>/,
-        `<script>${js}</script>`
+        () => `<script>${js}</script>`
     );
 
     let minified;
