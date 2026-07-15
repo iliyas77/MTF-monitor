@@ -47,7 +47,7 @@
         const presets = getCalcSellPctPresets();
         wrap.innerHTML = presets.map((p) => {
             const active = calcActiveSellPct != null && Math.abs(calcActiveSellPct - p) < 0.0001;
-            return `<button type="button" class="calc-pct-chip${active ? ' is-active' : ''}" onclick="setCalcSellPct(${p})" data-ref="page.mtf-calc.presets.chip">${fmtCalcPctLabel(p)}</button>`;
+            return `<button type="button" class="calc-pct-chip${active ? ' is-active' : ''}" onclick="setCalcSellPct(${p})" data-pct="${p}" data-ref="page.mtf-calc.presets.chip">${fmtCalcPctLabel(p)}</button>`;
         }).join('');
     }
 
