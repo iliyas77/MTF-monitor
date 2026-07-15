@@ -2715,12 +2715,13 @@
             // Update Target Status
             const targetStatusHost = el.querySelector('.trade-position-cell--target-status');
             if (targetStatusHost) {
+                const baseRef = targetStatusHost.getAttribute('data-ref');
                 if (status === 'open' && hasPrice && targetPrice > 0) {
-                    const targetStatus = global.MTFComponents.TargetStatus(livePrice, targetPrice, status, targetReachedBeforeClose);
-
+                    const targetStatus = global.MTFComponents.TargetStatus(livePrice, targetPrice, status, targetReachedBeforeClose, baseRef);
+ 
                     const wasReached = targetStatusHost.querySelector('[data-target-status][data-reached="true"]') !== null;
                     const isReached = targetStatus.isTargetReached;
-
+ 
                     if (wasReached !== isReached) {
                         targetStatusHost.style.transition = 'opacity 200ms ease, transform 200ms ease';
                         targetStatusHost.style.opacity = '0';
@@ -2734,7 +2735,7 @@
                         const leftEl = targetStatusHost.querySelector('[data-target-left]');
                         const pctEl = targetStatusHost.querySelector('[data-target-pct-left]');
                         const diffPctEl = targetStatusHost.querySelector('[data-target-pct-diff]');
-
+ 
                         if (isReached) {
                             if (diffPctEl) {
                                 const diffPct = ((livePrice - targetPrice) / targetPrice) * 100;
@@ -2758,12 +2759,12 @@
                         }
                     }
                 } else if (status === 'closed') {
-                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose, baseRef);
                     if (targetStatusHost.innerHTML !== targetStatus.html) {
                         targetStatusHost.innerHTML = targetStatus.html;
                     }
                 } else if (!hasPrice || !(targetPrice > 0)) {
-                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose);
+                    const targetStatus = global.MTFComponents.TargetStatus(null, targetPrice, status, targetReachedBeforeClose, baseRef);
                     if (targetStatusHost.innerHTML !== targetStatus.html) {
                         targetStatusHost.innerHTML = targetStatus.html;
                     }
@@ -5985,7 +5986,8 @@
                 );
                 const targetReachedBeforeClose = targetPrice > 0 && highestPriceDuringTrade >= targetPrice;
 
-                const saved = await updateTransaction(id, {
+                const closedTx = {
+                    ...tx,
                     status: 'closed',
                     sellPrice,
                     targetReachedBeforeClose,
@@ -5999,9 +6001,26 @@
                     ownMargin: calc.ownMargin,
                     totalInvestment: calc.totalInvestment,
                     breakdown: calc.breakdown
-                });
+                };
+                
+                const pb = document.createElement('div');
+                pb.innerHTML = `<div class="progress" style="height: 4px; position: fixed; top: 0; left: 0; width: 100%; z-index: 1055;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-success" style="width: 100%"></div></div>`;
+                document.body.appendChild(pb);
+                
+                const db = global.MTFDb;
+                let saved = false;
+                if (db && typeof db.archiveTradeToCloud === 'function') {
+                    saved = await db.archiveTradeToCloud(closedTx);
+                } else {
+                    // Fallback to local storage if offline or not configured
+                    saved = await updateTransaction(id, closedTx);
+                }
+                
+                if (pb.parentNode) pb.parentNode.removeChild(pb);
+
                 if (saved) {
-                    showToast('Trade moved to Past Trades.', 'success');
+                    showToast('Update is happened successfully in the database.', 'success');
+                    closeTradeDetail();
                     refreshTradeListViews();
                     renderMoney();
                     refreshActiveMoreView();

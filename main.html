@@ -9,6 +9,7 @@
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
         crossorigin="anonymous" />
+    <link rel="stylesheet" href="shared/css/colors.css" />
     <link rel="stylesheet" href="shared/css/_variables.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -39,7 +40,7 @@
                 <div id="appLoading" class="app-header-sync d-none" aria-live="polite" aria-busy="false"
                     data-ref="header.default.sync">
                     <span class="spinner-border spinner-border-sm text-primary" role="status"
-                        data-ref="header.default.sync.spinner"><span class="visually-hidden">Syncing</span></span>
+                        data-ref="header.default.sync.spinner"><span class="visually-hidden" data-ref="header.default.sync.spinner.text">Syncing</span></span>
                     <span id="appLoadingLabel" class="app-header-sync-label"
                         data-ref="header.default.sync.label">Syncing…</span>
                 </div>
@@ -150,37 +151,37 @@
     <!-- PAGE: WATCHLIST (Market) -->
     <section id="page-market" class="w-100 d-none bg-white" data-ref="page.market" style="padding-bottom: 80px;">
         <!-- Market Summary Carousel -->
-        <div class="pt-3 px-3 w-100">
-            <div id="marketSummaryCarousel" class="wl-carousel w-100"></div>
+        <div class="pt-3 px-3 w-100" data-ref="page.market.summary-carousel-wrapper">
+            <div id="marketSummaryCarousel" class="wl-carousel w-100" data-ref="page.market.summary-carousel"></div>
         </div>
-
+ 
         <!-- Sticky Header -->
-        <div class="wl-header">
-            <div class="wl-col-symbol">Company</div>
-            <div class="wl-col-price">Price</div>
-            <div class="wl-col-pct">% Change</div>
-            <div class="wl-col-range">Day Range</div>
-            <div class="wl-col-action">Actions</div>
+        <div class="wl-header" data-ref="page.market.header">
+            <div class="wl-col-symbol" data-ref="page.market.header.symbol">Company</div>
+            <div class="wl-col-price" data-ref="page.market.header.price">Price</div>
+            <div class="wl-col-pct" data-ref="page.market.header.pct">% Change</div>
+            <div class="wl-col-range" data-ref="page.market.header.range">Day Range</div>
+            <div class="wl-col-action" data-ref="page.market.header.action">Actions</div>
         </div>
-
+ 
         <!-- Watchlist Rows -->
         <div id="marketQuotesList" class="w-100" data-ref="page.market.quotes-list"></div>
-
+ 
         <!-- Add Stock Button -->
-        <div class="wl-footer">
-            <button class="wl-add-btn" id="btnAddStock" onclick="if(window.openMarketSearch) window.openMarketSearch()">
+        <div class="wl-footer" data-ref="page.market.footer">
+            <button class="wl-add-btn" id="btnAddStock" onclick="if(window.openMarketSearch) window.openMarketSearch()" data-ref="page.market.footer.add-btn">
                 <i class="fas fa-plus"></i> Add Stock
             </button>
-            <div class="wl-stock-count" id="marketStockCount">0 / 50 stocks</div>
+            <div class="wl-stock-count" id="marketStockCount" data-ref="page.market.footer.stock-count">0 / 50 stocks</div>
         </div>
-
+ 
         <!-- Live Status Footer -->
-        <div class="wl-live-bar border-top">
-            <div><span class="wl-live-dot"></span><span class="text-positive fw-bold">Live</span></div>
-            <div class="d-flex align-items-center gap-2">
-                Last updated: <span id="marketLastUpdated">--</span>
+        <div class="wl-live-bar border-top" data-ref="page.market.live-bar">
+            <div data-ref="page.market.live-bar.status"><span class="wl-live-dot" data-ref="page.market.live-bar.dot"></span><span class="text-positive fw-bold" data-ref="page.market.live-bar.label">Live</span></div>
+            <div class="d-flex align-items-center gap-2" data-ref="page.market.live-bar.actions">
+                Last updated: <span id="marketLastUpdated" data-ref="page.market.live-bar.last-updated">--</span>
                 <button class="btn btn-sm btn-link text-muted p-0"
-                    onclick="if(window.refreshMarketQuotes) window.refreshMarketQuotes()"><i
+                    onclick="if(window.refreshMarketQuotes) window.refreshMarketQuotes()" data-ref="page.market.live-bar.refresh-btn"><i
                         class="fas fa-rotate-right"></i></button>
             </div>
         </div>
@@ -189,137 +190,137 @@
     <!-- PAGE: GOLD -->
     <section id="page-gold" class="w-100 d-none bg-body" data-ref="page.gold" style="padding-bottom: 80px;">
         <!-- Two Tab Bars: Gold / Silver -->
-        <ul class="nav nav-tabs border-bottom mb-2 px-3 pt-2" id="goldSilverNavTabs" role="tablist">
-            <li class="nav-item" role="presentation">
+        <ul class="nav nav-tabs border-bottom mb-2 px-3 pt-2" id="goldSilverNavTabs" role="tablist" data-ref="page.gold.tabs">
+            <li class="nav-item" role="presentation" data-ref="page.gold.tabs.item-gold">
                 <button class="nav-link active px-4 py-2 fw-semibold" id="tab-gold-toggle" data-tab="gold" type="button"
-                    role="tab" aria-selected="true">Gold</button>
+                    role="tab" aria-selected="true" data-ref="page.gold.tabs.item-gold.btn">Gold</button>
             </li>
-            <li class="nav-item" role="presentation">
+            <li class="nav-item" role="presentation" data-ref="page.gold.tabs.item-silver">
                 <button class="nav-link px-4 py-2 fw-semibold" id="tab-silver-toggle" data-tab="silver" type="button"
-                    role="tab" aria-selected="false">Silver</button>
+                    role="tab" aria-selected="false" data-ref="page.gold.tabs.item-silver.btn">Silver</button>
             </li>
         </ul>
-
-        <div class="w-100 d-flex flex-column gap-3">
+ 
+        <div class="w-100 d-flex flex-column gap-3" data-ref="page.gold.body">
             <!-- Filter Row: City / Date / Refresh -->
-            <div class="px-3">
-                <div class="row g-2 align-items-center">
-                    <div class="col-10">
+            <div class="px-3" data-ref="page.gold.filters">
+                <div class="row g-2 align-items-center" data-ref="page.gold.filters.row">
+                    <div class="col-10" data-ref="page.gold.filters.date-col">
                         <input type="date" class="form-control form-control-sm" id="goldLookDate"
-                            aria-label="Date Selector" />
+                            aria-label="Date Selector" data-ref="page.gold.filters.date-input" />
                     </div>
-                    <div class="col-2 d-flex justify-content-end align-items-center gap-2">
+                    <div class="col-2 d-flex justify-content-end align-items-center gap-2" data-ref="page.gold.filters.actions-col">
                         <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" id="btnGoldLookRefresh"
-                            aria-label="Refresh rates">
+                            aria-label="Refresh rates" data-ref="page.gold.filters.refresh-btn">
                             <i class="fas fa-sync-alt"></i>
                         </button>
                         <span class="badge bg-light text-muted border py-1 px-2 font-monospace" id="goldCountdownBadge"
-                            style="font-size: 10px;">60s</span>
+                            style="font-size: 10px;" data-ref="page.gold.filters.countdown">60s</span>
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Loader Skeletons -->
-            <div id="goldLookLoadingState" class="px-3" aria-busy="true" aria-label="Loading prices">
-                <div class="row g-2">
-                    <div class="col-4">
-                        <div class="card bg-body border rounded-3 p-3 text-center">
-                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
-                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+            <div id="goldLookLoadingState" class="px-3" aria-busy="true" aria-label="Loading prices" data-ref="page.gold.loading-state">
+                <div class="row g-2" data-ref="page.gold.loading-state.grid">
+                    <div class="col-4" data-ref="page.gold.loading-state.col-1">
+                        <div class="card bg-body border rounded-3 p-3 text-center" data-ref="page.gold.loading-state.card-1">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;" data-ref="page.gold.loading-state.title-skeleton-1"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;" data-ref="page.gold.loading-state.price-skeleton-1"></div>
                         </div>
                     </div>
-                    <div class="col-4">
-                        <div class="card bg-body border rounded-3 p-3 text-center">
-                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
-                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+                    <div class="col-4" data-ref="page.gold.loading-state.col-2">
+                        <div class="card bg-body border rounded-3 p-3 text-center" data-ref="page.gold.loading-state.card-2">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;" data-ref="page.gold.loading-state.title-skeleton-2"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;" data-ref="page.gold.loading-state.price-skeleton-2"></div>
                         </div>
                     </div>
-                    <div class="col-4">
-                        <div class="card bg-body border rounded-3 p-3 text-center">
-                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;"></div>
-                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;"></div>
+                    <div class="col-4" data-ref="page.gold.loading-state.col-3">
+                        <div class="card bg-body border rounded-3 p-3 text-center" data-ref="page.gold.loading-state.card-3">
+                            <div class="skeleton-text skeleton-pulse mx-auto w-50" style="height: 10px;" data-ref="page.gold.loading-state.title-skeleton-3"></div>
+                            <div class="skeleton-price skeleton-pulse mx-auto w-70 mt-2" style="height: 18px;" data-ref="page.gold.loading-state.price-skeleton-3"></div>
                         </div>
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Error State -->
-            <div id="goldLookErrorState" class="error-state d-none text-center py-5 px-3">
-                <div class="fs-1 mb-2">⚠️</div>
-                <p class="text-danger fw-semibold">Failed to fetch prices.</p>
-                <button type="button" class="btn btn-dark btn-sm mt-2 px-3 py-1" id="btnGoldLookRetry">
+            <div id="goldLookErrorState" class="error-state d-none text-center py-5 px-3" data-ref="page.gold.error-state">
+                <div class="fs-1 mb-2" data-ref="page.gold.error-state.icon">⚠️</div>
+                <p class="text-danger fw-semibold" data-ref="page.gold.error-state.message">Failed to fetch prices.</p>
+                <button type="button" class="btn btn-dark btn-sm mt-2 px-3 py-1" id="btnGoldLookRetry" data-ref="page.gold.error-state.retry-btn">
                     <i class="fas fa-redo-alt me-1"></i> Retry
                 </button>
             </div>
-
+ 
             <!-- Price Summary Cards Grid -->
-            <div class="px-3 d-none" id="goldLookCardsGrid">
-                <div class="row g-2 justify-content-between" id="goldLookSummaryHost">
+            <div class="px-3 d-none" id="goldLookCardsGrid" data-ref="page.gold.cards-grid">
+                <div class="row g-2 justify-content-between" id="goldLookSummaryHost" data-ref="page.gold.cards-grid.summary-host">
                     <!-- Dynamic Summary Cards -->
                 </div>
             </div>
-
+ 
             <!-- Compact Calculator Component -->
-            <div class="px-3">
-                <div class="card border rounded-3 p-3 bg-light-subtle">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="fs-6 fw-bold text-secondary"><i
+            <div class="px-3" data-ref="page.gold.calculator">
+                <div class="card border rounded-3 p-3 bg-light-subtle" data-ref="page.gold.calculator.card">
+                    <div class="d-flex align-items-center justify-content-between mb-2" data-ref="page.gold.calculator.header">
+                        <span class="fs-6 fw-bold text-secondary" data-ref="page.gold.calculator.title"><i
                                 class="fas fa-calculator text-muted me-1"></i>Calculator</span>
-                        <strong class="text-primary font-monospace fw-bold fs-5" id="calcLookResult">$0.00</strong>
+                        <strong class="text-primary font-monospace fw-bold fs-5" id="calcLookResult" data-ref="page.gold.calculator.result">$0.00</strong>
                     </div>
-                    <div class="row g-2">
-                        <div class="col-4">
-                            <select class="form-select form-select-sm" id="calcLookPurity" aria-label="Type selector">
+                    <div class="row g-2" data-ref="page.gold.calculator.grid">
+                        <div class="col-4" data-ref="page.gold.calculator.col-purity">
+                            <select class="form-select form-select-sm" id="calcLookPurity" aria-label="Type selector" data-ref="page.gold.calculator.purity-select">
                                 <!-- Dynamic options loaded by JS -->
                             </select>
                         </div>
-                        <div class="col-4">
-                            <select class="form-select form-select-sm" id="calcLookUnit" aria-label="Unit factor">
+                        <div class="col-4" data-ref="page.gold.calculator.col-unit">
+                            <select class="form-select form-select-sm" id="calcLookUnit" aria-label="Unit factor" data-ref="page.gold.calculator.unit-select">
                                 <option value="1">Gram</option>
                                 <option value="10">10 Grams</option>
                                 <option value="1000">Kilogram</option>
                             </select>
                         </div>
-                        <div class="col-4">
+                        <div class="col-4" data-ref="page.gold.calculator.col-weight">
                             <input type="number" class="form-control form-control-sm" id="calcLookWeight" value="1"
-                                min="0" step="any" aria-label="Weight input" />
+                                min="0" step="any" aria-label="Weight input" data-ref="page.gold.calculator.weight-input" />
                         </div>
                     </div>
                 </div>
             </div>
-
+ 
             <!-- 30-Day Historical Data Table -->
-            <div class="px-3">
-                <div class="card border rounded-3 p-3 bg-body">
-                    <h3 class="fs-6 fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i>Historical Prices
+            <div class="px-3" data-ref="page.gold.historical">
+                <div class="card border rounded-3 p-3 bg-body" data-ref="page.gold.historical.card">
+                    <h3 class="fs-6 fw-bold mb-2" data-ref="page.gold.historical.title"><i class="fas fa-history text-secondary me-2"></i>Historical Prices
                     </h3>
-                    <div class="table-responsive border rounded-3" style="max-height: 280px; overflow-y: auto;">
+                    <div class="table-responsive border rounded-3" style="max-height: 280px; overflow-y: auto;" data-ref="page.gold.historical.table-container">
                         <table class="table table-sm table-striped table-hover align-middle mb-0"
-                            id="historicalPricesTable">
-                            <thead class="table-light sticky-top" style="z-index: 1;">
-                                <tr id="historicalPricesHeader">
+                            id="historicalPricesTable" data-ref="page.gold.historical.table">
+                            <thead class="table-light sticky-top" style="z-index: 1;" data-ref="page.gold.historical.table.thead">
+                                <tr id="historicalPricesHeader" data-ref="page.gold.historical.table.header-row">
                                     <!-- Dynamic table headings -->
                                 </tr>
                             </thead>
-                            <tbody id="historicalPricesBody">
+                            <tbody id="historicalPricesBody" data-ref="page.gold.historical.table.tbody">
                                 <!-- Dynamic table rows -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
-
+ 
             <!-- Disclaimer Notes footer -->
-            <div class="px-3">
-                <div class="card bg-body border rounded-3 p-3 text-muted" style="font-size: 11px;">
-                    <p class="mb-0 leading-normal">
+            <div class="px-3" data-ref="page.gold.disclaimer">
+                <div class="card bg-body border rounded-3 p-3 text-muted" style="font-size: 11px;" data-ref="page.gold.disclaimer.card">
+                    <p class="mb-0 leading-normal" data-ref="page.gold.disclaimer.text">
                         <strong>Disclaimer:</strong> Prices are indicative only and do not include GST/making charges.
                         Table represents daily valuations ending on the selected lookup date. Historical rates are
                         simulated based on international market pricing index.
                     </p>
                 </div>
             </div>
-
+ 
         </div>
     </section>
 
@@ -386,7 +387,7 @@
                         </div>
                     </div>
 
-                    <div class="cal-net-bar" id="calNetBar" aria-label="Net P&amp;L split">
+                    <div class="cal-net-bar" id="calNetBar" aria-label="Net P&amp;L split" data-ref="page.calendar.net-bar">
                         <div class="cal-net-bar-track" data-ref="page.calendar.net-bar.track">
                             <div class="cal-net-bar-profit" id="calNetBarProfit"
                                 data-ref="page.calendar.net-bar.profit"></div>
@@ -802,7 +803,7 @@
                                 data-ref="page.money-entry.preview.grid.col-center.amount-label">Amount</div>
                             <div class="money-entry-preview-value text-success" id="moneyEntryPreviewAmount"
                                 data-ref="page.money-entry.preview.grid.col-center.amount-value">₹0.00</div>
-                            <div class="money-entry-preview-label mt-3">Date &amp; Time</div>
+                            <div class="money-entry-preview-label mt-3" data-ref="page.money-entry.preview.grid.col-center.datetime-label">Date &amp; Time</div>
                             <div class="money-entry-preview-value" id="moneyEntryPreviewDateTime"
                                 data-ref="page.money-entry.preview.grid.col-center.datetime-value">—</div>
                         </div>
@@ -917,7 +918,7 @@
                         <span class="settings-icon settings-icon--backup" aria-hidden="true"
                             data-ref="page.settings.data-card.list.backup.icon"><i class="fas fa-clipboard"></i></span>
                         <div class="min-w-0 flex-fill" data-ref="page.settings.data-card.list.backup.body">
-                            <div class="settings-card-title">Backup &amp; JSON</div>
+                            <div class="settings-card-title" data-ref="page.settings.data-card.list.backup.title">Backup &amp; JSON</div>
                             <div class="small text-muted" data-ref="page.settings.data-card.list.backup.desc">Copy,
                                 paste, restore, or visualize data</div>
                         </div>
@@ -1004,7 +1005,7 @@
                         <div class="calc-company-title text-truncate" id="calcCompanyTitle"
                             data-ref="page.mtf-calc.company-pick.main.title">Search and select a stock
                         </div>
-                        <div class="calc-company-sub text-truncate" id="calcCompanySub">NSE · Live fill qty, buy &amp;
+                        <div class="calc-company-sub text-truncate" id="calcCompanySub" data-ref="page.mtf-calc.company-pick.main.subtitle">NSE · Live fill qty, buy &amp;
                             target</div>
                     </div>
                 </div>
@@ -2072,108 +2073,108 @@
                             data-ref="sheet.tx-modal.body.form.detail.broker-leverage">
                             <div class="tx-broker-col"
                                 data-ref="sheet.tx-modal.body.form.detail.broker-leverage.broker">
-                                <label class="form-label mb-1" for="txBrokerTrigger">Broker <span
+                                <label class="form-label mb-1" for="txBrokerTrigger" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.broker.label">Broker <span
                                         class="text-danger">*</span></label>
-                                <input type="hidden" id="txBroker" value="" />
-                                <div id="txBrokerHost" class="w-100"></div>
+                                <input type="hidden" id="txBroker" value="" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.broker.input" />
+                                <div id="txBrokerHost" class="w-100" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.broker.host"></div>
                             </div>
                             <div class="tx-leverage-col"
                                 data-ref="sheet.tx-modal.body.form.detail.broker-leverage.leverage">
-                                <label class="form-label mb-1 text-nowrap" for="txLeverage">
+                                <label class="form-label mb-1 text-nowrap" for="txLeverage" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.leverage.label">
                                     <i class="fas fa-bolt text-primary me-1" aria-hidden="true"></i>
                                     Leverage <span class="text-danger">*</span>
                                 </label>
-                                <div class="tx-leverage-field">
+                                <div class="tx-leverage-field" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.leverage.field">
                                     <input type="number" class="form-control tx-leverage-input" id="txLeverage" min="1"
                                         step="any" value="1" inputmode="decimal" aria-label="Leverage value"
                                         oninput="onTxLeverageInput()" onblur="syncTxLeverageDisplay()" />
-                                    <span class="tx-leverage-suffix" aria-hidden="true">x</span>
+                                    <span class="tx-leverage-suffix" aria-hidden="true" data-ref="sheet.tx-modal.body.form.detail.broker-leverage.leverage.suffix">x</span>
                                 </div>
                             </div>
                         </div>
-
+ 
                         <div class="trade-detail-prices tx-form-prices" id="txModalPricesContainer" data-ref="sheet.tx-modal.body.form.detail.prices"></div>
-                        <span class="d-none" id="txSellPriceRequired" aria-hidden="true"></span>
-                        <span class="d-none" id="txSellPriceHint" aria-hidden="true"></span>
-
+                        <span class="d-none" id="txSellPriceRequired" aria-hidden="true" data-ref="sheet.tx-modal.body.form.detail.sell-price-required"></span>
+                        <span class="d-none" id="txSellPriceHint" aria-hidden="true" data-ref="sheet.tx-modal.body.form.detail.sell-price-hint"></span>
+ 
                         <section class="trade-detail-costs mt-3" data-ref="sheet.tx-modal.body.form.detail.costs">
                             <div class="trade-detail-cost-card trade-detail-cost-card--interest" role="group"
                                 aria-label="Interest" data-ref="sheet.tx-modal.body.form.detail.costs.interest">
-                                <span class="trade-detail-cost-head">
+                                <span class="trade-detail-cost-head" data-ref="sheet.tx-modal.body.form.detail.costs.interest.head">
                                     <i class="fas fa-bullseye trade-detail-cost-icon" aria-hidden="true"></i>
-                                    <span class="trade-detail-cost-label">Interest</span>
+                                    <span class="trade-detail-cost-label" data-ref="sheet.tx-modal.body.form.detail.costs.interest.label">Interest</span>
                                 </span>
-                                <span class="trade-detail-cost-value" id="txCostInterest">₹0.00</span>
-                                <span class="trade-detail-cost-meta" id="txCostInterestMeta">0D</span>
+                                <span class="trade-detail-cost-value" id="txCostInterest" data-ref="sheet.tx-modal.body.form.detail.costs.interest.value">₹0.00</span>
+                                <span class="trade-detail-cost-meta" id="txCostInterestMeta" data-ref="sheet.tx-modal.body.form.detail.costs.interest.meta">0D</span>
                             </div>
                             <div class="trade-detail-cost-card trade-detail-cost-card--charges" role="group"
                                 aria-label="Charges" data-ref="sheet.tx-modal.body.form.detail.costs.charges">
-                                <span class="trade-detail-cost-head">
+                                <span class="trade-detail-cost-head" data-ref="sheet.tx-modal.body.form.detail.costs.charges.head">
                                     <i class="fas fa-receipt trade-detail-cost-icon" aria-hidden="true"></i>
-                                    <span class="trade-detail-cost-label">Charges</span>
+                                    <span class="trade-detail-cost-label" data-ref="sheet.tx-modal.body.form.detail.costs.charges.label">Charges</span>
                                 </span>
-                                <span class="trade-detail-cost-value" id="txCostCharges">₹0.00</span>
-                                <span class="trade-detail-cost-meta">One-time</span>
+                                <span class="trade-detail-cost-value" id="txCostCharges" data-ref="sheet.tx-modal.body.form.detail.costs.charges.value">₹0.00</span>
+                                <span class="trade-detail-cost-meta" data-ref="sheet.tx-modal.body.form.detail.costs.charges.meta">One-time</span>
                             </div>
                             <div class="trade-detail-cost-card trade-detail-cost-card--total" role="group"
                                 aria-label="Total cost" data-ref="sheet.tx-modal.body.form.detail.costs.total">
-                                <span class="trade-detail-cost-head">
+                                <span class="trade-detail-cost-head" data-ref="sheet.tx-modal.body.form.detail.costs.total.head">
                                     <i class="fas fa-wallet trade-detail-cost-icon" aria-hidden="true"></i>
-                                    <span class="trade-detail-cost-label">Total</span>
+                                    <span class="trade-detail-cost-label" data-ref="sheet.tx-modal.body.form.detail.costs.total.label">Total</span>
                                 </span>
-                                <span class="trade-detail-cost-value" id="txCostTotal">₹0.00</span>
-                                <span class="trade-detail-cost-meta">Interest + Charges</span>
+                                <span class="trade-detail-cost-value" id="txCostTotal" data-ref="sheet.tx-modal.body.form.detail.costs.total.value">₹0.00</span>
+                                <span class="trade-detail-cost-meta" data-ref="sheet.tx-modal.body.form.detail.costs.total.meta">Interest + Charges</span>
                             </div>
                         </section>
-
+ 
                         <section class="trade-detail-timeline-wrap mt-3"
                             data-ref="sheet.tx-modal.body.form.detail.timeline">
-                            <div class="trade-detail-timeline">
+                            <div class="trade-detail-timeline" data-ref="sheet.tx-modal.body.form.detail.timeline.steps">
                                 <div class="trade-detail-timeline-step"
                                     data-ref="sheet.tx-modal.body.form.detail.timeline.buy">
-                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                    <span class="trade-detail-timeline-icon-wrap" data-ref="sheet.tx-modal.body.form.detail.timeline.buy.icon-wrap"><i
                                             class="fas fa-calendar-plus trade-detail-timeline-icon trade-detail-timeline-icon--buy"
                                             aria-hidden="true"></i></span>
-                                    <span class="trade-detail-timeline-copy">
-                                        <span class="trade-detail-timeline-label">Bought On</span>
-                                        <span class="trade-detail-timeline-value" id="txTimelineBuy">—</span>
+                                    <span class="trade-detail-timeline-copy" data-ref="sheet.tx-modal.body.form.detail.timeline.buy.copy">
+                                        <span class="trade-detail-timeline-label" data-ref="sheet.tx-modal.body.form.detail.timeline.buy.label">Bought On</span>
+                                        <span class="trade-detail-timeline-value" id="txTimelineBuy" data-ref="sheet.tx-modal.body.form.detail.timeline.buy.value">—</span>
                                     </span>
                                 </div>
                                 <span class="trade-detail-timeline-sep" aria-hidden="true"
                                     data-ref="sheet.tx-modal.body.form.detail.timeline.sep-1">
-                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right"
+                                    <span class="trade-detail-timeline-arrow" data-ref="sheet.tx-modal.body.form.detail.timeline.sep-1.arrow"><i class="fas fa-arrow-right"
                                             aria-hidden="true"></i></span>
-                                    <span class="trade-detail-timeline-vline"></span>
+                                    <span class="trade-detail-timeline-vline" data-ref="sheet.tx-modal.body.form.detail.timeline.sep-1.vline"></span>
                                 </span>
                                 <div class="trade-detail-timeline-step"
                                     data-ref="sheet.tx-modal.body.form.detail.timeline.hold">
-                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                    <span class="trade-detail-timeline-icon-wrap" data-ref="sheet.tx-modal.body.form.detail.timeline.hold.icon-wrap"><i
                                             class="fas fa-hourglass-half trade-detail-timeline-icon trade-detail-timeline-icon--hold"
                                             aria-hidden="true"></i></span>
-                                    <span class="trade-detail-timeline-copy">
-                                        <span class="trade-detail-timeline-label">Holding</span>
-                                        <span class="badge rounded-pill trade-detail-hold-badge" id="txTimelineHold">0
+                                    <span class="trade-detail-timeline-copy" data-ref="sheet.tx-modal.body.form.detail.timeline.hold.copy">
+                                        <span class="trade-detail-timeline-label" data-ref="sheet.tx-modal.body.form.detail.timeline.hold.label">Holding</span>
+                                        <span class="badge rounded-pill trade-detail-hold-badge" id="txTimelineHold" data-ref="sheet.tx-modal.body.form.detail.timeline.hold.value">0
                                             Days</span>
                                     </span>
                                 </div>
                                 <span class="trade-detail-timeline-sep" aria-hidden="true"
                                     data-ref="sheet.tx-modal.body.form.detail.timeline.sep-2">
-                                    <span class="trade-detail-timeline-arrow"><i class="fas fa-arrow-right"
+                                    <span class="trade-detail-timeline-arrow" data-ref="sheet.tx-modal.body.form.detail.timeline.sep-2.arrow"><i class="fas fa-arrow-right"
                                             aria-hidden="true"></i></span>
-                                    <span class="trade-detail-timeline-vline"></span>
+                                    <span class="trade-detail-timeline-vline" data-ref="sheet.tx-modal.body.form.detail.timeline.sep-2.vline"></span>
                                 </span>
                                 <div class="trade-detail-timeline-step"
                                     data-ref="sheet.tx-modal.body.form.detail.timeline.exit">
-                                    <span class="trade-detail-timeline-icon-wrap"><i
+                                    <span class="trade-detail-timeline-icon-wrap" data-ref="sheet.tx-modal.body.form.detail.timeline.exit.icon-wrap"><i
                                             class="fas fa-calendar-check trade-detail-timeline-icon trade-detail-timeline-icon--exit"
                                             aria-hidden="true"></i></span>
-                                    <span class="trade-detail-timeline-copy">
-                                        <span class="trade-detail-timeline-label">Expected Exit</span>
-                                        <span class="trade-detail-timeline-value" id="txTimelineExit">—</span>
+                                    <span class="trade-detail-timeline-copy" data-ref="sheet.tx-modal.body.form.detail.timeline.exit.copy">
+                                        <span class="trade-detail-timeline-label" data-ref="sheet.tx-modal.body.form.detail.timeline.exit.label">Expected Exit</span>
+                                        <span class="trade-detail-timeline-value" id="txTimelineExit" data-ref="sheet.tx-modal.body.form.detail.timeline.exit.value">—</span>
                                     </span>
                                 </div>
                             </div>
-                            <p class="trade-detail-timeline-hint mb-0">Dates default to today · Hold 0 days</p>
+                            <p class="trade-detail-timeline-hint mb-0" data-ref="sheet.tx-modal.body.form.detail.timeline.hint">Dates default to today · Hold 0 days</p>
                         </section>
 
                         <span class="d-none" id="previewTotalInv" aria-hidden="true"
@@ -2206,7 +2207,7 @@
     <script src="shared/lib/format.js"></script>
     <script src="shared/lib/bootstrap.js"></script>
     <script src="shared/lib/broker-logos.js"></script>
-    <script src="components/metrics-grid.js"></script>
+    <script src="components/metrics-cell.js"></script>
     <script src="features/common/app-shell.js"></script>
     <script src="features/common/trade-list.js"></script>
     <script src="features/common/trade-sheets.js"></script>

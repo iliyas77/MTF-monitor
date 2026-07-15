@@ -9,7 +9,8 @@
     "verify": "node shared/scripts/verify.js",
     "verify:integrity": "node -e \"const {createReport}=require('./shared/scripts/verify-report');const {runIntegrity}=require('./shared/scripts/verify-integrity');const r=createReport();runIntegrity(r);process.exit(r.print());\"",
     "all": "npm run repair && npm run build && npm run verify",
-    "save": "node shared/scripts/git-save.js"
+    "save": "node shared/scripts/git-save.js",
+    "save-local": "node shared/scripts/git-save-local.js"
   },
   "devDependencies": {
     "html-minifier-terser": "^7.2.0",
