@@ -1027,16 +1027,16 @@
         }
 
         return `
-        <!-- Section 1 Title -->
-        <div class="d-flex align-items-center mb-2 px-1" style="font-size: 18px; font-weight: 600; color: #1f2937;">
-            <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;">
-                <i class="fas fa-chart-simple" style="font-size: 14px;"></i>
-            </span>
-            <span>Portfolio Summary</span>
-        </div>
-        
-        <!-- ONE White Summary Card -->
-        <div class="card bg-white border shadow-none p-3 mb-2" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+        <!-- Portfolio Summary Card -->
+        <div class="card bg-white border shadow-none p-3 mb-4" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+            <!-- Section 1 Title -->
+            <div class="d-flex align-items-center mb-3" style="font-size: 18px; font-weight: 600; color: #1f2937;">
+                <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;">
+                    <i class="fas fa-chart-simple" style="font-size: 14px;"></i>
+                </span>
+                <span>Portfolio Summary</span>
+            </div>
+            
             <div class="portfolio-summary-cards row align-items-center w-100 g-0">
                 <!-- Total P&L -->
                 <div class="portfolio-stat-card col d-flex align-items-center gap-2 ps-1">
@@ -1078,27 +1078,26 @@
             </div>
         </div>
         
-        <!-- 32px Empty Space -->
-        <div style="height: 30px;"></div>
-        
-        <!-- Section 2 Title + Subtitle and Sort/Filter Buttons -->
-        <div class="d-flex align-items-center justify-content-between mb-3 px-1">
-            <div class="d-flex align-items-center gap-2">
-                <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;">
-                    <i class="fas ${section2Icon}" style="font-size: 14px;"></i>
-                </span>
-                <div class="d-flex flex-column">
-                    <h2 class="fs-6 fw-bold text-dark mb-0">${section2Title}</h2>
-                    <span class="text-muted" style="font-size: 11px;">${section2Subtitle}</span>
+        <!-- Active Positions Header Card -->
+        <div class="card bg-white border shadow-none p-3 mb-3" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;">
+                        <i class="fas ${section2Icon}" style="font-size: 14px;"></i>
+                    </span>
+                    <div class="d-flex flex-column">
+                        <h2 class="fs-6 fw-bold text-dark mb-0">${section2Title}</h2>
+                        <span class="text-muted" style="font-size: 11px;">${section2Subtitle}</span>
+                    </div>
                 </div>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;">
-                    <i class="fas fa-arrow-down-wide-short text-muted" style="font-size: 11px;"></i> Sort <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;">
-                    <i class="fas fa-filter text-muted" style="font-size: 11px;"></i> Filter <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;">
+                        <i class="fas fa-arrow-down-wide-short text-muted" style="font-size: 11px;"></i> Sort <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;">
+                        <i class="fas fa-filter text-muted" style="font-size: 11px;"></i> Filter <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                    </button>
+                </div>
             </div>
         </div>
         `;

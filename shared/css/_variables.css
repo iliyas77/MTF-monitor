@@ -2,7 +2,7 @@
 
 :root {
     /* Background */
-    --whole-bg: #f8f9fa;
+    --whole-bg: #fff;
     --gr-bg: #fff;
     --gr-bg-soft: #f4f5f7;
     --gr-bg-ticker: #f8f9fb;
@@ -6456,7 +6456,7 @@ body:has(#appDialog.show) .modal-backdrop {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
     padding: 16px;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    border: none;
+    border: 1px solid var(--gr-border-strong);
     border-left: 4px solid #1677FF;
     font-family: 'Inter', -apple-system, sans-serif;
     overflow: hidden;

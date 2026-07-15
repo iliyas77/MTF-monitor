@@ -106,7 +106,7 @@ function assertSafeToCommit() {
     } catch (e) {
         fail(`git status failed: ${e.message}`);
     }
-    if (!porcelain) return false;
+    if (!porcelain) return [];
 
     const paths = porcelain
         .split('\n')
@@ -120,7 +120,7 @@ function assertSafeToCommit() {
             }
         }
     }
-    return true;
+    return paths;
 }
 
 function main() {
@@ -152,15 +152,18 @@ function main() {
         ? `${commitMessage} (v${version})`
         : commitMessage;
 
-    const hasChanges = assertSafeToCommit();
+    const changedPaths = assertSafeToCommit();
     let committed = false;
 
-    if (hasChanges) {
+    if (changedPaths.length > 0) {
+        const fileListStr = changedPaths.join('\n- ');
+        const finalCommitMessage = `${commitWithVersion}\n\nModified files:\n- ${fileListStr}`;
+        
         try {
             runGit(['add', '-A']);
-            runGit(['commit', '-m', commitWithVersion]);
+            runGit(['commit', '-m', finalCommitMessage]);
             committed = true;
-            console.log(`✓ Committed: ${commitWithVersion}`);
+            console.log(`✓ Committed: ${commitWithVersion} (${changedPaths.length} files)`);
         } catch (e) {
             fail(`git commit failed: ${e.message}`);
         }
