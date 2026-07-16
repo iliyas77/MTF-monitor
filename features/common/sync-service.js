@@ -4,9 +4,9 @@
 (function (global) {
     'use strict';
 
-    const db = global.MTFDb;
-    const FIREBASE_CONFIG = db.FIREBASE_CONFIG;
-    const DEFAULT_SYNC_CODE = db.DEFAULT_SYNC_CODE;
+    function db() {
+        return global.MTFDb || {};
+    }
 
     let fbDb = null;
     let syncCode = null;
@@ -39,11 +39,12 @@
     }
 
     function isFirebaseConfigured() {
-        return FIREBASE_CONFIG &&
-            FIREBASE_CONFIG.apiKey &&
-            FIREBASE_CONFIG.apiKey.indexOf('YOUR_') === -1 &&
-            FIREBASE_CONFIG.projectId &&
-            FIREBASE_CONFIG.projectId.indexOf('YOUR_') === -1;
+        const config = db().FIREBASE_CONFIG;
+        return config &&
+            config.apiKey &&
+            config.apiKey.indexOf('YOUR_') === -1 &&
+            config.projectId &&
+            config.projectId.indexOf('YOUR_') === -1;
     }
 
     function initFirebase() {
@@ -52,7 +53,7 @@
         if (typeof firebase === 'undefined' || !firebase.initializeApp) return false;
         try {
             if (!firebase.apps || !firebase.apps.length) {
-                firebase.initializeApp(FIREBASE_CONFIG);
+                firebase.initializeApp(db().FIREBASE_CONFIG);
             }
             fbDb = firebase.firestore();
             return true;
@@ -557,7 +558,7 @@
 
     function initSyncOnLoad() {
         if (!initFirebase()) return;
-        const saved = localStorage.getItem('mtf_sync_code') || DEFAULT_SYNC_CODE;
+        const saved = localStorage.getItem('mtf_sync_code') || db().DEFAULT_SYNC_CODE;
         if (saved) connectSync(saved, { silent: true });
     }
 
