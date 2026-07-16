@@ -11,8 +11,7 @@
         return;
     }
 
-    // Configure page.js for hash routing
-    page.configure({ hashbang: true });
+    // (Hashbang configuration is done inside page.start below)
 
     // Ensure our dependencies exist
     function getComponents() {
@@ -79,7 +78,7 @@
     });
 
     // Start the router
-    page.start();
+    page.start({ hashbang: true });
 
     // Register empty object to satisfy MTF module requirements
     if (typeof global.MTFRegister === 'function') {

@@ -2854,7 +2854,7 @@
             return out;
         }
 
-        const txs = getTransactions();
+        const txs = getOpenTransactions();
         const isPlan = tradesViewMode === 'plan';
         txs.forEach((t) => {
             if (isPlan ? !isPlannedTrade(t) : !isActiveOpenTrade(t)) return;
@@ -5156,7 +5156,7 @@
     }
 
     function getPastFiltered() {
-        const txs = getTransactions();
+        const txs = getClosedTransactions();
         ensureSharedTradeRange();
 
         let filtered = txs.filter((t) => {
@@ -6009,18 +6009,27 @@
                 
                 const db = global.MTFDb;
                 let saved = false;
-                if (db && typeof db.archiveTradeToCloud === 'function') {
-                    saved = await db.archiveTradeToCloud(closedTx);
-                } else {
-                    // Fallback to local storage if offline or not configured
-                    saved = await updateTransaction(id, closedTx);
+                try {
+                    if (db && typeof db.isSyncConnected === 'function' && db.isSyncConnected() && typeof db.archiveTradeToCloud === 'function') {
+                        saved = await db.archiveTradeToCloud(closedTx);
+                        if (!saved) {
+                            console.warn("Cloud archive failed; falling back to local storage update.");
+                            saved = await updateTransaction(id, closedTx);
+                        }
+                    } else {
+                        // Fallback to local storage if offline or not configured
+                        saved = await updateTransaction(id, closedTx);
+                    }
+                } catch (err) {
+                    console.error('Failed to close trade:', err);
+                    saved = false;
+                } finally {
+                    if (pb.parentNode) pb.parentNode.removeChild(pb);
                 }
-                
-                if (pb.parentNode) pb.parentNode.removeChild(pb);
 
                 if (saved) {
                     showToast('Update is happened successfully in the database.', 'success');
-                    closeTradeDetail();
+                    backFromTradeDetail();
                     refreshTradeListViews();
                     renderMoney();
                     refreshActiveMoreView();
@@ -6427,6 +6436,9 @@
         },
         tradePages: {
             getTransactions,
+            getOpenTransactions,
+            getClosedTransactions,
+            getFeed: (...args) => (window.MTFDb && window.MTFDb.getFeed ? window.MTFDb.getFeed(...args) : Promise.resolve([])),
             isPlannedTrade,
             isActiveOpenTrade,
             sortTradesByHoldDays,
@@ -6450,6 +6462,7 @@
             getPastFrom: () => pastFrom,
             getPastTo: () => pastTo,
             getPastPnlFilter: () => pastPnlFilter,
+            getTradeCancelledOnly: () => tradeCancelledOnly,
             parseDateKey,
             resolveTradeLiveSymbol,
             getTradeLiveQuote,

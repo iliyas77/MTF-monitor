@@ -49,7 +49,7 @@
             getPastTo = () => null,
             getPastPnlFilter = () => 'all',
             parseDateKey,
-            getTransactions
+            getOpenTransactions
         } = tradePages();
 
         if (ensureSharedTradeRange) ensureSharedTradeRange();
@@ -86,7 +86,7 @@
             return;
         }
 
-        const txs = getTransactions ? getTransactions() : [];
+        const txs = getOpenTransactions ? getOpenTransactions() : [];
         let filtered;
         if (isAll) {
             filtered = txs.filter((t) => (t.status || '') !== 'cancelled');
