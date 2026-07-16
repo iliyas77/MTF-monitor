@@ -48,14 +48,32 @@
         return 'Feature: general | Caller: unknown';
     }
 
+    let config = { master: true, db: true, app: true };
+
+    function loadConfig() {
+        if (typeof localStorage !== 'undefined') {
+            config.master = localStorage.getItem('activityLog_master') !== 'false';
+            config.db = localStorage.getItem('activityLog_db') !== 'false';
+            config.app = localStorage.getItem('activityLog_app') !== 'false';
+        }
+    }
+    loadConfig();
+
     const MTFLogger = {
+        updateConfig: function() {
+            loadConfig();
+        },
         log: function(label, ...data) {
+            if (!config.master) return;
+            if (label && label.includes('from DB') && !config.db) return;
             console.log(`[Activity Log] ${getCallerName()} | ${label}`, ...data);
         },
         warn: function(label, ...data) {
+            if (!config.master) return;
             console.warn(`[Activity Log] ${getCallerName()} | ${label}`, ...data);
         },
         error: function(label, ...data) {
+            if (!config.master) return;
             console.error(`[Activity Log] ${getCallerName()} | ${label}`, ...data);
         },
         trace: function(serviceObj, trackName) {
@@ -64,18 +82,26 @@
                 if (typeof originalMethod === 'function') {
                     serviceObj[key] = function(...args) {
                         const callerStr = key;
-                        console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method initiated`);
+                        if (config.master && config.app) {
+                            console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method initiated`);
+                        }
                         try {
                             const result = originalMethod.apply(this, args);
                             if (result instanceof Promise) {
                                 return result.finally(() => {
-                                    console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
+                                    if (config.master && config.app) {
+                                        console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
+                                    }
                                 });
                             }
-                            console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
+                            if (config.master && config.app) {
+                                console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
+                            }
                             return result;
                         } catch (e) {
-                            console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited (with error)`);
+                            if (config.master && config.app) {
+                                console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited (with error)`);
+                            }
                             throw e;
                         }
                     };
