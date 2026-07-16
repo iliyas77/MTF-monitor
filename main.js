@@ -6116,15 +6116,7 @@
 
     function paintBackupDbCallFlushButton() {
         const host = document.getElementById('backupDbCallFlushHost');
-        if (!host || typeof renderAppButton !== 'function') return;
-        const summary = getDbCallSummaryForViz();
-        host.innerHTML = renderAppButton('Save call log to cloud', {
-            variant: summary.dirty ? 'action' : 'cancel',
-            onclick: 'flushDbCallLogToCloud()',
-            icon: 'fa-cloud-upload-alt',
-            fullWidth: true,
-            id: 'backupDbCallFlushBtn'
-        });
+        if (host) host.innerHTML = '';
     }
 
     function refreshBackupVisualizer() {
@@ -6164,33 +6156,7 @@
     }
 
     async function flushDbCallLogToCloud() {
-        const flush = window.MTFDb && window.MTFDb.flushDbCallLogToDatabase;
-        if (typeof flush !== 'function') {
-            showToast('Call log is not available.', 'danger');
-            return;
-        }
-        const btn = document.getElementById('backupDbCallFlushBtn');
-        if (btn) btn.disabled = true;
-        try {
-            const result = await flush();
-            showToast(
-                result && result.ok
-                    ? 'Database call log saved to cloud.'
-                    : 'Saved locally. Connect Cloud Sync to push dbCallLog.',
-                result && result.ok ? 'success' : 'warning'
-            );
-            try {
-                const data = getStorage();
-                const ta = document.getElementById('backupTextArea');
-                if (ta) ta.value = JSON.stringify(data, null, 2);
-            } catch (_) { }
-            refreshBackupVisualizer();
-        } catch (e) {
-            console.warn('flushDbCallLogToCloud failed', e);
-            showToast('Could not save call log.', 'danger');
-        } finally {
-            if (btn) btn.disabled = false;
-        }
+        // Removed
     }
 
     function onBackupTextInput() {
@@ -6637,7 +6603,7 @@
     window.openBackupTextModal = openBackupTextModal;
     window.onBackupTextInput = onBackupTextInput;
     window.refreshBackupVisualizer = refreshBackupVisualizer;
-    window.flushDbCallLogToCloud = flushDbCallLogToCloud;
+    // window.flushDbCallLogToCloud = flushDbCallLogToCloud;
     window.checkMarketFeed = checkMarketFeed;
     window.openSettingsPage = openSettingsPage;
     window.backFromSettings = backFromSettings;

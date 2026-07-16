@@ -26,7 +26,6 @@
     "features/more/settings-page.js",
     "features/calendar/calendar-service.js",
     "features/common/router.js",
-    "features/common/sync-service.js",
     "features/gold/gold-page.js",
     "features/gold/gold-services.js",
     "features/more/json-visualizer.js",

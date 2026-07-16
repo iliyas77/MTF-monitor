@@ -230,7 +230,6 @@ async function runSmoke(report) {
                 addAccount: typeof db.addMoneyAccount === 'function',
                 addEntry: typeof db.addMoneyEntry === 'function',
                 addTransfer: typeof db.addMoneyTransfer === 'function',
-                noteDbCall: typeof db.noteDbCall === 'function',
                 cloudPush: typeof db.cloudPush === 'function',
                 connectSync: typeof db.connectSync === 'function'
             }

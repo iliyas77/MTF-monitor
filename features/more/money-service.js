@@ -492,30 +492,11 @@
     }
 
     function stopMoneyLedgerListeners() {
-        if (ledgerUnsub) { try { ledgerUnsub(); } catch (_) {} ledgerUnsub = null; }
+        // No-op (handled directly by sync-service to avoid duplicate listeners)
     }
 
     function startMoneyLedgerListeners() {
-        stopMoneyLedgerListeners();
-        const d = db();
-        const code = d.getSyncCode && d.getSyncCode();
-        if (!code) return;
-
-        if (typeof d.listenToDocument === 'function') {
-            ledgerUnsub = d.listenToDocument('syncs', code, (res) => {
-                noteDb('read', 'moneyLedgerSnapshot');
-                if (res.success && res.data) {
-                    console.log("[DB] onSnapshot: received moneyLedger document data from Firestore:", res.data);
-                    applyingRemote = true;
-                    try {
-                        applyLedgerFromDocData(res.data);
-                    } finally {
-                        applyingRemote = false;
-                    }
-                    notifyMoneyChanged();
-                }
-            });
-        }
+        // No-op (handled directly by sync-service to avoid duplicate listeners)
     }
 
     function migratedFlagKey(code) {
@@ -676,7 +657,8 @@
         firestoreErrorMessage,
         MONEY_LEDGER_CACHE_KEY: CACHE_KEY,
         getMoneyFeed,
-        updateMoneyItem
+        updateMoneyItem,
+        applyLedgerFromDocData
     });
 
     // Register module
