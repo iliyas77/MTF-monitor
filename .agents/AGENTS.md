@@ -668,3 +668,14 @@ border-color: #e4e6ea;
 ```
 
 The `color.css` file is the project's **single source of truth** for all colors and must be used consistently throughout the application.
+
+## 11. Strict Separation of Concerns for Reusable Components
+
+All UI components located in the `components/` directory (e.g., Grid, MetricsCell, Bottom Sheets, etc.) must remain completely pure and agnostic to the application's business logic.
+
+### Rules
+
+* **No Application-Specific Logic**: Never add domain-specific (e.g., "positions", "trades", "wallets") properties, CSS classes, conditionals, or hardcoded strings inside a reusable component.
+* **Pass Data via Configuration**: If an application feature requires specific HTML attributes, IDs, `data-*` hooks, or layout adjustments, pass them into the component via standard configuration objects (e.g., an `attrs` object) instead of modifying the component itself.
+* **Component-Level Updates Only**: When updating a reusable component, only make changes that improve its generic functionality, structure, or Bootstrap integration. Never modify a component just to satisfy a one-off application requirement.
+* **Use As-Is**: Use reusable components exactly as they are designed. If a component lacks flexibility for a specific generic use case, update it to accept generic configuration parameters rather than adding domain-specific hacks.

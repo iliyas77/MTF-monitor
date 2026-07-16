@@ -314,7 +314,7 @@ async function runSmoke(report) {
                 hasPnl: /Total P\s*&\s*L/i.test(summaryText),
                 hasInvested: /Total Invested/i.test(summaryText),
                 hasHoldings: /Total Holdings/i.test(summaryText),
-                cardCount: summary?.querySelectorAll('[data-component="trade-position-cell"]')?.length || 0,
+                cardCount: summary?.querySelectorAll('[data-component="metrics-cell"]')?.length || 0,
                 rangeAll: !from && !to,
                 listHasTrade: /Smoke Open/i.test(document.getElementById('transactionList')?.textContent || '')
             };
@@ -366,7 +366,7 @@ async function runSmoke(report) {
                 rangeNotAll: !!(from && to),
                 hasHoldings: /Total Holdings/i.test(summary?.textContent || ''),
                 hasPnl: /Total P\s*&\s*L/i.test(summary?.textContent || ''),
-                hasCards: (summary?.querySelectorAll('[data-component="trade-position-cell"]') || []).length === 3,
+                hasCards: (summary?.querySelectorAll('[data-component="metrics-cell"]') || []).length === 3,
                 listText: document.getElementById('transactionList')?.textContent || ''
             };
         });
@@ -418,7 +418,7 @@ async function runSmoke(report) {
         const bucketCounts = await page.evaluate(() => {
             const summary = document.getElementById('summaryOpenStats');
             if (!summary) return { holdings: null, hasInvested: false, cardCount: 0 };
-            const cards = [...summary.querySelectorAll('[data-component="trade-position-cell"]')];
+            const cards = [...summary.querySelectorAll('[data-component="metrics-cell"]')];
             const read = (label) => {
                 const card = cards.find((el) => new RegExp(label, 'i').test(el.querySelector('[class*="text-secondary"]')?.textContent || ''));
                 return card?.querySelector('[class*="fw-bold"]')?.textContent?.trim() || null;

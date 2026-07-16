@@ -1134,7 +1134,8 @@
             </div>
             
             ${renderGrid ? renderGrid({
-                preset: 'portfolio-summary',
+                gridClass: 'portfolio-summary-cards row align-items-center w-100 g-0',
+                type: 'css',
                 dataRef: 'page.trades.portfolio-summary.grid',
                 innerHTML: `${pnlCell}${investedCell}${holdingsCell}`
             }) : `

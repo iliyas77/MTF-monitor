@@ -52,169 +52,6 @@
         return typeof r === 'function' ? r(cell) : '';
     };
 
-    /* ---------- grid presets ---------- */
-
-    const GRID_PRESETS = {
-        /**
-         * Flex-based KPI strip (horizontal scroll).
-         * Wrapper: .trade-position-metrics > .trade-position-grid
-         */
-        metrics: {
-            wrapperClass: 'trade-position-metrics',
-            gridClass: 'trade-position-grid',
-            type: 'flex'
-        },
-        /**
-         * Company info grid — responsive 2→3→4 columns.
-         * CSS class: .ci-grid
-         */
-        ci: {
-            gridClass: 'ci-grid',
-            type: 'css'
-        },
-        /**
-         * Calendar P&L cards — 2 columns.
-         * CSS class: .cal-pl-cards
-         */
-        'pl-cards': {
-            gridClass: 'cal-pl-cards',
-            type: 'css'
-        },
-        /**
-         * Transaction type selector — 4 columns.
-         * CSS class: .money-entry-type-grid
-         */
-        'type-grid': {
-            gridClass: 'money-entry-type-grid',
-            type: 'css'
-        },
-        /**
-         * Trade detail prices — 3 columns with 1px dividers.
-         * CSS class: .trade-detail-prices
-         */
-        prices: {
-            gridClass: 'trade-detail-prices',
-            type: 'css',
-            divider: true
-        },
-        /**
-         * Trade detail market — 2 columns with 1px divider.
-         * CSS class: .trade-detail-market
-         */
-        market: {
-            gridClass: 'trade-detail-market',
-            type: 'css',
-            divider: true
-        },
-        /**
-         * Money wallet metrics — 3 columns.
-         * CSS class: .money-wallet-metrics
-         */
-        'wallet-metrics': {
-            gridClass: 'money-wallet-metrics',
-            type: 'css'
-        },
-        /**
-         * Calculator quick grid — responsive 2→4 columns.
-         * CSS class: .calc-quick-grid
-         */
-        'quick-grid': {
-            gridClass: 'calc-quick-grid',
-            type: 'css'
-        },
-        /**
-         * Trade detail costs — 3 columns.
-         * CSS class: .trade-detail-costs
-         */
-        costs: {
-            gridClass: 'trade-detail-costs',
-            type: 'css'
-        },
-        /**
-         * Transaction status group — 3 columns.
-         * CSS class: .tx-status-group
-         */
-        'status-group': {
-            gridClass: 'tx-status-group',
-            type: 'css'
-        },
-        /**
-         * Transaction summary cards — 3 columns.
-         * CSS class: .tx-summary-cards
-         */
-        'summary-cards': {
-            gridClass: 'tx-summary-cards',
-            type: 'css'
-        },
-        /**
-         * Trade detail costs grid (flex variant with borders).
-         * Wrapper: .trade-detail-costs-grid
-         */
-        'costs-grid': {
-            wrapperClass: 'trade-detail-costs-grid',
-            gridClass: 'trade-position-grid',
-            type: 'flex'
-        },
-        /**
-         * Trade detail timeline grid (flex variant with borders).
-         * Wrapper: .trade-detail-timeline-grid
-         */
-        'timeline-grid': {
-            wrapperClass: 'trade-detail-timeline-grid',
-            gridClass: 'trade-position-grid',
-            type: 'flex'
-        },
-        /**
-         * Trade detail prices grid (flex variant with borders).
-         * Wrapper: .trade-detail-prices-grid
-         */
-        'prices-grid': {
-            wrapperClass: 'trade-detail-prices-grid',
-            gridClass: 'trade-position-grid',
-            type: 'flex'
-        },
-        /**
-         * Trade filters dates — 2 columns.
-         * CSS class: .trade-filters-dates
-         */
-        'filters-dates': {
-            gridClass: 'trade-filters-dates',
-            type: 'css'
-        },
-        /**
-         * Company info summary metrics — responsive 2→4 columns.
-         * CSS class: .cal-summary-metrics
-         */
-        'summary-metrics': {
-            gridClass: 'cal-summary-metrics',
-            type: 'css'
-        },
-        /**
-         * Money entry status — responsive single→3 columns.
-         * CSS class: .money-entry-status
-         */
-        'entry-status': {
-            gridClass: 'money-entry-status',
-            type: 'css'
-        },
-        /**
-         * Money entry preview — responsive 1→4 columns.
-         * CSS class: .money-entry-preview-grid
-         */
-        'entry-preview': {
-            gridClass: 'money-entry-preview-grid',
-            type: 'css'
-        },
-        /**
-         * Portfolio summary cards — row based.
-         * CSS class: .portfolio-summary-cards
-         */
-        'portfolio-summary': {
-            gridClass: 'portfolio-summary-cards row align-items-center w-100 g-0',
-            type: 'css'
-        }
-    };
-
     /* ---------- helpers ---------- */
 
     function attrsToString(attrs, excludeKeys) {
@@ -259,9 +96,8 @@
      * Render a grid container with cells.
      *
      * @param {Object} opts
-     * @param {string} [opts.preset]          - preset name from GRID_PRESETS
      * @param {number} [opts.columns]         - custom column count (for CSS grid)
-     * @param {string} [opts.gridClass]       - custom grid CSS class (overrides preset)
+     * @param {string} [opts.gridClass]       - custom grid CSS class
      * @param {string} [opts.wrapperClass]    - optional outer wrapper class
      * @param {string} [opts.className]       - extra classes on the grid element
      * @param {string} [opts.id]              - id attribute on the grid element
@@ -272,34 +108,20 @@
      * @param {string} [opts.innerHTML]       - raw inner HTML (alternative to cells)
      * @param {Object} [opts.data]            - data-* attributes
      * @param {string} [opts.dataRef]         - data-ref attribute
+     * @param {string} [opts.type]            - 'flex' or 'css'
      * @returns {string}
      */
     function renderGrid(opts) {
         opts = opts || {};
 
-        /* resolve preset */
-        let preset = null;
-        if (opts.preset && GRID_PRESETS[opts.preset]) {
-            preset = GRID_PRESETS[opts.preset];
-        }
-
-        const isFlex = (preset && preset.type === 'flex') || opts.type === 'flex';
-        const useDivider = opts.divider != null ? !!opts.divider : (preset && !!preset.divider);
+        const isFlex = opts.type === 'flex';
+        const useDivider = !!opts.divider;
 
         /* grid CSS class */
-        let gridClass;
-        if (opts.gridClass) {
-            gridClass = opts.gridClass;
-        } else if (preset && preset.gridClass) {
-            gridClass = preset.gridClass;
-        } else if (opts.columns) {
-            gridClass = '';
-        } else {
-            gridClass = 'ci-grid';
-        }
+        let gridClass = opts.gridClass || '';
 
-        /* wrapper class (flex presets need a wrapper) */
-        let wrapperClass = opts.wrapperClass || (preset && preset.wrapperClass) || '';
+        /* wrapper class */
+        let wrapperClass = opts.wrapperClass || '';
 
         /* extra classes */
         const extraClass = opts.className ? ` ${opts.className}` : '';
@@ -331,7 +153,11 @@
         /* assemble grid element */
         const gridTag = isFlex ? 'div' : 'div';
         const componentAttr = wrapperClass ? '' : ' data-component="grid"';
-        const gridHtml = `<${gridTag}${componentAttr} class="${gridClass}${extraClass}"${idAttr}${dataStr}${refAttr}${styleAttr}>${innerHtml}</${gridTag}>`;
+        
+        const cssClasses = [gridClass, extraClass].filter(Boolean).join(' ').trim();
+        const classAttr = cssClasses ? ` class="${cssClasses}"` : '';
+        
+        const gridHtml = `<${gridTag}${componentAttr}${classAttr}${idAttr}${dataStr}${refAttr}${styleAttr}>${innerHtml}</${gridTag}>`;
 
         /* wrap if needed */
         if (wrapperClass) {
@@ -357,8 +183,7 @@
 
     /**
      * Patch a live field inside any grid without full re-render.
-     * Delegates to metrics-cell's updateLiveField for flex grids,
-     * or uses direct DOM query for CSS grids.
+     * Checks for data-live-field and optionally delegates to a generic metric updater if needed.
      *
      * @param {HTMLElement} gridEl - the grid container element
      * @param {string} field      - the data-live-field value to match
@@ -368,13 +193,14 @@
     function updateGridLiveField(gridEl, field, value, toneClass) {
         if (!gridEl || !field) return;
 
-        /* try metrics-cell's updateLiveField first (for flex grids) */
         const updateFn = comps().updateLiveField;
+        
+        // Ensure we pass the element containing the [data-live-field] to updateLiveField
+        // (the cell component's root handles its own fields).
         if (typeof updateFn === 'function') {
-            /* check if this is a flex grid with trade-position-cell children */
-            const flexGrid = gridEl.querySelector('.trade-position-grid');
-            if (flexGrid) {
-                updateFn(flexGrid, field, value, toneClass);
+            // First check if the gridEl itself is the target
+            if (gridEl.querySelector(`[data-live-field="${field}"]`)) {
+                updateFn(gridEl, field, value, toneClass);
                 return;
             }
         }
@@ -396,8 +222,7 @@
         renderGrid,
         renderGrids,
         renderGridDivider,
-        updateGridLiveField,
-        GRID_PRESETS
+        updateGridLiveField
     });
 
 })(typeof window !== 'undefined' ? window : globalThis);
