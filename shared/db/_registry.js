@@ -9,5 +9,6 @@
 
     global.MTFDbRegister = function register(exports) {
         Object.assign(MTFDb, exports);
+        Object.assign(global, exports);
     };
 })(typeof window !== 'undefined' ? window : globalThis);

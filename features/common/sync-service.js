@@ -4,9 +4,11 @@
 (function (global) {
     'use strict';
 
-    function db() {
-        return global.MTFDb || {};
-    }
+    const db = new Proxy({}, {
+        get(target, prop) {
+            return (global.MTFDb || {})[prop];
+        }
+    });
 
     let fbDb = null;
     let syncCode = null;
@@ -584,9 +586,7 @@
         getSyncNote,
         connectSync,
         disconnectSync,
-        initSyncOnLoad,
-        DEFAULT_SYNC_CODE,
-        FIREBASE_CONFIG
+        initSyncOnLoad
     });
 
     // Register module

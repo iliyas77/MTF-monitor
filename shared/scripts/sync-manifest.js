@@ -132,9 +132,9 @@ function repairScripts(existing, onDisk) {
 
     const next = [
         ...preferredLibOrder(allLib),
+        ...preferredDbOrder(allDb),
         ...preferredComponentsOrder(allComponents),
         ...preferredFeaturesOrder(allFeatures),
-        ...preferredDbOrder(allDb),
         ...other.sort()
     ];
 

@@ -4,6 +4,9 @@
     "shared/lib/format.js",
     "shared/lib/bootstrap.js",
     "shared/lib/broker-logos.js",
+    "shared/db/_registry.js",
+    "shared/db/firebase-config.js",
+    "shared/db/db-service.js",
     "components/metrics-cell.js",
     "components/grid.js",
     "features/common/app-shell.js",
@@ -31,9 +34,6 @@
     "features/more/money-service.js",
     "features/positions/positions-service.js",
     "features/watchlist/watchlist-service.js",
-    "shared/db/_registry.js",
-    "shared/db/firebase-config.js",
-    "shared/db/db-service.js",
     "main.js"
   ]
 }
