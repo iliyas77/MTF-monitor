@@ -520,7 +520,7 @@
                 return true;
             }
         } catch (e) {
-            console.warn('NSE catalog fetch failed', e);
+            MTFLogger.warn('NSE catalog fetch failed', e);
         } finally {
             stockCatalogLoading = false;
         }
@@ -1315,7 +1315,7 @@
             try { persistMarketQuoteCacheLocal(); } catch (_) { }
             try { paintAfterQuoteUpdate(); } catch (_) { }
         } catch (err) {
-            console.warn('Company quote refresh failed', err);
+            MTFLogger.warn('Company quote refresh failed', err);
         }
         const openForm = (typeof window.openAddModal === 'function')
             ? window.openAddModal
@@ -1327,7 +1327,7 @@
         try {
             await openForm(meta);
         } catch (err) {
-            console.error('openBuyTradeFromMarket', err);
+            MTFLogger.error('openBuyTradeFromMarket', err);
             showToast('Could not open trade form.', 'danger');
         }
     }
@@ -1706,7 +1706,7 @@
                     showToast(key + ' removed from watchlist', 'success');
                     return true;
                 }).catch((err) => {
-                    console.warn('removeMarketWatchlistSymbol failed', err);
+                    MTFLogger.warn('removeMarketWatchlistSymbol failed', err);
                     showToast('Could not remove from watchlist.', 'danger');
                     try { renderMarketPage(); } catch (_) { }
                     return false;
@@ -2380,13 +2380,13 @@
             }
             if (refreshedOk) {
                 try { persistMarketQuoteCacheLocal(); } catch (e) {
-                    console.warn('Could not save watchlist quotes to localStorage', e);
+                    MTFLogger.warn('Could not save watchlist quotes to localStorage', e);
                 }
             }
         } catch (e) {
             marketError = 'Could not reach market data. Check internet and try again.';
             refreshedOk = false;
-            console.warn('Market quote refresh failed', e);
+            MTFLogger.warn('Market quote refresh failed', e);
         } finally {
             marketLoading = false;
             setMarketHeaderRefreshBusy(false);
@@ -2900,7 +2900,7 @@
                 syncDisplayedQuotesFromMarket(items);
             }
         } catch (e) {
-            console.warn('Trade live price refresh failed', e);
+            MTFLogger.warn('Trade live price refresh failed', e);
         } finally {
             if (seq === tradeLiveRefreshSeq) {
                 tradeLiveRefreshing = false;
@@ -3640,7 +3640,7 @@
             );
             try { showToast('Yes — we are getting real-time market data.', 'success'); } catch (_) { }
         } catch (e) {
-            console.warn('Market feed check failed', e);
+            MTFLogger.warn('Market feed check failed', e);
             setMarketFeedStatusUI(
                 'error',
                 '<span class="text-danger fw-medium">Could not reach live market data.</span><br>' +
@@ -5712,7 +5712,7 @@
                 }
             } catch (err) {
                 if (err && err.message === 'sync_required') return;
-                console.warn('saveMoneyAccount', err);
+                MTFLogger.warn('saveMoneyAccount', err);
                 const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                     ? window.MTFDb.firestoreErrorMessage(err)
                     : (err && err.message) || 'Could not save wallet.';
@@ -5748,7 +5748,7 @@
                     showToast('Wallet deleted from cloud.', 'danger');
                 } catch (err) {
                     if (err && err.message === 'sync_required') return;
-                    console.warn('deleteMoneyAccount', err);
+                    MTFLogger.warn('deleteMoneyAccount', err);
                     const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                         ? window.MTFDb.firestoreErrorMessage(err)
                         : 'Could not delete wallet.';
@@ -5783,7 +5783,7 @@
                     showToast('Entry deleted from cloud.', 'danger');
                 } catch (err) {
                     if (err && err.message === 'sync_required') return;
-                    console.warn('deleteMoneyEntry', err);
+                    MTFLogger.warn('deleteMoneyEntry', err);
                     const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                         ? window.MTFDb.firestoreErrorMessage(err)
                         : 'Could not delete entry.';
@@ -6013,7 +6013,7 @@
                     if (db && typeof db.isSyncConnected === 'function' && db.isSyncConnected() && typeof db.archiveTradeToCloud === 'function') {
                         saved = await db.archiveTradeToCloud(closedTx);
                         if (!saved) {
-                            console.warn("Cloud archive failed; falling back to local storage update.");
+                            MTFLogger.warn("Cloud archive failed; falling back to local storage update.");
                             saved = await updateTransaction(id, closedTx);
                         }
                     } else {
@@ -6021,7 +6021,7 @@
                         saved = await updateTransaction(id, closedTx);
                     }
                 } catch (err) {
-                    console.error('Failed to close trade:', err);
+                    MTFLogger.error('Failed to close trade:', err);
                     saved = false;
                 } finally {
                     if (pb.parentNode) pb.parentNode.removeChild(pb);

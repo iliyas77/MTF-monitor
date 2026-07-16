@@ -7,7 +7,7 @@
 
     // Verify page.js loaded
     if (typeof page === 'undefined') {
-        console.warn('Router: page.js is not loaded.');
+        MTFLogger.warn('Router: page.js is not loaded.');
         return;
     }
 
@@ -52,7 +52,7 @@
         if (typeof global.renderAppPage === 'function') {
             global.renderAppPage(pageId);
         } else {
-            console.warn(`Router: renderAppPage is not defined for route /${pageId}`);
+            MTFLogger.warn(`Router: renderAppPage is not defined for route /${pageId}`);
         }
     }
 
@@ -73,7 +73,7 @@
 
     // Fallback route
     page('*', (ctx) => {
-        console.log('Router: Unknown route', ctx.path);
+        MTFLogger.log('Router: Unknown route', ctx.path);
         page.redirect('/trades');
     });
 

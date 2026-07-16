@@ -158,7 +158,7 @@
             _create() {
                 const CupertinoPane = global.CupertinoPane;
                 if (typeof CupertinoPane !== 'function') {
-                    console.error('CupertinoPane is not loaded');
+                    MTFLogger.error('CupertinoPane is not loaded');
                     return null;
                 }
                 const vh = host._sheetHeight();
@@ -457,7 +457,7 @@
                 confirmPending = null;
                 confirmRun = false;
                 if (run && typeof cb === 'function') {
-                    Promise.resolve(cb()).catch((err) => console.warn('confirm action failed', err));
+                    Promise.resolve(cb()).catch((err) => MTFLogger.warn('confirm action failed', err));
                 }
             });
         }

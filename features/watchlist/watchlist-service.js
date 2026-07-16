@@ -13,7 +13,12 @@
     function getWatchlistFeed(queryConfig = {}, options = {}) {
         const db = global.MTFDb || {};
         if (typeof db.getFeed === 'function') {
-            return db.getFeed(queryConfig, options);
+            return db.getFeed(queryConfig, options).then(res => {
+                if (res && res.length) {
+                    MTFLogger.log('Received watchlist feed from DB:', res);
+                }
+                return res;
+            });
         }
         return Promise.resolve([]);
     }
@@ -34,7 +39,7 @@
     }
 
     function deleteWatchlistItem(symbol) {
-        console.log("[DB] deleteWatchlistItem: soft-deleting watchlist item:", symbol);
+        MTFLogger.log("Action: deleteWatchlistItem", symbol);
         return updateWatchlistItem(symbol, { isDeleted: true });
     }
 

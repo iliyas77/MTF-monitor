@@ -235,6 +235,7 @@
     function saveStorage(data) {
         const payload = ensureMoneyData(data || { transactions: [] });
         stripSmokeTradesFromData(payload);
+        
         saveStorageLocal(payload);
         const db = global.MTFDb;
         if (db && typeof db.bumpLocalVersionAndPush === 'function') {
@@ -327,7 +328,12 @@
         const db = global.MTFDb || {};
         if (typeof db.getFeed === 'function') {
             const nextOptions = { ...options, status: 'open' };
-            return db.getFeed(queryConfig, nextOptions);
+            return db.getFeed(queryConfig, nextOptions).then(res => {
+                if (res && res.length) {
+                    MTFLogger.log('Received positions feed from DB:', res);
+                }
+                return res;
+            });
         }
         return Promise.resolve([]);
     }

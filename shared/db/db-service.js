@@ -55,7 +55,7 @@
             fbDb = firebase.firestore();
             return true;
         } catch (e) {
-            console.warn('Firebase init failed', e);
+            MTFLogger.warn('Firebase init failed', e);
             return false;
         }
     }
@@ -97,9 +97,7 @@
         }
     }
 
-    function noteDb(kind, reason) {
-        // No-op diagnostics logging helper
-    }
+    // noteDb removed
 
     function bumpLocalVersionAndPush(payload) {
         localDataVersion++;
@@ -108,7 +106,7 @@
     }
 
     function cloudPush(data, version) {
-        console.log("[DB] cloudPush: pushing data to Firestore document:", syncCode, data);
+        MTFLogger.log(`Action: cloudPush | SyncCode: ${syncCode}`, data);
         if (!fbDb || !syncCode) return Promise.resolve(false);
         syncPushPending++;
         hooks.showLoading();
@@ -126,14 +124,14 @@
             dataVersion: ver,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }).then(() => true).catch(err => {
-            console.warn('Cloud push failed', err);
+            MTFLogger.warn('Cloud push failed', err);
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
         }).finally(() => { syncPushPending--; hooks.hideLoading(); });
     }
 
     async function archiveTradeToCloud(tx) {
-        console.log("[DB] archiveTradeToCloud: archiving closed trade transaction to Firestore:", tx);
+        MTFLogger.log(`Action: archiveTradeToCloud | TxId: ${tx.id}`);
         if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
         const id = tx.id;
         hooks.showLoading();
@@ -151,7 +149,7 @@
             }
             return true;
         } catch (err) {
-            console.error('Failed to archive trade:', err);
+            MTFLogger.error('Failed to archive trade:', err);
             return false;
         } finally {
             hooks.hideLoading();
@@ -159,26 +157,26 @@
     }
 
     async function fetchClosedTradesFromCloud() {
-        console.log("[DB] fetchClosedTradesFromCloud: fetching closed trades collection from Firestore document:", syncCode);
+        MTFLogger.log(`Action: fetchClosedTradesFromCloud | SyncCode: ${syncCode}`);
         if (!fbDb || !syncCode) return [];
         try {
             const res = await getCollection(`syncs/${syncCode}/closed_trades`, {}, { limit: 20 });
             return res.success ? res.data : [];
         } catch (err) {
-            console.error('Failed to fetch closed trades:', err);
+            MTFLogger.error('Failed to fetch closed trades:', err);
             return [];
         }
     }
 
     async function deleteClosedTradeFromCloud(id) {
         const tx = closedTradesCache.find(t => t.id === id) || null;
-        console.log("[DB] deleteClosedTradeFromCloud: deleting closed trade from Firestore:", tx);
+        MTFLogger.log(`Action: deleteClosedTradeFromCloud | TxId: ${id}`);
         if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
         try {
             const res = await deleteDocument(`syncs/${syncCode}/closed_trades`, id);
             return res.success;
         } catch (err) {
-            console.error('Failed to delete closed trade:', err);
+            MTFLogger.error('Failed to delete closed trade:', err);
             return false;
         }
     }
@@ -222,6 +220,7 @@
     }
 
     function connectSync(rawCode, opts) {
+        MTFLogger.log(`Action: connectSync | Code: ${rawCode}`);
         opts = opts || {};
         if (!initFirebase()) {
             if (!opts.silent) hooks.showToast('Cloud sync is not configured yet.', 'warning');
@@ -308,7 +307,7 @@
             hooks.renderSettings();
             endConnectLoading();
         }).catch(err => {
-            console.warn('connectSync failed', err);
+            MTFLogger.warn('connectSync failed', err);
             syncStatus = 'error';
             if (!opts.silent) {
                 hooks.showToast('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), 'danger');
@@ -319,6 +318,7 @@
     }
 
     function disconnectSync() {
+        MTFLogger.log(`Action: disconnectSync`);
         if (syncUnsub) { try { syncUnsub(); } catch (_) {} syncUnsub = null; }
         if (closedTradesUnsub) { try { closedTradesUnsub(); } catch (_) {} closedTradesUnsub = null; }
         closedTradesCache = [];
@@ -385,7 +385,7 @@
     };
 
     async function getFeed(queryConfig = {}, options = {}) {
-        console.log("[DB] getFeed: fetching data feed with queryConfig:", queryConfig, "options:", options);
+        MTFLogger.log("[DB] getFeed: fetching data feed with queryConfig:", queryConfig, "options:", options);
         
         const limitVal = Number(options.limit) || 20;
         const filters = parseQueryConfig(queryConfig);
@@ -420,7 +420,7 @@
                 const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, { limit: limitVal });
                 return res.success ? res.data : [];
             } catch (err) {
-                console.error('getFeed Firestore query failed:', err);
+                MTFLogger.error('getFeed Firestore query failed:', err);
                 return [];
             }
         }
@@ -432,7 +432,7 @@
                 const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, { limit: limitVal });
                 if (res.success) closedTxs = res.data;
             } catch (err) {
-                console.error('getFeed default closed query failed:', err);
+                MTFLogger.error('getFeed default closed query failed:', err);
             }
         } else {
             closedTxs = (db().getStorage().transactions || []).filter(t => t.status === 'closed');
@@ -451,7 +451,7 @@
         
         if (viewMode !== 'past') {
             if (closedTradesUnsub) {
-                console.log("[DB] syncClosedTradesListener: view mode is not 'past', unsubscribing from closed trades.");
+                MTFLogger.log("[DB] syncClosedTradesListener: view mode is not 'past', unsubscribing from closed trades.");
                 try { closedTradesUnsub(); } catch (_) {}
                 closedTradesUnsub = null;
             }
@@ -488,13 +488,13 @@
             closedTradesUnsub = null;
         }
         
-        console.log(`[DB] syncClosedTradesListener: subscribing with query key: ${queryKey}`);
+        MTFLogger.log(`[DB] syncClosedTradesListener: subscribing with query key: ${queryKey}`);
         closedTradesUnsub = listenToCollection(
             `syncs/${syncCode}/closed_trades`,
             (res) => {
                 if (res.success) {
                     closedTradesCache = res.data;
-                    console.log("[DB] onSnapshot: received filtered closed trades collection from Firestore (limited to 20):", closedTradesCache);
+                    MTFLogger.log("[DB] onSnapshot: received filtered closed trades collection from Firestore (limited to 20):", closedTradesCache);
                     hooks.refreshAllViews();
                 }
             },
@@ -504,140 +504,98 @@
     }
 
     // ----- Core CRUD operations (v8 compat style) -----
-    function getCallerName() {
-        try {
-            const stack = new Error().stack;
-            if (!stack) return 'general | unknown';
-            const lines = stack.split('\n');
-            for (let i = 2; i < lines.length; i++) {
-                const line = lines[i];
-                if (line.includes('db-service.js')) continue;
-                
-                let callerName = 'unknown';
-                let track = 'general';
-
-                const funcMatch = line.match(/at\s+([a-zA-Z0-9_$$.]+)\s+\(/);
-                if (funcMatch && funcMatch[1]) {
-                    const parts = funcMatch[1].split('.');
-                    callerName = parts[parts.length - 1];
-                } else {
-                    const anonMatch = line.match(/at\s+(.+:\d+:\d+)/);
-                    if (anonMatch && anonMatch[1]) {
-                        const cleanPath = anonMatch[1].replace(/.*\//, '');
-                        callerName = `anonymous (${cleanPath})`;
-                    }
-                }
-
-                const searchStr = (line + ' ' + callerName).toLowerCase();
-                if (searchStr.includes('positions') || searchStr.includes('trade') || searchStr.includes('transaction') || searchStr.includes('past')) {
-                    track = 'positions';
-                } else if (searchStr.includes('watchlist') || searchStr.includes('market') || searchStr.includes('quote')) {
-                    track = 'watchlist';
-                } else if (searchStr.includes('money') || searchStr.includes('ledger') || searchStr.includes('wallet') || searchStr.includes('account') || searchStr.includes('entry') || searchStr.includes('transfer')) {
-                    track = 'money';
-                } else if (searchStr.includes('calendar')) {
-                    track = 'calendar';
-                } else if (searchStr.includes('sync') || searchStr.includes('push') || searchStr.includes('cloud') || searchStr.includes('firebase')) {
-                    track = 'sync';
-                }
-
-                return `${track} | ${callerName}`;
-            }
-        } catch (_) {}
-        return 'general | unknown';
-    }
 
     async function createDocument(collectionPath, data, docId = null) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: createDocument | Collection: ${collectionPath} | docId: ${docId}`, JSON.stringify(data, null, 2));
+        MTFLogger.log(`Action: createDocument | Collection: ${collectionPath} | docId: ${docId}`, data);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | createDocument failed: Database offline`);
+                MTFLogger.warn(`createDocument failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const col = fb.collection(collectionPath);
             const ref = docId ? col.doc(docId) : col.doc();
             const finalData = { ...data, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
             await ref.set(finalData, { merge: true });
-            console.log(`[DB Core] Caller: ${getCallerName()} | createDocument success | Created ID: ${ref.id}`);
+            MTFLogger.log(`createDocument success | Created ID: ${ref.id}`);
             return { success: true, id: ref.id };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | createDocument error:`, error);
+            MTFLogger.error(`createDocument error:`, error);
             return { success: false, error };
         }
     }
 
     async function getDocument(collectionPath, docId) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: getDocument | Collection: ${collectionPath} | docId: ${docId}`);
+        MTFLogger.log(`Action: getDocument | Collection: ${collectionPath} | docId: ${docId}`);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | getDocument failed: Database offline`);
+                MTFLogger.warn(`getDocument failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const ref = fb.collection(collectionPath).doc(docId);
             const snapshot = await ref.get();
             if (!snapshot.exists) {
-                console.log(`[DB Core] Caller: ${getCallerName()} | getDocument: Document not found at ${collectionPath}/${docId}`);
+                MTFLogger.log(`getDocument: Document not found at ${collectionPath}/${docId}`);
                 return { success: false, error: 'Document not found' };
             }
             const docData = snapshot.data();
             if (docData && docData.isDeleted === true) {
-                console.log(`[DB Core] Caller: ${getCallerName()} | getDocument: Document is soft-deleted at ${collectionPath}/${docId}`);
+                MTFLogger.log(`getDocument: Document is soft-deleted at ${collectionPath}/${docId}`);
                 return { success: false, error: 'Document not found' };
             }
-            console.log(`[DB Core] Caller: ${getCallerName()} | getDocument success | Data:`, JSON.stringify(docData, null, 2));
+            MTFLogger.log(`[DB Core] ${getCallerName()} | getDocument success | Data:`, docData);
             return { success: true, data: { id: snapshot.id, ...docData } };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | getDocument error:`, error);
+            MTFLogger.error(`getDocument error:`, error);
             return { success: false, error };
         }
     }
 
     async function updateDocument(collectionPath, docId, data) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: updateDocument | Collection: ${collectionPath} | docId: ${docId}`, JSON.stringify(data, null, 2));
+        MTFLogger.log(`Action: updateDocument | Collection: ${collectionPath} | docId: ${docId}`, data);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | updateDocument failed: Database offline`);
+                MTFLogger.warn(`updateDocument failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const ref = fb.collection(collectionPath).doc(docId);
             const finalData = { ...data, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
             await ref.update(finalData);
-            console.log(`[DB Core] Caller: ${getCallerName()} | updateDocument success`);
+            MTFLogger.log(`updateDocument success`);
             return { success: true };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | updateDocument error:`, error);
+            MTFLogger.error(`updateDocument error:`, error);
             return { success: false, error };
         }
     }
 
     async function deleteDocument(collectionPath, docId) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: deleteDocument (Soft-Delete) | Collection: ${collectionPath} | docId: ${docId}`);
+        MTFLogger.log(`Action: deleteDocument (Soft-Delete) | Collection: ${collectionPath} | docId: ${docId}`);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | deleteDocument failed: Database offline`);
+                MTFLogger.warn(`deleteDocument failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const ref = fb.collection(collectionPath).doc(docId);
             const finalData = { isDeleted: true, deletedAt: firebase.firestore.FieldValue.serverTimestamp() };
             await ref.update(finalData);
-            console.log(`[DB Core] Caller: ${getCallerName()} | deleteDocument (Soft-Delete) success`);
+            MTFLogger.log(`deleteDocument (Soft-Delete) success`);
             return { success: true };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | deleteDocument error:`, error);
+            MTFLogger.error(`deleteDocument error:`, error);
             return { success: false, error };
         }
     }
 
     async function getCollection(collectionPath, queryConfig = {}, options = {}) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: getCollection | Collection: ${collectionPath} | QueryConfig:`, JSON.stringify(queryConfig, null, 2), `| Options:`, JSON.stringify(options, null, 2));
+        MTFLogger.log(`Action: getCollection | Collection: ${collectionPath} | QueryConfig:`, queryConfig, `| Options:`, options);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | getCollection failed: Database offline`);
+                MTFLogger.warn(`getCollection failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const filters = parseQueryConfig(queryConfig);
@@ -658,19 +616,19 @@
             const data = snapshot.docs
                 .map((doc) => ({ id: doc.id, ...doc.data() }))
                 .filter(item => item.isDeleted !== true);
-            console.log(`[DB Core] Caller: ${getCallerName()} | getCollection success | Result Feed (${data.length} items):`, JSON.stringify(data, null, 2));
+            MTFLogger.log(`[DB Core] ${getCallerName()} | getCollection success | Result Feed (${data.length} items):`, data);
             return { success: true, data };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | getCollection error:`, error);
+            MTFLogger.error(`getCollection error:`, error);
             return { success: false, error };
         }
     }
 
     function listenToCollection(collectionPath, callback, queryConfig = {}, options = {}) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: listenToCollection | Collection: ${collectionPath} | QueryConfig:`, JSON.stringify(queryConfig, null, 2), `| Options:`, JSON.stringify(options, null, 2));
+        MTFLogger.log(`Action: listenToCollection | Collection: ${collectionPath} | QueryConfig:`, queryConfig, `| Options:`, options);
         const fb = firestore();
         if (!fb) {
-            console.warn(`[DB Core] Caller: ${getCallerName()} | listenToCollection failed: Database offline`);
+            MTFLogger.warn(`listenToCollection failed: Database offline`);
             callback({ success: false, error: 'Database offline' });
             return () => {};
         }
@@ -693,11 +651,11 @@
                 const data = snapshot.docs
                     .map((doc) => ({ id: doc.id, ...doc.data() }))
                     .filter(item => item.isDeleted !== true);
-                console.log(`[DB Core] Caller: ${getCallerName()} | listenToCollection snapshot trigger | Feed (${data.length} items):`, JSON.stringify(data, null, 2));
+                MTFLogger.log(`[DB Core] ${getCallerName()} | listenToCollection snapshot trigger | Feed (${data.length} items):`, data);
                 callback({ success: true, data });
             },
             (error) => {
-                console.error(`[DB Core] Caller: ${getCallerName()} | listenToCollection error:`, error);
+                MTFLogger.error(`listenToCollection error:`, error);
                 callback({ success: false, error });
             }
         );
@@ -705,10 +663,10 @@
     }
 
     function listenToDocument(collectionPath, docId, callback) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: listenToDocument | Collection: ${collectionPath} | docId: ${docId}`);
+        MTFLogger.log(`Action: listenToDocument | Collection: ${collectionPath} | docId: ${docId}`);
         const fb = firestore();
         if (!fb) {
-            console.warn(`[DB Core] Caller: ${getCallerName()} | listenToDocument failed: Database offline`);
+            MTFLogger.warn(`listenToDocument failed: Database offline`);
             callback({ success: false, error: 'Database offline' });
             return () => {};
         }
@@ -722,19 +680,19 @@
                         if (docData.dbCallLog) delete docData.dbCallLog;
                     }
                     if (docData && docData.isDeleted === true) {
-                        console.log(`[DB Core] Caller: ${getCallerName()} | listenToDocument snapshot trigger: Document is soft-deleted at ${collectionPath}/${docId}`);
+                        MTFLogger.log(`listenToDocument snapshot trigger: Document is soft-deleted at ${collectionPath}/${docId}`);
                         callback({ success: false, error: 'Document not found' });
                         return;
                     }
-                    console.log(`[DB Core] Caller: ${getCallerName()} | listenToDocument snapshot trigger | docId: ${snapshot.id} | Data:`, JSON.stringify(docData, null, 2));
+                    MTFLogger.log(`[DB Core] ${getCallerName()} | listenToDocument snapshot trigger | docId: ${snapshot.id} | Data:`, docData);
                     callback({ success: true, data: { id: snapshot.id, ...docData } });
                 } else {
-                    console.log(`[DB Core] Caller: ${getCallerName()} | listenToDocument snapshot trigger: Document not found at ${collectionPath}/${docId}`);
+                    MTFLogger.log(`listenToDocument snapshot trigger: Document not found at ${collectionPath}/${docId}`);
                     callback({ success: false, error: 'Document not found' });
                 }
             },
             (error) => {
-                console.error(`[DB Core] Caller: ${getCallerName()} | listenToDocument error:`, error);
+                MTFLogger.error(`listenToDocument error:`, error);
                 callback({ success: false, error });
             }
         );
@@ -742,11 +700,11 @@
     }
 
     async function batchWrite(operations) {
-        console.log(`[DB Core] Caller: ${getCallerName()} | Action: batchWrite | Operations:`, JSON.stringify(operations, null, 2));
+        MTFLogger.log(`Action: batchWrite | Operations:`, operations);
         try {
             const fb = firestore();
             if (!fb) {
-                console.warn(`[DB Core] Caller: ${getCallerName()} | batchWrite failed: Database offline`);
+                MTFLogger.warn(`batchWrite failed: Database offline`);
                 return { success: false, error: 'Database offline' };
             }
             const batch = fb.batch();
@@ -767,10 +725,10 @@
                 }
             });
             await batch.commit();
-            console.log(`[DB Core] Caller: ${getCallerName()} | batchWrite success`);
+            MTFLogger.log(`batchWrite success`);
             return { success: true };
         } catch (error) {
-            console.error(`[DB Core] Caller: ${getCallerName()} | batchWrite error:`, error);
+            MTFLogger.error(`batchWrite error:`, error);
             return { success: false, error };
         }
     }
@@ -808,12 +766,6 @@
         getSyncNote,
         connectSync,
         disconnectSync,
-        initSyncOnLoad,
-        // Dummy call-log APIs to satisfy smoke test and main.js after deleting call-log-service
-        noteDbCall: () => {},
-        hydrateDbCallLogFromRemote: () => {},
-        mergeDbCallLogs: (a) => a || {},
-        normalizeDbCallLog: (a) => a || {},
-        flushDbCallLogToDatabase: () => Promise.resolve({ ok: true, log: {} })
+        initSyncOnLoad
     });
 })(typeof window !== 'undefined' ? window : globalThis);

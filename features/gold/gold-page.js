@@ -354,7 +354,7 @@
 
             showSkeleton(false);
         } catch (err) {
-            console.error('Update UI error:', err);
+            MTFLogger.error('Update UI error:', err);
             showSkeleton(false);
             
             if (errorView) {

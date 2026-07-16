@@ -12,7 +12,12 @@
     function getCalendarFeed(queryConfig = {}, options = {}) {
         const db = global.MTFDb || {};
         if (typeof db.getFeed === 'function') {
-            return db.getFeed(queryConfig, options);
+            return db.getFeed(queryConfig, options).then(res => {
+                if (res && res.length) {
+                    MTFLogger.log('Received calendar feed from DB:', res);
+                }
+                return res;
+            });
         }
         return Promise.resolve([]);
     }
