@@ -380,3 +380,291 @@ Verify:
 - ✓ JavaScript is modular.
 - ✓ Accessibility is maintained.
 - ✓ Performance is improved.
+
+# Project Development Rules
+
+## Tech Stack
+
+* Use **HTML5**, **CSS3**, and **Vanilla JavaScript (ES6+)**.
+* Do not introduce additional frontend frameworks unless explicitly instructed.
+
+---
+
+# 1. Bootstrap-First Development (Highest Priority)
+
+Bootstrap is the **primary UI framework** for this project.
+
+### Rules
+
+* Use **Bootstrap CSS utility classes** wherever possible.
+* Aim to implement **99.9% of the styling using Bootstrap classes only**.
+* Before writing any custom CSS, always verify whether Bootstrap already provides a utility or component for the requirement.
+* Use Bootstrap's spacing, typography, flexbox, grid, colors, sizing, borders, positioning, shadows, and responsive utility classes.
+* Avoid creating duplicate CSS for functionality already available in Bootstrap.
+
+### Custom CSS
+
+Create custom CSS **only when Bootstrap cannot achieve the required design or behavior.**
+
+Custom CSS should:
+
+* Be minimal.
+* Extend Bootstrap rather than replace it.
+* Never override Bootstrap globally unless absolutely necessary.
+* Be well organized and reusable.
+
+---
+
+# 2. Component Reusability
+
+Reusability is a core principle of this project.
+
+### Rules
+
+* If a UI section is used in more than one place, convert it into a reusable component.
+* Store reusable components inside the **`components/`** folder.
+* Never duplicate HTML for repeated UI sections.
+* Reuse existing components whenever possible before creating new ones.
+
+Examples:
+
+* Cards
+* Headers
+* Navigation bars
+* Bottom sheets
+* List items
+* Buttons
+* Forms
+* Empty states
+* Loaders
+* Modals
+* Filters
+* Search bars
+
+When creating reusable components:
+
+* Continue using Bootstrap classes as the primary styling approach.
+* Avoid custom CSS unless absolutely necessary.
+* Keep components modular, configurable, and easy to maintain.
+
+---
+
+# 3. Bootstrap JavaScript Components
+
+Whenever interactive functionality is required:
+
+* Prefer Bootstrap's built-in JavaScript components.
+* Use Bootstrap APIs instead of implementing custom JavaScript where Bootstrap already provides the functionality.
+
+Examples include:
+
+* Collapse
+* Accordion
+* Dropdown
+* Modal
+* Offcanvas
+* Tooltip
+* Popover
+* Toast
+* Carousel
+
+Do not recreate Bootstrap components using custom JavaScript.
+
+---
+
+# 4. Routing
+
+The application routing must use **Page.js**.
+
+### Rules
+
+* All navigation must be implemented using **Page.js**.
+* Do not implement custom routing logic.
+* Do not use hash-based navigation unless explicitly required.
+* Keep routes centralized and maintainable.
+* Follow the existing routing architecture consistently throughout the application.
+
+---
+
+# 5. Bottom Sheet Implementation
+
+The application uses a dedicated Bottom Sheet plugin.
+
+### Rules
+
+* Always use the existing Bottom Sheet plugin.
+* Do not create custom Bottom Sheet implementations.
+* Do not recreate Bottom Sheet animations.
+* Do not build custom overlays or slide-up panels.
+
+The plugin already provides:
+
+* Bootstrap-compatible Bottom Sheets
+* Animations
+* Backdrop handling
+* Accessibility
+* Lifecycle management
+
+Always reuse this implementation.
+
+---
+
+# 6. Development Principles
+
+Every implementation should follow these principles:
+
+* Bootstrap First
+* Reuse Before Create
+* Component-Based Development
+* Minimal Custom CSS
+* Minimal Custom JavaScript
+* Maintainable Code
+* Clean Folder Structure
+* Consistent Naming Conventions
+* Avoid Code Duplication (DRY Principle)
+* Keep Components Small and Modular
+
+---
+
+# 7. Before Writing Any Code
+
+Before implementing any feature, always follow this decision order:
+
+1. Can Bootstrap provide this using existing classes?
+2. Can an existing reusable component be used?
+3. Can Bootstrap JavaScript handle the interaction?
+4. Can the existing Bottom Sheet plugin be used?
+5. Can Page.js handle the navigation?
+6. Only if all of the above are insufficient, create a minimal custom implementation.
+
+This order must always be followed throughout the project.
+## Build Verification Rule
+
+After completing **every code change**, you must run:
+
+```bash
+npm run build
+```
+
+### 8. Requirements
+
+* Always execute `npm run build` after implementing any change.
+* Verify that the build completes successfully without errors.
+* If the build fails, fix all errors before considering the task complete.
+* Do not mark a task as finished until the build passes successfully.
+
+## 9. HTML Element Reference Attribute
+
+Every HTML element created in the application must include a `data-ref` attribute for identification and maintainability.
+
+### Rules
+
+* Every meaningful HTML element must have a `data-ref` attribute.
+* The value must follow the application's hierarchy and component structure.
+* Use a descriptive, dot-separated naming convention.
+* The hierarchy should represent the page, section, component, and element.
+
+### Example
+
+```html
+<div data-ref="page.trades.summary-card"></div>
+
+<div data-ref="page.trades.summary-card.stats"></div>
+
+<button data-ref="page.trades.summary-card.buy-button"></button>
+
+<input data-ref="page.login.form.email-input">
+
+<span data-ref="component.navbar.profile.avatar"></span>
+```
+
+### Naming Convention
+
+Use the following hierarchy whenever possible:
+
+```
+page.<page-name>.<section>.<component>.<element>
+```
+
+Examples:
+
+* `page.dashboard.header.title`
+* `page.trades.summary-card.stats`
+* `page.orders.table.row.price`
+* `component.sidebar.menu.item`
+* `component.bottom-sheet.confirm.button`
+
+Every newly created HTML element should follow this convention consistently throughout the application.
+
+## 10. Color Management Rule
+
+All colors throughout the application must be managed exclusively through **`color.css`**, which serves as the single source of truth for the project's color system.
+
+### Rules
+
+* Never use hardcoded color values (e.g. `#ffffff`, `rgb(...)`, `hsl(...)`) in HTML, CSS, or JavaScript.
+* Never create new color variables unless explicitly instructed.
+* Always use the existing utility classes provided by `color.css`.
+* If a utility class already exists, use it instead of writing custom CSS.
+* If a custom component requires colors, it must reference the existing CSS variables from `color.css`.
+* Do not duplicate color definitions anywhere else in the project.
+
+### Preferred Utility Classes
+
+Use the predefined utility classes from `color.css`, such as:
+
+**Backgrounds**
+
+* `.bg-whole`
+* `.bg-gr`
+* `.bg-gr-soft`
+* `.bg-gr-ticker`
+* `.bg-gr-input`
+* `.bg-gr-accent-soft`
+* `.bg-gr-active`
+* `.bg-gr-danger-soft`
+* `.bg-gr-warning-bg`
+* `.bg-blue500-soft`
+
+**Text Colors**
+
+* `.text-gr`
+* `.text-gr1`
+* `.text-gr-muted`
+* `.text-gr-accent`
+* `.text-gr-accent-hover`
+* `.text-gr-danger`
+* `.text-gr-pill-down`
+* `.text-gr-warning`
+* `.text-gr-orange`
+* `.text-blue500`
+
+**Border Colors**
+
+* `.border-gr`
+* `.border-gr-strong`
+* `.border-gr-calc`
+
+### If Custom CSS Is Required
+
+If Bootstrap utilities cannot satisfy the requirement and custom CSS is necessary, reference only the existing variables from `color.css`.
+
+Example:
+
+```css
+.custom-card {
+    background-color: var(--gr-bg);
+    color: var(--gr-text1);
+    border-color: var(--gr-border);
+}
+```
+
+Never write:
+
+```css
+background-color: #ffffff;
+color: #1f2937;
+border-color: #e4e6ea;
+```
+
+The `color.css` file is the project's **single source of truth** for all colors and must be used consistently throughout the application.

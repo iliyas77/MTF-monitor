@@ -191,7 +191,20 @@
         return data;
     }
 
+    // ----- getStorage render-frame cache -----
+    // Prevents repeated JSON.parse of localStorage within the same synchronous
+    // render cycle. Invalidated automatically via queueMicrotask after the
+    // current call stack completes, and explicitly on save operations.
+    let _storageCached = null;
+    let _storageCachePending = false;
+
+    function invalidateStorageCache() {
+        _storageCached = null;
+        _storageCachePending = false;
+    }
+
     function getStorage() {
+        if (_storageCached) return _storageCached;
         try {
             const raw = localStorage.getItem('mtf_tracker_data');
             if (raw) {
@@ -219,6 +232,11 @@
                             localStorage.setItem('mtf_tracker_data', JSON.stringify(data));
                         }
                     }
+                    _storageCached = data;
+                    if (!_storageCachePending) {
+                        _storageCachePending = true;
+                        queueMicrotask(invalidateStorageCache);
+                    }
                     return data;
                 }
             }
@@ -227,6 +245,7 @@
     }
 
     function saveStorageLocal(data) {
+        invalidateStorageCache();
         const payload = ensureMoneyData(data || { transactions: [] });
         stripSmokeTradesFromData(payload);
         localStorage.setItem('mtf_tracker_data', JSON.stringify(payload));
@@ -263,9 +282,9 @@
     
     function getClosedTransactions() {
         const db = global.MTFDb;
-        if (db && typeof db.syncClosedTradesListener === 'function') {
-            db.syncClosedTradesListener();
-        }
+        // NOTE: syncClosedTradesListener() is NOT called here anymore.
+        // It is only triggered at proper lifecycle points (connectSync, view-mode switch)
+        // to avoid re-subscribing to Firestore on every render/scroll.
         const closedFromCloud = (db && typeof db.getClosedTradesCache === 'function') ? db.getClosedTradesCache() : [];
         const closedFromLocal = (getStorage().transactions || []).filter(t => t.status === 'closed' && t.isDeleted !== true);
         return [...closedFromLocal, ...closedFromCloud].filter(t => t.isDeleted !== true);

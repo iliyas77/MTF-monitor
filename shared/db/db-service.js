@@ -18,6 +18,12 @@
     let syncPushPending = 0;
     let localDataVersion = parseInt(localStorage.getItem('mtf_data_version') || '0', 10);
 
+    // ----- getFeed Cache (prevents repeated Firestore reads on scroll) -----
+    const FEED_CACHE_TTL_MS = 30000; // 30 seconds
+    let feedCacheKey = null;
+    let feedCacheData = null;
+    let feedCacheTs = 0;
+
     const hooks = {
         showToast: function () {},
         showLoading: function () {},
@@ -385,10 +391,18 @@
     };
 
     async function getFeed(queryConfig = {}, options = {}) {
-        MTFLogger.log("[DB] getFeed: fetching data feed with queryConfig:", queryConfig, "options:", options);
-        
         const limitVal = Number(options.limit) || 20;
         const filters = parseQueryConfig(queryConfig);
+
+        // Build a cache key from query parameters to detect identical requests
+        const cacheKey = JSON.stringify({ queryConfig, limit: limitVal });
+        const now = Date.now();
+        if (cacheKey === feedCacheKey && feedCacheData && (now - feedCacheTs) < FEED_CACHE_TTL_MS) {
+            MTFLogger.log("[DB] getFeed: returning cached result (TTL not expired)");
+            return feedCacheData;
+        }
+
+        MTFLogger.log("[DB] getFeed: fetching data feed with queryConfig:", queryConfig, "options:", options);
         
         const statusFilter = filters.find(f => f.field === 'status' && f.operator === '==');
         const status = statusFilter ? statusFilter.value : 'all';
@@ -418,7 +432,12 @@
             
             try {
                 const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, { limit: limitVal });
-                return res.success ? res.data : [];
+                const result = res.success ? res.data : [];
+                // Cache the result
+                feedCacheKey = cacheKey;
+                feedCacheData = result;
+                feedCacheTs = Date.now();
+                return result;
             } catch (err) {
                 MTFLogger.error('getFeed Firestore query failed:', err);
                 return [];
@@ -439,6 +458,10 @@
         }
         
         const combined = [...openTxs, ...closedTxs].slice(0, limitVal);
+        // Cache the result
+        feedCacheKey = cacheKey;
+        feedCacheData = combined;
+        feedCacheTs = Date.now();
         return combined;
     }
 
