@@ -326,7 +326,8 @@
     function getPositionsFeed(queryConfig = {}, options = {}) {
         const db = global.MTFDb || {};
         if (typeof db.getFeed === 'function') {
-            return db.getFeed(queryConfig, options);
+            const nextOptions = { ...options, status: 'open' };
+            return db.getFeed(queryConfig, nextOptions);
         }
         return Promise.resolve([]);
     }

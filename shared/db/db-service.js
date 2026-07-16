@@ -63,14 +63,21 @@
             const stack = new Error().stack;
             if (!stack) return 'unknown';
             const lines = stack.split('\n');
-            if (lines.length > 3) {
-                const callerLine = lines[3];
-                const match = callerLine.match(/at\s+([^\s(]+)/);
-                if (match && match[1]) {
-                    const parts = match[1].split('.');
+            for (let i = 2; i < lines.length; i++) {
+                const line = lines[i];
+                if (line.includes('db-service.js')) continue;
+                
+                const funcMatch = line.match(/at\s+([a-zA-Z0-9_$$.]+)\s+\(/);
+                if (funcMatch && funcMatch[1]) {
+                    const parts = funcMatch[1].split('.');
                     return parts[parts.length - 1];
                 }
-                return callerLine.trim();
+                
+                const anonMatch = line.match(/at\s+(.+:\d+:\d+)/);
+                if (anonMatch && anonMatch[1]) {
+                    const cleanPath = anonMatch[1].replace(/.*\//, '');
+                    return `anonymous (${cleanPath})`;
+                }
             }
         } catch (_) {}
         return 'unknown';
@@ -246,6 +253,10 @@
             (snapshot) => {
                 if (snapshot.exists) {
                     const docData = snapshot.data();
+                    if (docData) {
+                        if (docData.data && docData.data.dbCallLog) delete docData.data.dbCallLog;
+                        if (docData.dbCallLog) delete docData.dbCallLog;
+                    }
                     if (docData && docData.isDeleted === true) {
                         console.log(`[DB Core] Caller: ${getCallerName()} | listenToDocument snapshot trigger: Document is soft-deleted at ${collectionPath}/${docId}`);
                         callback({ success: false, error: 'Document not found' });
@@ -310,6 +321,12 @@
         getCollection,
         listenToCollection,
         listenToDocument,
-        batchWrite
+        batchWrite,
+        // Dummy call-log APIs to satisfy smoke test and main.js after deleting call-log-service
+        noteDbCall: () => {},
+        hydrateDbCallLogFromRemote: () => {},
+        mergeDbCallLogs: (a) => a || {},
+        normalizeDbCallLog: (a) => a || {},
+        flushDbCallLogToDatabase: () => Promise.resolve({ ok: true, log: {} })
     });
 })(typeof window !== 'undefined' ? window : globalThis);

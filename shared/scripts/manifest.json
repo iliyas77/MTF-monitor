@@ -29,7 +29,6 @@
     "features/common/sync-service.js",
     "features/gold/gold-page.js",
     "features/gold/gold-services.js",
-    "features/more/call-log-service.js",
     "features/more/json-visualizer.js",
     "features/more/money-service.js",
     "features/positions/positions-service.js",

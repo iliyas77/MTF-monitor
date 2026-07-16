@@ -41,7 +41,7 @@
     }
 
     function isFirebaseConfigured() {
-        const config = db().FIREBASE_CONFIG;
+        const config = db.FIREBASE_CONFIG;
         return config &&
             config.apiKey &&
             config.apiKey.indexOf('YOUR_') === -1 &&
@@ -55,7 +55,7 @@
         if (typeof firebase === 'undefined' || !firebase.initializeApp) return false;
         try {
             if (!firebase.apps || !firebase.apps.length) {
-                firebase.initializeApp(db().FIREBASE_CONFIG);
+                firebase.initializeApp(db.FIREBASE_CONFIG);
             }
             fbDb = firebase.firestore();
             return true;
@@ -103,11 +103,7 @@
     }
 
     function hydrateCallLogFromData(data) {
-        try {
-            if (data && data.dbCallLog && typeof db.hydrateDbCallLogFromRemote === 'function') {
-                db.hydrateDbCallLogFromRemote(data.dbCallLog);
-            }
-        } catch (_) { /* ignore */ }
+        // No-op (logs kept local only)
     }
 
     function bumpLocalVersionAndPush(payload) {
@@ -122,6 +118,7 @@
         syncPushPending++;
         hooks.showLoading();
         const payload = db.ensureMoneyData(data || db.getStorage());
+        delete payload.dbCallLog;
         if (typeof db.stripMoneyFromBlobData === 'function') {
             db.stripMoneyFromBlobData(payload);
         } else {
@@ -237,13 +234,8 @@
             moneyEntries: [],
             marketWatchlist: mergeMarketWatchlist(local.marketWatchlist, remote.marketWatchlist)
         };
-        if (typeof db.mergeDbCallLogs === 'function') {
-            merged.dbCallLog = db.mergeDbCallLogs(local.dbCallLog, remote.dbCallLog);
-        } else if (remote.dbCallLog) {
-            merged.dbCallLog = remote.dbCallLog;
-        } else if (local.dbCallLog) {
-            merged.dbCallLog = local.dbCallLog;
-        }
+        // No dbCallLog syncing/merging to remote database
+        merged.dbCallLog = local.dbCallLog;
         return merged;
     }
 
@@ -515,6 +507,12 @@
             syncStatus = 'connected';
             noteDb('read', 'onSnapshot');
             const snapData = snap.data() || {};
+            if (snapData.data && snapData.data.dbCallLog) {
+                delete snapData.data.dbCallLog;
+            }
+            if (snapData.dbCallLog) {
+                delete snapData.dbCallLog;
+            }
             console.log("[DB] onSnapshot: received sync document data from Firestore:", snapData);
             if (!snap.exists || !snapData || !snapData.data) {
                 hooks.renderSettings();
@@ -560,7 +558,7 @@
 
     function initSyncOnLoad() {
         if (!initFirebase()) return;
-        const saved = localStorage.getItem('mtf_sync_code') || db().DEFAULT_SYNC_CODE;
+        const saved = localStorage.getItem('mtf_sync_code') || db.DEFAULT_SYNC_CODE;
         if (saved) connectSync(saved, { silent: true });
     }
 
