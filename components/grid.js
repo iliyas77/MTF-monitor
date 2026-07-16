@@ -204,6 +204,14 @@
         'entry-preview': {
             gridClass: 'money-entry-preview-grid',
             type: 'css'
+        },
+        /**
+         * Portfolio summary cards — row based.
+         * CSS class: .portfolio-summary-cards
+         */
+        'portfolio-summary': {
+            gridClass: 'portfolio-summary-cards row align-items-center w-100 g-0',
+            type: 'css'
         }
     };
 
@@ -322,11 +330,12 @@
 
         /* assemble grid element */
         const gridTag = isFlex ? 'div' : 'div';
-        const gridHtml = `<${gridTag} class="${gridClass}${extraClass}"${idAttr}${dataStr}${refAttr}${styleAttr}>${innerHtml}</${gridTag}>`;
+        const componentAttr = wrapperClass ? '' : ' data-component="grid"';
+        const gridHtml = `<${gridTag}${componentAttr} class="${gridClass}${extraClass}"${idAttr}${dataStr}${refAttr}${styleAttr}>${innerHtml}</${gridTag}>`;
 
         /* wrap if needed */
         if (wrapperClass) {
-            return `<div class="${wrapperClass}">${gridHtml}</div>`;
+            return `<div class="${wrapperClass}" data-component="grid">${gridHtml}</div>`;
         }
 
         return gridHtml;

@@ -1009,7 +1009,7 @@
         const pctFormatted = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
         const pctClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-muted');
 
-        const { renderMetricsCell } = global.MTFComponents || {};
+        const { renderMetricsCell, renderGrid } = global.MTFComponents || {};
 
         const pnlCell = renderMetricsCell ? renderMetricsCell({
             label: 'Total P&L',
@@ -1089,11 +1089,17 @@
                 <span data-ref="page.trades.portfolio-summary.title">Portfolio Summary</span>
             </div>
             
+            ${renderGrid ? renderGrid({
+                preset: 'portfolio-summary',
+                dataRef: 'page.trades.portfolio-summary.grid',
+                innerHTML: `${pnlCell}${investedCell}${holdingsCell}`
+            }) : `
             <div class="portfolio-summary-cards row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
                 ${pnlCell}
                 ${investedCell}
                 ${holdingsCell}
             </div>
+            `}
         </div>
         
         <!-- Active Positions Header Card -->
