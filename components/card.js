@@ -25,10 +25,7 @@
          * @param {string} [params.body]         - HTML for card body (wrapped in .card-body)
          * @param {string} [params.content]      - Raw HTML inside card (not wrapped in .card-body)
          * @param {string} [params.footer]       - HTML for card footer
-         * @param {string} [params.className]    - Extra classes for the .card
-         * @param {string} [params.headerClass]  - Extra classes for .card-header
-         * @param {string} [params.bodyClass]    - Extra classes for .card-body
-         * @param {string} [params.footerClass]  - Extra classes for .card-footer
+
          * @param {Object} [params.attrs]        - Additional HTML attributes for the .card (e.g., data-ref)
          * @returns {string} HTML string
          */
@@ -38,10 +35,6 @@
                 body = '',
                 content = '',
                 footer = '',
-                className = '',
-                headerClass = '',
-                bodyClass = '',
-                footerClass = '',
                 attrs = {}
             } = params;
 
@@ -51,20 +44,20 @@
                 'data-component': 'card'
             };
 
+            let customClass = finalAttrs.class || '';
+            delete finalAttrs.class;
             const attrStr = this._buildAttrs(finalAttrs);
             
-            const cardClasses = `card ${className}`.trim();
+            const cardClasses = customClass ? `card ${customClass}`.trim() : 'card';
             
             let html = `<div class="${cardClasses}"${attrStr}>`;
             
             if (header) {
-                const hClass = `card-header ${headerClass}`.trim();
-                html += `\n    <div class="${hClass}">\n        ${header}\n    </div>`;
+                html += `\n    <div class="card-header">\n        ${header}\n    </div>`;
             }
             
             if (body) {
-                const bClass = `card-body ${bodyClass}`.trim();
-                html += `\n    <div class="${bClass}">\n        ${body}\n    </div>`;
+                html += `\n    <div class="card-body">\n        ${body}\n    </div>`;
             }
             
             if (content) {
@@ -72,8 +65,7 @@
             }
             
             if (footer) {
-                const fClass = `card-footer ${footerClass}`.trim();
-                html += `\n    <div class="${fClass}">\n        ${footer}\n    </div>`;
+                html += `\n    <div class="card-footer">\n        ${footer}\n    </div>`;
             }
             
             html += `\n</div>`;

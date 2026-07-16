@@ -97,65 +97,7 @@ Every page should document:
 
 If implementation changes, update `pages.json`.
 
-## PURE HTML, CSS & JAVASCRIPT STANDARDS
-This is a Vanilla JavaScript application.
-Do NOT convert it into React.
-Do NOT convert it into Vue.
-Do NOT convert it into Angular.
-Do NOT introduce jQuery unless already required.
-Do NOT introduce unnecessary dependencies.
-Keep everything modular using plain JavaScript.
-Use ES6 modules where appropriate.
-Separate responsibilities clearly:
-- HTML for structure
-- CSS for presentation
-- JavaScript for behavior
 
-Avoid inline JavaScript.
-Avoid inline styles.
-Avoid duplicated logic.
-
-## BOOTSTRAP FIRST POLICY
-Bootstrap must be the primary UI framework.
-Always use Bootstrap before creating custom CSS.
-Use Bootstrap for:
-- Grid
-- Containers
-- Rows
-- Columns
-- Cards
-- Buttons
-- Forms
-- Tables
-- Alerts
-- Badges
-- Modals
-- Dropdowns
-- Navbar
-- Offcanvas
-- Accordion
-- Tabs
-- Pagination
-- Utilities
-- Responsive classes
-- Display utilities
-- Spacing utilities
-- Flex utilities
-- Typography utilities
-
-Never recreate Bootstrap functionality with custom CSS.
-Only create custom CSS when Bootstrap cannot achieve the required design.
-
-## CSS RULES
-Use `color.css` as the only source of truth for colors.
-Never hardcode colors.
-Reuse utility classes.
-Remove duplicate CSS.
-Avoid unnecessary selectors.
-Prefer Bootstrap utilities whenever possible.
-Create reusable CSS.
-Keep CSS modular.
-Keep CSS readable.
 
 ## JAVASCRIPT RULES
 Keep JavaScript modular.
@@ -211,26 +153,7 @@ Handle:
 - Retry state
 - Success state
 
-## REUSABLE COMPONENTS
-Create reusable HTML components wherever possible.
-Examples:
-- Header
-- Sidebar
-- Navbar
-- Footer
-- Cards
-- Tables
-- Filters
-- Search bars
-- Modals
-- Confirmation dialogs
-- Toasts
-- Empty states
-- Loading indicators
-- Buttons
-- Form controls
 
-Never duplicate UI.
 
 ## MASTER SPA LIFECYCLE & DATA LOADING SPECIFICATION
 To ensure the application is highly performant, lightweight, and incredibly friendly to **VoiceOver**, follow this standardized **Page Lifecycle Pattern**.
@@ -679,3 +602,14 @@ All UI components located in the `components/` directory (e.g., Grid, MetricsCel
 * **Pass Data via Configuration**: If an application feature requires specific HTML attributes, IDs, `data-*` hooks, or layout adjustments, pass them into the component via standard configuration objects (e.g., an `attrs` object) instead of modifying the component itself.
 * **Component-Level Updates Only**: When updating a reusable component, only make changes that improve its generic functionality, structure, or Bootstrap integration. Never modify a component just to satisfy a one-off application requirement.
 * **Use As-Is**: Use reusable components exactly as they are designed. If a component lacks flexibility for a specific generic use case, update it to accept generic configuration parameters rather than adding domain-specific hacks.
+
+## 12. Component Class Properties Restriction
+
+When creating or modifying a reusable component in the `components/` directory, **do not provide specific configuration properties for passing CSS classes** (e.g., `className`, `headerClass`, `bodyClass`, etc.). 
+
+### Rules
+
+* **Internal Styling Only**: The component should define its internal layout and structure using standard Bootstrap classes.
+* **No Class Properties**: Do not expose parameters that allow consumers to inject arbitrary CSS classes into specific internal elements of the component.
+* **Configuration via `attrs`**: If a consumer needs to add classes (or any attributes) to the root element of the component, they must do so via the standard `attrs` object (e.g., `attrs: { class: 'custom-class' }`), which will apply to the root wrapper.
+* **Why**: Providing specific class configuration properties encourages consumers to write custom CSS or override the component's design from the outside, which leads to inconsistent UI and fragmented styling. If a component is genuinely lacking flexibility, update its generic implementation rather than allowing ad-hoc class injection.
