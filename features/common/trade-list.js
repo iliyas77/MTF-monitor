@@ -1029,12 +1029,7 @@
         return { net, invested, holdings };
     }
 
-    function renderPortfolioStatCard(label, valueHtml, valueClass) {
-        return `<div class="portfolio-stat-card">
-            <div class="portfolio-stat-label">${label}</div>
-            <div class="portfolio-stat-value text-truncate ${valueClass || ''}">${valueHtml}</div>
-        </div>`;
-    }
+
 
     function renderPortfolioSummaryCards({ net, invested, holdings }) {
         const n = Number(net) || 0;
@@ -1053,7 +1048,7 @@
         const pctFormatted = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
         const pctClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-muted');
 
-        const { renderMetricsCell, renderGrid } = global.MTFComponents || {};
+        const { renderMetricsCell, MetricsGrid } = global.MTFComponents || {};
 
         const pnlCell = renderMetricsCell ? renderMetricsCell({
             label: 'Total P&L',
@@ -1133,13 +1128,8 @@
                 <span data-ref="page.trades.portfolio-summary.title">Portfolio Summary</span>
             </div>
             
-            ${renderGrid ? renderGrid({
-                gridClass: 'portfolio-summary-cards row align-items-center w-100 g-0',
-                type: 'css',
-                dataRef: 'page.trades.portfolio-summary.grid',
-                innerHTML: `${pnlCell}${investedCell}${holdingsCell}`
-            }) : `
-            <div class="portfolio-summary-cards row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
+            ${(MetricsGrid && MetricsGrid.grid) ? MetricsGrid.grid([pnlCell, investedCell, holdingsCell], { attrs: { 'data-ref': 'page.trades.portfolio-summary.grid' } }) : `
+            <div class="row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
                 ${pnlCell}
                 ${investedCell}
                 ${holdingsCell}
