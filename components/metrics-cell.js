@@ -148,9 +148,9 @@
         const isClickable = !!cell.onclick;
         const tag = isClickable ? 'button' : 'div';
         
-        let baseCellClasses = 'd-flex align-items-start gap-2 flex-fill min-w-0 px-2 border-end overflow-hidden';
+        let baseCellClasses = 'd-flex align-items-start gap-2 flex-fill min-w-0 px-2 overflow-hidden';
         if (isClickable) {
-            baseCellClasses = 'btn btn-link text-decoration-none p-0 bg-transparent text-start border-0 border-end ' + baseCellClasses;
+            baseCellClasses = 'btn btn-link text-decoration-none p-0 bg-transparent text-start border-0 ' + baseCellClasses;
         }
 
         const typeAttr = isClickable ? ' type="button"' : '';
