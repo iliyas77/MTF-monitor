@@ -10,6 +10,7 @@
     "shared/db/db-service.js",
     "components/metrics-cell.js",
     "components/grid.js",
+    "components/card.js",
     "features/common/app-shell.js",
     "features/common/trade-list.js",
     "features/common/trade-sheets.js",
