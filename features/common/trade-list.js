@@ -729,7 +729,7 @@
         if (t.targetReachedBeforeClose === undefined && isClosed) {
             targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
         }
-        const { renderMetricsCell, escapeHtml: esc } = global.MTFComponents || {};
+        const { renderMetricsCell, escapeHtml: esc, MetricsGrid } = global.MTFComponents || {};
         const baseRef = variant === 'open' ? 'page.trades.list.item' : 'page.past.list.item';
         const cells = [
             {
@@ -783,12 +783,12 @@
             'data-trade-id': tradeId,
             'data-trade-status': status,
             'data-target-reached-before-close': String(targetReachedBeforeClose),
-            'data-trade-variant': variant
+            'data-trade-variant': variant,
+            'data-ref': `${baseRef}.metrics.grid`
         };
  
-        const attrsStr = Object.keys(gridAttrs).map(k => ` ${k}="${(esc || escapeHtml)(gridAttrs[k])}"`).join('');
-        const metricsGridHtml = renderMetricsCell
-            ? `<div class="trade-position-metrics" data-ref="${baseRef}.metrics"><div class="trade-position-grid" data-ref="${baseRef}.metrics.grid"${attrsStr}>${cells.map(renderMetricsCell).join('')}</div></div>`
+        const metricsGridHtml = (renderMetricsCell && MetricsGrid)
+            ? `<div class="trade-position-metrics" data-ref="${baseRef}.metrics">${MetricsGrid.grid(cells.map(renderMetricsCell), { attrs: gridAttrs, gap: '1rem' })}</div>`
             : '';
  
         return `

@@ -528,7 +528,7 @@ async function runSmoke(report) {
             const moreBtn = card.querySelector('[data-bs-toggle="dropdown"]');
             const openTarget = card.matches('[data-trade-open-detail]')
                 || !!card.querySelector('[data-trade-open-detail]');
-            const grid = card.querySelector('.trade-position-grid');
+            const grid = card.querySelector('[data-component="grid"]');
             const tagsText = card.querySelector('.trade-position-tags')?.textContent || '';
             const metaText = card.querySelector('.trade-position-meta')?.textContent || '';
             const buyOpensSheet = !!card.querySelector('[onclick*="openBuyPriceModal"]');
@@ -622,7 +622,7 @@ async function runSmoke(report) {
             const list = document.getElementById('transactionList');
             const card = list?.querySelector('[data-trade-card]');
             const id = card?.getAttribute('data-trade-id');
-            const grid = card?.querySelector('.trade-position-grid');
+            const grid = card?.querySelector('[data-component="grid"]');
             if (id && typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
             return {
                 id,

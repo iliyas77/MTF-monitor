@@ -18,7 +18,9 @@
         Sheet,
         getCalcSellPctPresets,
         saveCalcSellPctPresets,
-        fmtCalcPctLabel
+        fmtCalcPctLabel,
+        MetricsGrid,
+        renderMetricsCell
     } = global.MTFComponents;
 
     let calcActiveSellPct = null;
@@ -499,22 +501,23 @@
                             <div class="fw-semibold ${netTone}" data-ref="page.mtf-calc.broker-card.header.right.net-value">${netLabel}</div>
                         </div>
                     </div>
-                    <div class="trade-position-metrics" data-ref="page.mtf-calc.broker-card.metrics">
-                        <div class="trade-position-grid" data-ref="page.mtf-calc.broker-card.metrics.grid">
-                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.interest">
-                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.interest.label">Interest</span>
-                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.interest.value">${fmtDec(result.interest)}</span>
-                            </div>
-                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.charges">
-                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.charges.label">Charges</span>
-                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.charges.value">${fmtDec(result.totalCharges)}</span>
-                            </div>
-                            <div class="trade-position-cell" data-ref="page.mtf-calc.broker-card.metrics.margin">
-                                <span class="trade-position-label" data-ref="page.mtf-calc.broker-card.metrics.margin.label">Margin</span>
-                                <span class="trade-position-value" data-ref="page.mtf-calc.broker-card.metrics.margin.value">${fmtDec(result.ownMargin)}</span>
-                            </div>
-                        </div>
-                    </div>
+                    ${(MetricsGrid && renderMetricsCell) ? MetricsGrid.grid([
+                        renderMetricsCell({
+                            label: 'Interest',
+                            value: fmtDec(result.interest),
+                            data: { ref: 'page.mtf-calc.broker-card.metrics.interest' }
+                        }),
+                        renderMetricsCell({
+                            label: 'Charges',
+                            value: fmtDec(result.totalCharges),
+                            data: { ref: 'page.mtf-calc.broker-card.metrics.charges' }
+                        }),
+                        renderMetricsCell({
+                            label: 'Margin',
+                            value: fmtDec(result.ownMargin),
+                            data: { ref: 'page.mtf-calc.broker-card.metrics.margin' }
+                        })
+                    ], { attrs: { 'data-ref': 'page.mtf-calc.broker-card.metrics.grid' }, gap: '1rem' }) : ''}
                 </div>
             </article>
         `;
