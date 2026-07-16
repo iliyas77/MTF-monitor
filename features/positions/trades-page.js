@@ -58,6 +58,13 @@
         return 'trade';
     }
 
+    function setPaginationState(variant, trades, isAllMode, renderItem) {
+        _lastVariant = variant;
+        _lastFilteredTrades = trades;
+        _lastIsAllMode = isAllMode;
+        _lastRenderItem = renderItem;
+    }
+
     function renderCurrentView() {
         const {
             isActiveOpenTrade,
@@ -110,10 +117,7 @@
             }
 
             // Store for "Load More" append
-            _lastFilteredTrades = filtered;
-            _lastVariant = 'past';
-            _lastRenderItem = renderPastTradeListItem;
-            _lastIsAllMode = false;
+            setPaginationState('past', filtered, false, renderPastTradeListItem);
 
             container.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem, 'past', {
                 pageSize: PAGE_SIZE,
@@ -181,13 +185,8 @@
             return;
         }
 
-        // Store for "Load More" append
-        _lastFilteredTrades = filtered;
-        _lastIsAllMode = isAll;
-
         if (isAll) {
-            _lastVariant = 'all';
-            _lastRenderItem = null; // All mode uses mixed renderer
+            setPaginationState('all', filtered, true, null);
 
             const currentPage = tradeListPages[pageKey];
             const visibleCount = PAGE_SIZE * currentPage;
@@ -208,8 +207,7 @@
             return;
         }
 
-        _lastVariant = 'open';
-        _lastRenderItem = renderOpenTradeListItem;
+        setPaginationState('open', filtered, false, renderOpenTradeListItem);
 
         container.innerHTML = renderFlatTradesList(filtered, renderOpenTradeListItem, 'open', {
             pageSize: PAGE_SIZE,
@@ -296,5 +294,5 @@
         });
     };
 
-    global.MTFRegister({ renderCurrentView, resetTradeListPages, tradeListPages });
+    global.MTFRegister({ renderCurrentView, resetTradeListPages, tradeListPages, setPaginationState });
 })(typeof window !== 'undefined' ? window : globalThis);

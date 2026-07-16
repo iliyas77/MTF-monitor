@@ -401,3 +401,151 @@
     });
 
 })(typeof window !== 'undefined' ? window : globalThis);
+
+/**
+ * MetricsGrid – Pure Bootstrap grid builder for vanilla JS.
+ * Provides .row(), .col(), and .grid() methods.
+ * Supports custom HTML attributes via the 'attrs' option.
+ */
+(function (global) {
+    'use strict';
+
+    class MetricsGrid {
+        /**
+         * Helper to convert an attributes object to an HTML string.
+         * @param {Object} attrs - Key-value pairs of attributes.
+         * @returns {string} e.g. ' id="myId" data-type="grid"'
+         */
+        static _buildAttrs(attrs = {}) {
+            let result = '';
+            for (const [key, value] of Object.entries(attrs)) {
+                // Escape double quotes to prevent XSS/breakage
+                const safeValue = String(value).replace(/"/g, '&quot;');
+                result += ` ${key}="${safeValue}"`;
+            }
+            return result;
+        }
+
+        /**
+         * Creates a Bootstrap row.
+         * @param {string} children - Inner HTML content.
+         * @param {Object} opts
+         * @param {number} opts.columns - 1–6 → adds `row-cols-*`.
+         * @param {string} opts.gap - 'sm' | 'md' | 'lg' → adds `g-*`.
+         * @param {string} opts.align - 'start' | 'center' | 'end' | 'stretch'.
+         * @param {string} opts.justify - 'start' | 'center' | 'end' | 'around' | 'between'.
+         * @param {boolean} opts.responsive - If true (default), uses responsive `row-cols-*`.
+         * @param {string} opts.className - Extra CSS classes for the row.
+         * @param {Object} opts.attrs - Custom HTML attributes (id, data-*, aria-*, etc.).
+         * @returns {string} HTML string.
+         */
+        static row(children = '', opts = {}) {
+            const {
+                columns = null,
+                gap = 'md',
+                align = 'stretch',
+                justify = 'start',
+                responsive = true,
+                className = '',
+                attrs = {},
+            } = opts;
+
+            let classes = 'row';
+
+            // Gap
+            const gapMap = { sm: 'g-2', md: 'g-3', lg: 'g-4' };
+            if (gapMap[gap]) classes += ` ${gapMap[gap]}`;
+
+            // Columns (row-cols-*)
+            if (columns) {
+                if (responsive) {
+                    const colMap = {
+                        1: 'row-cols-1',
+                        2: 'row-cols-1 row-cols-md-2',
+                        3: 'row-cols-1 row-cols-md-2 row-cols-lg-3',
+                        4: 'row-cols-1 row-cols-md-2 row-cols-lg-4',
+                        5: 'row-cols-1 row-cols-md-3 row-cols-lg-5',
+                        6: 'row-cols-1 row-cols-md-3 row-cols-lg-6',
+                    };
+                    classes += ` ${colMap[columns] || colMap[3]}`;
+                } else {
+                    classes += ` row-cols-${columns}`;
+                }
+            }
+
+            // Alignment
+            if (align) classes += ` align-items-${align}`;
+            if (justify) classes += ` justify-content-${justify}`;
+            if (className) classes += ` ${className}`;
+
+            const attrString = this._buildAttrs(attrs);
+            return `<div class="${classes}"${attrString}>${children}</div>`;
+        }
+
+        /**
+         * Creates a Bootstrap column.
+         * @param {string} content - Inner HTML content.
+         * @param {Object} opts
+         * @param {string|number} opts.size - 'auto' | 1–12 | e.g. 'col-4'.
+         * @param {number} opts.offset - offset number (1–11).
+         * @param {number} opts.order - order number (1–12).
+         * @param {string} opts.className - Extra CSS classes for the column.
+         * @param {Object} opts.attrs - Custom HTML attributes (id, data-*, aria-*, etc.).
+         * @returns {string} HTML string.
+         */
+        static col(content = '', opts = {}) {
+            const { size = null, offset = null, order = null, className = '', attrs = {} } = opts;
+
+            let classes = 'col';
+
+            // Size
+            if (size) {
+                if (size === 'auto') {
+                    classes += ' col-auto';
+                } else if (typeof size === 'string' && size.startsWith('col-')) {
+                    classes += ` ${size}`;
+                } else {
+                    classes += ` col-${size}`;
+                }
+            }
+
+            if (offset) classes += ` offset-${offset}`;
+            if (order) classes += ` order-${order}`;
+            if (className) classes += ` ${className}`;
+
+            const attrString = this._buildAttrs(attrs);
+            return `<div class="${classes}"${attrString}>${content}</div>`;
+        }
+
+        /**
+         * Shortcut: creates a row and automatically wraps each item in a column.
+         * @param {Array} items - Array of content strings.
+         * @param {Object} opts - Same as .row() options + extra:
+         * @param {string|number} opts.colSize - Size for each column (e.g. 4, 'auto').
+         * @param {Object} opts.colAttrs - Attributes applied to every column.
+         * @param {Object} opts.rowAttrs - Attributes applied to the row.
+         * @returns {string} HTML string.
+         */
+        static grid(items = [], opts = {}) {
+            if (!Array.isArray(items)) items = [items];
+
+            const { colSize = null, colAttrs = {}, rowAttrs = {}, ...rowOpts } = opts;
+
+            const colsHtml = items
+                .map((item) => {
+                    return MetricsGrid.col(item, { size: colSize, attrs: colAttrs });
+                })
+                .join('');
+
+            // Merge rowAttrs into the row options
+            return MetricsGrid.row(colsHtml, { ...rowOpts, attrs: rowAttrs });
+        }
+    }
+
+    if (typeof global.MTFRegister === 'function') {
+        global.MTFRegister({ MetricsGrid });
+    } else {
+        global.MetricsGrid = MetricsGrid;
+    }
+
+})(typeof window !== 'undefined' ? window : globalThis);
