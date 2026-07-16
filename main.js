@@ -3561,15 +3561,6 @@
                 fullWidth: true
             });
         }
-        const backupHost = document.getElementById('settingsBackupBtnHost');
-        if (backupHost) {
-            backupHost.innerHTML = renderAppButton('Open', {
-                variant: 'action',
-                onclick: 'openBackupTextModal()',
-                icon: 'fa-code',
-                size: 'sm'
-            });
-        }
         const resetHost = document.getElementById('settingsResetBtnHost');
         if (resetHost) {
             resetHost.innerHTML = renderAppButton('Reset', {
@@ -6093,158 +6084,12 @@
         connectSync(input ? input.value : '');
     }
 
-    // ---------- BACKUP AS TEXT + JSON VISUALIZER ----------
-    let backupVizTimer = null;
-
-    function getQuoteCacheCount() {
-        try {
-            const map = readQuoteCacheMap();
-            return Object.keys(map || {}).length;
-        } catch (_) {
-            return 0;
-        }
-    }
-
-    function getDbCallSummaryForViz() {
-        try {
-            const fn = window.MTFDb && window.MTFDb.getDbCallLogSummary;
-            return typeof fn === 'function' ? fn() : {};
-        } catch (_) {
-            return {};
-        }
-    }
-
-    function paintBackupDbCallFlushButton() {
-        const host = document.getElementById('backupDbCallFlushHost');
-        if (host) host.innerHTML = '';
-    }
-
-    function refreshBackupVisualizer() {
-        const comps = window.MTFComponents || {};
-        const parseBackupText = comps.parseBackupText;
-        const renderBackupVisualizer = comps.renderBackupVisualizer;
-        const summaryEl = document.getElementById('backupVizSummary');
-        const treeEl = document.getElementById('backupVizTree');
-        const hintEl = document.getElementById('backupVizParseHint');
-        const ta = document.getElementById('backupTextArea');
-        if (!summaryEl || !treeEl || !ta || typeof parseBackupText !== 'function' || typeof renderBackupVisualizer !== 'function') {
-            return;
-        }
-        const dbCallSummary = getDbCallSummaryForViz();
-        const parsed = parseBackupText(ta.value);
-        if (!parsed.ok) {
-            summaryEl.innerHTML = renderBackupVisualizer({}, {
-                quoteCacheCount: getQuoteCacheCount(),
-                rawChars: parsed.rawChars || 0
-            }, appNetworkStats, dbCallSummary).summaryHtml;
-            paintBackupDbCallFlushButton();
-            treeEl.innerHTML = `<p class="small text-danger mb-0">${parsed.error === 'Empty' ? 'Paste JSON above to visualize.' : ('Invalid JSON: ' + parsed.error)}</p>`;
-            if (hintEl) hintEl.textContent = parsed.error === 'Empty' ? '' : 'Fix JSON to restore or explore structure.';
-            return;
-        }
-        const viz = renderBackupVisualizer(parsed.data, {
-            quoteCacheCount: getQuoteCacheCount(),
-            rawChars: parsed.rawChars
-        }, appNetworkStats, dbCallSummary);
-        summaryEl.innerHTML = viz.summaryHtml;
-        paintBackupDbCallFlushButton();
-        treeEl.innerHTML = viz.treeHtml;
-        if (hintEl) {
-            const s = viz.summary;
-            hintEl.textContent = `${s.trades} trades · ${s.watchlist} watchlist · ${s.rawSize} · DB calls today ${dbCallSummary.todayTotal || 0}`;
-        }
-    }
-
-    async function flushDbCallLogToCloud() {
-        // Removed
-    }
-
-    function onBackupTextInput() {
-        if (backupVizTimer) clearTimeout(backupVizTimer);
-        backupVizTimer = setTimeout(() => {
-            backupVizTimer = null;
-            refreshBackupVisualizer();
-        }, 200);
-    }
-
-    function openBackupTextModal() {
-        try {
-            const data = getStorage();
-            const ta = document.getElementById('backupTextArea');
-            if (!ta) {
-                showToast('Backup panel unavailable.', 'danger');
-                return;
-            }
-            ta.value = JSON.stringify(data, null, 2);
-            Sheet.mountPanel('<i class="fas fa-code me-2"></i>Backup & JSON', 'panelBackup',
-                `<div class="d-flex gap-2">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
-            refreshBackupVisualizer();
-        } catch (_) {
-            showToast('Could not open backup.', 'danger');
-        }
-    }
-
-    async function copyBackupText() {
-        const ta = document.getElementById('backupTextArea');
-        if (!ta) {
-            showToast('Backup area not found.', 'danger');
-            return;
-        }
-        const text = ta.value;
-        if (!text) {
-            showToast('Nothing to copy.', 'warning');
-            return;
-        }
-        try {
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(text);
-                showToast('Backup copied to clipboard!', 'success');
-                return;
-            }
-        } catch (_) { /* fall through to manual copy */ }
-        ta.focus({ preventScroll: true });
-        ta.select();
-        ta.setSelectionRange(0, text.length);
-        let copied = false;
-        try { copied = document.execCommand('copy'); } catch (_) { }
-        showToast(
-            copied ? 'Backup copied to clipboard!' : 'Text selected — use your keyboard Copy button.',
-            copied ? 'success' : 'info'
-        );
-    }
-
-    function restoreFromText() {
-        const text = document.getElementById('backupTextArea').value.trim();
-        if (!text) { showToast('Paste your backup text first.', 'warning'); return; }
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (_) {
-            showToast('Invalid backup text. Check for missing/extra characters.', 'danger');
-            return;
-        }
-        if (!data || !Array.isArray(data.transactions)) {
-            showToast('Invalid backup format. Expected a "transactions" list.', 'danger');
-            return;
-        }
-        data = ensureMoneyData(data);
-        if (!confirm('This will REPLACE all current data with the pasted backup. Continue?')) return;
-        saveStorage(data);
-        showToast('Data restored successfully!', 'success');
-        Sheet.close();
-        refreshTradeListViews();
-        renderMoney();
-        renderSettings();
-        refreshActiveMoreView();
-    }
-
     function resetData() {
         const syncNote = getSyncCode() ? '<p class="small text-muted mb-2"><i class="fas fa-cloud me-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="fw-medium text-body-secondary">all synced devices</span>.</p>' : '';
         AppDialog.open(
             '<span class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Reset All Data?</span>',
             `<p class="mb-2 fw-semibold text-body-secondary">This will permanently delete ALL your transactions.</p>
-                    <p class="small text-muted mb-2">This action <span class="text-danger fw-semibold">cannot be undone</span>.</p>${syncNote}
-                    <p class="small text-muted mb-0">Tip: use <span class="fw-medium text-body-secondary">Backup as Text</span> first.</p>`,
+                    <p class="small text-muted mb-2">This action <span class="text-danger fw-semibold">cannot be undone</span>.</p>${syncNote}`,
             renderAppButtonRow('Cancel', 'Delete Everything', {
                 cancelOnClick: 'closeDialog()',
                 actionOnClick: 'performReset()',
@@ -6337,18 +6182,12 @@
                 try { migrateTradeCompanySymbols(); } catch (_) { }
                 try {
                     const data = getStorage();
-                    if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
-                        window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
-                    }
                 } catch (_) { }
             },
             migrateTradeCompanySymbols
         });
         try {
             const data = getStorage();
-            if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
-                window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
-            }
         } catch (_) { }
         initSyncOnLoad();
 
@@ -6600,15 +6439,9 @@
     window.confirmDelete = confirmDelete;
     window.deleteTradeFromEditor = deleteTradeFromEditor;
     window.saveTransaction = saveTransaction;
-    window.openBackupTextModal = openBackupTextModal;
-    window.onBackupTextInput = onBackupTextInput;
-    window.refreshBackupVisualizer = refreshBackupVisualizer;
-    // window.flushDbCallLogToCloud = flushDbCallLogToCloud;
     window.checkMarketFeed = checkMarketFeed;
     window.openSettingsPage = openSettingsPage;
     window.backFromSettings = backFromSettings;
-    window.copyBackupText = copyBackupText;
-    window.restoreFromText = restoreFromText;
     window.resetData = resetData;
     window.performReset = performReset;
     window.openTargetModal = openTargetModal;

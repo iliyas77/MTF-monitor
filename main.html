@@ -914,17 +914,7 @@
                         <span class="badge rounded-pill text-bg-light border" id="totalTxBadge"
                             data-ref="page.settings.data-card.list.total.badge">0</span>
                     </div>
-                    <div class="list-group-item settings-data-row" data-ref="page.settings.data-card.list.backup">
-                        <span class="settings-icon settings-icon--backup" aria-hidden="true"
-                            data-ref="page.settings.data-card.list.backup.icon"><i class="fas fa-clipboard"></i></span>
-                        <div class="min-w-0 flex-fill" data-ref="page.settings.data-card.list.backup.body">
-                            <div class="settings-card-title" data-ref="page.settings.data-card.list.backup.title">Backup &amp; JSON</div>
-                            <div class="small text-muted" data-ref="page.settings.data-card.list.backup.desc">Copy,
-                                paste, restore, or visualize data</div>
-                        </div>
-                        <div id="settingsBackupBtnHost" class="flex-shrink-0"
-                            data-ref="page.settings.data-card.list.backup.btn-host"></div>
-                    </div>
+
                     <div class="list-group-item settings-data-row settings-data-row--danger"
                         data-ref="page.settings.data-card.list.reset">
                         <span class="settings-icon settings-icon--danger" aria-hidden="true"
@@ -1958,29 +1948,7 @@
                 </div>
             </div>
         </div>
-        <div id="panelBackup" data-ref="sheet.backup">
-            <p class="small text-muted mb-2" data-ref="sheet.backup.desc">Copy this JSON backup anywhere (notes, email,
-                chat). Paste to restore, or
-                explore counts and structure below.</p>
-            <div id="backupVizSummary" data-ref="sheet.backup.summary"></div>
-            <div class="json-viz-block mb-3" data-ref="sheet.backup.structure">
-                <details class="json-viz-section" open data-ref="sheet.backup.structure.details">
-                    <summary class="json-viz-section-title" data-ref="sheet.backup.structure.title">Structure</summary>
-                    <div id="backupVizTree" class="json-viz-tree-host mt-2" data-ref="sheet.backup.structure.tree">
-                    </div>
-                </details>
-            </div>
-            <div class="json-viz-block mb-0" data-ref="sheet.backup.raw">
-                <details class="json-viz-section" open data-ref="sheet.backup.raw.details">
-                    <summary class="json-viz-section-title" data-ref="sheet.backup.raw.title">Raw JSON</summary>
-                    <textarea class="form-control w-100 font-monospace small mt-2" id="backupTextArea" rows="10"
-                        spellcheck="false" oninput="onBackupTextInput()"
-                        data-ref="sheet.backup.raw.textarea"></textarea>
-                    <p class="small text-muted mb-0 mt-2" id="backupVizParseHint" aria-live="polite"
-                        data-ref="sheet.backup.raw.hint"></p>
-                </details>
-            </div>
-        </div>
+
 
         <!-- Search sheet (Cupertino Pane) — trades, watchlist, company pickers -->
         <div id="searchSheet" class="app-sheet-layout" aria-label="Search" data-ref="sheet.search">
@@ -2266,7 +2234,6 @@
     <script src="features/common/router.js"></script>
     <script src="features/gold/gold-page.js"></script>
     <script src="features/gold/gold-services.js"></script>
-    <script src="features/more/json-visualizer.js"></script>
     <script src="features/more/money-service.js"></script>
     <script src="features/positions/positions-service.js"></script>
     <script src="features/watchlist/watchlist-service.js"></script>

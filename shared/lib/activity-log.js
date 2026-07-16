@@ -51,13 +51,19 @@
     let config = { master: true, db: true, app: true };
 
     function loadConfig() {
-        if (typeof localStorage !== 'undefined') {
-            config.master = localStorage.getItem('activityLog_master') !== 'false';
-            config.db = localStorage.getItem('activityLog_db') !== 'false';
-            config.app = localStorage.getItem('activityLog_app') !== 'false';
+        try {
+            if (typeof localStorage !== 'undefined') {
+                config.master = localStorage.getItem('activityLog_master') !== 'false';
+                config.db = localStorage.getItem('activityLog_db') !== 'false';
+                config.app = localStorage.getItem('activityLog_app') !== 'false';
+            }
+        } catch (e) {
+            console.warn('MTFLogger: localStorage access failed, using default config', e);
         }
     }
     loadConfig();
+
+    console.log('[Activity Log] Logger initialized. Config:', config);
 
     const MTFLogger = {
         updateConfig: function() {
@@ -65,7 +71,7 @@
         },
         log: function(label, ...data) {
             if (!config.master) return;
-            if (label && label.includes('from DB') && !config.db) return;
+            if (label && typeof label === 'string' && label.includes('from DB') && !config.db) return;
             console.log(`[Activity Log] ${getCallerName()} | ${label}`, ...data);
         },
         warn: function(label, ...data) {

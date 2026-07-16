@@ -29,7 +29,7 @@
     "features/common/router.js",
     "features/gold/gold-page.js",
     "features/gold/gold-services.js",
-    "features/more/json-visualizer.js",
+
     "features/more/money-service.js",
     "features/positions/positions-service.js",
     "features/watchlist/watchlist-service.js",
