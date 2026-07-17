@@ -64,3 +64,4 @@ In the final response, provide:
 | #109 | Fix redundant DB calls on scroll in Positions | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/109) |
 | #110 | Set up initial HTML structure and core layout | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/110) |
 | #111 | Implementation Task: Temporarily Disable Permanent Delete & Batch Delete, Use Soft Delete Everywhere | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/111) |
+| #112 | New Ticket | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/112) |

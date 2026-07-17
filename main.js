@@ -6007,16 +6007,7 @@
                 const db = global.MTFDb;
                 let saved = false;
                 try {
-                    if (db && typeof db.isSyncConnected === 'function' && db.isSyncConnected() && typeof db.archiveTradeToCloud === 'function') {
-                        saved = await db.archiveTradeToCloud(closedTx);
-                        if (!saved) {
-                            MTFLogger.warn("Cloud archive failed; falling back to local storage update.");
-                            saved = await updateTransaction(id, closedTx);
-                        }
-                    } else {
-                        // Fallback to local storage if offline or not configured
-                        saved = await updateTransaction(id, closedTx);
-                    }
+                    saved = await updateTransaction(id, closedTx);
                 } catch (err) {
                     MTFLogger.error('Failed to close trade:', err);
                     saved = false;

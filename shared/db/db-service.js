@@ -132,32 +132,6 @@
         }).finally(() => { syncPushPending--; hooks.hideLoading(); });
     }
 
-    async function archiveTradeToCloud(tx) {
-        MTFLogger.log(`Action: archiveTradeToCloud | TxId: ${tx.id}`);
-        if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
-        const id = tx.id;
-        hooks.showLoading();
-        try {
-            await createDocument(`syncs/${syncCode}/closed_trades`, {
-                ...tx,
-                archivedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, id);
-            
-            const localData = db().getStorage();
-            if (localData && localData.transactions) {
-                localData.transactions = localData.transactions.filter(t => t.id !== id);
-                db().saveStorageLocal(localData);
-                bumpLocalVersionAndPush(localData);
-            }
-            return true;
-        } catch (err) {
-            MTFLogger.error('Failed to archive trade:', err);
-            return false;
-        } finally {
-            hooks.hideLoading();
-        }
-    }
-
     async function fetchClosedTradesFromCloud() {
         MTFLogger.log(`Action: fetchClosedTradesFromCloud | SyncCode: ${syncCode}`);
         if (!fbDb || !syncCode) return [];
@@ -787,7 +761,6 @@
         isFirebaseConfigured,
         initFirebase,
         cloudPush,
-        archiveTradeToCloud,
         fetchClosedTradesFromCloud,
         getClosedTradesCache,
         getFeed,
