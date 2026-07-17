@@ -49,7 +49,16 @@
             return;
         }
 
-        listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem, 'past');
+        const { tradeListPages = { past: 1 }, setPaginationState } = global.MTFComponents;
+        
+        if (typeof setPaginationState === 'function') {
+            setPaginationState('past', filtered, false, renderPastTradeListItem);
+        }
+
+        listContainer.innerHTML = renderFlatTradesList(filtered, renderPastTradeListItem, 'past', {
+            pageSize: 20, // PAGE_SIZE constant from trades-page
+            currentPage: tradeListPages.past || 1
+        });
     }
 
     global.MTFRegister({ renderPastTrades, PAST_PNL_OPTIONS });

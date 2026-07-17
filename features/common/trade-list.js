@@ -729,7 +729,7 @@
         if (t.targetReachedBeforeClose === undefined && isClosed) {
             targetReachedBeforeClose = (Number(t.netProfit) || 0) > 0;
         }
-        const { renderMetricsCell, escapeHtml: esc } = global.MTFComponents || {};
+        const { renderMetricsCell, escapeHtml: esc, MetricsGrid } = global.MTFComponents || {};
         const baseRef = variant === 'open' ? 'page.trades.list.item' : 'page.past.list.item';
         const cells = [
             {
@@ -783,12 +783,12 @@
             'data-trade-id': tradeId,
             'data-trade-status': status,
             'data-target-reached-before-close': String(targetReachedBeforeClose),
-            'data-trade-variant': variant
+            'data-trade-variant': variant,
+            'data-ref': `${baseRef}.metrics.grid`
         };
  
-        const attrsStr = Object.keys(gridAttrs).map(k => ` ${k}="${(esc || escapeHtml)(gridAttrs[k])}"`).join('');
-        const metricsGridHtml = renderMetricsCell
-            ? `<div class="trade-position-metrics" data-ref="${baseRef}.metrics"><div class="trade-position-grid" data-ref="${baseRef}.metrics.grid"${attrsStr}>${cells.map(renderMetricsCell).join('')}</div></div>`
+        const metricsGridHtml = (renderMetricsCell && MetricsGrid)
+            ? `<div class="trade-position-metrics" data-ref="${baseRef}.metrics">${MetricsGrid.grid(cells.map(renderMetricsCell), { attrs: gridAttrs, gap: '1rem' })}</div>`
             : '';
  
         return `
@@ -898,8 +898,50 @@
         return `<div class="trade-cards-stack d-flex flex-column w-100">${trades.map((item, i) => renderItem(item, i + 1)).join('')}</div>`;
     }
 
-    function renderFlatTradesList(trades, renderItem, variant = 'open') {
-        return renderTradesList(trades, renderItem);
+    function renderFlatTradesList(trades, renderItem, variant = 'open', paginationOpts = {}) {
+        const PAGE_SIZE = paginationOpts.pageSize || 20;
+        const currentPage = paginationOpts.currentPage || 1;
+        const visibleCount = PAGE_SIZE * currentPage;
+        const visible = trades.slice(0, visibleCount);
+        const remaining = trades.length - visible.length;
+
+        let html = `<div class="trade-cards-stack d-flex flex-column w-100" data-ref="page.${variant}.list-stack" data-trade-list-stack>`;
+        html += visible.map((item, i) => renderItem(item, i + 1)).join('');
+        html += '</div>';
+
+        if (remaining > 0) {
+            html += renderLoadMoreButton(variant, remaining, visibleCount);
+        }
+
+        // VoiceOver live region for announcing loaded items
+        html += `<div id="tradeListLiveRegion-${variant}" class="visually-hidden" aria-live="polite" aria-atomic="true" role="status" data-ref="page.${variant}.live-region"></div>`;
+
+        return html;
+    }
+
+    function renderLoadMoreButton(variant, remaining, startIndex) {
+        const nextBatch = Math.min(remaining, 20);
+        const label = `Load More · ${remaining} remaining`;
+        return `
+            <div class="d-flex justify-content-center py-3" data-ref="page.${variant}.load-more-wrapper" data-trade-load-more>
+                <button type="button"
+                    class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2 d-flex align-items-center gap-2"
+                    onclick="loadMoreTrades('${variant}')"
+                    aria-label="Load ${nextBatch} more trades, ${remaining} remaining"
+                    data-ref="page.${variant}.load-more-btn"
+                    data-component="load-more-trades">
+                    <i class="fa fa-chevron-down" aria-hidden="true"></i>
+                    <span>${label}</span>
+                </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Renders only the list item HTML for a slice of trades (for appending to DOM).
+     */
+    function renderTradesListItems(trades, renderItem, startIndex) {
+        return trades.map((item, i) => renderItem(item, startIndex + i + 1)).join('');
     }
 
     function renderDateGroupHeader(dateKey, items, opts = {}) {
@@ -959,6 +1001,8 @@
         groupTradesByDate,
         renderTradesList,
         renderFlatTradesList,
+        renderLoadMoreButton,
+        renderTradesListItems,
         renderDateGroupHeader,
         renderGroupedTrades
     });
@@ -985,12 +1029,7 @@
         return { net, invested, holdings };
     }
 
-    function renderPortfolioStatCard(label, valueHtml, valueClass) {
-        return `<div class="portfolio-stat-card">
-            <div class="portfolio-stat-label">${label}</div>
-            <div class="portfolio-stat-value text-truncate ${valueClass || ''}">${valueHtml}</div>
-        </div>`;
-    }
+
 
     function renderPortfolioSummaryCards({ net, invested, holdings }) {
         const n = Number(net) || 0;
@@ -1009,7 +1048,7 @@
         const pctFormatted = pct >= 0 ? `+${pct.toFixed(2)}%` : `${pct.toFixed(2)}%`;
         const pctClass = n > 0 ? 'text-success' : (n < 0 ? 'text-danger' : 'text-muted');
 
-        const { renderMetricsCell } = global.MTFComponents || {};
+        const { renderMetricsCell, MetricsGrid } = global.MTFComponents || {};
 
         const pnlCell = renderMetricsCell ? renderMetricsCell({
             label: 'Total P&L',
@@ -1089,11 +1128,13 @@
                 <span data-ref="page.trades.portfolio-summary.title">Portfolio Summary</span>
             </div>
             
-            <div class="portfolio-summary-cards row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
+            ${(MetricsGrid && MetricsGrid.grid) ? MetricsGrid.grid([pnlCell, investedCell, holdingsCell], { attrs: { 'data-ref': 'page.trades.portfolio-summary.grid' } }) : `
+            <div class="row align-items-center w-100 g-0" data-ref="page.trades.portfolio-summary.grid">
                 ${pnlCell}
                 ${investedCell}
                 ${holdingsCell}
             </div>
+            `}
         </div>
         
         <!-- Active Positions Header Card -->

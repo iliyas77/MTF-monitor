@@ -8,6 +8,10 @@
     global.MTFDb = MTFDb;
 
     global.MTFDbRegister = function register(exports) {
+        if (global.MTFLogger && global.MTFLogger.trace) {
+            exports = global.MTFLogger.trace(exports, 'db');
+        }
         Object.assign(MTFDb, exports);
+        Object.assign(global, exports);
     };
 })(typeof window !== 'undefined' ? window : globalThis);

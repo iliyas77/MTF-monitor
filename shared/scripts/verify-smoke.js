@@ -230,7 +230,6 @@ async function runSmoke(report) {
                 addAccount: typeof db.addMoneyAccount === 'function',
                 addEntry: typeof db.addMoneyEntry === 'function',
                 addTransfer: typeof db.addMoneyTransfer === 'function',
-                noteDbCall: typeof db.noteDbCall === 'function',
                 cloudPush: typeof db.cloudPush === 'function',
                 connectSync: typeof db.connectSync === 'function'
             }
@@ -315,7 +314,7 @@ async function runSmoke(report) {
                 hasPnl: /Total P\s*&\s*L/i.test(summaryText),
                 hasInvested: /Total Invested/i.test(summaryText),
                 hasHoldings: /Total Holdings/i.test(summaryText),
-                cardCount: summary?.querySelectorAll('.portfolio-stat-card')?.length || 0,
+                cardCount: summary?.querySelectorAll('[data-component="metrics-cell"]')?.length || 0,
                 rangeAll: !from && !to,
                 listHasTrade: /Smoke Open/i.test(document.getElementById('transactionList')?.textContent || '')
             };
@@ -367,7 +366,7 @@ async function runSmoke(report) {
                 rangeNotAll: !!(from && to),
                 hasHoldings: /Total Holdings/i.test(summary?.textContent || ''),
                 hasPnl: /Total P\s*&\s*L/i.test(summary?.textContent || ''),
-                hasCards: (summary?.querySelectorAll('.portfolio-stat-card') || []).length === 3,
+                hasCards: (summary?.querySelectorAll('[data-component="metrics-cell"]') || []).length === 3,
                 listText: document.getElementById('transactionList')?.textContent || ''
             };
         });
@@ -419,10 +418,10 @@ async function runSmoke(report) {
         const bucketCounts = await page.evaluate(() => {
             const summary = document.getElementById('summaryOpenStats');
             if (!summary) return { holdings: null, hasInvested: false, cardCount: 0 };
-            const cards = [...summary.querySelectorAll('.portfolio-stat-card')];
+            const cards = [...summary.querySelectorAll('[data-component="metrics-cell"]')];
             const read = (label) => {
-                const card = cards.find((el) => new RegExp(label, 'i').test(el.querySelector('.portfolio-stat-label')?.textContent || ''));
-                return card?.querySelector('.portfolio-stat-value')?.textContent?.trim() || null;
+                const card = cards.find((el) => new RegExp(label, 'i').test(el.querySelector('[class*="text-secondary"]')?.textContent || ''));
+                return card?.querySelector('[class*="fw-bold"]')?.textContent?.trim() || null;
             };
             const holdingsRaw = read('Total Holdings');
             return {
@@ -529,7 +528,7 @@ async function runSmoke(report) {
             const moreBtn = card.querySelector('[data-bs-toggle="dropdown"]');
             const openTarget = card.matches('[data-trade-open-detail]')
                 || !!card.querySelector('[data-trade-open-detail]');
-            const grid = card.querySelector('.trade-position-grid');
+            const grid = card.querySelector('[data-component="grid"]');
             const tagsText = card.querySelector('.trade-position-tags')?.textContent || '';
             const metaText = card.querySelector('.trade-position-meta')?.textContent || '';
             const buyOpensSheet = !!card.querySelector('[onclick*="openBuyPriceModal"]');
@@ -623,7 +622,7 @@ async function runSmoke(report) {
             const list = document.getElementById('transactionList');
             const card = list?.querySelector('[data-trade-card]');
             const id = card?.getAttribute('data-trade-id');
-            const grid = card?.querySelector('.trade-position-grid');
+            const grid = card?.querySelector('[data-component="grid"]');
             if (id && typeof window.openTradeDetail === 'function') window.openTradeDetail(id);
             return {
                 id,
@@ -1050,7 +1049,7 @@ async function runSmoke(report) {
         await page.fill('#calcBuyPrice', '100');
         await page.fill('#calcQty', '10');
         await page.waitForTimeout(100);
-        await page.click('[data-ref="page.mtf-calc.presets.chip"]:has-text("5%")');
+        await page.click('[data-ref="page.mtf-calc.presets.chip"][data-pct="5"]');
         await page.waitForTimeout(100);
         const sellPriceVal = await page.inputValue('#calcSellPrice');
         if (parseFloat(sellPriceVal) === 105) {
@@ -1083,7 +1082,7 @@ async function runSmoke(report) {
         // --- MTF Calculator Breakdown Modal (Assertion 4) ---
         await page.click('[data-ref="page.mtf-calc.broker-card"]:has-text("Zerodha")');
         await page.waitForTimeout(250);
-        const breakdownTitle = await page.textContent('.sheet-header-title');
+        const breakdownTitle = await page.textContent('#appSheetTitle');
         if (breakdownTitle && breakdownTitle.includes('Zerodha Breakdown')) {
             report.pass('MTF Calc Breakdown Modal', 'Breakdown sheet opened for Zerodha');
         } else {
@@ -1118,7 +1117,7 @@ async function runSmoke(report) {
         }
 
         // --- Gold Page Header Title (Assertion 7) ---
-        const goldHeaderTitle = await page.textContent('[data-ref="page.gold"] h4, [data-ref="page.gold"] .header-title, #page-gold h4');
+        const goldHeaderTitle = await page.textContent('#tab-gold-toggle, [data-ref="page.gold.calculator.title"]');
         if (goldHeaderTitle && goldHeaderTitle.trim().length > 0) {
             report.pass('Gold Page Title', `Gold Page header title is visible: "${goldHeaderTitle.trim()}"`);
         } else {
@@ -1161,10 +1160,10 @@ async function runSmoke(report) {
             if (window.page) window.page('/calendar');
         });
         await page.waitForTimeout(250);
-        const initialCalendarHeader = await page.textContent('[data-ref="page.calendar.header.title"], #page-calendar .calendar-header-title, #page-calendar h4');
+        const initialCalendarHeader = await page.textContent('#calendarMonthTitle, [data-ref="page.calendar.toolbar.month-title"]');
         await page.click('[data-ref="page.calendar.header.next-btn"], #page-calendar .btn-next, #page-calendar button:has(.fa-chevron-right)');
         await page.waitForTimeout(200);
-        const nextCalendarHeader = await page.textContent('[data-ref="page.calendar.header.title"], #page-calendar .calendar-header-title, #page-calendar h4');
+        const nextCalendarHeader = await page.textContent('#calendarMonthTitle, [data-ref="page.calendar.toolbar.month-title"]');
         if (initialCalendarHeader !== nextCalendarHeader) {
             report.pass('Calendar Month Nav', `Navigated calendar month successfully from "${initialCalendarHeader?.trim()}" to "${nextCalendarHeader?.trim()}"`);
         } else {
@@ -1211,7 +1210,7 @@ async function runSmoke(report) {
         }
 
         // --- Settings Page Title (Assertion 15) ---
-        const settingsTitle = await page.textContent('[data-ref="page.settings.container"] h4, #page-settings h4');
+        const settingsTitle = await page.textContent('[data-ref="header.settings.title"], h1.app-header-title');
         if (settingsTitle && settingsTitle.trim().length > 0) {
             report.pass('Settings Title', `Settings header title is visible: "${settingsTitle.trim()}"`);
         } else {

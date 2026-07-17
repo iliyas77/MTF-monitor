@@ -993,7 +993,7 @@
                 if (refreshMoneyHistorySheetIfOpen) refreshMoneyHistorySheetIfOpen();
             } catch (err) {
                 if (err && err.message === 'sync_required') return;
-                console.warn('saveMoneyEntry', err);
+                MTFLogger.warn('saveMoneyEntry', err);
                 showToast('Could not save transaction.', 'danger');
             }
         };

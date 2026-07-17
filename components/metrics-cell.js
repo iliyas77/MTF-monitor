@@ -1,8 +1,7 @@
 /**
- * MetricsGrid — reusable KPI strip built on the `trade-position-cell` design system.
+ * MetricsCell — reusable KPI strip.
  *
- * Encapsulates the three-layer layout used across the app:
- *   .trade-position-metrics > .trade-position-grid > .trade-position-cell
+ * Encapsulates the cell layout used across the app.
  *
  * Supports every feature found in the existing usages:
  *   - Rich cells (tinted icon box + label + value + optional subtitle pill)
@@ -18,7 +17,6 @@
  * Usage:
  *   const { renderMetricsCell } = global.MTFComponents;
  *   const cellHtml = renderMetricsCell({ label: 'Current Price', value: '₹123.45', icon: 'fa-arrow-trend-up', iconTone: 'green' });
- *   const { renderMetricsCell } = global.MTFComponents;
  */
 (function (global) {
     'use strict';
@@ -150,9 +148,9 @@
         const isClickable = !!cell.onclick;
         const tag = isClickable ? 'button' : 'div';
         
-        let baseCellClasses = 'd-flex align-items-start gap-2 flex-fill min-w-0 px-2 border-end overflow-hidden';
+        let baseCellClasses = 'd-flex align-items-start gap-2 flex-fill min-w-0 px-2 overflow-hidden';
         if (isClickable) {
-            baseCellClasses = 'btn btn-link text-decoration-none p-0 bg-transparent text-start border-0 border-end ' + baseCellClasses;
+            baseCellClasses = 'btn btn-link text-decoration-none p-0 bg-transparent text-start border-0 ' + baseCellClasses;
         }
 
         const typeAttr = isClickable ? ' type="button"' : '';
@@ -161,7 +159,7 @@
 
         // ---- target-status host slot ----
         if (variant === 'target-status') {
-            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
+            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="metrics-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${cell.hostHtml || ''}</${tag}>`;
         }
 
         // ---- progress variant ----
@@ -170,7 +168,7 @@
             const pctText = p.pct != null ? `${Number(p.pct).toFixed(p.pctDecimals == null ? 0 : p.pctDecimals)}%` : '';
             const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
             const pctRef = baseRef ? ` data-ref="${esc(baseRef)}.progress-pct"` : '';
-            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>
+            return `<${tag} class="${baseCellClasses}${extraClass}" style="min-width: 115px;" data-component="metrics-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>
                 <div class="d-flex flex-column align-items-start gap-1 min-w-0 w-100"${baseRef ? ` data-ref="${esc(baseRef)}.body"` : ''}>
                     ${cell.label ? `<span class="text-secondary text-truncate fw-medium" style="font-size: 11px; max-width: 100%;"${labelRef}>${esc(cell.label)}</span>` : ''}
                     ${pctText ? `<span class="text-dark fw-bold text-truncate" style="font-size: 12px;"${pctRef}>${esc(pctText)}</span>` : ''}
@@ -182,7 +180,7 @@
         // ---- rich / simple cell ----
         const iconHtml = cell.icon ? iconBoxHtml(cell.icon, cell.iconTone, baseRef) : '';
         const bodyAlign = isCenter ? 'align-items-center text-center' : 'align-items-start';
-        const refreshHtml = cell.refresh ? ` <i class="fas fa-redo-alt pf-refresh-icon ms-1 text-secondary" aria-hidden="true"${baseRef ? ` data-ref="${esc(baseRef)}.refresh"` : ''}></i>` : '';
+        const refreshHtml = cell.refresh ? ` <i class="fas fa-redo-alt metrics-refresh-icon ms-1 text-secondary" aria-hidden="true"${baseRef ? ` data-ref="${esc(baseRef)}.refresh"` : ''}></i>` : '';
         const labelRef = baseRef ? ` data-ref="${esc(baseRef)}.label"` : '';
         const valWrapperRef = baseRef ? ` data-ref="${esc(baseRef)}.value-wrapper"` : '';
         const valRef = baseRef ? ` data-ref="${esc(baseRef)}.value"` : '';
@@ -197,7 +195,7 @@
             </div>
         `;
 
-        return `<${tag} class="${baseCellClasses}${alignClass}${extraClass}" style="min-width: 115px;" data-component="trade-position-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
+        return `<${tag} class="${baseCellClasses}${alignClass}${extraClass}" style="min-width: 115px;" data-component="metrics-cell"${typeAttr}${dataStr}${liveField}${refAttr}${onclickAttr}${ariaAttr}>${iconHtml}${bodyHtml}</${tag}>`;
     }
 
     /* ---------- live-update helper ---------- */
@@ -205,7 +203,7 @@
     /**
      * Patch a live field inside a grid without full re-render.
      * Mirrors the in-place update strategy used in main.js (only write on change).
-     * @param {HTMLElement} gridEl - the .trade-position-grid element
+     * @param {HTMLElement} gridEl - the grid element
      * @param {string} field      - the data-live-field value to match
      * @param {string} value      - new text content
      * @param {string} [toneClass]- optional tone class to set on the value span
