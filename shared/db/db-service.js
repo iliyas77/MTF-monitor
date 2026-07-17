@@ -272,12 +272,7 @@
 
             try { hooks.migrateTradeCompanySymbols({ force: true }); } catch (_) {}
             syncClosedTradesListener();
-            if (typeof db().onMoneySyncConnected === 'function') {
-                Promise.resolve(db().onMoneySyncConnected(legacyMoney)).catch(() => {});
-            }
-            if (typeof db().applyLedgerFromDocData === 'function') {
-                try { db().applyLedgerFromDocData(snapData); } catch (_) {}
-            }
+
             if (!opts.silent) hooks.showToast('Cloud sync connected!', 'success');
             hooks.refreshAllViews();
             hooks.renderSettings();
