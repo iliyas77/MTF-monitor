@@ -6122,6 +6122,17 @@
     }
     */
 
+    function resetData() {
+        if (typeof hooks === 'function' && hooks().showToast) {
+            hooks().showToast('Permanent reset is currently disabled.', 'warning');
+        } else if (typeof showToast === 'function') {
+            showToast('Permanent reset is currently disabled.', 'warning');
+        }
+    }
+
+    function performReset() {}
+
+
     // ---------- INIT ----------
     document.addEventListener('DOMContentLoaded', function () {
         BottomBar.mount(document.getElementById('bottomBarMount'), {

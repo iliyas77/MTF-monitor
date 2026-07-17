@@ -371,7 +371,10 @@
             }
         });
 
-        if (status === 'open') {
+        if (status === 'closed' || status === 'close') {
+            const allClosed = (storage.transactions || []).filter(t => t.status === 'close' || t.status === 'closed');
+            return Promise.resolve(applyClientSideQuery(allClosed, queryConfig, options));
+        } else if (status === 'open' || status === 'active') {
             return Promise.resolve(openTxs);
         }
         
@@ -471,22 +474,12 @@
             global.MTFLocalDB.clearTransactions().catch(e => MTFLogger.error("Failed to clear LocalDB", e));
         }
         
-        MTFLogger.log(`[DB] syncClosedTradesListener: subscribing with query key: ${queryKey}`);
-        closedTradesUnsub = listenToCollection(
-            `syncs/${syncCode}/closed_trades`,
-            (res) => {
-                if (res.success) {
-                    closedTradesCache = res.data;
-                    if (global.MTFLocalDB && res.data.length > 0) {
-                        global.MTFLocalDB.saveTransactions(res.data).catch(e => MTFLogger.error("Failed to save to LocalDB", e));
-                    }
-                    MTFLogger.log("[DB] onSnapshot: received filtered closed trades collection from Firestore (no limits):", closedTradesCache.length);
-                    hooks.refreshAllViews();
-                }
-            },
-            queryConfig,
-            {} // Removed the 20-item pagination limit
-        );
+        MTFLogger.log(`[DB] syncClosedTradesListener: disabled (closed trades are now stored in the main document)`);
+        if (global.MTFLocalDB) {
+            // Re-populate LocalDB from the main transactions array since we aren't fetching a subcollection anymore
+            const allClosed = (storage.transactions || []).filter(t => t.status === 'close' || t.status === 'closed');
+            global.MTFLocalDB.saveTransactions(allClosed).catch(e => MTFLogger.error("Failed to save to LocalDB", e));
+        }
     }
 
     // ----- Core CRUD operations (v8 compat style) -----
