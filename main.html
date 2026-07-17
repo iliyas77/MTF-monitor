@@ -1479,42 +1479,7 @@
                             <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"
                                 data-ref="sheet.trade-filter.past.nav.status.chevron"></i>
                         </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="holding"
-                            onclick="setTradeFilterCategory('holding')" data-ref="sheet.trade-filter.past.nav.holding">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.holding.icon"><i class="fas fa-clock"></i></span>
-                            <span class="trade-filter-nav-label"
-                                data-ref="sheet.trade-filter.past.nav.holding.label">Holding days</span>
-                            <span class="trade-filter-nav-badge d-none" data-filter-badge="holding"
-                                data-ref="sheet.trade-filter.past.nav.holding.badge">0</span>
-                            <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.holding.chevron"></i>
-                        </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="performance"
-                            onclick="setTradeFilterCategory('performance')"
-                            data-ref="sheet.trade-filter.past.nav.performance">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.performance.icon"><i
-                                    class="fas fa-chart-line"></i></span>
-                            <span class="trade-filter-nav-label"
-                                data-ref="sheet.trade-filter.past.nav.performance.label">Performance</span>
-                            <span class="trade-filter-nav-badge d-none" data-filter-badge="performance"
-                                data-ref="sheet.trade-filter.past.nav.performance.badge">0</span>
-                            <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.performance.chevron"></i>
-                        </button>
-                        <button type="button" class="trade-filter-nav-item" data-filter-cat="sort"
-                            onclick="setTradeFilterCategory('sort')" data-ref="sheet.trade-filter.past.nav.sort">
-                            <span class="trade-filter-nav-icon" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.sort.icon"><i
-                                    class="fas fa-arrow-down-wide-short"></i></span>
-                            <span class="trade-filter-nav-label" data-ref="sheet.trade-filter.past.nav.sort.label">Sort
-                                by</span>
-                            <span class="trade-filter-nav-badge d-none" data-filter-badge="sort"
-                                data-ref="sheet.trade-filter.past.nav.sort.badge">0</span>
-                            <i class="fas fa-chevron-right trade-filter-nav-chevron" aria-hidden="true"
-                                data-ref="sheet.trade-filter.past.nav.sort.chevron"></i>
-                        </button>
+
                         <button type="button" class="trade-filter-nav-item" data-filter-cat="dates"
                             onclick="setTradeFilterCategory('dates')" data-ref="sheet.trade-filter.past.nav.dates">
                             <span class="trade-filter-nav-icon" aria-hidden="true"
@@ -1558,15 +1523,7 @@
                                         onchange="updateTradeFilterSummary()"
                                         data-ref="sheet.trade-filter.past.panels.status.closed.input">
                                 </label>
-                                <label class="trade-filter-option" for="tradeFilterStatus-cancelled"
-                                    data-ref="sheet.trade-filter.past.panels.status.cancelled">
-                                    <span
-                                        data-ref="sheet.trade-filter.past.panels.status.cancelled.label">Cancelled</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterStatus"
-                                        value="cancelled" id="tradeFilterStatus-cancelled"
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.status.cancelled.input">
-                                </label>
+
                             </div>
                             <p class="trade-filter-panel-hint" id="tradeFilterStatusHint"
                                 data-ref="sheet.trade-filter.past.panels.status.hint"><i class="fas fa-info-circle me-1"
@@ -1576,155 +1533,6 @@
                                     trades</span></p>
                         </section>
 
-                        <section class="trade-filter-panel" data-filter-panel="holding" aria-label="Holding days" hidden
-                            data-ref="sheet.trade-filter.past.panels.holding">
-                            <h4 class="trade-filter-panel-title"
-                                data-ref="sheet.trade-filter.past.panels.holding.title">Holding days</h4>
-                            <div class="trade-filter-options" role="radiogroup" aria-label="Holding days"
-                                data-ref="sheet.trade-filter.past.panels.holding.options">
-                                <label class="trade-filter-option" for="tradeFilterHold-all"
-                                    data-ref="sheet.trade-filter.past.panels.holding.all">
-                                    <span data-ref="sheet.trade-filter.past.panels.holding.all.label">All</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
-                                        id="tradeFilterHold-all" value="all" checked
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.holding.all.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterHold-1-3"
-                                    data-ref="sheet.trade-filter.past.panels.holding.1-3">
-                                    <span data-ref="sheet.trade-filter.past.panels.holding.1-3.label">1–3 days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
-                                        id="tradeFilterHold-1-3" value="1-3" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.holding.1-3.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterHold-4-7"
-                                    data-ref="sheet.trade-filter.past.panels.holding.4-7">
-                                    <span data-ref="sheet.trade-filter.past.panels.holding.4-7.label">4–7 days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
-                                        id="tradeFilterHold-4-7" value="4-7" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.holding.4-7.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterHold-8"
-                                    data-ref="sheet.trade-filter.past.panels.holding.8">
-                                    <span data-ref="sheet.trade-filter.past.panels.holding.8.label">8+ days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterHoldDays"
-                                        id="tradeFilterHold-8" value="8+" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.holding.8.input">
-                                </label>
-                            </div>
-                        </section>
-
-                        <section class="trade-filter-panel" data-filter-panel="performance" aria-label="Performance"
-                            hidden data-ref="sheet.trade-filter.past.panels.performance">
-                            <h4 class="trade-filter-panel-title"
-                                data-ref="sheet.trade-filter.past.panels.performance.title">Performance</h4>
-                            <div class="trade-filter-options trade-filters-checks" role="group" aria-label="Performance"
-                                data-ref="sheet.trade-filter.past.panels.performance.options">
-                                <label class="trade-filter-option" for="tradeFilterPerf-profit"
-                                    data-ref="sheet.trade-filter.past.panels.performance.profit">
-                                    <span
-                                        data-ref="sheet.trade-filter.past.panels.performance.profit.label">Profit</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-profit"
-                                        value="profit" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.performance.profit.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterPerf-loss"
-                                    data-ref="sheet.trade-filter.past.panels.performance.loss">
-                                    <span data-ref="sheet.trade-filter.past.panels.performance.loss.label">Loss</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-loss"
-                                        value="loss" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.performance.loss.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterPerf-near"
-                                    data-ref="sheet.trade-filter.past.panels.performance.near">
-                                    <span data-ref="sheet.trade-filter.past.panels.performance.near.label">Near
-                                        target</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-near"
-                                        value="near_target" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.performance.near.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterPerf-hit"
-                                    data-ref="sheet.trade-filter.past.panels.performance.hit">
-                                    <span data-ref="sheet.trade-filter.past.panels.performance.hit.label">Target
-                                        hit</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-hit"
-                                        value="target_hit" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.performance.hit.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterPerf-verified"
-                                    data-ref="sheet.trade-filter.past.panels.performance.verified">
-                                    <span
-                                        data-ref="sheet.trade-filter.past.panels.performance.verified.label">Verified</span>
-                                    <input type="checkbox" class="trade-filter-check" id="tradeFilterPerf-verified"
-                                        value="verified" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.performance.verified.input">
-                                </label>
-                            </div>
-                            <p class="trade-filter-panel-hint"
-                                data-ref="sheet.trade-filter.past.panels.performance.hint"><i
-                                    class="fas fa-info-circle me-1" aria-hidden="true"
-                                    data-ref="sheet.trade-filter.past.panels.performance.hint.icon"></i><span
-                                    data-ref="sheet.trade-filter.past.panels.performance.hint.text">Match any selected —
-                                    leave empty for all</span></p>
-                        </section>
-
-                        <section class="trade-filter-panel" data-filter-panel="sort" aria-label="Sort by" hidden
-                            data-ref="sheet.trade-filter.past.panels.sort">
-                            <h4 class="trade-filter-panel-title" data-ref="sheet.trade-filter.past.panels.sort.title">
-                                Sort by</h4>
-                            <div class="trade-filter-options" role="radiogroup" aria-label="Sort by"
-                                data-ref="sheet.trade-filter.past.panels.sort.options">
-                                <label class="trade-filter-option" for="tradeFilterSort-company"
-                                    data-ref="sheet.trade-filter.past.panels.sort.company">
-                                    <span data-ref="sheet.trade-filter.past.panels.sort.company.label">Company</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
-                                        value="company" id="tradeFilterSort-company"
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.company.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterSort-holding"
-                                    data-ref="sheet.trade-filter.past.panels.sort.holding">
-                                    <span data-ref="sheet.trade-filter.past.panels.sort.holding.label">Holding
-                                        days</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
-                                        value="holding" id="tradeFilterSort-holding" checked
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.holding.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterSort-buyDate"
-                                    data-ref="sheet.trade-filter.past.panels.sort.buy-date">
-                                    <span data-ref="sheet.trade-filter.past.panels.sort.buy-date.label">Buy date</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
-                                        value="buyDate" id="tradeFilterSort-buyDate"
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.buy-date.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterSort-sellDate"
-                                    data-ref="sheet.trade-filter.past.panels.sort.sell-date">
-                                    <span data-ref="sheet.trade-filter.past.panels.sort.sell-date.label">Sell
-                                        date</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort"
-                                        value="sellDate" id="tradeFilterSort-sellDate"
-                                        onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.sell-date.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterSort-pnl"
-                                    data-ref="sheet.trade-filter.past.panels.sort.pnl">
-                                    <span>P&amp;L</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="pnl"
-                                        id="tradeFilterSort-pnl" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.pnl.input">
-                                </label>
-                                <label class="trade-filter-option" for="tradeFilterSort-return"
-                                    data-ref="sheet.trade-filter.past.panels.sort.return">
-                                    <span data-ref="sheet.trade-filter.past.panels.sort.return.label">Current
-                                        return</span>
-                                    <input type="radio" class="trade-filter-check" name="tradeFilterSort" value="return"
-                                        id="tradeFilterSort-return" onchange="updateTradeFilterSummary()"
-                                        data-ref="sheet.trade-filter.past.panels.sort.return.input">
-                                </label>
-                            </div>
-                        </section>
 
                         <section class="trade-filter-panel" data-filter-panel="dates" aria-label="Date range" hidden
                             data-ref="sheet.trade-filter.past.panels.dates">
