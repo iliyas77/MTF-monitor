@@ -1119,11 +1119,11 @@
 
         return `
         <!-- Portfolio Summary Card -->
-        <div class="card bg-white border shadow-none p-3 mb-4" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;" data-ref="page.trades.portfolio-summary">
+        <div class="card bg-gr border-gr-strong shadow-sm p-3 mb-4 rounded-4" data-ref="page.trades.portfolio-summary">
             <!-- Section 1 Title -->
-            <div class="d-flex align-items-center mb-3" style="font-size: 18px; font-weight: 600; color: #1f2937;" data-ref="page.trades.portfolio-summary.title-wrapper">
+            <div class="d-flex align-items-center mb-3 fs-5 fw-semibold text-gr1" data-ref="page.trades.portfolio-summary.title-wrapper">
                 <span class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success me-2 flex-shrink-0" style="width: 28px; height: 28px;" data-ref="page.trades.portfolio-summary.title-icon">
-                    <i class="fas fa-chart-simple" style="font-size: 14px;"></i>
+                    <i class="fas fa-chart-simple"></i>
                 </span>
                 <span data-ref="page.trades.portfolio-summary.title">Portfolio Summary</span>
             </div>
@@ -1138,23 +1138,23 @@
         </div>
         
         <!-- Active Positions Header Card -->
-        <div class="card bg-white border shadow-none p-3 mb-0" style="border-radius: 18px; border-color: #E8E8E8 !important; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02) !important;" data-ref="page.trades.header-card">
+        <div class="card bg-gr border-gr-strong shadow-sm p-3 mb-0 rounded-4" data-ref="page.trades.header-card">
             <div class="d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
                     <span class="rounded-circle d-flex align-items-center justify-content-center ${section2IconBg} flex-shrink-0" style="width: 32px; height: 32px;" data-ref="page.trades.header-card.icon">
-                        <i class="fas ${section2Icon}" style="font-size: 14px;"></i>
+                        <i class="fas ${section2Icon}"></i>
                     </span>
                     <div class="d-flex flex-column">
-                        <h2 class="fs-6 fw-bold text-dark mb-0" data-ref="page.trades.header-card.title">${section2Title}</h2>
-                        <span class="text-muted" style="font-size: 11px;" data-ref="page.trades.header-card.subtitle">${section2Subtitle}</span>
+                        <h2 class="fs-6 fw-bold text-gr1 mb-0" data-ref="page.trades.header-card.title">${section2Title}</h2>
+                        <span class="text-gr-muted small" data-ref="page.trades.header-card.subtitle">${section2Subtitle}</span>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openSortSheet()" style="font-size: 12px; font-weight: 500;" data-ref="page.trades.header-card.sort-btn">
-                        <i class="fas fa-arrow-down-wide-short text-muted" style="font-size: 11px;"></i> Sort <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1 fw-medium" onclick="window.openSortSheet()" data-ref="page.trades.header-card.sort-btn">
+                        <i class="fas fa-arrow-down-wide-short text-muted"></i> Sort <i class="fas fa-chevron-down fa-xs text-muted"></i>
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1" onclick="window.openFilterSheet()" style="font-size: 12px; font-weight: 500;" data-ref="page.trades.header-card.filter-btn">
-                        <i class="fas fa-filter text-muted" style="font-size: 11px;"></i> Filter <i class="fas fa-chevron-down text-muted" style="font-size: 9px;"></i>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 d-flex align-items-center gap-1 fw-medium" onclick="window.openFilterSheet()" data-ref="page.trades.header-card.filter-btn">
+                        <i class="fas fa-filter text-muted"></i> Filter <i class="fas fa-chevron-down fa-xs text-muted"></i>
                     </button>
                 </div>
             </div>

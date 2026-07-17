@@ -20,7 +20,7 @@ When generating a ticket for `ticket.txt`, the AI MUST use this exact pattern:
 
 ---
 
-## Implementation Instructions:
+Implementation Instructions:
 
 First, analyze the existing implementation and identify the root cause. Do not implement a workaround if the underlying issue can be fixed properly.
 Strictly follow all existing Antigravity project rules throughout the implementation.
@@ -32,7 +32,7 @@ Prevent duplicate database/API calls, duplicate event listeners, race conditions
 Maintain an activity log during implementation, including the files modified, changes made, and reasons for each change.
 After implementation, run `npm run build` and resolve any build errors before considering the task complete.
 
-## In the final response, provide:
+In the final response, provide:
 1. Root cause identified
 2. Summary of the implementation
 3. Files modified
@@ -56,3 +56,11 @@ After implementation, run `npm run build` and resolve any build errors before co
 | #96 | Remove pagination limit for Positions/Transactions fetch | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/96) |
 | #97 | Implement Local Caching for Transactions DB | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/97) |
 | #101 | Fix redundant DB calls on scroll in Positions | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/101) |
+| #104 | Redesign the Positions summary section | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/104) |
+| #105 | Redesign the Positions summary section | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/105) |
+| #106 | Implement Local Caching for Transactions DB | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/106) |
+| #107 | Remove pagination limit for Positions/Transactions fetch | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/107) |
+| #108 | Redesign the Positions summary section | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/108) |
+| #109 | Fix redundant DB calls on scroll in Positions | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/109) |
+| #110 | Set up initial HTML structure and core layout | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/110) |
+| #111 | Implementation Task: Temporarily Disable Permanent Delete & Batch Delete, Use Soft Delete Everywhere | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/111) |

@@ -28,7 +28,8 @@ function checkGhAuth() {
 
 function parseNewTickets(content) {
     // Looks for blocks starting with ### [NEW]
-    const newTicketsRegex = /### \[NEW\] (.*?)\n\*\*Status:\*\* (.*?)\n\*\*Description:\*\*\n([\s\S]*?)(?=\n### \[NEW\]|\n---|$)/g;
+    // The description captures everything until the next ### [NEW] or end of file
+    const newTicketsRegex = /### \[NEW\] (.*?)\n\*\*Status:\*\* (.*?)\n\*\*Description:\*\*\n([\s\S]*?)(?=\n### \[NEW\]|$)/g;
     const tickets = [];
     let match;
     
@@ -40,6 +41,29 @@ function parseNewTickets(content) {
             originalText: match[0]
         });
     }
+
+    // Fallback: If no strict formatted tickets are found, but there is content,
+    // treat the entire file as a single new ticket.
+    if (tickets.length === 0 && content.trim().length > 0) {
+        let title = "New Ticket";
+        // Attempt to find a heading to use as the title
+        const headingMatch = content.match(/^#{1,6}\s+(?:\*\*)?(.*?)(?:\*\*)?\s*$/m);
+        if (headingMatch && headingMatch[1]) {
+            title = headingMatch[1].trim();
+        } else {
+            // Fallback to first line if it's short enough
+            const firstLine = content.trim().split('\n')[0].trim();
+            if (firstLine.length < 80) title = firstLine;
+        }
+
+        tickets.push({
+            title: title,
+            status: 'Todo',
+            description: content.trim(),
+            originalText: content
+        });
+    }
+
     return tickets;
 }
 
@@ -62,7 +86,15 @@ function pushNewTickets(tickets) {
         const issueId = issueIdMatch ? `#${issueIdMatch[1]}` : 'Unknown';
         
         console.log('  Adding to GitHub Project...');
-        runCmd(`gh project item-add ${PROJECT_NUMBER} --owner ${PROJECT_OWNER} --url "${issueUrl}"`);
+        try {
+            execSync(`gh project item-add ${PROJECT_NUMBER} --owner ${PROJECT_OWNER} --url "${issueUrl}"`, { stdio: 'pipe' });
+            console.log('  Successfully added to project.');
+        } catch (e) {
+            console.error('\n⚠️  WARNING: Could not add issue to GitHub Project.');
+            console.error('   Error: Your GitHub CLI is likely missing the "project" scope.');
+            console.error('   To fix this permanently, run this command in your terminal:');
+            console.error('   gh auth refresh -s project\n');
+        }
         
         synced.push({
             ...t,

@@ -735,7 +735,12 @@
                         batch.update(ref, op.data);
                         break;
                     case 'delete':
-                        batch.delete(ref);
+                        // TEMP DISABLED:
+                        // Permanent Batch Delete is temporarily disabled.
+                        // Retained for future implementation.
+                        // Currently replaced by Soft Delete.
+                        // batch.delete(ref);
+                        batch.update(ref, { isDeleted: true, deletedAt: firebase.firestore.FieldValue.serverTimestamp() });
                         break;
                     default:
                         throw new Error(`Unsupported batch operation: ${op.type}`);

@@ -3561,6 +3561,11 @@
                 fullWidth: true
             });
         }
+        /*
+        // TEMP DISABLED:
+        // Permanent Delete is temporarily disabled.
+        // Retained for future implementation.
+        // Currently replaced by Soft Delete.
         const resetHost = document.getElementById('settingsResetBtnHost');
         if (resetHost) {
             resetHost.innerHTML = renderAppButton('Reset', {
@@ -3570,6 +3575,7 @@
                 size: 'sm'
             });
         }
+        */
     }
 
     let marketFeedChecking = false;
@@ -6084,6 +6090,11 @@
         connectSync(input ? input.value : '');
     }
 
+    // TEMP DISABLED:
+    // Permanent Delete is temporarily disabled.
+    // Retained for future implementation.
+    // Currently replaced by Soft Delete.
+    /*
     function resetData() {
         const syncNote = getSyncCode() ? '<p class="small text-muted mb-2"><i class="fas fa-cloud me-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="fw-medium text-body-secondary">all synced devices</span>.</p>' : '';
         AppDialog.open(
@@ -6118,6 +6129,7 @@
         renderSettings();
         refreshActiveMoreView();
     }
+    */
 
     // ---------- INIT ----------
     document.addEventListener('DOMContentLoaded', function () {

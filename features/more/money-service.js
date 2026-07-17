@@ -340,12 +340,27 @@
         const acc = accountsCache.find(a => a.id === id) || null;
         console.log("[DB] deleteMoneyAccount: deleting money account:", acc);
         if (!requireSync()) return Promise.reject(new Error('sync_required'));
+        // TEMP DISABLED:
+        // Permanent Delete is temporarily disabled.
+        // Retained for future implementation.
+        // Currently replaced by Soft Delete.
+        /*
         const del = firebase.firestore.FieldValue.delete();
         const fields = {
             [`moneyLedger.accounts.${id}`]: del
         };
         entriesCache.filter((e) => e.accountId === id).forEach((e) => {
             fields[`moneyLedger.entries.${e.id}`] = del;
+        });
+        */
+        const now = new Date().toISOString();
+        const fields = {
+            [`moneyLedger.accounts.${id}.isDeleted`]: true,
+            [`moneyLedger.accounts.${id}.updatedAt`]: now
+        };
+        entriesCache.filter((e) => e.accountId === id).forEach((e) => {
+            fields[`moneyLedger.entries.${e.id}.isDeleted`] = true;
+            fields[`moneyLedger.entries.${e.id}.updatedAt`] = now;
         });
         await patchLedgerFields(fields);
         removeAccountLocal(id);
@@ -419,6 +434,11 @@
         if (!requireSync()) return Promise.reject(new Error('sync_required'));
         const existing = getMoneyEntry(id);
         if (!existing) return;
+        // TEMP DISABLED:
+        // Permanent Delete is temporarily disabled.
+        // Retained for future implementation.
+        // Currently replaced by Soft Delete.
+        /*
         const del = firebase.firestore.FieldValue.delete();
 
         if (existing.type === 'transfer' && existing.transferGroupId) {
@@ -428,15 +448,32 @@
                 fields[`moneyLedger.entries.${e.id}`] = del;
             });
             await patchLedgerFields(fields);
-            removeEntriesByGroupLocal(existing.transferGroupId);
-            notifyMoneyChanged();
-            return;
+            peers.forEach(e => removeEntryLocal(e.id));
+        } else {
+            await patchLedgerFields({
+                [`moneyLedger.entries.${id}`]: del
+            });
+            removeEntryLocal(id);
         }
+        */
 
-        await patchLedgerFields({
-            [`moneyLedger.entries.${id}`]: del
-        });
-        removeEntryLocal(id);
+        const now = new Date().toISOString();
+        if (existing.type === 'transfer' && existing.transferGroupId) {
+            const peers = entriesCache.filter((e) => e.transferGroupId === existing.transferGroupId);
+            const fields = {};
+            peers.forEach((e) => {
+                fields[`moneyLedger.entries.${e.id}.isDeleted`] = true;
+                fields[`moneyLedger.entries.${e.id}.updatedAt`] = now;
+            });
+            await patchLedgerFields(fields);
+            peers.forEach(e => removeEntryLocal(e.id));
+        } else {
+            await patchLedgerFields({
+                [`moneyLedger.entries.${id}.isDeleted`]: true,
+                [`moneyLedger.entries.${id}.updatedAt`]: now
+            });
+            removeEntryLocal(id);
+        }
         notifyMoneyChanged();
     }
 
