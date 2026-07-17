@@ -48,7 +48,7 @@
         return 'Feature: general | Caller: unknown';
     }
 
-    let config = { master: true, db: true, app: true };
+    let config = { master: true, db: true, app: true, trace: true };
 
     function loadConfig() {
         try {
@@ -56,6 +56,7 @@
                 config.master = localStorage.getItem('activityLog_master') !== 'false';
                 config.db = localStorage.getItem('activityLog_db') !== 'false';
                 config.app = localStorage.getItem('activityLog_app') !== 'false';
+                config.trace = localStorage.getItem('activityLog_trace') !== 'false';
             }
         } catch (e) {
             console.warn('MTFLogger: localStorage access failed, using default config', e);
@@ -88,27 +89,28 @@
                 if (typeof originalMethod === 'function') {
                     serviceObj[key] = function(...args) {
                         const callerStr = key;
-                        if (config.master && config.app) {
+                        if (config.master && config.trace) {
                             console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method initiated`);
                         }
                         try {
                             const result = originalMethod.apply(this, args);
                             if (result instanceof Promise) {
                                 return result.finally(() => {
-                                    if (config.master && config.app) {
+                                    if (config.master && config.trace) {
                                         console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
                                     }
                                 });
+                            } else {
+                                if (config.master && config.trace) {
+                                    console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
+                                }
+                                return result;
                             }
-                            if (config.master && config.app) {
-                                console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited`);
-                            }
-                            return result;
-                        } catch (e) {
-                            if (config.master && config.app) {
+                        } catch (err) {
+                            if (config.master && config.trace) {
                                 console.log(`[Activity Log] Feature: ${trackName} | Caller: ${callerStr} | Method exited (with error)`);
                             }
-                            throw e;
+                            throw err;
                         }
                     };
                 }

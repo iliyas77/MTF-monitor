@@ -613,3 +613,15 @@ When creating or modifying a reusable component in the `components/` directory, 
 * **No Class Properties**: Do not expose parameters that allow consumers to inject arbitrary CSS classes into specific internal elements of the component.
 * **Configuration via `attrs`**: If a consumer needs to add classes (or any attributes) to the root element of the component, they must do so via the standard `attrs` object (e.g., `attrs: { class: 'custom-class' }`), which will apply to the root wrapper.
 * **Why**: Providing specific class configuration properties encourages consumers to write custom CSS or override the component's design from the outside, which leads to inconsistent UI and fragmented styling. If a component is genuinely lacking flexibility, update its generic implementation rather than allowing ad-hoc class injection.
+
+## 13. Task Completion Summary Table Rule
+
+At the end of every successful task completion, the AI must append a small Markdown table to its final response. The table must contain the following information:
+- **Row 1 (Task Status):** The overall status of the task and a very brief summary (around 10 words) of what was done.
+- **Row 2 (Rules Applied):** A confirmation that the `AGENTS.md` rules were reviewed and applied, explicitly listing the specific rules that were fulfilled during the execution of the task.
+
+**Example Table Format:**
+| Category | Details |
+| :--- | :--- |
+| **Task Status** | ✅ Completed: [Brief 10-word summary of what was done] |
+| **Rules Applied** | Verified against `AGENTS.md`. Fulfilled rules: [e.g., Bootstrap-First, Color Management] |

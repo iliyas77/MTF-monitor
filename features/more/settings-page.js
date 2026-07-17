@@ -21,6 +21,7 @@
         const masterSwitch = document.getElementById('settingActivityLogMaster');
         const dbSwitch = document.getElementById('settingActivityLogDB');
         const appSwitch = document.getElementById('settingActivityLogApp');
+        const traceSwitch = document.getElementById('settingActivityLogTrace');
 
         if (masterSwitch) {
             masterSwitch.checked = localStorage.getItem('activityLog_master') !== 'false';
@@ -44,6 +45,15 @@
             appSwitch.checked = localStorage.getItem('activityLog_app') !== 'false';
             appSwitch.onchange = (e) => {
                 localStorage.setItem('activityLog_app', String(e.target.checked));
+                if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
+                    global.MTFLogger.updateConfig();
+                }
+            };
+        }
+        if (traceSwitch) {
+            traceSwitch.checked = localStorage.getItem('activityLog_trace') !== 'false';
+            traceSwitch.onchange = (e) => {
+                localStorage.setItem('activityLog_trace', String(e.target.checked));
                 if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
                     global.MTFLogger.updateConfig();
                 }

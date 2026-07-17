@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "repair": "node shared/scripts/sync-manifest.js",
+    "sync": "node shared/scripts/github-sync.js",
     "build": "node build-production.js",
     "ship": "node build-production.js",
     "build:nobump": "node build-production.js --no-bump",
