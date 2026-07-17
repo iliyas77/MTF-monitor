@@ -7,12 +7,11 @@
 
     // Verify page.js loaded
     if (typeof page === 'undefined') {
-        console.warn('Router: page.js is not loaded.');
+        MTFLogger.warn('Router: page.js is not loaded.');
         return;
     }
 
-    // Configure page.js for hash routing
-    page.configure({ hashbang: true });
+    // (Hashbang configuration is done inside page.start below)
 
     // Ensure our dependencies exist
     function getComponents() {
@@ -53,7 +52,7 @@
         if (typeof global.renderAppPage === 'function') {
             global.renderAppPage(pageId);
         } else {
-            console.warn(`Router: renderAppPage is not defined for route /${pageId}`);
+            MTFLogger.warn(`Router: renderAppPage is not defined for route /${pageId}`);
         }
     }
 
@@ -74,12 +73,12 @@
 
     // Fallback route
     page('*', (ctx) => {
-        console.log('Router: Unknown route', ctx.path);
+        MTFLogger.log('Router: Unknown route', ctx.path);
         page.redirect('/trades');
     });
 
     // Start the router
-    page.start();
+    page.start({ hashbang: true });
 
     // Register empty object to satisfy MTF module requirements
     if (typeof global.MTFRegister === 'function') {

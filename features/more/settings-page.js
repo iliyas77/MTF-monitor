@@ -16,6 +16,49 @@
         if (countEl) countEl.textContent = txs.length + ' records';
         if (badgeEl) badgeEl.textContent = txs.length;
         if (renderSyncStatus) renderSyncStatus();
+        
+        // Developer Options: Activity Log settings
+        const masterSwitch = document.getElementById('settingActivityLogMaster');
+        const dbSwitch = document.getElementById('settingActivityLogDB');
+        const appSwitch = document.getElementById('settingActivityLogApp');
+        const traceSwitch = document.getElementById('settingActivityLogTrace');
+
+        if (masterSwitch) {
+            masterSwitch.checked = localStorage.getItem('activityLog_master') !== 'false';
+            masterSwitch.onchange = (e) => {
+                localStorage.setItem('activityLog_master', String(e.target.checked));
+                if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
+                    global.MTFLogger.updateConfig();
+                }
+            };
+        }
+        if (dbSwitch) {
+            dbSwitch.checked = localStorage.getItem('activityLog_db') !== 'false';
+            dbSwitch.onchange = (e) => {
+                localStorage.setItem('activityLog_db', String(e.target.checked));
+                if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
+                    global.MTFLogger.updateConfig();
+                }
+            };
+        }
+        if (appSwitch) {
+            appSwitch.checked = localStorage.getItem('activityLog_app') !== 'false';
+            appSwitch.onchange = (e) => {
+                localStorage.setItem('activityLog_app', String(e.target.checked));
+                if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
+                    global.MTFLogger.updateConfig();
+                }
+            };
+        }
+        if (traceSwitch) {
+            traceSwitch.checked = localStorage.getItem('activityLog_trace') !== 'false';
+            traceSwitch.onchange = (e) => {
+                localStorage.setItem('activityLog_trace', String(e.target.checked));
+                if (global.MTFLogger && typeof global.MTFLogger.updateConfig === 'function') {
+                    global.MTFLogger.updateConfig();
+                }
+            };
+        }
     }
 
     global.MTFRegister({ renderSettings });

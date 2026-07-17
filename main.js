@@ -520,7 +520,7 @@
                 return true;
             }
         } catch (e) {
-            console.warn('NSE catalog fetch failed', e);
+            MTFLogger.warn('NSE catalog fetch failed', e);
         } finally {
             stockCatalogLoading = false;
         }
@@ -1315,7 +1315,7 @@
             try { persistMarketQuoteCacheLocal(); } catch (_) { }
             try { paintAfterQuoteUpdate(); } catch (_) { }
         } catch (err) {
-            console.warn('Company quote refresh failed', err);
+            MTFLogger.warn('Company quote refresh failed', err);
         }
         const openForm = (typeof window.openAddModal === 'function')
             ? window.openAddModal
@@ -1327,7 +1327,7 @@
         try {
             await openForm(meta);
         } catch (err) {
-            console.error('openBuyTradeFromMarket', err);
+            MTFLogger.error('openBuyTradeFromMarket', err);
             showToast('Could not open trade form.', 'danger');
         }
     }
@@ -1706,7 +1706,7 @@
                     showToast(key + ' removed from watchlist', 'success');
                     return true;
                 }).catch((err) => {
-                    console.warn('removeMarketWatchlistSymbol failed', err);
+                    MTFLogger.warn('removeMarketWatchlistSymbol failed', err);
                     showToast('Could not remove from watchlist.', 'danger');
                     try { renderMarketPage(); } catch (_) { }
                     return false;
@@ -2380,13 +2380,13 @@
             }
             if (refreshedOk) {
                 try { persistMarketQuoteCacheLocal(); } catch (e) {
-                    console.warn('Could not save watchlist quotes to localStorage', e);
+                    MTFLogger.warn('Could not save watchlist quotes to localStorage', e);
                 }
             }
         } catch (e) {
             marketError = 'Could not reach market data. Check internet and try again.';
             refreshedOk = false;
-            console.warn('Market quote refresh failed', e);
+            MTFLogger.warn('Market quote refresh failed', e);
         } finally {
             marketLoading = false;
             setMarketHeaderRefreshBusy(false);
@@ -2854,7 +2854,7 @@
             return out;
         }
 
-        const txs = getTransactions();
+        const txs = getOpenTransactions();
         const isPlan = tradesViewMode === 'plan';
         txs.forEach((t) => {
             if (isPlan ? !isPlannedTrade(t) : !isActiveOpenTrade(t)) return;
@@ -2900,7 +2900,7 @@
                 syncDisplayedQuotesFromMarket(items);
             }
         } catch (e) {
-            console.warn('Trade live price refresh failed', e);
+            MTFLogger.warn('Trade live price refresh failed', e);
         } finally {
             if (seq === tradeLiveRefreshSeq) {
                 tradeLiveRefreshing = false;
@@ -3561,15 +3561,6 @@
                 fullWidth: true
             });
         }
-        const backupHost = document.getElementById('settingsBackupBtnHost');
-        if (backupHost) {
-            backupHost.innerHTML = renderAppButton('Open', {
-                variant: 'action',
-                onclick: 'openBackupTextModal()',
-                icon: 'fa-code',
-                size: 'sm'
-            });
-        }
         const resetHost = document.getElementById('settingsResetBtnHost');
         if (resetHost) {
             resetHost.innerHTML = renderAppButton('Reset', {
@@ -3640,7 +3631,7 @@
             );
             try { showToast('Yes — we are getting real-time market data.', 'success'); } catch (_) { }
         } catch (e) {
-            console.warn('Market feed check failed', e);
+            MTFLogger.warn('Market feed check failed', e);
             setMarketFeedStatusUI(
                 'error',
                 '<span class="text-danger fw-medium">Could not reach live market data.</span><br>' +
@@ -5156,7 +5147,7 @@
     }
 
     function getPastFiltered() {
-        const txs = getTransactions();
+        const txs = getClosedTransactions();
         ensureSharedTradeRange();
 
         let filtered = txs.filter((t) => {
@@ -5712,7 +5703,7 @@
                 }
             } catch (err) {
                 if (err && err.message === 'sync_required') return;
-                console.warn('saveMoneyAccount', err);
+                MTFLogger.warn('saveMoneyAccount', err);
                 const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                     ? window.MTFDb.firestoreErrorMessage(err)
                     : (err && err.message) || 'Could not save wallet.';
@@ -5748,7 +5739,7 @@
                     showToast('Wallet deleted from cloud.', 'danger');
                 } catch (err) {
                     if (err && err.message === 'sync_required') return;
-                    console.warn('deleteMoneyAccount', err);
+                    MTFLogger.warn('deleteMoneyAccount', err);
                     const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                         ? window.MTFDb.firestoreErrorMessage(err)
                         : 'Could not delete wallet.';
@@ -5783,7 +5774,7 @@
                     showToast('Entry deleted from cloud.', 'danger');
                 } catch (err) {
                     if (err && err.message === 'sync_required') return;
-                    console.warn('deleteMoneyEntry', err);
+                    MTFLogger.warn('deleteMoneyEntry', err);
                     const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
                         ? window.MTFDb.firestoreErrorMessage(err)
                         : 'Could not delete entry.';
@@ -6009,18 +6000,27 @@
                 
                 const db = global.MTFDb;
                 let saved = false;
-                if (db && typeof db.archiveTradeToCloud === 'function') {
-                    saved = await db.archiveTradeToCloud(closedTx);
-                } else {
-                    // Fallback to local storage if offline or not configured
-                    saved = await updateTransaction(id, closedTx);
+                try {
+                    if (db && typeof db.isSyncConnected === 'function' && db.isSyncConnected() && typeof db.archiveTradeToCloud === 'function') {
+                        saved = await db.archiveTradeToCloud(closedTx);
+                        if (!saved) {
+                            MTFLogger.warn("Cloud archive failed; falling back to local storage update.");
+                            saved = await updateTransaction(id, closedTx);
+                        }
+                    } else {
+                        // Fallback to local storage if offline or not configured
+                        saved = await updateTransaction(id, closedTx);
+                    }
+                } catch (err) {
+                    MTFLogger.error('Failed to close trade:', err);
+                    saved = false;
+                } finally {
+                    if (pb.parentNode) pb.parentNode.removeChild(pb);
                 }
-                
-                if (pb.parentNode) pb.parentNode.removeChild(pb);
 
                 if (saved) {
                     showToast('Update is happened successfully in the database.', 'success');
-                    closeTradeDetail();
+                    backFromTradeDetail();
                     refreshTradeListViews();
                     renderMoney();
                     refreshActiveMoreView();
@@ -6084,192 +6084,12 @@
         connectSync(input ? input.value : '');
     }
 
-    // ---------- BACKUP AS TEXT + JSON VISUALIZER ----------
-    let backupVizTimer = null;
-
-    function getQuoteCacheCount() {
-        try {
-            const map = readQuoteCacheMap();
-            return Object.keys(map || {}).length;
-        } catch (_) {
-            return 0;
-        }
-    }
-
-    function getDbCallSummaryForViz() {
-        try {
-            const fn = window.MTFDb && window.MTFDb.getDbCallLogSummary;
-            return typeof fn === 'function' ? fn() : {};
-        } catch (_) {
-            return {};
-        }
-    }
-
-    function paintBackupDbCallFlushButton() {
-        const host = document.getElementById('backupDbCallFlushHost');
-        if (!host || typeof renderAppButton !== 'function') return;
-        const summary = getDbCallSummaryForViz();
-        host.innerHTML = renderAppButton('Save call log to cloud', {
-            variant: summary.dirty ? 'action' : 'cancel',
-            onclick: 'flushDbCallLogToCloud()',
-            icon: 'fa-cloud-upload-alt',
-            fullWidth: true,
-            id: 'backupDbCallFlushBtn'
-        });
-    }
-
-    function refreshBackupVisualizer() {
-        const comps = window.MTFComponents || {};
-        const parseBackupText = comps.parseBackupText;
-        const renderBackupVisualizer = comps.renderBackupVisualizer;
-        const summaryEl = document.getElementById('backupVizSummary');
-        const treeEl = document.getElementById('backupVizTree');
-        const hintEl = document.getElementById('backupVizParseHint');
-        const ta = document.getElementById('backupTextArea');
-        if (!summaryEl || !treeEl || !ta || typeof parseBackupText !== 'function' || typeof renderBackupVisualizer !== 'function') {
-            return;
-        }
-        const dbCallSummary = getDbCallSummaryForViz();
-        const parsed = parseBackupText(ta.value);
-        if (!parsed.ok) {
-            summaryEl.innerHTML = renderBackupVisualizer({}, {
-                quoteCacheCount: getQuoteCacheCount(),
-                rawChars: parsed.rawChars || 0
-            }, appNetworkStats, dbCallSummary).summaryHtml;
-            paintBackupDbCallFlushButton();
-            treeEl.innerHTML = `<p class="small text-danger mb-0">${parsed.error === 'Empty' ? 'Paste JSON above to visualize.' : ('Invalid JSON: ' + parsed.error)}</p>`;
-            if (hintEl) hintEl.textContent = parsed.error === 'Empty' ? '' : 'Fix JSON to restore or explore structure.';
-            return;
-        }
-        const viz = renderBackupVisualizer(parsed.data, {
-            quoteCacheCount: getQuoteCacheCount(),
-            rawChars: parsed.rawChars
-        }, appNetworkStats, dbCallSummary);
-        summaryEl.innerHTML = viz.summaryHtml;
-        paintBackupDbCallFlushButton();
-        treeEl.innerHTML = viz.treeHtml;
-        if (hintEl) {
-            const s = viz.summary;
-            hintEl.textContent = `${s.trades} trades · ${s.watchlist} watchlist · ${s.rawSize} · DB calls today ${dbCallSummary.todayTotal || 0}`;
-        }
-    }
-
-    async function flushDbCallLogToCloud() {
-        const flush = window.MTFDb && window.MTFDb.flushDbCallLogToDatabase;
-        if (typeof flush !== 'function') {
-            showToast('Call log is not available.', 'danger');
-            return;
-        }
-        const btn = document.getElementById('backupDbCallFlushBtn');
-        if (btn) btn.disabled = true;
-        try {
-            const result = await flush();
-            showToast(
-                result && result.ok
-                    ? 'Database call log saved to cloud.'
-                    : 'Saved locally. Connect Cloud Sync to push dbCallLog.',
-                result && result.ok ? 'success' : 'warning'
-            );
-            try {
-                const data = getStorage();
-                const ta = document.getElementById('backupTextArea');
-                if (ta) ta.value = JSON.stringify(data, null, 2);
-            } catch (_) { }
-            refreshBackupVisualizer();
-        } catch (e) {
-            console.warn('flushDbCallLogToCloud failed', e);
-            showToast('Could not save call log.', 'danger');
-        } finally {
-            if (btn) btn.disabled = false;
-        }
-    }
-
-    function onBackupTextInput() {
-        if (backupVizTimer) clearTimeout(backupVizTimer);
-        backupVizTimer = setTimeout(() => {
-            backupVizTimer = null;
-            refreshBackupVisualizer();
-        }, 200);
-    }
-
-    function openBackupTextModal() {
-        try {
-            const data = getStorage();
-            const ta = document.getElementById('backupTextArea');
-            if (!ta) {
-                showToast('Backup panel unavailable.', 'danger');
-                return;
-            }
-            ta.value = JSON.stringify(data, null, 2);
-            Sheet.mountPanel('<i class="fas fa-code me-2"></i>Backup & JSON', 'panelBackup',
-                `<div class="d-flex gap-2">${renderAppButton('Restore', { variant: 'danger', onclick: 'restoreFromText()', icon: 'fa-file-import', flex: true })}${renderAppButton('Copy', { variant: 'action', onclick: 'copyBackupText()', icon: 'fa-copy', flex: true })}</div>`);
-            refreshBackupVisualizer();
-        } catch (_) {
-            showToast('Could not open backup.', 'danger');
-        }
-    }
-
-    async function copyBackupText() {
-        const ta = document.getElementById('backupTextArea');
-        if (!ta) {
-            showToast('Backup area not found.', 'danger');
-            return;
-        }
-        const text = ta.value;
-        if (!text) {
-            showToast('Nothing to copy.', 'warning');
-            return;
-        }
-        try {
-            if (navigator.clipboard?.writeText) {
-                await navigator.clipboard.writeText(text);
-                showToast('Backup copied to clipboard!', 'success');
-                return;
-            }
-        } catch (_) { /* fall through to manual copy */ }
-        ta.focus({ preventScroll: true });
-        ta.select();
-        ta.setSelectionRange(0, text.length);
-        let copied = false;
-        try { copied = document.execCommand('copy'); } catch (_) { }
-        showToast(
-            copied ? 'Backup copied to clipboard!' : 'Text selected — use your keyboard Copy button.',
-            copied ? 'success' : 'info'
-        );
-    }
-
-    function restoreFromText() {
-        const text = document.getElementById('backupTextArea').value.trim();
-        if (!text) { showToast('Paste your backup text first.', 'warning'); return; }
-        let data;
-        try {
-            data = JSON.parse(text);
-        } catch (_) {
-            showToast('Invalid backup text. Check for missing/extra characters.', 'danger');
-            return;
-        }
-        if (!data || !Array.isArray(data.transactions)) {
-            showToast('Invalid backup format. Expected a "transactions" list.', 'danger');
-            return;
-        }
-        data = ensureMoneyData(data);
-        if (!confirm('This will REPLACE all current data with the pasted backup. Continue?')) return;
-        saveStorage(data);
-        showToast('Data restored successfully!', 'success');
-        Sheet.close();
-        refreshTradeListViews();
-        renderMoney();
-        renderSettings();
-        refreshActiveMoreView();
-    }
-
     function resetData() {
         const syncNote = getSyncCode() ? '<p class="small text-muted mb-2"><i class="fas fa-cloud me-1"></i>You are connected to Cloud Sync, so this will also delete the data on <span class="fw-medium text-body-secondary">all synced devices</span>.</p>' : '';
         AppDialog.open(
             '<span class="text-danger"><i class="fas fa-exclamation-triangle me-2"></i>Reset All Data?</span>',
             `<p class="mb-2 fw-semibold text-body-secondary">This will permanently delete ALL your transactions.</p>
-                    <p class="small text-muted mb-2">This action <span class="text-danger fw-semibold">cannot be undone</span>.</p>${syncNote}
-                    <p class="small text-muted mb-0">Tip: use <span class="fw-medium text-body-secondary">Backup as Text</span> first.</p>`,
+                    <p class="small text-muted mb-2">This action <span class="text-danger fw-semibold">cannot be undone</span>.</p>${syncNote}`,
             renderAppButtonRow('Cancel', 'Delete Everything', {
                 cancelOnClick: 'closeDialog()',
                 actionOnClick: 'performReset()',
@@ -6362,18 +6182,12 @@
                 try { migrateTradeCompanySymbols(); } catch (_) { }
                 try {
                     const data = getStorage();
-                    if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
-                        window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
-                    }
                 } catch (_) { }
             },
             migrateTradeCompanySymbols
         });
         try {
             const data = getStorage();
-            if (data && data.dbCallLog && window.MTFDb?.hydrateDbCallLogFromRemote) {
-                window.MTFDb.hydrateDbCallLogFromRemote(data.dbCallLog);
-            }
         } catch (_) { }
         initSyncOnLoad();
 
@@ -6427,6 +6241,9 @@
         },
         tradePages: {
             getTransactions,
+            getOpenTransactions,
+            getClosedTransactions,
+            getFeed: (...args) => (window.MTFDb && window.MTFDb.getFeed ? window.MTFDb.getFeed(...args) : Promise.resolve([])),
             isPlannedTrade,
             isActiveOpenTrade,
             sortTradesByHoldDays,
@@ -6450,6 +6267,7 @@
             getPastFrom: () => pastFrom,
             getPastTo: () => pastTo,
             getPastPnlFilter: () => pastPnlFilter,
+            getTradeCancelledOnly: () => tradeCancelledOnly,
             parseDateKey,
             resolveTradeLiveSymbol,
             getTradeLiveQuote,
@@ -6621,15 +6439,9 @@
     window.confirmDelete = confirmDelete;
     window.deleteTradeFromEditor = deleteTradeFromEditor;
     window.saveTransaction = saveTransaction;
-    window.openBackupTextModal = openBackupTextModal;
-    window.onBackupTextInput = onBackupTextInput;
-    window.refreshBackupVisualizer = refreshBackupVisualizer;
-    window.flushDbCallLogToCloud = flushDbCallLogToCloud;
     window.checkMarketFeed = checkMarketFeed;
     window.openSettingsPage = openSettingsPage;
     window.backFromSettings = backFromSettings;
-    window.copyBackupText = copyBackupText;
-    window.restoreFromText = restoreFromText;
     window.resetData = resetData;
     window.performReset = performReset;
     window.openTargetModal = openTargetModal;
