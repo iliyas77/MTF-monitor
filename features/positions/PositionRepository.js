@@ -14,8 +14,7 @@
             const db = this.getDb();
             const uid = this.getUid();
             if (!db || !uid) return null;
-            // Due to strict Firestore security rules, we must use the flat 'transactions' collection
-            return db.collection('transactions');
+            return db.collection(this.collectionName).doc(uid).collection('items');
         }
 
         async fetch() {
@@ -50,7 +49,8 @@
                 items.forEach(item => {
                     if (!item.id) return;
                     this.cache.set(item.id, item);
-                    const docRef = ref.doc(String(item.id));
+                    const docId = String(item.id);
+                    const docRef = ref.doc(docId);
                     batch.set(docRef, { 
                         ...item, 
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp() 

@@ -17,9 +17,7 @@
                 if (global.MTFLogger) global.MTFLogger.warn('[WatchlistRepository] Missing db or uid context.');
                 return null;
             }
-            // Due to strict Firestore security rules, we must use the flat 'watchlist' collection
-            // with a composite doc ID instead of a nested watchlists/{uid}/items structure.
-            return db.collection('watchlist');
+            return db.collection(this.collectionName).doc(uid).collection('items');
         }
 
         async fetch() {
@@ -37,7 +35,7 @@
             }
 
             try {
-                const snapshot = await ref.where('syncCode', '==', uid).get();
+                const snapshot = await ref.get();
                 const items = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -80,17 +78,15 @@
                 const orderIndex = this.cache.size; // Simple ordering
                 const payload = {
                     ...item,
-                    syncCode: uid, // explicitly tag for flat collection
                     orderIndex: orderIndex,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
-                const docId = `${uid}_${safeSymbol}`;
                 
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to watchlist/${docId}...`);
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to syncs/${uid}/watchlist/${safeSymbol}...`);
                 
-                await ref.doc(docId).set(payload, { merge: true });
+                await ref.doc(safeSymbol).set(payload, { merge: true });
                 
                 // Update Cache immediately
                 this.cache.set(item.s, { ...item, orderIndex: orderIndex });
@@ -116,8 +112,7 @@
 
             try {
                 const safeSymbol = String(symbol).replace(/[^a-zA-Z0-9_-]/g, '_');
-                const docId = `${uid}_${safeSymbol}`;
-                await ref.doc(docId).delete();
+                await ref.doc(safeSymbol).delete();
                 
                 this.cache.delete(symbol);
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Remove success for ${symbol}.`);

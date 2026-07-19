@@ -251,16 +251,8 @@
         };
 
         Promise.all([
-            docRef.get(),
-            fbDb.collection('transactions').where('syncCode', '==', code).get().catch(e => {
-                MTFLogger.warn('Failed to fetch remote transactions', e);
-                return { docs: [] };
-            }),
-            fbDb.collection('watchlist').where('syncCode', '==', code).get().catch(e => {
-                MTFLogger.warn('Failed to fetch remote watchlist', e);
-                return { docs: [] };
-            })
-        ]).then(([snap, txSnap, wlSnap]) => {
+            docRef.get()
+        ]).then(([snap]) => {
             const local = db().getStorage();
             const legacyMoney = {
                 moneyAccounts: Array.isArray(local.moneyAccounts) ? local.moneyAccounts.slice() : [],
@@ -271,17 +263,8 @@
             if (snapData.data && snapData.data.dbCallLog) delete snapData.data.dbCallLog;
             if (snapData.dbCallLog) delete snapData.dbCallLog;
             
-            const remoteTxs = [];
-            if (txSnap && txSnap.docs) {
-                txSnap.docs.forEach(d => remoteTxs.push(d.data()));
-            }
-
-            const remoteWatchlist = [];
-            if (wlSnap && wlSnap.docs) {
-                wlSnap.docs.forEach(d => remoteWatchlist.push(d.data()));
-            }
-            // Sort watchlist items by orderIndex to maintain user's desired order
-            remoteWatchlist.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            const remoteTxs = []; // Managed natively by Repositories now
+            const remoteWatchlist = []; // Managed natively by Repositories now
             
             const remotePayload = snapData.data || snapData;
             const cleanRemotePayload = { ...remotePayload };

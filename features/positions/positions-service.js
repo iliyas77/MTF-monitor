@@ -205,7 +205,6 @@
 
     function getStorage() {
         if (window.AppPermissions?.localDbEnabled === false) {
-            if (global.MTFLogger && global.MTFLogger.log) global.MTFLogger.log("[LocalDB Interceptor] Bypass GET: mtf_tracker_data");
             return ensureMoneyData({ transactions: [], marketWatchlist: [] });
         }
         if (_storageCached) return _storageCached;
@@ -259,7 +258,6 @@
 
     function saveStorageLocal(data) {
         if (window.AppPermissions?.localDbEnabled === false) {
-            if (global.MTFLogger && global.MTFLogger.log) global.MTFLogger.log("[LocalDB Interceptor] Bypass SAVE LOCAL");
             return;
         }
         invalidateStorageCache();
@@ -283,7 +281,6 @@
 
     function saveStorage(data) {
         if (window.AppPermissions?.localDbEnabled === false) {
-            if (global.MTFLogger && global.MTFLogger.log) global.MTFLogger.log("[LocalDB Interceptor] Bypass SAVE");
             return Promise.resolve(true);
         }
         const payload = ensureMoneyData(data || { transactions: [] });
@@ -299,7 +296,6 @@
 
     function applyRemoteStorage(remoteData, remoteVersion) {
         if (window.AppPermissions?.localDbEnabled === false) {
-            if (global.MTFLogger && global.MTFLogger.log) global.MTFLogger.log("[LocalDB Interceptor] Bypass SYNC");
             return;
         }
         const db = global.MTFDb;
