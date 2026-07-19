@@ -717,6 +717,25 @@
         }
     }
 
+    async function purgeLocalDatabase() {
+        MTFLogger.warn('Executing destructive local database purge...');
+        localStorage.clear();
+        if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
+            try {
+                const dbs = await window.indexedDB.databases();
+                for (const db of dbs) {
+                    if (db.name) {
+                        MTFLogger.log(`Deleting IndexedDB: ${db.name}`);
+                        window.indexedDB.deleteDatabase(db.name);
+                    }
+                }
+            } catch (err) {
+                MTFLogger.warn('Failed to completely clear IndexedDB', err);
+            }
+        }
+        MTFLogger.warn('Local database purge complete.');
+    }
+
     // Boot: Load cached closed trades from LocalDB if available (defer to allow scripts to load)
     setTimeout(() => {
         if (global.MTFLocalDB) {
@@ -764,6 +783,7 @@
         getSyncNote,
         connectSync,
         disconnectSync,
-        initSyncOnLoad
+        initSyncOnLoad,
+        purgeLocalDatabase
     });
 })(typeof window !== 'undefined' ? window : globalThis);

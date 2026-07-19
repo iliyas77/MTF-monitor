@@ -19,6 +19,14 @@
 
 <body class="overflow-x-hidden app-shell">
 
+    <!-- BLOCKING BOOTLOADER -->
+    <div id="appBootLoader" class="position-fixed top-0 start-0 w-100 h-100 d-flex flex-column justify-content-center align-items-center bg-body" style="z-index: 9999;">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="text-gr1 fw-medium" id="appBootLoaderText">Initializing Environment...</h5>
+    </div>
+
     <!-- ============ TOAST ============ -->
     <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" id="toastContainer"
         data-ref="toast.container"></div>
@@ -538,6 +546,15 @@
                         </div>
                         <div class="form-check form-switch fs-5 m-0 p-0 d-flex align-items-center">
                             <input class="form-check-input m-0" type="checkbox" role="switch" id="settingActivityLogTrace" checked>
+                        </div>
+                    </div>
+                    <div class="list-group-item settings-data-row d-flex justify-content-between align-items-center" data-ref="page.settings.dev-card.list.db-disable">
+                        <div class="min-w-0 flex-fill">
+                            <div class="settings-card-title">Disable Local Database</div>
+                            <div class="small text-muted">Halt all local storage reads/writes</div>
+                        </div>
+                        <div class="form-check form-switch fs-5 m-0 p-0 d-flex align-items-center">
+                            <input class="form-check-input m-0" type="checkbox" role="switch" id="disableLocalDbToggle">
                         </div>
                     </div>
                 </div>
@@ -1176,6 +1193,28 @@
                 </form>
             </div>
             <div class="app-sheet-footer border-top p-3 bg-body" id="txModalFooter" data-ref="sheet.tx-modal.footer">
+            </div>
+    </div>
+
+    <!-- DESTRUCTIVE DB DISABLE MODAL -->
+    <div class="modal fade" id="dbDisableConfirmModal" tabindex="-1" aria-labelledby="dbDisableConfirmModalLabel" aria-hidden="true" data-ref="modal.db-disable-confirm">
+        <div class="modal-dialog modal-dialog-centered" data-ref="modal.db-disable-confirm.dialog">
+            <div class="modal-content" data-ref="modal.db-disable-confirm.content">
+                <div class="modal-header border-0 pb-0" data-ref="modal.db-disable-confirm.header">
+                    <h5 class="modal-title fw-bold text-gr1" id="dbDisableConfirmModalLabel" data-ref="modal.db-disable-confirm.title">Disable Local Database?</h5>
+                </div>
+                <div class="modal-body" data-ref="modal.db-disable-confirm.body">
+                    <p class="text-gr-muted mb-0" data-ref="modal.db-disable-confirm.desc">
+                        Turning off the local database will <strong>permanently delete</strong> all locally cached data on this device to ensure data security. 
+                        Your data will still be safe in the cloud (if synced), but offline access will be completely disabled.
+                        <br><br>
+                        Are you sure you want to proceed?
+                    </p>
+                </div>
+                <div class="modal-footer border-0 pt-0" data-ref="modal.db-disable-confirm.footer">
+                    <button type="button" class="btn btn-light fw-medium" data-bs-dismiss="modal" id="dbDisableCancelBtn" data-ref="modal.db-disable-confirm.btn.cancel">Cancel</button>
+                    <button type="button" class="btn btn-danger fw-medium" id="dbDisableConfirmBtn" data-ref="modal.db-disable-confirm.btn.confirm">Yes, Delete Local Data</button>
+                </div>
             </div>
         </div>
     </div>

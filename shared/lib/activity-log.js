@@ -52,14 +52,19 @@
 
     function loadConfig() {
         try {
-            if (typeof localStorage !== 'undefined') {
+            if (global.AppPermissions) {
+                config.master = global.AppPermissions.activityLogMaster !== false;
+                config.db = global.AppPermissions.activityLogDb === true;
+                config.app = global.AppPermissions.activityLogApp !== false;
+                config.trace = global.AppPermissions.activityLogTrace === true;
+            } else if (typeof localStorage !== 'undefined') {
                 config.master = localStorage.getItem('activityLog_master') !== 'false';
-                config.db = localStorage.getItem('activityLog_db') !== 'false';
+                config.db = localStorage.getItem('activityLog_db') === 'true';
                 config.app = localStorage.getItem('activityLog_app') !== 'false';
-                config.trace = localStorage.getItem('activityLog_trace') !== 'false';
+                config.trace = localStorage.getItem('activityLog_trace') === 'true';
             }
         } catch (e) {
-            console.warn('MTFLogger: localStorage access failed, using default config', e);
+            console.warn('MTFLogger: Config access failed, using default config', e);
         }
     }
     loadConfig();

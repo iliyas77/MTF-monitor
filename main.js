@@ -5373,7 +5373,7 @@
 
 
     // ---------- INIT ----------
-    document.addEventListener('DOMContentLoaded', function () {
+    function initApp() {
         BottomBar.mount(document.getElementById('bottomBarMount'), {
             onNavigate: navigateTo,
             onFabClick: openAddModal
@@ -5463,6 +5463,54 @@
             // iOS often suspends timers while backgrounded — restart feeds.
             ensureLiveFeedsForVisiblePage();
         });
+    }
+
+    async function fetchAppPermissions() {
+        window.AppPermissions = {
+            localDbEnabled: false,
+            activityLogMaster: false,
+            activityLogDb: false,
+            activityLogApp: false,
+            activityLogTrace: false
+        };
+        try {
+            if (global.MTFDb && global.MTFDb.initFirebase()) {
+                const fbDb = global.MTFDb.getFirebaseDb();
+                if (fbDb) {
+                    const doc = await fbDb.collection('app_config').doc('global').get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data && data.permissions && typeof data.permissions === 'object') {
+                            window.AppPermissions = {
+                                localDbEnabled: data.permissions.localDbEnabled ?? true,
+                                activityLogMaster: data.permissions.activityLogMaster ?? true,
+                                activityLogDb: data.permissions.activityLogDb ?? false,
+                                activityLogApp: data.permissions.activityLogApp ?? true,
+                                activityLogTrace: data.permissions.activityLogTrace ?? false
+                            };
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            if (global.MTFLogger && global.MTFLogger.warn) {
+                global.MTFLogger.warn('Failed to fetch global permissions from Firestore:', e);
+            }
+            const bootText = document.getElementById('appBootLoaderText');
+            if (bootText) {
+                bootText.textContent = 'Offline/Error. Using secure defaults.';
+                bootText.classList.replace('text-gr1', 'text-danger');
+            }
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        const bootLoader = document.getElementById('appBootLoader');
+        if (bootLoader) bootLoader.classList.add('d-none');
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        await fetchAppPermissions();
+        initApp();
     });
 
     // Expose global functions
