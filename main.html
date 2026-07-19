@@ -509,7 +509,10 @@
                 </div>
             </div>
 
-            <p class="settings-section-label" data-ref="page.settings.dev-label">Developer Options</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <p class="settings-section-label mb-0" data-ref="page.settings.dev-label">Developer Options</p>
+                <span class="badge bg-body-secondary text-muted" id="cloudSyncStatusBadge" data-ref="cloud-sync-status" aria-live="polite">Cloud Synchronized</span>
+            </div>
             <div class="card settings-card bg-body rounded-3 border overflow-hidden mb-3" data-ref="page.settings.dev-card">
                 <div class="list-group list-group-flush settings-data-list" data-ref="page.settings.dev-card.list">
                     <div class="list-group-item settings-data-row d-flex justify-content-between align-items-center" data-ref="page.settings.dev-card.list.master">
@@ -1196,28 +1199,7 @@
             </div>
     </div>
 
-    <!-- DESTRUCTIVE DB DISABLE MODAL -->
-    <div class="modal fade" id="dbDisableConfirmModal" tabindex="-1" aria-labelledby="dbDisableConfirmModalLabel" aria-hidden="true" data-ref="modal.db-disable-confirm">
-        <div class="modal-dialog modal-dialog-centered" data-ref="modal.db-disable-confirm.dialog">
-            <div class="modal-content" data-ref="modal.db-disable-confirm.content">
-                <div class="modal-header border-0 pb-0" data-ref="modal.db-disable-confirm.header">
-                    <h5 class="modal-title fw-bold text-gr1" id="dbDisableConfirmModalLabel" data-ref="modal.db-disable-confirm.title">Disable Local Database?</h5>
-                </div>
-                <div class="modal-body" data-ref="modal.db-disable-confirm.body">
-                    <p class="text-gr-muted mb-0" data-ref="modal.db-disable-confirm.desc">
-                        Turning off the local database will <strong>permanently delete</strong> all locally cached data on this device to ensure data security. 
-                        Your data will still be safe in the cloud (if synced), but offline access will be completely disabled.
-                        <br><br>
-                        Are you sure you want to proceed?
-                    </p>
-                </div>
-                <div class="modal-footer border-0 pt-0" data-ref="modal.db-disable-confirm.footer">
-                    <button type="button" class="btn btn-light fw-medium" data-bs-dismiss="modal" id="dbDisableCancelBtn" data-ref="modal.db-disable-confirm.btn.cancel">Cancel</button>
-                    <button type="button" class="btn btn-danger fw-medium" id="dbDisableConfirmBtn" data-ref="modal.db-disable-confirm.btn.confirm">Yes, Delete Local Data</button>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <!-- ============ SCRIPTS ============ -->
     <!-- Firebase (compat SDK) for cloud sync -->

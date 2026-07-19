@@ -719,7 +719,17 @@
 
     async function purgeLocalDatabase() {
         MTFLogger.warn('Executing destructive local database purge...');
+        
+        const preservedSyncCode = localStorage.getItem('mtf_sync_code');
+        const preservedPerms = localStorage.getItem('mtf_permissions');
+        const preservedVersion = localStorage.getItem('mtf_data_version');
+        
         localStorage.clear();
+        
+        if (preservedSyncCode) localStorage.setItem('mtf_sync_code', preservedSyncCode);
+        if (preservedPerms) localStorage.setItem('mtf_permissions', preservedPerms);
+        if (preservedVersion) localStorage.setItem('mtf_data_version', preservedVersion);
+
         if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
             try {
                 const dbs = await window.indexedDB.databases();

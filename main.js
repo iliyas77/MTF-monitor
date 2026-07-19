@@ -5466,18 +5466,32 @@
     }
 
     async function fetchAppPermissions() {
-        window.AppPermissions = {
-            localDbEnabled: false,
-            activityLogMaster: false,
+        const defaultPerms = {
+            localDbEnabled: true,
+            activityLogMaster: true,
             activityLogDb: false,
-            activityLogApp: false,
+            activityLogApp: true,
             activityLogTrace: false
         };
+        
+        let loadedPerms = null;
+        try {
+            const localRaw = localStorage.getItem('mtf_permissions');
+            if (localRaw) {
+                loadedPerms = JSON.parse(localRaw);
+            }
+        } catch (e) {
+            // Ignore parse errors
+        }
+        
+        window.AppPermissions = loadedPerms || defaultPerms;
+
         try {
             if (global.MTFDb && global.MTFDb.initFirebase()) {
                 const fbDb = global.MTFDb.getFirebaseDb();
-                if (fbDb) {
-                    const doc = await fbDb.collection('app_config').doc('global').get();
+                const syncCode = localStorage.getItem('mtf_sync_code');
+                if (fbDb && syncCode) {
+                    const doc = await fbDb.collection('syncs').doc(syncCode).get();
                     if (doc.exists) {
                         const data = doc.data();
                         if (data && data.permissions && typeof data.permissions === 'object') {
@@ -5488,6 +5502,7 @@
                                 activityLogApp: data.permissions.activityLogApp ?? true,
                                 activityLogTrace: data.permissions.activityLogTrace ?? false
                             };
+                            localStorage.setItem('mtf_permissions', JSON.stringify(window.AppPermissions));
                         }
                     }
                 }
