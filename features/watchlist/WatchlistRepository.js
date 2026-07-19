@@ -17,7 +17,9 @@
                 if (global.MTFLogger) global.MTFLogger.warn('[WatchlistRepository] Missing db or uid context.');
                 return null;
             }
-            return db.collection(this.collectionName).doc(uid).collection('items');
+            // Due to strict Firestore security rules, we must use the flat 'watchlist' collection
+            // with a composite doc ID instead of a nested watchlists/{uid}/items structure.
+            return db.collection('watchlist');
         }
 
         async fetch() {
@@ -28,13 +30,14 @@
             }
 
             const ref = this.getCollectionRef();
-            if (!ref) {
+            const uid = this.getUid();
+            if (!ref || !uid) {
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Fetch failed: Cannot resolve collection path (auth required).');
                 return [];
             }
 
             try {
-                const snapshot = await ref.get();
+                const snapshot = await ref.where('syncCode', '==', uid).get();
                 const items = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -66,7 +69,8 @@
             }
 
             const ref = this.getCollectionRef();
-            if (!ref) {
+            const uid = this.getUid();
+            if (!ref || !uid) {
                 const err = new Error('Authentication required');
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Add failed: Missing auth session', err);
                 throw err;
@@ -76,15 +80,17 @@
                 const orderIndex = this.cache.size; // Simple ordering
                 const payload = {
                     ...item,
+                    syncCode: uid, // explicitly tag for flat collection
                     orderIndex: orderIndex,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
                 const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
+                const docId = `${uid}_${safeSymbol}`;
                 
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to watchlists/{uid}/items/${safeSymbol}...`);
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to watchlist/${docId}...`);
                 
-                await ref.doc(safeSymbol).set(payload, { merge: true });
+                await ref.doc(docId).set(payload, { merge: true });
                 
                 // Update Cache immediately
                 this.cache.set(item.s, { ...item, orderIndex: orderIndex });
@@ -101,7 +107,8 @@
             if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Initiating remove for: ${symbol}`);
             
             const ref = this.getCollectionRef();
-            if (!ref) {
+            const uid = this.getUid();
+            if (!ref || !uid) {
                 const err = new Error('Authentication required');
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Remove failed: Missing auth session', err);
                 throw err;
@@ -109,7 +116,8 @@
 
             try {
                 const safeSymbol = String(symbol).replace(/[^a-zA-Z0-9_-]/g, '_');
-                await ref.doc(safeSymbol).delete();
+                const docId = `${uid}_${safeSymbol}`;
+                await ref.doc(docId).delete();
                 
                 this.cache.delete(symbol);
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Remove success for ${symbol}.`);

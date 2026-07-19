@@ -14,7 +14,8 @@
             const db = this.getDb();
             const uid = this.getUid();
             if (!db || !uid) return null;
-            return db.collection(this.collectionName).doc(uid).collection('items');
+            // Due to strict Firestore security rules, we must use the flat 'transactions' collection
+            return db.collection('transactions');
         }
 
         async fetch() {

@@ -482,18 +482,22 @@
     }
 
     async function fetchNseEquityCsvText() {
+        // Direct fetch triggers red CORS errors in console which are alarming.
+        // We use a free CORS proxy to cleanly fetch the CSV without console spam.
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(NSE_EQUITY_CSV_URL);
         try {
-            const res = await fetch(NSE_EQUITY_CSV_URL, {
-                headers: { Accept: 'text/csv,*/*' },
-                mode: 'cors'
-            });
+            const res = await fetch(proxyUrl);
             if (res.ok) {
                 const text = await res.text();
-                if (text.includes('SYMBOL,NAME OF COMPANY')) return { text, source: 'NSE direct' };
+                if (text.includes('SYMBOL,NAME OF COMPANY')) {
+                    return { text, source: 'NSE via proxy' };
+                }
             }
         } catch (_) { }
+        
+        // Fallback to Jina if corsproxy fails
         const proxied = await fetchViaJina(NSE_EQUITY_CSV_URL);
-        return { text: proxied, source: 'NSE via internet' };
+        return { text: proxied, source: 'NSE via Jina' };
     }
 
     async function loadStockCatalogFromInternet() {
