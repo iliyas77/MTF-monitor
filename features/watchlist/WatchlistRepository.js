@@ -29,10 +29,7 @@
             const ref = this.getCollectionRef();
             const ownerUid = this.getOwnerUid();
             const syncCode = this.getSyncCode();
-            if (!ref || !ownerUid) {
-                if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Fetch failed: Cannot resolve collection path (auth required).');
-                return [];
-            }
+            if (!ref || !ownerUid) return [];
 
             try {
                 // We fetch by syncCode since it identifies the logical business dataset, regardless of true auth ownership
