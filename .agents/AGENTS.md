@@ -626,6 +626,6 @@ At the end of every successful task completion, the AI must append a small Markd
 | **Task Status** | ✅ Completed: [Brief 10-word summary of what was done] |
 | **Rules Applied** | Verified against `AGENTS.md`. Fulfilled rules: [e.g., Bootstrap-First, Color Management] |
 
-## 14. Automatic GitHub Sync Rule
+## 14. Automatic GitHub Sync & Ticket Formatting Rule
 
-Whenever the user requests a new ticket (e.g. by mentioning the `TICKETS.md` file), the AI MUST automatically write the ticket into `ticket.txt`. **Crucially, the AI MUST then automatically execute the `npm run sync` terminal command itself.** Under no circumstances should the AI tell the user to run this command manually. The AI must use its terminal execution tool to run the command, and the user will approve any network permission popups.
+Whenever the user requests a new ticket (e.g. by mentioning the `TICKETS.md` file), **the AI MUST NOT perform the actual task or modify the codebase.** The AI MUST ONLY automatically write the ticket into `ticket.txt` using the STRICT template format defined in the `TICKETS.md` file under the "Ticket Creation Template" section. **Crucially, the AI MUST then automatically execute the `npm run sync` terminal command itself.** Under no circumstances should the AI tell the user to run this command manually. The AI must use its terminal execution tool to run the command, and the user will approve any network permission popups.

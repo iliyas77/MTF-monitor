@@ -293,42 +293,47 @@
     function getTransactions() { return [...getOpenTransactions(), ...getClosedTransactions()]; }
     
     function setTransactions(txs) {
-        const openTxs = txs.filter(t => t.status !== 'closed');
-        return setOpenTransactions(openTxs);
-    }
-    
-    function setOpenTransactions(txs) {
         const data = getStorage();
         data.transactions = txs;
         return saveStorage(data);
     }
     
+    function setOpenTransactions(openTxs) {
+        const data = getStorage();
+        const existingClosed = (data.transactions || []).filter(t => t.status === 'closed');
+        data.transactions = [...openTxs, ...existingClosed];
+        return saveStorage(data);
+    }
+    
     function addTransaction(tx) {
         console.log("[DB] addTransaction: adding trade transaction:", tx);
-        const txs = getOpenTransactions();
+        const data = getStorage();
+        if (!data.transactions) data.transactions = [];
         tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        txs.push(tx);
-        return setOpenTransactions(txs).then(() => tx);
+        data.transactions.push(tx);
+        return saveStorage(data).then(() => tx);
     }
     
     function updateTransaction(id, updated) {
         console.log("[DB] updateTransaction: updating trade transaction ID:", id, "with updates:", updated);
-        const openTxs = getOpenTransactions();
-        const openIdx = openTxs.findIndex(t => String(t.id) === String(id));
-        if (openIdx !== -1) {
-            openTxs[openIdx] = { ...openTxs[openIdx], ...updated };
-            return setOpenTransactions(openTxs).then(() => openTxs[openIdx]);
+        const data = getStorage();
+        if (!data.transactions) data.transactions = [];
+        
+        const idx = data.transactions.findIndex(t => String(t.id) === String(id));
+        if (idx !== -1) {
+            data.transactions[idx] = { ...data.transactions[idx], ...updated };
+            return saveStorage(data).then(() => data.transactions[idx]);
         }
         
+        // If not in main transactions array, it might be an older trade loaded from the cloud cache
         const closedTxs = getClosedTransactions();
         const closedIdx = closedTxs.findIndex(t => String(t.id) === String(id));
         if (closedIdx !== -1) {
-            const db = global.MTFDb;
-            if (db && typeof db.archiveTradeToCloud === 'function') {
-                const updatedTx = { ...closedTxs[closedIdx], ...updated };
-                return db.archiveTradeToCloud(updatedTx).then(() => updatedTx);
-            }
+            const updatedTx = { ...closedTxs[closedIdx], ...updated };
+            data.transactions.push(updatedTx); // Bring it into the main array
+            return saveStorage(data).then(() => updatedTx);
         }
+        
         return Promise.resolve(null);
     }
     

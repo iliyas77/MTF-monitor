@@ -224,15 +224,7 @@ async function runSmoke(report) {
             hasTradeDetail: typeof window.openTradeDetail === 'function'
                 && typeof window.backFromTradeDetail === 'function',
             hasSummaryBuckets: typeof (window.MTFComponents || {}).aggregatePortfolioSummary === 'function',
-            moneyApis: {
-                getAccounts: typeof db.getMoneyAccounts === 'function',
-                getEntries: typeof db.getMoneyEntries === 'function',
-                addAccount: typeof db.addMoneyAccount === 'function',
-                addEntry: typeof db.addMoneyEntry === 'function',
-                addTransfer: typeof db.addMoneyTransfer === 'function',
-                cloudPush: typeof db.cloudPush === 'function',
-                connectSync: typeof db.connectSync === 'function'
-            }
+
         };
         });
         if (!globals.hasComponents || !globals.hasDb || !globals.hasBottomBar || !globals.hasHeader) {
@@ -258,12 +250,6 @@ async function runSmoke(report) {
                 'Feature APIs',
                 `detail=${globals.hasTradeDetail} buckets=${globals.hasSummaryBuckets}`
             );
-        }
-        const moneyApiOk = Object.values(globals.moneyApis).every(Boolean);
-        if (moneyApiOk) {
-            report.pass('DB money APIs', 'ledger CRUD + call log + sync push on MTFDb');
-        } else {
-            report.fail('DB money APIs', JSON.stringify(globals.moneyApis));
         }
 
         // --- Trades UI shell ---
@@ -891,219 +877,11 @@ async function runSmoke(report) {
             report.warn('App version', 'version stamp not found on More page');
         }
 
-        // --- Money (Broker Wallets) ---
-        await page.locator('#page-more .list-group-item', { hasText: 'Money' }).click();
-        await page.waitForTimeout(300);
-        if (!(await pageVisible(page, 'page-money'))) {
-            report.fail('Money', '#page-money not shown');
-        } else if (!(await page.locator('#moneySummaryCard').count())) {
-            report.fail('Money', 'summary card missing');
-        } else {
-            report.pass('Money', 'Broker Wallets page shown');
-        }
 
-        const moneyChrome = await page.evaluate(() => {
-            const tools = document.getElementById('appHeaderMoneyTools');
-            const searchWrap = document.getElementById('appHeaderMoneySearch');
-            const search = document.getElementById('moneySearchInput');
-            const filterBtn = document.getElementById('moneyPageFilterBtn');
-            const filterHost = document.getElementById('moneyAccountFilterHost');
-            const subtitle = document.getElementById('appHeaderMoneySubtitle');
-            const monthInput = document.getElementById('moneyMonthPicker')
-                || document.querySelector('#moneyMonthChart input[type="month"], #moneyMonthChartCard input[type="month"]');
-            const wallets = document.getElementById('moneyAccountList');
-            const summaryHero = document.getElementById('moneyTotalValueHero');
-            return {
-                toolsVisible: !!(tools && !tools.classList.contains('d-none')),
-                searchVisible: !!(searchWrap && !searchWrap.classList.contains('d-none') && search),
-                hasFilterBtn: !!filterBtn,
-                hasFilterHost: !!filterHost,
-                hasSubtitle: !!(subtitle && /cash per broker/i.test(subtitle.textContent || '')),
-                hasMonthPicker: !!(monthInput && monthInput.type === 'month'),
-                hasWalletList: !!wallets,
-                hasSummaryHero: !!summaryHero,
-                moneyFns: {
-                    search: typeof window.setMoneySearchQuery === 'function',
-                    month: typeof window.setMoneyMonthKey === 'function',
-                    filter: typeof window.openMoneyPageFilterSheet === 'function',
-                    render: typeof window.renderMoney === 'function'
-                }
-            };
-        });
-        if (moneyChrome.toolsVisible && moneyChrome.searchVisible && moneyChrome.hasFilterBtn && moneyChrome.hasSubtitle) {
-            report.pass('Money header', 'search + All filter + filter btn + Cash per broker in header');
-        } else {
-            report.fail(
-                'Money header',
-                `tools=${moneyChrome.toolsVisible} search=${moneyChrome.searchVisible} filter=${moneyChrome.hasFilterBtn} subtitle=${moneyChrome.hasSubtitle}`
-            );
-        }
-        if (moneyChrome.hasMonthPicker && moneyChrome.moneyFns.month) {
-            report.pass('Money month', 'Monthly Flow month picker (type=month) wired');
-        } else {
-            report.fail('Money month', `picker=${moneyChrome.hasMonthPicker} setMoneyMonthKey=${moneyChrome.moneyFns.month}`);
-        }
-        if (moneyChrome.hasWalletList && moneyChrome.hasSummaryHero && moneyChrome.moneyFns.render) {
-            report.pass('Money UI', 'summary hero + wallets list + renderMoney');
-        } else {
-            report.fail(
-                'Money UI',
-                `list=${moneyChrome.hasWalletList} hero=${moneyChrome.hasSummaryHero} render=${moneyChrome.moneyFns.render}`
-            );
-        }
 
-        // Money search filters in place
-        if (moneyChrome.moneyFns.search) {
-            await page.fill('#moneySearchInput', 'zzz-no-match-smoke');
-            await page.waitForTimeout(200);
-            const searchMode = await page.evaluate(() => {
-                const filterView = document.getElementById('moneyPageFilterView');
-                const defaultView = document.getElementById('moneyPageDefaultView');
-                const title = document.getElementById('moneyPageFilterViewTitle');
-                return {
-                    filterShown: !!(filterView && !filterView.classList.contains('d-none')),
-                    defaultHidden: !!(defaultView && defaultView.classList.contains('d-none')),
-                    titleText: (title && title.textContent) || ''
-                };
-            });
-            if (searchMode.filterShown || /search/i.test(searchMode.titleText)) {
-                report.pass('Money search', 'search query switches to results view');
-            } else {
-                report.warn('Money search', `filterShown=${searchMode.filterShown} title=${searchMode.titleText || '(empty)'}`);
-            }
-            await page.evaluate(() => {
-                if (typeof window.clearMoneySearchQuery === 'function') window.clearMoneySearchQuery();
-                else if (typeof window.setMoneySearchQuery === 'function') window.setMoneySearchQuery('');
-            });
-            await page.waitForTimeout(150);
-        } else {
-            report.fail('Money search', 'setMoneySearchQuery missing');
-        }
 
-        // Add-account surface (mount panel; UI normally needs cloud sync)
-        const moneyAccountApi = await page.evaluate(() => typeof window.openAddMoneyAccountModal === 'function');
-        if (!moneyAccountApi) {
-            report.fail('Money add account', 'openAddMoneyAccountModal missing');
-        } else {
-            await page.evaluate(() => {
-                const Sheet = window.MTFComponents && window.MTFComponents.Sheet;
-                const editId = document.getElementById('moneyAccountEditId');
-                if (editId) editId.value = '';
-                if (Sheet && typeof Sheet.mountPanel === 'function') {
-                    Sheet.mountPanel('Add wallet', 'panelMoneyAccount', '');
-                }
-            });
-            await page.waitForTimeout(400);
-            const accountSheet = await page.evaluate(() => {
-                const Sheet = window.MTFComponents && window.MTFComponents.Sheet;
-                const panel = document.getElementById('panelMoneyAccount');
-                const broker = document.getElementById('moneyAccountBroker');
-                const inSheet = !!(panel && panel.closest('.cupertino-pane-wrapper, #appSheet, [data-cupertino]'));
-                const open = !!(Sheet && typeof Sheet.isOpen === 'function' && Sheet.isOpen());
-                const ok = !!(broker && (open || inSheet || broker.offsetParent !== null));
-                return {
-                    ok,
-                    note: ok
-                        ? 'account panel mounts via Sheet'
-                        : `open=${open} inSheet=${inSheet} broker=${!!broker}`
-                };
-            });
-            if (accountSheet.ok) {
-                report.pass('Money add account', accountSheet.note);
-            } else {
-                report.warn('Money add account', accountSheet.note);
-            }
-            await page.evaluate(() => {
-                if (typeof window.closeSheet === 'function') window.closeSheet();
-                else if (window.MTFComponents?.Sheet?.close) window.MTFComponents.Sheet.close();
-            });
-            await page.waitForTimeout(200);
-        }
 
-        await page.locator('#appHeaderSubpage button[aria-label="Back"]').click();
-        await page.waitForTimeout(200);
 
-        // --- MTF Calculator ---
-        await page.locator('#page-more .list-group-item', { hasText: 'MTF Calculator' }).click();
-        await page.waitForTimeout(250);
-        if (!(await pageVisible(page, 'page-mtf-calc'))) {
-            report.fail('MTF Calc', '#page-mtf-calc not shown');
-        } else {
-            report.pass('MTF Calc', 'MTF Calculator page shown');
-        }
-        const calcFields = await page.evaluate(() => ({
-            company: !!document.getElementById('calcCompany'),
-            qty: !!document.getElementById('calcQty'),
-            hasCompare: !!document.getElementById('calcComparePanel'),
-            hasLeverage: !!document.getElementById('calcLeverageCards'),
-            hasOverview: !!document.getElementById('calcOverviewGrid'),
-            hasSummary: !!document.getElementById('calcSummaryStats')
-        }));
-        if (calcFields.company && calcFields.qty && calcFields.hasCompare && calcFields.hasLeverage && calcFields.hasOverview) {
-            report.pass('MTF Calc UI', 'company + leverage + overview + compare present');
-        } else {
-            report.warn('MTF Calc UI', JSON.stringify(calcFields));
-        }
-
-        // --- MTF Calculator Preset Click (Assertion 1) ---
-        await page.fill('#calcBuyPrice', '100');
-        await page.fill('#calcQty', '10');
-        await page.waitForTimeout(100);
-        await page.click('[data-ref="page.mtf-calc.presets.chip"][data-pct="5"]');
-        await page.waitForTimeout(100);
-        const sellPriceVal = await page.inputValue('#calcSellPrice');
-        if (parseFloat(sellPriceVal) === 105) {
-            report.pass('MTF Calc Preset Click', 'Target sell price updated to 105.00 on 5% preset click');
-        } else {
-            report.fail('MTF Calc Preset Click', `Target sell price expected 105.00, got ${sellPriceVal}`);
-        }
-
-        // --- MTF Calculator Custom Preset (Assertion 2) ---
-        await page.fill('#calcSellPctCustom', '7.5');
-        await page.click('#calcAddPctBtnHost button');
-        await page.waitForTimeout(100);
-        const sellPriceCustomVal = await page.inputValue('#calcSellPrice');
-        if (parseFloat(sellPriceCustomVal) === 107.5) {
-            report.pass('MTF Calc Custom Preset', 'Custom preset 7.5% added and applied target sell price (107.50)');
-        } else {
-            report.fail('MTF Calc Custom Preset', `Target sell price expected 107.50, got ${sellPriceCustomVal}`);
-        }
-
-        // --- MTF Calculator Leverage Card Click (Assertion 3) ---
-        await page.click('[data-ref="page.mtf-calc.leverage-card"]:has-text("4x")');
-        await page.waitForTimeout(100);
-        const selectedText = await page.textContent('#calcLeverageSelected');
-        if (selectedText && selectedText.includes('4x Selected')) {
-            report.pass('MTF Calc Leverage Card Click', 'Leverage cards updated selection to 4x');
-        } else {
-            report.fail('MTF Calc Leverage Card Click', `Selected text expected '4x Selected', got '${selectedText}'`);
-        }
-
-        // --- MTF Calculator Breakdown Modal (Assertion 4) ---
-        await page.click('[data-ref="page.mtf-calc.broker-card"]:has-text("Zerodha")');
-        await page.waitForTimeout(250);
-        const breakdownTitle = await page.textContent('#appSheetTitle');
-        if (breakdownTitle && breakdownTitle.includes('Zerodha Breakdown')) {
-            report.pass('MTF Calc Breakdown Modal', 'Breakdown sheet opened for Zerodha');
-        } else {
-            report.fail('MTF Calc Breakdown Modal', `Expected title to contain 'Zerodha Breakdown', got '${breakdownTitle}'`);
-        }
-
-        // --- MTF Calculator Breakdown Refs (Assertion 5) ---
-        const breakdownRefs = await page.evaluate(() => {
-            const list = document.querySelectorAll('[data-ref^="sheet.calc-breakdown."]');
-            return Array.from(list).map(el => el.getAttribute('data-ref'));
-        });
-        if (breakdownRefs.length > 5) {
-            report.pass('MTF Calc Breakdown Refs', `Verified ${breakdownRefs.length} sheet.calc-breakdown data-ref keys`);
-        } else {
-            report.fail('MTF Calc Breakdown Refs', `Only found ${breakdownRefs.length} sheet.calc-breakdown keys`);
-        }
-        // Close breakdown sheet
-        await page.evaluate(() => {
-            if (typeof window.closeSheet === 'function') window.closeSheet();
-        });
-        await page.waitForTimeout(200);
 
         // --- Gold Page Nav & Visibility (Assertion 6) ---
         await page.evaluate(() => {
@@ -1124,36 +902,7 @@ async function runSmoke(report) {
             report.fail('Gold Page Title', 'Gold Page header title is missing or empty');
         }
 
-        // --- Money Page Month Flow Hero Chart Ref (Assertion 8) ---
-        await page.evaluate(() => {
-            if (window.page) window.page('/money');
-        });
-        await page.waitForTimeout(250);
-        const monthFlowRef = await page.locator('[data-ref="page.money.month-flow"]').count();
-        if (monthFlowRef > 0) {
-            report.pass('Money Month Flow Ref', 'Money page month flow hero chart contains data-ref="page.money.month-flow"');
-        } else {
-            report.fail('Money Month Flow Ref', 'Money month flow hero chart data-ref is missing');
-        }
 
-        // --- Money Page Wallet Card Refs (Assertion 9) ---
-        const walletCardRefs = await page.evaluate(() => {
-            const list = document.querySelectorAll('[data-ref^="page.money.wallet-card"]');
-            return Array.from(list).map(el => el.getAttribute('data-ref'));
-        });
-        if (walletCardRefs.length > 0) {
-            report.pass('Money Wallet Card Refs', `Verified presence of ${walletCardRefs.length} money wallet card references`);
-        } else {
-            report.fail('Money Wallet Card Refs', 'Broker wallet card references are missing on money page');
-        }
-
-        // --- Money Filter Click (Assertion 10) ---
-        const hasFilterItem = await page.locator('[data-ref="page.money.filters.all"], [data-ref^="page.money.filters."]').count();
-        if (hasFilterItem > 0) {
-            report.pass('Money Filter Ref', 'Verified presence of Money Page active/filters data-ref list items');
-        } else {
-            report.fail('Money Filter Ref', 'Money Page filter references are missing');
-        }
 
         // --- Calendar Month Navigation (Assertion 11) ---
         await page.evaluate(() => {

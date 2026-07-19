@@ -2,6 +2,9 @@
   "name": "money-monitor",
   "private": true,
   "scripts": {
+    "start": "http-server . -p 8080 -c-1",
+    "dev": "http-server . -p 8080 -c-1",
+    "production": "http-server . -p 8080 -c-1 -o production.html",
     "repair": "node shared/scripts/sync-manifest.js",
     "sync": "node shared/scripts/github-sync.js",
     "build": "node build-production.js",
@@ -14,6 +17,7 @@
     "save-local": "node shared/scripts/git-save-local.js"
   },
   "devDependencies": {
+    "http-server": "^14.1.1",
     "html-minifier-terser": "^7.2.0",
     "playwright": "^1.49.0"
   },
