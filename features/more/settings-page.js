@@ -31,7 +31,7 @@
                 const fbDb = global.MTFDb.getFirebaseDb();
                 const syncCode = global.MTFDb.getSyncCode ? global.MTFDb.getSyncCode() : null;
                 if (fbDb && syncCode) {
-                    await fbDb.collection('syncs').doc(syncCode).set(
+                    await fbDb.collection('settings').doc(syncCode).set(
                         { permissions: window.AppPermissions }, 
                         { merge: true }
                     );

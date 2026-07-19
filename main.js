@@ -5564,7 +5564,7 @@
                 const fbDb = global.MTFDb.getFirebaseDb();
                 const syncCode = localStorage.getItem('mtf_sync_code');
                 if (fbDb && syncCode) {
-                    const doc = await fbDb.collection('syncs').doc(syncCode).get();
+                    const doc = await fbDb.collection('settings').doc(syncCode).get();
                     if (doc.exists) {
                         const data = doc.data();
                         if (data && data.permissions && typeof data.permissions === 'object') {
