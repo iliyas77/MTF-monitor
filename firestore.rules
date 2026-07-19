@@ -9,22 +9,26 @@ service cloud.firestore {
 
     // 2. The flat Watchlist Collection
     match /watchlist/{documentId} {
-      allow read, write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
+      allow read: if true;
+      allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
     }
 
     // 3. The flat Positions Collection
     match /positions/{documentId} {
-      allow read, write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
+      allow read: if true;
+      allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
     }
 
     // 4. The flat Closed Trades Collection
     match /closed_trades/{documentId} {
-      allow read, write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
+      allow read: if true;
+      allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
     }
 
     // 5. The flat Settings Collection
     match /settings/{documentId} {
-      allow read, write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
+      allow read: if true;
+      allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
     }
 
   }
