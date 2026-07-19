@@ -72,3 +72,4 @@ In the final response, provide:
 | #121 | Enhance the settings management module | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/121) |
 | #122 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/122) |
 | #123 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/123) |
+| #124 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/124) |

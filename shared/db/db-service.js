@@ -125,11 +125,15 @@
         const transactionsToSync = payload.transactions || [];
         delete payload.transactions; // Strip from main configuration tree
         
+        // --- ISOLATE WATCHLIST ARCHITECTURE ---
+        const watchlistToSync = payload.marketWatchlist || [];
+        delete payload.marketWatchlist; // Strip from main configuration tree
+        
         const ver = version || localDataVersion;
         
-        // 1. Push core configuration data
+        // 1. Push core configuration data (without the 'data' wrapper)
         const pushMain = fbDb.collection('syncs').doc(syncCode).set({
-            data: payload,
+            ...payload,
             dataVersion: ver,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
@@ -141,7 +145,17 @@
             return fbDb.collection('transactions').doc(String(tx.id)).set(txDoc, { merge: true });
         }));
 
-        return Promise.all([pushMain, pushTxs]).then(() => true).catch(err => {
+        // 3. Push watchlist autonomously to standalone collection
+        const pushWatchlist = Promise.all(watchlistToSync.map((item, index) => {
+            if (!item || !item.s) return Promise.resolve();
+            // Use symbol as part of the doc ID, sanitize to avoid Firestore invalid paths
+            const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const docId = `${syncCode}_${safeSymbol}`;
+            const wlDoc = { ...item, syncCode: syncCode, orderIndex: index, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            return fbDb.collection('watchlist').doc(docId).set(wlDoc, { merge: true });
+        }));
+
+        return Promise.all([pushMain, pushTxs, pushWatchlist]).then(() => true).catch(err => {
             MTFLogger.warn('Cloud push failed', err);
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
@@ -241,8 +255,12 @@
             fbDb.collection('transactions').where('syncCode', '==', code).get().catch(e => {
                 MTFLogger.warn('Failed to fetch remote transactions', e);
                 return { docs: [] };
+            }),
+            fbDb.collection('watchlist').where('syncCode', '==', code).get().catch(e => {
+                MTFLogger.warn('Failed to fetch remote watchlist', e);
+                return { docs: [] };
             })
-        ]).then(([snap, txSnap]) => {
+        ]).then(([snap, txSnap, wlSnap]) => {
             const local = db().getStorage();
             const legacyMoney = {
                 moneyAccounts: Array.isArray(local.moneyAccounts) ? local.moneyAccounts.slice() : [],
@@ -258,8 +276,21 @@
                 txSnap.docs.forEach(d => remoteTxs.push(d.data()));
             }
 
-            if (snap.exists && snapData.data) {
-                const remote = db().ensureMoneyData({ transactions: remoteTxs, ...snapData.data });
+            const remoteWatchlist = [];
+            if (wlSnap && wlSnap.docs) {
+                wlSnap.docs.forEach(d => remoteWatchlist.push(d.data()));
+            }
+            // Sort watchlist items by orderIndex to maintain user's desired order
+            remoteWatchlist.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+            
+            const remotePayload = snapData.data || snapData;
+            const cleanRemotePayload = { ...remotePayload };
+            delete cleanRemotePayload.dataVersion;
+            delete cleanRemotePayload.updatedAt;
+            delete cleanRemotePayload.permissions;
+
+            if (snap.exists && (snapData.data || Object.keys(cleanRemotePayload).length > 0)) {
+                const remote = db().ensureMoneyData({ transactions: remoteTxs, marketWatchlist: remoteWatchlist, ...cleanRemotePayload });
                 if (!legacyMoney.moneyAccounts.length && Array.isArray(remote.moneyAccounts)) {
                     legacyMoney.moneyAccounts = remote.moneyAccounts.slice();
                 }
@@ -276,7 +307,7 @@
                 const cloudMerged = { ...merged };
                 delete cloudMerged.dbCallLog;
                 docRef.set({
-                    data: cloudMerged,
+                    ...cloudMerged,
                     dataVersion: localDataVersion,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true }).finally(() => { syncPushPending--; });
@@ -291,7 +322,7 @@
                 const cloudInitial = { ...initial };
                 delete cloudInitial.dbCallLog;
                 docRef.set({
-                    data: cloudInitial,
+                    ...cloudInitial,
                     dataVersion: localDataVersion,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true }).finally(() => { syncPushPending--; });
