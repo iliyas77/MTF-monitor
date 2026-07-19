@@ -70,3 +70,5 @@ In the final response, provide:
 | #119 | Role: Expert Frontend & Architecture Developer | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/119) |
 | #120 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/120) |
 | #121 | Enhance the settings management module | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/121) |
+| #122 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/122) |
+| #123 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/123) |

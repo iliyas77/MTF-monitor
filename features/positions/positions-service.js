@@ -206,34 +206,43 @@
     function getStorage() {
         if (window.AppPermissions?.localDbEnabled === false) {
             if (global.MTFLogger && global.MTFLogger.log) global.MTFLogger.log("[LocalDB Interceptor] Bypass GET: mtf_tracker_data");
-            return ensureMoneyData({ transactions: [] });
+            return ensureMoneyData({ transactions: [], marketWatchlist: [] });
         }
         if (_storageCached) return _storageCached;
         try {
             const raw = localStorage.getItem('mtf_tracker_data');
-            if (raw) {
-                let hadWatchlistQuotes = false;
-                try {
-                    const peek = JSON.parse(raw);
-                    if (Array.isArray(peek.marketWatchlist)) {
-                        hadWatchlistQuotes = peek.marketWatchlist.some((item) => {
-                            const price = Number(item && item.price);
-                            return isFinite(price) && price > 0;
-                        });
-                    }
-                } catch (_) { /* ignore */ }
-                const data = ensureMoneyData(JSON.parse(raw));
-                if (hadWatchlistQuotes) {
-                    try {
-                        localStorage.setItem('mtf_tracker_data', JSON.stringify(data));
-                    } catch (_) { /* ignore */ }
+            const rawTxs = localStorage.getItem('mtf_transactions');
+            const rawWatchlist = localStorage.getItem('mtf_watchlist');
+            
+            if (raw || rawTxs || rawWatchlist) {
+                let data = ensureMoneyData(raw ? JSON.parse(raw) : {});
+                
+                // Legacy Migration: Port embedded transactions to decoupled store
+                if (Array.isArray(data.transactions) && data.transactions.length > 0 && !rawTxs) {
+                    try { localStorage.setItem('mtf_transactions', JSON.stringify(data.transactions)); } catch (_) {}
+                    const migrated = { ...data };
+                    delete migrated.transactions;
+                    try { localStorage.setItem('mtf_tracker_data', JSON.stringify(migrated)); } catch (_) {}
+                } else if (rawTxs) {
+                    try { data.transactions = JSON.parse(rawTxs); } catch (_) { data.transactions = []; }
                 }
+
+                // Legacy Migration: Port embedded marketWatchlist to decoupled store
+                if (Array.isArray(data.marketWatchlist) && data.marketWatchlist.length > 0 && !rawWatchlist) {
+                    try { localStorage.setItem('mtf_watchlist', JSON.stringify(data.marketWatchlist)); } catch (_) {}
+                    const migrated = { ...data };
+                    delete migrated.marketWatchlist;
+                    try { localStorage.setItem('mtf_tracker_data', JSON.stringify(migrated)); } catch (_) {}
+                } else if (rawWatchlist) {
+                    try { data.marketWatchlist = JSON.parse(rawWatchlist); } catch (_) { data.marketWatchlist = []; }
+                }
+
                 if (Array.isArray(data.transactions)) {
                     if (!smokeTradesAllowed()) {
                         const before = data.transactions.length;
                         stripSmokeTradesFromData(data);
                         if (data.transactions.length !== before) {
-                            localStorage.setItem('mtf_tracker_data', JSON.stringify(data));
+                            try { localStorage.setItem('mtf_transactions', JSON.stringify(data.transactions)); } catch (_) {}
                         }
                     }
                     _storageCached = data;
@@ -245,7 +254,7 @@
                 }
             }
         } catch (_) { /* ignore */ }
-        return ensureMoneyData({ transactions: [] });
+        return ensureMoneyData({ transactions: [], marketWatchlist: [] });
     }
 
     function saveStorageLocal(data) {
@@ -254,9 +263,22 @@
             return;
         }
         invalidateStorageCache();
-        const payload = ensureMoneyData(data || { transactions: [] });
+        const payload = ensureMoneyData(data || { transactions: [], marketWatchlist: [] });
         stripSmokeTradesFromData(payload);
-        localStorage.setItem('mtf_tracker_data', JSON.stringify(payload));
+        
+        // Decouple Transactions Persistence
+        const transactions = payload.transactions || [];
+        try { localStorage.setItem('mtf_transactions', JSON.stringify(transactions)); } catch (_) {}
+        
+        // Decouple Watchlist Persistence
+        const marketWatchlist = payload.marketWatchlist || [];
+        try { localStorage.setItem('mtf_watchlist', JSON.stringify(marketWatchlist)); } catch (_) {}
+        
+        const mainPayload = { ...payload };
+        delete mainPayload.transactions;
+        delete mainPayload.marketWatchlist;
+        
+        localStorage.setItem('mtf_tracker_data', JSON.stringify(mainPayload));
     }
 
     function saveStorage(data) {

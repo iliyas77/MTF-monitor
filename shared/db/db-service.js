@@ -120,12 +120,28 @@
             payload.moneyAccounts = [];
             payload.moneyEntries = [];
         }
+        
+        // --- ISOLATE TRANSACTIONS ARCHITECTURE ---
+        const transactionsToSync = payload.transactions || [];
+        delete payload.transactions; // Strip from main configuration tree
+        
         const ver = version || localDataVersion;
-        return fbDb.collection('syncs').doc(syncCode).set({
+        
+        // 1. Push core configuration data
+        const pushMain = fbDb.collection('syncs').doc(syncCode).set({
             data: payload,
             dataVersion: ver,
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => true).catch(err => {
+        }, { merge: true });
+
+        // 2. Push transactions distinctively to standalone collection
+        const pushTxs = Promise.all(transactionsToSync.map(tx => {
+            if (!tx || !tx.id) return Promise.resolve();
+            const txDoc = { ...tx, syncCode: syncCode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            return fbDb.collection('transactions').doc(String(tx.id)).set(txDoc, { merge: true });
+        }));
+
+        return Promise.all([pushMain, pushTxs]).then(() => true).catch(err => {
             MTFLogger.warn('Cloud push failed', err);
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
@@ -220,7 +236,13 @@
             if (connectLoadingActive) { connectLoadingActive = false; hooks.hideLoading(); }
         };
 
-        docRef.get().then(snap => {
+        Promise.all([
+            docRef.get(),
+            fbDb.collection('transactions').where('syncCode', '==', code).get().catch(e => {
+                MTFLogger.warn('Failed to fetch remote transactions', e);
+                return { docs: [] };
+            })
+        ]).then(([snap, txSnap]) => {
             const local = db().getStorage();
             const legacyMoney = {
                 moneyAccounts: Array.isArray(local.moneyAccounts) ? local.moneyAccounts.slice() : [],
@@ -230,9 +252,14 @@
             const snapData = snap.data() || {};
             if (snapData.data && snapData.data.dbCallLog) delete snapData.data.dbCallLog;
             if (snapData.dbCallLog) delete snapData.dbCallLog;
+            
+            const remoteTxs = [];
+            if (txSnap && txSnap.docs) {
+                txSnap.docs.forEach(d => remoteTxs.push(d.data()));
+            }
 
             if (snap.exists && snapData.data) {
-                const remote = db().ensureMoneyData({ transactions: [], ...snapData.data });
+                const remote = db().ensureMoneyData({ transactions: remoteTxs, ...snapData.data });
                 if (!legacyMoney.moneyAccounts.length && Array.isArray(remote.moneyAccounts)) {
                     legacyMoney.moneyAccounts = remote.moneyAccounts.slice();
                 }
