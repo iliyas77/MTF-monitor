@@ -34,17 +34,18 @@
             }
 
             try {
-                const docSnap = await ref.doc(uid).get();
+                const snapshot = await ref.where('syncCode', '==', uid).get();
                 const items = [];
-                if (docSnap.exists) {
-                    const data = docSnap.data();
-                    if (Array.isArray(data.items)) {
-                        data.items.forEach(item => items.push(item));
-                    }
-                }
                 
                 this.cache.clear();
-                items.forEach(item => this.cache.set(item.s, item));
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    // Store the autoDocId inside the data so we can delete it later if needed
+                    const item = { id: doc.id, ...data };
+                    this.cache.set(data.symbol || data.s, item);
+                    items.push(item);
+                });
+                
                 const sortedItems = items.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
                 
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Fetch success: Retrieved ${items.length} items.`);
@@ -56,17 +57,18 @@
         }
 
         async add(item) {
-            if (!item || !item.s) {
+            if (!item || (!item.s && !item.symbol)) {
                 const err = new Error('Invalid item payload');
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Add failed: Missing symbol', err);
                 throw err;
             }
 
-            if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Initiating add for: ${item.s}`);
+            const symbol = item.s || item.symbol;
+            if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Initiating add for: ${symbol}`);
             
             // Optimistic Check
-            if (this.cache.has(item.s)) {
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Item ${item.s} already exists in cache, bypassing network loop.`);
+            if (this.cache.has(symbol)) {
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Item ${symbol} already exists in cache, bypassing network loop.`);
                 return true;
             }
 
@@ -82,23 +84,24 @@
                 const orderIndex = this.cache.size; // Simple ordering
                 const payloadItem = {
                     ...item,
+                    symbol: symbol,
+                    syncCode: uid,
                     orderIndex: orderIndex,
-                    updatedAt: Date.now()
+                    addedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // Update Cache immediately
-                this.cache.set(item.s, payloadItem);
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to flat watchlist collection...`);
                 
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload array to watchlist/${uid}...`);
+                // Firestore automatically generates UUIDs
+                const docRef = await ref.add(payloadItem);
                 
-                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
+                // Update Cache immediately with the generated doc id
+                this.cache.set(symbol, { ...payloadItem, id: docRef.id });
                 
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Write success. Cache updated for ${item.s}.`);
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Write success. Cache updated for ${symbol} with ID ${docRef.id}.`);
                 return true;
             } catch (e) {
-                // Rollback cache on failure
-                this.cache.delete(item.s);
-                if (global.MTFLogger) global.MTFLogger.error(`[WatchlistRepository] Write transaction failed for ${item.s}`, e);
+                if (global.MTFLogger) global.MTFLogger.error(`[WatchlistRepository] Write transaction failed for ${symbol}`, e);
                 throw e; // Explicitly throw so UI can catch and show error alert
             }
         }
@@ -116,14 +119,23 @@
             }
 
             try {
-                // Keep backup for rollback
-                const backup = this.cache.get(symbol);
+                // To delete a flat collection document, we need its autoDocId
+                const cachedItem = this.cache.get(symbol);
+                if (cachedItem && cachedItem.id) {
+                    await ref.doc(cachedItem.id).delete();
+                } else {
+                    // Fallback: query by syncCode and symbol to find the document to delete
+                    const snapshot = await ref.where('syncCode', '==', uid).where('symbol', '==', symbol).get();
+                    if (!snapshot.empty) {
+                        const batch = this.getDb().batch();
+                        snapshot.docs.forEach(doc => {
+                            batch.delete(doc.ref);
+                        });
+                        await batch.commit();
+                    }
+                }
+                
                 this.cache.delete(symbol);
-                
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Deleting ${symbol} and rewriting array to watchlist/${uid}`);
-                
-                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
-                
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Remove success for ${symbol}.`);
                 return true;
             } catch (e) {
@@ -139,13 +151,28 @@
             if (!ref || !uid) return false;
 
             try {
+                const batch = this.getDb().batch();
                 this.cache.clear();
                 items.forEach((item, index) => {
-                    if (!item.s) return;
-                    this.cache.set(item.s, { ...item, orderIndex: index, updatedAt: Date.now() });
+                    const symbol = item.s || item.symbol;
+                    if (!symbol) return;
+                    
+                    const payloadItem = {
+                        ...item,
+                        symbol: symbol,
+                        syncCode: uid,
+                        orderIndex: index,
+                        addedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+
+                    // For bulk save without IDs, we generate new ones
+                    const docRef = ref.doc();
+                    batch.set(docRef, payloadItem);
+                    
+                    this.cache.set(symbol, { ...payloadItem, id: docRef.id });
                 });
                 
-                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
+                await batch.commit();
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Bulk save success for ${items.length} items.`);
                 return true;
             } catch (e) {
