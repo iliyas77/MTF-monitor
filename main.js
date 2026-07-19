@@ -104,18 +104,7 @@
         sortMoneyEntries,
         renderMoney,
         renderAccountHistorySheet,
-        renderMtfCalculator,
-        updateMtfCalculator,
-        setCalcSellPct,
-        setCalcLeverage,
-        onCalcLeverageInput,
-        onCalcBuyPriceInput,
-        onCalcSellPriceInput,
-        addCalcSellPctPreset,
-        onCalcDateInput,
-        setCalcSameDay,
-        setCalcTodayPair,
-        openCalcBreakdownSheet,
+
         openChargesModal,
         openInterestModal,
         openCompanyInfoSheet,
@@ -277,8 +266,8 @@
         Zerodha: {
             label: 'Zerodha',
             interestRatePerDay: 0.0004,
-            brokeragePct: 0,
-            brokerageCap: 0,
+            brokeragePct: 0.003,
+            brokerageCap: 20,
             pledgeCharge: 15,
             unpledgeCharge: 15,
             dpCharge: 15.93,
@@ -1193,7 +1182,7 @@
         else {
             const sellEl = document.getElementById('calcSellPrice');
             if (sellEl) sellEl.value = sell;
-            if (typeof updateMtfCalculator === 'function') updateMtfCalculator();
+
         }
 
         const sellShown = document.getElementById('calcSellPrice')?.value || sell;
@@ -1226,7 +1215,7 @@
         const quote = await fillCalcFromLivePrice(item);
         if (typeof paintCalcCompanyHeader === 'function') paintCalcCompanyHeader();
         if (typeof paintCalcLiveQuote === 'function') paintCalcLiveQuote(quote);
-        if (typeof updateMtfCalculator === 'function') updateMtfCalculator();
+
     }
 
     function onCalcCompanyInput() {
@@ -3221,8 +3210,7 @@
     }
 
     function refreshActiveMoreView() {
-        const calcPage = document.getElementById('page-mtf-calc');
-        if (calcPage && !calcPage.classList.contains('d-none') && calcPage.offsetParent !== null) updateMtfCalculator();
+
     }
 
     // ---------- CALCULATION ENGINE ----------
@@ -3279,7 +3267,7 @@
         Groww: { brokeragePct: 0.001, brokerageCap: 20 },
     };
 
-    const CHARGE_LOGIC_VERSION = 3;
+    const CHARGE_LOGIC_VERSION = 4;
 
     function getChargeConfig(broker, buyDate, sellDate) {
         const base = BROKER_CONFIG[broker] || BROKER_CONFIG['Zerodha'];
@@ -3315,11 +3303,12 @@
         const txs = getTransactions();
         let changed = false;
         const updated = txs.map(tx => {
-            if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice) return tx;
+            if (!tx.buyDate || !tx.quantity || !tx.buyPrice) return tx;
             const isOpen = (tx.status || 'closed') === 'open';
             const effectiveSellPrice = tx.sellPrice || (isOpen ? tx.buyPrice : 0);
             if (!effectiveSellPrice) return tx;
-            const calc = calculateTrade({ ...tx, sellPrice: effectiveSellPrice });
+            const effectiveSellDate = tx.sellDate || new Date().toISOString().split('T')[0];
+            const calc = calculateTrade({ ...tx, sellPrice: effectiveSellPrice, sellDate: effectiveSellDate });
             const newTx = {
                 ...tx,
                 grossProfit: calc.grossProfit,
@@ -3461,10 +3450,11 @@
             ownMargin: Number(tx.ownMargin) || 0,
             totalInvestment: Number(tx.totalInvestment) || 0,
         };
-        if (!tx.buyDate || !tx.sellDate || !tx.quantity || !tx.buyPrice || !sellPrice) {
+        if (!tx.buyDate || !tx.quantity || !tx.buyPrice || !sellPrice) {
             return fallback;
         }
-        const calc = calculateTrade({ ...tx, sellPrice });
+        const effectiveSellDate = tx.sellDate || new Date().toISOString().split('T')[0];
+        const calc = calculateTrade({ ...tx, sellPrice, sellDate: effectiveSellDate });
         return {
             sellPrice,
             interest: calc.interest,
@@ -3495,60 +3485,11 @@
             renderAppButton('Disconnect', { id: 'syncDisconnectBtn', variant: 'cancel', onclick: 'disconnectSync()', icon: 'fa-unlink', flex: true, className: 'd-none' });
     }
 
-    function paintAddMoneyAccountBtn() {
-        // Header "Add Wallet" removed — wallets are added from the + FAB sheet.
-        const host = document.getElementById('moneyAddAccountBtnHost');
-        if (host) host.innerHTML = '';
-    }
-
-    function updateMoneyFabVisibility() {
-        const onMoney = activeMoreFeature === 'money';
-        // Hide FAB on the add/edit transaction page itself.
-        BottomBar.setFabVisible(!!onMoney);
-        const fab = document.getElementById('bottomBarFab');
-        if (fab) {
-            fab.setAttribute('aria-label', 'Add transaction');
-            fab.title = 'Add transaction';
-        }
-        if (!onMoney) {
-            BottomBar._onFabClick = openAddModal;
-            return;
-        }
-        BottomBar._onFabClick = () => openMoneyEntryModal(null, 'deposit');
-    }
-
     function updateFabVisibility(page) {
-        if (activeMoreFeature === 'money' || page === 'money') {
-            updateMoneyFabVisibility();
-            return;
-        }
         BottomBar.setFabVisible(false);
         BottomBar._onFabClick = openAddModal;
     }
 
-    function onMoneyEntryBrokerChange(selectEl) {
-        if (!selectEl || selectEl.value !== '__add_wallet__') return;
-        const accounts = typeof getMoneyAccounts === 'function' ? getMoneyAccounts() : [];
-        selectEl.value = document.getElementById('moneyEntryAccountId')?.value
-            || accounts[0]?.id
-            || '';
-        openAddMoneyAccountModal({ returnToEntry: true });
-    }
-
-    function refreshOpenMoneyEntryWallets(selectedAccountId) {
-        if (typeof refreshMoneyEntryWalletSelects === 'function') {
-            refreshMoneyEntryWalletSelects(selectedAccountId);
-        }
-    }
-
-    function reopenMoneyEntryAfterWallet(selectedAccountId) {
-        refreshOpenMoneyEntryWallets(selectedAccountId);
-        showMoneyEntryPage();
-        setTimeout(() => {
-            const amountEl = document.getElementById('moneyEntryAmount');
-            if (amountEl) amountEl.focus();
-        }, 200);
-    }
 
     function paintSettingsActionButtons() {
         const feedHost = document.getElementById('settingsMarketFeedBtnHost');
@@ -3657,9 +3598,7 @@
 
     function initAppButtons() {
         setTxModalMode(false);
-        renderMoneyEntryFooter('Add Deposit', 'fa-plus');
         renderSyncConnectRow();
-        paintAddMoneyAccountBtn();
         paintSettingsActionButtons();
         const calcAdd = document.getElementById('calcAddPctBtnHost');
         if (calcAdd) {
@@ -4015,11 +3954,9 @@
         if (id === 'page-past') return { page: 'past', moreFeature: null };
         if (id === 'page-market') return { page: 'market', moreFeature: null };
         if (id === 'page-calendar') return { page: 'calendar', moreFeature: null };
-        if (id === 'page-money') return { page: 'more', moreFeature: 'money' };
-        if (id === 'page-money-entry') return { page: 'more', moreFeature: 'money-entry' };
         if (id === 'page-more') return { page: 'more', moreFeature: null };
         if (id === 'page-settings') return { page: 'settings', moreFeature: null };
-        if (id === 'page-mtf-calc') return { page: 'more', moreFeature: 'mtf-calc' };
+
         return { page: 'trades', moreFeature: null };
     }
 
@@ -4080,10 +4017,7 @@
             openMoreFeature(saved.moreFeature);
             return true;
         }
-        if (saved.page === 'money') {
-            openMoreFeature('money');
-            return true;
-        }
+
         // Legacy / mistaken "plan" nav → always land on current open trades.
         if (saved.page === 'plan') {
             navigateTo('trades');
@@ -4110,7 +4044,6 @@
         }
         stopMarketRefresh();
         stopTradeLiveRefresh();
-        setMoneyEntryChromeHidden(false);
         renderSettings();
         showPage('page-settings');
         setBottomNavActive(null);
@@ -4156,7 +4089,7 @@
 
     // ---------- NAVIGATION ----------
     const pageMap = { trades: 'page-trades', past: 'page-past', market: 'page-market', gold: 'page-gold', calendar: 'page-calendar', more: 'page-more' };
-    const moreFeatureMap = { money: 'page-money', 'money-entry': 'page-money-entry', 'mtf-calc': 'page-mtf-calc' };
+    const moreFeatureMap = { };
     let activeMoreFeature = null;
 
     function showPage(pageId) {
@@ -4170,36 +4103,13 @@
         BottomBar.setActive(page);
     }
 
-    function setMoneyEntryChromeHidden(hidden) {
-        document.body.classList.toggle('money-entry-immersive', !!hidden);
-        const appHeader = document.getElementById('appHeader');
-        if (appHeader) appHeader.classList.toggle('d-none', !!hidden);
-        BottomBar.setBarVisible(!hidden);
-        if (hidden) BottomBar.setFabVisible(false);
-    }
 
-    function showMoneyEntryPage() {
-        activeMoreFeature = 'money-entry';
-        showPage('page-money-entry');
-        setMoneyEntryChromeHidden(true);
-        saveNavState();
-    }
-
-    function closeMoneyEntryPage() {
-        setMoneyEntryChromeHidden(false);
-        openMoreFeature('money');
-    }
 
     function renderAppPage(page) {
-        if (page === 'money') {
-            openMoreFeature('money');
-            return;
-        }
         if (page === 'plan') {
             navigateTo('trades');
             return;
         }
-        setMoneyEntryChromeHidden(false);
         activeMoreFeature = null;
         showPage(pageMap[page]);
         setBottomNavActive(page);
@@ -4250,29 +4160,14 @@
             navigateTo('more');
             return;
         }
-        if (feature !== 'money-entry') setMoneyEntryChromeHidden(false);
         activeMoreFeature = feature;
         showPage(moreFeatureMap[feature]);
         setBottomNavActive('more');
-        updateFabVisibility(feature === 'money' ? 'money' : 'more');
-        if (feature === 'money') {
-            paintAddMoneyAccountBtn();
-            updateMoneyFabVisibility();
-            renderMoney();
-        }
-        if (feature === 'mtf-calc') {
-            renderMtfCalculator();
-            updateMtfCalculator();
-        }
+        updateFabVisibility('more');
         saveNavState();
     }
 
     function backToMoreHub() {
-        if (activeMoreFeature === 'money-entry'
-            || !document.getElementById('page-money-entry')?.classList.contains('d-none')) {
-            openMoreFeature('money');
-            return;
-        }
         activeMoreFeature = null;
         showPage('page-more');
         setBottomNavActive('more');
@@ -4305,34 +4200,8 @@
     let searchContext = 'trades';
     let searchQuery = '';
     let txModalContext = 'trades';
-    let moneyAccountFilter = 'all';
-    let moneyPageTypeFilter = 'all';
-    let moneyPageFrom = null;
-    let moneyPageTo = null;
-    let moneyPageRangeKey = 'all';
-    let moneyPageSort = 'newest';
-    let moneySearchQuery = '';
-    let moneyMonthKey = new Date().toISOString().slice(0, 7);
-    let moneyHistorySheetAccountId = null;
-    let moneyHistoryTypeFilter = 'all';
-    let moneyHistoryFrom = null;
-    let moneyHistoryTo = null;
-    let moneyHistoryRangeKey = 'all';
 
-    const APP_MONEY_TYPE_OPTIONS = [
-        { value: 'all', label: 'All', icon: 'fa-layer-group', variant: 'muted' },
-        { value: 'deposit', label: 'Deposit', icon: 'fa-plus', variant: 'deposit' },
-        { value: 'withdraw', label: 'Withdrawal', icon: 'fa-minus', variant: 'withdraw' },
-        { value: 'adjustment', label: 'Adjustment', icon: 'fa-sliders-h', variant: 'muted' },
-        { value: 'transfer', label: 'Transfer', icon: 'fa-exchange-alt', variant: 'muted' }
-    ];
-    const APP_MONEY_TYPE_FILTER_OPTIONS = [
-        { value: 'all', label: 'All types', icon: 'fa-layer-group', variant: 'muted' },
-        { value: 'deposit', label: 'Deposits', icon: 'fa-plus', variant: 'deposit' },
-        { value: 'withdraw', label: 'Withdrawals', icon: 'fa-minus', variant: 'withdraw' },
-        { value: 'adjustment', label: 'Adjustments', icon: 'fa-sliders-h', variant: 'muted' },
-        { value: 'transfer', label: 'Transfers', icon: 'fa-exchange-alt', variant: 'muted' }
-    ];
+
     const APP_BROKER_OPTIONS = [
         { value: '', label: 'Select Broker', icon: 'fa-building', variant: 'muted' },
         { value: 'Zerodha', label: 'Zerodha', icon: 'fa-chart-line', variant: 'broker' },
@@ -4340,12 +4209,7 @@
         { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' },
         { value: 'Angel One', label: 'Angel One', icon: 'fa-chart-line', variant: 'broker' }
     ];
-    const APP_MONEY_BROKER_OPTIONS = [
-        { value: 'Zerodha', label: 'Zerodha', icon: 'fa-chart-line', variant: 'broker' },
-        { value: 'Dhan', label: 'Dhan', icon: 'fa-chart-line', variant: 'broker' },
-        { value: 'Groww', label: 'Groww', icon: 'fa-chart-line', variant: 'broker' },
-        { value: 'Angel One', label: 'Angel One', icon: 'fa-chart-line', variant: 'broker' }
-    ];
+
 
     function setFilterBtnHighlight(btn, active) {
         if (!btn) return;
@@ -4370,54 +4234,7 @@
         setRangeButtonsActive(containerSelector, '');
     }
 
-    function syncMoneyTypeDropdowns() {
-        syncAppSelectDropdown({
-            options: APP_MONEY_TYPE_OPTIONS,
-            selectedValue: moneyPageTypeFilter,
-            hostId: 'moneyPageFilterTypeHost',
-            id: 'moneyPageFilterType',
-            selectHandler: 'setMoneyPageTypeFilter',
-            ariaLabel: 'Filter type'
-        });
-        syncAppSelectDropdown({
-            options: APP_MONEY_TYPE_FILTER_OPTIONS,
-            selectedValue: moneyPageTypeFilter,
-            hostId: 'moneyPageTypeFilterHost',
-            id: 'moneyPageTypeFilterSelect',
-            selectHandler: 'pickMoneyPageTypeFilter',
-            ariaLabel: 'Filter type',
-            fullWidth: true
-        });
-        const hiddenType = document.getElementById('moneyPageTypeFilter');
-        if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-    }
 
-    function syncMoneyHistoryTypeDropdown() {
-        syncAppSelectDropdown({
-            options: APP_MONEY_TYPE_OPTIONS,
-            selectedValue: moneyHistoryTypeFilter,
-            hostId: 'moneyHistoryTypeHost',
-            id: 'moneyHistoryType',
-            selectHandler: 'setMoneyHistoryTypeFilter',
-            ariaLabel: 'Filter type'
-        });
-    }
-
-    function syncMoneyAccountFilterDropdown(accounts) {
-        const options = [
-            { value: 'all', label: 'All' },
-            ...accounts.map(a => ({ value: a.id, label: a.name }))
-        ];
-        syncAppSelectDropdown({
-            options,
-            selectedValue: moneyAccountFilter,
-            hostId: 'moneyAccountFilterHost',
-            id: 'moneyAccountFilter',
-            selectHandler: 'setMoneyAccountFilter',
-            escapeValues: true,
-            ariaLabel: 'Filter accounts'
-        });
-    }
 
     function setTxBroker(value) {
         const hidden = document.getElementById('txBroker');
@@ -4442,12 +4259,7 @@
         try { global.MTFComponents.hideOpenDropdowns?.(document.getElementById('txModal')); } catch (_) { }
     }
 
-    function pickMoneyPageTypeFilter(value) {
-        moneyPageTypeFilter = value || 'all';
-        const hiddenType = document.getElementById('moneyPageTypeFilter');
-        if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-        syncMoneyTypeDropdowns();
-    }
+
 
     // ---------- RANGE HELPERS ----------
     function localDateStr(d) {
@@ -5135,6 +4947,27 @@
             updateFabVisibility('trades');
             startTradeLiveRefresh();
         }
+        
+        // Update new compact header switch UI states
+        const openBtn = document.getElementById('headerSwitchOpenBtn');
+        const closeBtn = document.getElementById('headerSwitchCloseBtn');
+        if (openBtn && closeBtn) {
+            const isPast = tradesViewMode === 'past';
+            
+            // Open btn styles
+            openBtn.classList.toggle('active', !isPast);
+            openBtn.classList.toggle('text-body-secondary', isPast);
+            openBtn.style.backgroundColor = isPast ? 'transparent' : 'var(--bs-body-bg)';
+            openBtn.style.color = isPast ? '' : 'var(--bs-body-color)';
+            openBtn.style.borderColor = isPast ? 'transparent' : 'var(--bs-border-color)';
+            
+            // Close btn styles
+            closeBtn.classList.toggle('active', isPast);
+            closeBtn.classList.toggle('text-body-secondary', !isPast);
+            closeBtn.style.backgroundColor = isPast ? 'var(--bs-body-bg)' : 'transparent';
+            closeBtn.style.color = isPast ? 'var(--bs-body-color)' : '';
+            closeBtn.style.borderColor = isPast ? 'var(--bs-border-color)' : 'transparent';
+        }
     }
 
     // renderCurrentView → features/positions/trades-page.js
@@ -5202,595 +5035,9 @@
 
     // renderPastTrades → features/positions/past-page.js
 
-    // ---------- MONEY TRACKER ----------
-    // renderMoney, renderAccountHistorySheet → features/more/money-page.js
 
-    function moneyPageDateFilterActive() {
-        return moneyPageRangeKey !== 'all' && (moneyPageFrom || moneyPageTo);
-    }
 
-    function moneyPageFiltersActive() {
-        return moneyPageTypeFilter !== 'all' || moneyPageDateFilterActive() || !!String(moneySearchQuery || '').trim();
-    }
 
-    function matchesMoneyPageEntryFilter(e) {
-        if (moneyPageTypeFilter !== 'all' && e.type !== moneyPageTypeFilter) return false;
-        if (moneyPageDateFilterActive()) {
-            const d = e.date || '';
-            if (!d) return false;
-            if (moneyPageFrom && d < moneyPageFrom) return false;
-            if (moneyPageTo && d > moneyPageTo) return false;
-        }
-        const q = String(moneySearchQuery || '').trim().toLowerCase();
-        if (q) {
-            const acc = getMoneyAccounts().find((a) => a.id === e.accountId);
-            const hay = [
-                e.note || '',
-                String(e.amount || ''),
-                e.date || '',
-                acc ? acc.name : '',
-                acc ? acc.broker : '',
-                e.type || ''
-            ].join(' ').toLowerCase();
-            if (!hay.includes(q)) return false;
-        }
-        return true;
-    }
-
-    function getMoneyPageFilterViewTitle() {
-        const titles = {
-            deposit: 'Deposits',
-            withdraw: 'Withdrawals',
-            adjustment: 'Adjustments',
-            transfer: 'Transfers'
-        };
-        if (String(moneySearchQuery || '').trim()) return 'Search results';
-        return titles[moneyPageTypeFilter] || 'Transactions';
-    }
-
-    function getMoneyPageFilteredEntries() {
-        let entries = getMoneyEntries().filter(matchesMoneyPageEntryFilter);
-        if (moneyAccountFilter !== 'all') {
-            entries = entries.filter(e => e.accountId === moneyAccountFilter);
-        }
-        return sortMoneyEntries(entries, moneyPageSort);
-    }
-
-    function syncMoneyPageFilterUI() {
-        syncMoneyTypeDropdowns();
-        const fromEl = document.getElementById('moneyPageFrom');
-        const toEl = document.getElementById('moneyPageTo');
-        if (fromEl) setDateInputValue(fromEl, moneyPageFrom || '');
-        if (toEl) setDateInputValue(toEl, moneyPageTo || '');
-        setRangeButtonsActive('#moneyPageRangeButtons', moneyPageRangeKey);
-        document.querySelectorAll('#moneyPageSortButtons .btn-check[data-sort]').forEach((input) => {
-            input.checked = input.dataset.sort === moneyPageSort;
-        });
-        const filterBtn = document.getElementById('moneyPageFilterBtn');
-        setFilterBtnHighlight(filterBtn, moneyPageFiltersActive());
-        const filterBtnActive = document.getElementById('moneyPageFilterBtnActive');
-        setFilterBtnHighlight(filterBtnActive, moneyPageFiltersActive());
-        const clearBtn = document.getElementById('moneySearchClear');
-        if (clearBtn) clearBtn.classList.toggle('d-none', !String(moneySearchQuery || '').trim());
-    }
-
-    function openMoneyPageFilterSheet() {
-        syncMoneyPageFilterUI();
-        Sheet.mountPanel('<i class="fas fa-filter me-2"></i>Filter Wallets', 'panelMoneyPageFilter',
-            renderAppButtonRow('Clear', 'Apply', { cancelOnClick: 'clearMoneyPageFilters()', actionOnClick: 'applyMoneyPageFilter()', actionIcon: 'fa-check' }));
-    }
-
-    function closeMoneyPageFilterSheet() {
-        Sheet.close();
-    }
-
-    function setMoneyPageRangeInForm(daysOrKey) {
-        moneyPageRangeKey = String(daysOrKey);
-        if (daysOrKey === 'all') {
-            moneyPageFrom = null;
-            moneyPageTo = null;
-        } else if (daysOrKey === 'today') {
-            const date = localDateStr(new Date());
-            moneyPageFrom = date;
-            moneyPageTo = date;
-        } else if (daysOrKey === 'yesterday') {
-            const y = new Date();
-            y.setDate(y.getDate() - 1);
-            const date = localDateStr(y);
-            moneyPageFrom = date;
-            moneyPageTo = date;
-        } else if (daysOrKey === 'week') {
-            const range = getThisWeekMonFriRange();
-            moneyPageFrom = range.from;
-            moneyPageTo = range.to;
-        } else if (daysOrKey === 'month') {
-            const now = new Date();
-            moneyPageFrom = localDateStr(new Date(now.getFullYear(), now.getMonth(), 1));
-            moneyPageTo = localDateStr(now);
-        } else if (daysOrKey === 'lastMonth') {
-            const now = new Date();
-            const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-            const last = new Date(now.getFullYear(), now.getMonth(), 0);
-            moneyPageFrom = localDateStr(first);
-            moneyPageTo = localDateStr(last);
-        } else {
-            const range = getDateRange(daysOrKey);
-            moneyPageFrom = range.from;
-            moneyPageTo = range.to;
-        }
-        syncMoneyPageFilterUI();
-    }
-
-    function setMoneyPageSort(sortKey) {
-        moneyPageSort = sortKey || 'newest';
-        syncMoneyPageFilterUI();
-    }
-
-    function setMoneySearchQuery(value) {
-        moneySearchQuery = value || '';
-        const clearBtn = document.getElementById('moneySearchClear');
-        if (clearBtn) clearBtn.classList.toggle('d-none', !String(moneySearchQuery).trim());
-        const input = document.getElementById('moneySearchInput');
-        if (input && input.value !== moneySearchQuery) input.value = moneySearchQuery;
-        renderMoney();
-    }
-
-    function clearMoneySearchQuery() {
-        moneySearchQuery = '';
-        const input = document.getElementById('moneySearchInput');
-        if (input) input.value = '';
-        const clearBtn = document.getElementById('moneySearchClear');
-        if (clearBtn) clearBtn.classList.add('d-none');
-        renderMoney();
-    }
-
-    function shiftMoneyMonthChart(delta) {
-        const [y, m] = (moneyMonthKey || '').split('-').map(Number);
-        const d = new Date(y || new Date().getFullYear(), (m || 1) - 1 + Number(delta || 0), 1);
-        moneyMonthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-        renderMoney();
-    }
-
-    function setMoneyMonthKey(value) {
-        const raw = String(value || '').trim();
-        if (!/^\d{4}-\d{2}$/.test(raw)) return;
-        const [y, m] = raw.split('-').map(Number);
-        if (!y || !m || m < 1 || m > 12) return;
-        moneyMonthKey = `${y}-${String(m).padStart(2, '0')}`;
-        renderMoney();
-    }
-
-    function applyMoneyPageFilter() {
-        moneyPageTypeFilter = document.getElementById('moneyPageTypeFilter')?.value || moneyPageTypeFilter || 'all';
-        let from = document.getElementById('moneyPageFrom')?.value || '';
-        let to = document.getElementById('moneyPageTo')?.value || '';
-        if (!from && !to && moneyPageFrom && moneyPageTo) {
-            from = moneyPageFrom;
-            to = moneyPageTo;
-        }
-        if ((from && !to) || (!from && to)) {
-            showToast('Please select both From and To dates.', 'warning');
-            return;
-        }
-        if (from && to && from > to) {
-            showToast('From date must be before To date.', 'warning');
-            return;
-        }
-        if (!from && !to && moneyPageRangeKey === 'custom') {
-            moneyPageRangeKey = 'all';
-        }
-        if (from && to) {
-            moneyPageFrom = from;
-            moneyPageTo = to;
-            if (!document.querySelector(`#moneyPageRangeButtons .btn[data-range="${moneyPageRangeKey}"]`)?.classList.contains('btn-outline-primary')) {
-                moneyPageRangeKey = 'custom';
-            }
-        } else {
-            moneyPageFrom = null;
-            moneyPageTo = null;
-        }
-        closeMoneyPageFilterSheet();
-        renderMoney();
-        if (moneyPageFiltersActive()) showToast('Filter applied.', 'success');
-    }
-
-    function onMoneyPageDateInputChange() {
-        moneyPageRangeKey = 'custom';
-        setRangeButtonsActive('#moneyPageRangeButtons', '');
-    }
-
-    function setMoneyPageTypeFilter(value) {
-        moneyPageTypeFilter = value || 'all';
-        const hiddenType = document.getElementById('moneyPageTypeFilter');
-        if (hiddenType) hiddenType.value = moneyPageTypeFilter;
-        renderMoney();
-        syncMoneyTypeDropdowns();
-    }
-
-    function clearMoneyPageFilters() {
-        moneyPageTypeFilter = 'all';
-        moneyPageFrom = null;
-        moneyPageTo = null;
-        moneyPageRangeKey = 'all';
-        moneyPageSort = 'newest';
-        moneySearchQuery = '';
-        const input = document.getElementById('moneySearchInput');
-        if (input) input.value = '';
-        closeMoneyPageFilterSheet();
-        renderMoney();
-    }
-
-    function getMoneyHistorySheetTitle() {
-        const acc = getMoneyAccounts().find(a => a.id === moneyHistorySheetAccountId);
-        if (!acc) return 'Wallet History';
-        const holder = acc.holderName ? ` · ${acc.holderName}` : '';
-        return `${acc.name}${holder}`;
-    }
-
-    function openAccountHistorySheet(accountId) {
-        moneyHistorySheetAccountId = accountId;
-        resetMoneyHistoryFilters();
-        renderAccountHistorySheet();
-        Sheet.mountPanel(getMoneyHistorySheetTitle(), 'panelMoneyHistory', '');
-    }
-
-    function resetMoneyHistoryFilters() {
-        moneyHistoryTypeFilter = 'all';
-        moneyHistoryFrom = null;
-        moneyHistoryTo = null;
-        moneyHistoryRangeKey = 'all';
-    }
-
-    function moneyHistoryDateFilterActive() {
-        return moneyHistoryRangeKey !== 'all' && (moneyHistoryFrom || moneyHistoryTo);
-    }
-
-    function getMoneyHistoryRangeLabel() {
-        if (!moneyHistoryDateFilterActive()) return 'All time';
-        const quickLabels = {
-            yesterday: 'Yesterday',
-            7: 'Last 1 week',
-            30: 'Last 1 month',
-            90: 'Last 3 months'
-        };
-        const prefix = quickLabels[moneyHistoryRangeKey] || '';
-        if (moneyHistoryFrom && moneyHistoryTo) {
-            if (moneyHistoryFrom === moneyHistoryTo) {
-                return prefix ? `${prefix} · ${fmtDate(moneyHistoryFrom)}` : fmtDate(moneyHistoryFrom);
-            }
-            const range = `${fmtDate(moneyHistoryFrom)} – ${fmtDate(moneyHistoryTo)}`;
-            return prefix ? `${prefix} · ${range}` : range;
-        }
-        return prefix || 'Custom range';
-    }
-
-    function getMoneyHistoryActiveFilterLabel() {
-        const typeLabels = { deposit: 'Deposit', withdraw: 'Withdraw' };
-        const typePart = typeLabels[moneyHistoryTypeFilter] || '';
-        const rangePart = getMoneyHistoryRangeLabel();
-        if (typePart && rangePart !== 'All time') return `${typePart} · ${rangePart}`;
-        if (typePart) return typePart;
-        return rangePart;
-    }
-
-    function syncMoneyHistoryRangeSheetUI() {
-        const fromEl = document.getElementById('moneyHistoryFrom');
-        const toEl = document.getElementById('moneyHistoryTo');
-        if (fromEl) setDateInputValue(fromEl, moneyHistoryFrom || '');
-        if (toEl) setDateInputValue(toEl, moneyHistoryTo || '');
-        setRangeButtonsActive('#moneyHistoryRangeButtons', moneyHistoryRangeKey);
-    }
-
-    function syncMoneyHistoryFilterUI() {
-        syncMoneyHistoryTypeDropdown();
-        const filterBtn = document.getElementById('moneyHistoryRangeFilterBtn');
-        setFilterBtnHighlight(filterBtn, moneyHistoryDateFilterActive());
-    }
-
-    function openMoneyHistoryRangeSheet() {
-        syncMoneyHistoryRangeSheetUI();
-        Sheet.mountPanel('<i class="fas fa-calendar-alt me-2 text-primary"></i>Date Range', 'panelMoneyHistoryRange',
-            renderAppButtonRow('Close', 'Apply', { cancelOnClick: 'closeMoneyHistoryRangeSheet()', actionOnClick: 'applyMoneyHistoryDateRange()', actionIcon: 'fa-check' }));
-    }
-
-    function closeMoneyHistoryRangeSheet() {
-        if (moneyHistorySheetAccountId) {
-            renderAccountHistorySheet();
-            Sheet.mountPanel(getMoneyHistorySheetTitle(), 'panelMoneyHistory', '');
-            return;
-        }
-        Sheet.close();
-    }
-
-    function setMoneyHistoryTypeFilter(value) {
-        moneyHistoryTypeFilter = value || 'all';
-        renderAccountHistorySheet();
-    }
-
-    function setMoneyHistoryRange(daysOrKey) {
-        moneyHistoryRangeKey = String(daysOrKey);
-        if (daysOrKey === 'all') {
-            moneyHistoryFrom = null;
-            moneyHistoryTo = null;
-        } else if (daysOrKey === 'yesterday') {
-            const y = new Date();
-            y.setDate(y.getDate() - 1);
-            const date = y.toISOString().split('T')[0];
-            moneyHistoryFrom = date;
-            moneyHistoryTo = date;
-        } else {
-            const range = getDateRange(daysOrKey);
-            moneyHistoryFrom = range.from;
-            moneyHistoryTo = range.to;
-        }
-        syncMoneyHistoryRangeSheetUI();
-        closeMoneyHistoryRangeSheet();
-    }
-
-    function applyMoneyHistoryDateRange() {
-        const from = document.getElementById('moneyHistoryFrom')?.value || '';
-        const to = document.getElementById('moneyHistoryTo')?.value || '';
-        if (!from && !to) {
-            moneyHistoryFrom = null;
-            moneyHistoryTo = null;
-            moneyHistoryRangeKey = 'all';
-            closeMoneyHistoryRangeSheet();
-            return;
-        }
-        if (!from || !to) { showToast('Please select both From and To dates.', 'warning'); return; }
-        if (from > to) { showToast('From date must be before To date.', 'warning'); return; }
-        moneyHistoryFrom = from;
-        moneyHistoryTo = to;
-        moneyHistoryRangeKey = 'custom';
-        closeMoneyHistoryRangeSheet();
-        showToast('Date range applied.', 'success');
-    }
-
-    function clearMoneyHistoryFilters() {
-        resetMoneyHistoryFilters();
-        renderAccountHistorySheet();
-    }
-
-    function filterMoneyHistoryEntries(entries) {
-        return entries.filter(e => {
-            if (moneyHistoryTypeFilter !== 'all' && e.type !== moneyHistoryTypeFilter) return false;
-            if (moneyHistoryFrom || moneyHistoryTo) {
-                const d = e.date || '';
-                if (!d) return false;
-                if (moneyHistoryFrom && d < moneyHistoryFrom) return false;
-                if (moneyHistoryTo && d > moneyHistoryTo) return false;
-            }
-            return true;
-        });
-    }
-
-    function moneyHistoryFiltersActive() {
-        return moneyHistoryTypeFilter !== 'all' || moneyHistoryDateFilterActive();
-    }
-
-    function refreshMoneyHistorySheetIfOpen() {
-        if (moneyHistorySheetAccountId) renderAccountHistorySheet();
-    }
-
-    function setMoneyAccountFilter(value) {
-        moneyAccountFilter = value || 'all';
-        renderMoney();
-    }
-
-    // money entry page → features/more/money-page.js
-    function setMoneyAccountModalMode(isEdit) {
-        const title = isEdit ? '<i class="fas fa-pen me-2"></i>Edit Wallet' : '<i class="fas fa-plus me-2"></i>Add Wallet';
-        const footer = `${renderAppButtonRow('Cancel', 'Save', { cancelOnClick: 'closeSheet()', actionOnClick: 'saveMoneyAccount()', actionIcon: 'fa-save' })}
-                    ${isEdit ? `<div class="mt-2">${renderAppButton('Delete Wallet', { variant: 'danger', onclick: 'confirmDeleteMoneyAccount()', icon: 'fa-trash-alt', fullWidth: true })}</div>` : ''}`;
-        Sheet.mountPanel(title, 'panelMoneyAccount', footer);
-    }
-
-    function showMoneyAccountModal() { /* panel mounted by setMoneyAccountModalMode */ }
-
-    function onMoneyAccountBrokerChange() {
-        const broker = document.getElementById('moneyAccountBroker')?.value || '';
-        const wrap = document.getElementById('moneyAccountCustomNameWrap');
-        const nameEl = document.getElementById('moneyAccountName');
-        const isCustom = broker === '__custom';
-        if (wrap) wrap.classList.toggle('d-none', !isCustom);
-        if (!isCustom && nameEl) nameEl.value = broker;
-    }
-
-    function updateMoneyAccountOpeningPreview() {
-        const previewEl = document.getElementById('moneyAccountOpeningPreview');
-        const inputEl = document.getElementById('moneyAccountOpeningBalance');
-        if (!previewEl || !inputEl) return;
-        const amount = parseFloat(inputEl.value);
-        if (!amount || amount <= 0 || isNaN(amount)) {
-            previewEl.innerHTML = '';
-            previewEl.classList.add('d-none');
-            return;
-        }
-        previewEl.innerHTML = renderAmount(amount, {
-            size: 'md',
-            tone: 'positive',
-            align: 'left'
-        });
-        previewEl.classList.remove('d-none');
-    }
-
-    let moneyReturnToEntryAfterWallet = false;
-
-    function openAddMoneyAccountModal(opts) {
-        opts = opts || {};
-        moneyReturnToEntryAfterWallet = !!opts.returnToEntry;
-        if (!isSyncConnected()) {
-            showToast('Connect Cloud Sync to manage broker wallets.', 'warning');
-            return;
-        }
-        document.getElementById('moneyAccountEditId').value = '';
-        const brokerEl = document.getElementById('moneyAccountBroker');
-        if (brokerEl) brokerEl.value = 'Dhan';
-        document.getElementById('moneyAccountName').value = 'Dhan';
-        const holderEl = document.getElementById('moneyAccountHolderName');
-        if (holderEl) {
-            holderEl.value = '';
-            holderEl.disabled = false;
-            holderEl.readOnly = false;
-            holderEl.removeAttribute('readonly');
-            holderEl.removeAttribute('disabled');
-        }
-        document.getElementById('moneyAccountOpeningBalance').value = '';
-        onMoneyAccountBrokerChange();
-        updateMoneyAccountOpeningPreview();
-        setMoneyAccountModalMode(false);
-        showMoneyAccountModal();
-        setTimeout(() => {
-            const focusEl = document.getElementById('moneyAccountHolderName');
-            if (focusEl) focusEl.focus();
-        }, 120);
-    }
-
-    function openMoneyAccountModal(accountId) {
-        const acc = getMoneyAccounts().find(a => a.id === accountId);
-        if (!acc) return;
-        document.getElementById('moneyAccountEditId').value = acc.id;
-        const brokerEl = document.getElementById('moneyAccountBroker');
-        const known = APP_MONEY_BROKER_OPTIONS.some((o) => o.value === acc.broker || o.value === acc.name);
-        if (brokerEl) {
-            if (known) {
-                brokerEl.value = acc.broker || acc.name;
-            } else {
-                brokerEl.value = '__custom';
-            }
-        }
-        document.getElementById('moneyAccountName').value = acc.name;
-        document.getElementById('moneyAccountHolderName').value = acc.holderName || '';
-        document.getElementById('moneyAccountOpeningBalance').value = acc.openingBalance || '';
-        onMoneyAccountBrokerChange();
-        updateMoneyAccountOpeningPreview();
-        setMoneyAccountModalMode(true);
-        showMoneyAccountModal();
-    }
-
-    function saveMoneyAccount() {
-        if (!isSyncConnected()) {
-            showToast('Connect Cloud Sync to manage broker wallets.', 'warning');
-            return;
-        }
-        const id = document.getElementById('moneyAccountEditId').value;
-        const brokerSel = document.getElementById('moneyAccountBroker')?.value || '';
-        let name = '';
-        let broker = '';
-        if (brokerSel === '__custom') {
-            name = document.getElementById('moneyAccountName').value.trim();
-            broker = name;
-        } else {
-            name = brokerSel;
-            broker = brokerSel;
-        }
-        const holderName = document.getElementById('moneyAccountHolderName').value.trim();
-        const openingBalance = parseFloat(document.getElementById('moneyAccountOpeningBalance').value) || 0;
-        if (!name) { showToast('Please choose a broker.', 'warning'); return; }
-
-        const isEdit = !!id;
-        (async () => {
-            try {
-                let saved = null;
-                if (isEdit) {
-                    saved = await updateMoneyAccount(id, { name, holderName, broker, openingBalance });
-                    showToast('Wallet updated in cloud!', 'success');
-                } else {
-                    saved = await addMoneyAccount({ name, holderName, broker, openingBalance });
-                    showToast('Wallet added to cloud!', 'success');
-                }
-                const keepEntryOpen = moneyReturnToEntryAfterWallet && !isEdit;
-                moneyReturnToEntryAfterWallet = false;
-                Sheet.close();
-                renderMoney();
-                renderSettings();
-                if (keepEntryOpen) {
-                    reopenMoneyEntryAfterWallet(saved && saved.id ? saved.id : null);
-                }
-            } catch (err) {
-                if (err && err.message === 'sync_required') return;
-                MTFLogger.warn('saveMoneyAccount', err);
-                const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
-                    ? window.MTFDb.firestoreErrorMessage(err)
-                    : (err && err.message) || 'Could not save wallet.';
-                showToast(detail, 'danger');
-            }
-        })();
-    }
-
-    function confirmDeleteMoneyAccount() {
-        const id = document.getElementById('moneyAccountEditId').value;
-        if (!id) return;
-        const acc = getMoneyAccounts().find(a => a.id === id);
-        const name = acc ? acc.name : 'this wallet';
-        const entryCount = getMoneyEntries().filter(e => e.accountId === id).length;
-        const extra = entryCount ? ` This will also remove ${entryCount} transaction(s).` : '';
-        confirmAction({
-            title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Wallet?',
-            titleClass: 'text-danger',
-            message: `Delete "${name}"?${extra} This cannot be undone.`,
-            confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
-            confirmClass: 'btn-error',
-            onConfirm: async () => {
-                // Close sheets immediately; block UI until cloud delete finishes.
-                moneyReturnToEntryAfterWallet = false;
-                if (moneyHistorySheetAccountId === id) moneyHistorySheetAccountId = null;
-                Sheet.close();
-                showBlockingProgress('Deleting wallet…');
-                try {
-                    await deleteMoneyAccount(id);
-                    if (moneyAccountFilter === id) moneyAccountFilter = 'all';
-                    renderMoney();
-                    renderSettings();
-                    showToast('Wallet deleted from cloud.', 'danger');
-                } catch (err) {
-                    if (err && err.message === 'sync_required') return;
-                    MTFLogger.warn('deleteMoneyAccount', err);
-                    const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
-                        ? window.MTFDb.firestoreErrorMessage(err)
-                        : 'Could not delete wallet.';
-                    showToast(detail, 'danger');
-                } finally {
-                    hideBlockingProgress();
-                }
-            }
-        });
-    }
-
-    function confirmDeleteMoneyEntry(id) {
-        const entry = getMoneyEntry(id);
-        const amt = entry ? fmtINR(entry.amount) : 'this entry';
-        const isTransfer = entry?.type === 'transfer';
-        const typeLabel = isTransfer ? 'transfer (both sides)' : (entry?.type || 'entry');
-        confirmAction({
-            title: '<i class="fas fa-exclamation-triangle me-2"></i>Delete Entry?',
-            titleClass: 'text-danger',
-            message: isTransfer
-                ? `Delete both sides of this transfer (${amt})? This cannot be undone.`
-                : `Delete this ${typeLabel} of ${amt}? This cannot be undone.`,
-            confirmLabel: '<i class="fas fa-trash-alt me-1"></i> Delete',
-            confirmClass: 'btn-error',
-            onConfirm: async () => {
-                showBlockingProgress('Deleting transaction…');
-                try {
-                    await deleteMoneyEntry(id);
-                    closeMoneyEntryPage();
-                    renderMoney();
-                    refreshMoneyHistorySheetIfOpen();
-                    showToast('Entry deleted from cloud.', 'danger');
-                } catch (err) {
-                    if (err && err.message === 'sync_required') return;
-                    MTFLogger.warn('deleteMoneyEntry', err);
-                    const detail = (window.MTFDb && typeof window.MTFDb.firestoreErrorMessage === 'function')
-                        ? window.MTFDb.firestoreErrorMessage(err)
-                        : 'Could not delete entry.';
-                    showToast(detail, 'danger');
-                } finally {
-                    hideBlockingProgress();
-                }
-            }
-        });
-    }
 
     // MTF Calculator → features/more/mtf-calculator-page.js
 
@@ -5805,7 +5052,7 @@
         const newTx = await addTransaction(copyData);
         showToast(`Copied trade: ${newTx.company}`, 'success');
         refreshTradeListViews();
-        renderMoney();
+        refreshTradeListViews();
         refreshActiveMoreView();
     }
 
@@ -6104,19 +5351,11 @@
 
     function performReset() {
         saveStorage({
-            transactions: [],
-            moneyAccounts: [],
-            moneyEntries: []
+            transactions: []
         });
         AppDialog.close();
-        moneyAccountFilter = 'all';
-        moneyPageTypeFilter = 'all';
-        moneyPageFrom = null;
-        moneyPageTo = null;
-        moneyPageRangeKey = 'all';
         showToast('All data permanently deleted.', 'danger');
         refreshTradeListViews();
-        renderMoney();
         renderSettings();
         refreshActiveMoreView();
     }
@@ -6176,9 +5415,6 @@
         }
 
         setTxBroker('');
-        syncMoneyTypeDropdowns();
-        syncMoneyHistoryTypeDropdown();
-        syncMoneyAccountFilterDropdown(getMoneyAccounts());
 
         setSyncHooks({
             showToast,
@@ -6186,12 +5422,7 @@
             hideLoading,
             renderSettings,
             refreshAllViews,
-            onMoneyLedgerChanged: () => {
-                try {
-                    if (activeMoreFeature === 'money') renderMoney();
-                    refreshMoneyHistorySheetIfOpen();
-                } catch (_) { }
-            },
+
             onRemoteApplied: () => {
                 try { migrateTradeCompanySymbols(); } catch (_) { }
                 try {
@@ -6227,9 +5458,7 @@
             if (!document.getElementById('page-market').classList.contains('d-none')) {
                 try { renderMarketPage(); } catch (_) { }
             }
-            if (!document.getElementById('page-money').classList.contains('d-none')) {
-                renderMoney();
-            }
+
             refreshActiveMoreView();
             // iOS often suspends timers while backgrounded — restart feeds.
             ensureLiveFeedsForVisiblePage();
@@ -6246,11 +5475,8 @@
             actionBtnSm: UI.actionBtnSm
         },
         appHeader: {
-            moreFeatureMap: { money: 'page-money', 'money-entry': 'page-money-entry', 'mtf-calc': 'page-mtf-calc' },
+            moreFeatureMap: {  },
             moreFeatureTitles: {
-                money: 'Broker Wallets',
-                'money-entry': 'Add Transaction',
-                'mtf-calc': 'MTF Calculator'
             }
         },
         tradePages: {
@@ -6302,48 +5528,10 @@
         },
         settingsPages: {
             getTransactions,
-            getMoneyAccounts,
             renderSyncStatus
         },
-        moneyPages: {
-            getMoneyAccounts,
-            getMoneyEntries,
-            moneyPageFiltersActive,
-            moneyPageDateFilterActive,
-            matchesMoneyPageEntryFilter,
-            getMoneyPageFilterViewTitle,
-            getMoneyPageFilteredEntries,
-            syncMoneyPageFilterUI,
-            syncMoneyTypeDropdowns,
-            syncMoneyAccountFilterDropdown,
-            getMoneyAccountFilter: () => moneyAccountFilter,
-            getMoneyPageTypeFilter: () => moneyPageTypeFilter,
-            getMoneyPageFrom: () => moneyPageFrom,
-            getMoneyPageTo: () => moneyPageTo,
-            getMoneyPageRangeKey: () => moneyPageRangeKey,
-            getMoneySearchQuery: () => moneySearchQuery,
-            getMoneyMonthKey: () => moneyMonthKey,
-            setMoneyAccountFilter,
-            paintAddMoneyAccountBtn,
-            updateMoneyFabVisibility,
-            getMoneyHistorySheetAccountId: () => moneyHistorySheetAccountId,
-            getMoneyHistorySheetTitle,
-            syncMoneyHistoryFilterUI,
-            filterMoneyHistoryEntries,
-            getMoneyHistoryActiveFilterLabel,
-            moneyHistoryFiltersActive,
-            moneyHistoryDateFilterActive,
-            getMoneyHistoryFrom: () => moneyHistoryFrom,
-            getMoneyHistoryTo: () => moneyHistoryTo
-        },
-        calculator: {
-            BROKER_CONFIG,
-            getChargeConfig,
-            getDhanInterestRate,
-            calculateTrade,
-            isSameDayTrade,
-            interestDetails
-        },
+
+
         tradeSheets: {
             getTransaction,
             resolveTradeForDisplay,
@@ -6389,37 +5577,11 @@
             onTxTradeDatesChangeForSuggest,
             getSyncNote: () => (isSyncConnected() ? ' and synced' : ''),
             refreshTradeListViews,
-            renderMoney,
             refreshActiveMoreView,
             confirmDelete
-        },
-        moneyModal: {
-            getMoneyAccounts,
-            getMoneyEntries,
-            getMoneyEntry,
-            getNowTime,
-            addMoneyEntry,
-            updateMoneyEntry,
-            addMoneyTransfer,
-            isSyncConnected,
-            showMoneyEntryPage,
-            closeMoneyEntryPage,
-            setMoneyHistorySheetAccountId: (id) => { moneyHistorySheetAccountId = id; },
-            renderMoney,
-            refreshMoneyHistorySheetIfOpen,
-            getSyncNote: () => (isSyncConnected() ? ' to cloud' : '')
         }
     };
-
-    window.closeSheet = function closeSheetAndClearMoneyStack() {
-        const shouldReopenEntry = moneyReturnToEntryAfterWallet;
-        moneyReturnToEntryAfterWallet = false;
-        closeSheet();
-        if (shouldReopenEntry) {
-            // Cancelled wallet add — stay / return to the transaction page.
-            reopenMoneyEntryAfterWallet(document.getElementById('moneyEntryAccountId')?.value || null);
-        }
-    };
+    window.closeSheet = closeSheet;
     window.closeTradeModal = closeTradeModal;
     window.closeDialog = closeDialog;
 
@@ -6502,22 +5664,7 @@
     window.onMarketSearchBlur = onMarketSearchBlur;
     window.selectMarketSymbol = selectMarketSymbol;
     window.clearMarketSearch = clearMarketSearch;
-    window.updateMtfCalculator = updateMtfCalculator;
-    window.openCalcBreakdownSheet = openCalcBreakdownSheet;
-    window.onCalcDateInput = onCalcDateInput;
-    window.setCalcSameDay = setCalcSameDay;
-    window.setCalcTodayPair = setCalcTodayPair;
-    window.setCalcSellPct = setCalcSellPct;
-    window.setCalcLeverage = setCalcLeverage;
-    window.onCalcLeverageInput = onCalcLeverageInput;
-    window.onCalcBuyPriceInput = onCalcBuyPriceInput;
-    window.onCalcSellPriceInput = onCalcSellPriceInput;
-    window.addCalcSellPctPreset = addCalcSellPctPreset;
-    window.onCalcCompanyInput = onCalcCompanyInput;
-    window.onCalcCompanyKeydown = onCalcCompanyKeydown;
-    window.onCalcCompanyFocus = onCalcCompanyFocus;
-    window.onCalcCompanyBlur = onCalcCompanyBlur;
-    window.selectCalcStockSymbol = selectCalcStockSymbol;
+
     window.renderSettings = renderSettings;
     window.setTradeSearch = setTradeSearch;
     window.setTradesViewMode = setTradesViewMode;
@@ -6552,56 +5699,6 @@
     window.updatePreview = updatePreview;
     window.connectSyncFromInput = connectSyncFromInput;
     window.disconnectSync = disconnectSync;
-    window.renderMoney = renderMoney;
-    window.toggleMoneyAccountExpand = toggleMoneyAccountExpand;
-    window.toggleTradeDateGroupExpand = toggleTradeDateGroupExpand;
-    window.toggleTradeCardCollapse = window.MTFComponents.toggleTradeCardCollapse;
-    window.setMoneyAccountFilter = setMoneyAccountFilter;
-    window.openAccountHistorySheet = openAccountHistorySheet;
-    window.setMoneyHistoryTypeFilter = setMoneyHistoryTypeFilter;
-    window.setMoneyHistoryRange = setMoneyHistoryRange;
-    window.applyMoneyHistoryDateRange = applyMoneyHistoryDateRange;
-    window.openMoneyHistoryRangeSheet = openMoneyHistoryRangeSheet;
-    window.openMoneyPageFilterSheet = openMoneyPageFilterSheet;
-    window.setMoneyPageTypeFilter = setMoneyPageTypeFilter;
-    window.pickMoneyPageTypeFilter = pickMoneyPageTypeFilter;
-    window.setTxBroker = setTxBroker;
-    window.setMoneyPageRangeInForm = setMoneyPageRangeInForm;
-    window.applyMoneyPageFilter = applyMoneyPageFilter;
-    window.clearMoneyPageFilters = clearMoneyPageFilters;
-    window.onMoneyPageDateInputChange = onMoneyPageDateInputChange;
-    window.clearMoneyHistoryFilters = clearMoneyHistoryFilters;
-    window.onMoneyEntryTypePick = onMoneyEntryTypePick;
-    window.setMoneyEntryType = setMoneyEntryType;
-    window.toggleMoneyEntryDateTimeEdit = toggleMoneyEntryDateTimeEdit;
-    window.onMoneyEntryDateTimeChange = onMoneyEntryDateTimeChange;
-    window.openMoneyEntryModal = openMoneyEntryModal;
-    window.updateMoneyEntryAmountPreview = updateMoneyEntryAmountPreview;
-    window.onMoneyEntryAmountInput = onMoneyEntryAmountInput;
-    window.applyMoneyEntryAmountChip = applyMoneyEntryAmountChip;
-    window.focusMoneyEntryAmountCustom = focusMoneyEntryAmountCustom;
-    window.onMoneyEntryNoteInput = onMoneyEntryNoteInput;
-    window.applyMoneyEntryRemarkChip = applyMoneyEntryRemarkChip;
-    window.focusMoneyEntryRemarkCustom = focusMoneyEntryRemarkCustom;
-    window.onMoneyEntryBrokerSelectChange = onMoneyEntryBrokerSelectChange;
-    window.toggleMoneyEntryBalanceVisibility = toggleMoneyEntryBalanceVisibility;
-    window.pickMoneyEntryWallet = pickMoneyEntryWallet;
-    window.focusMoneyEntryBrokerPicker = focusMoneyEntryBrokerPicker;
-    window.closeMoneyEntryPage = closeMoneyEntryPage;
-    window.openEditMoneyEntryModal = openEditMoneyEntryModal;
-    window.saveMoneyEntry = saveMoneyEntry;
-    window.openAddMoneyAccountModal = openAddMoneyAccountModal;
-    window.updateMoneyAccountOpeningPreview = updateMoneyAccountOpeningPreview;
-    window.onMoneyAccountBrokerChange = onMoneyAccountBrokerChange;
-    window.onMoneyEntryBrokerChange = onMoneyEntryBrokerChange;
-    window.openMoneyAccountModal = openMoneyAccountModal;
-    window.saveMoneyAccount = saveMoneyAccount;
-    window.confirmDeleteMoneyAccount = confirmDeleteMoneyAccount;
-    window.confirmDeleteMoneyEntry = confirmDeleteMoneyEntry;
-    window.setMoneyPageSort = setMoneyPageSort;
-    window.setMoneySearchQuery = setMoneySearchQuery;
-    window.clearMoneySearchQuery = clearMoneySearchQuery;
-    window.shiftMoneyMonthChart = shiftMoneyMonthChart;
-    window.setMoneyMonthKey = setMoneyMonthKey;
+
 
 })(typeof window !== 'undefined' ? window : globalThis);

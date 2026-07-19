@@ -65,3 +65,5 @@ In the final response, provide:
 | #110 | Set up initial HTML structure and core layout | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/110) |
 | #111 | Implementation Task: Temporarily Disable Permanent Delete & Batch Delete, Use Soft Delete Everywhere | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/111) |
 | #112 | New Ticket | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/112) |
+| #115 | Role: Expert Full-Stack Developer & Code Refactoring Specialist | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/115) |
+| #116 | Role: Expert Full-Stack Developer & Code Refactoring Specialist | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/116) |
