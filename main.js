@@ -2379,6 +2379,11 @@
         }
         let refreshedOk = false;
         try {
+            if (window.watchlistRepo) {
+                await window.watchlistRepo.fetch();
+                // Ensure UI is re-rendered to match potentially new data before fetching live quotes
+                try { renderMarketPage(); } catch (_) { }
+            }
             loadStockCatalogFromInternet();
             // Full watchlist pool — fetch one-by-one (QUOTE_QUEUE_CONCURRENCY = 1).
             const items = getMarketWatchlist();
@@ -2895,6 +2900,16 @@
         if (!isTradeLivePageVisible()) return;
         if (tradeLiveRefreshing) return;
 
+        const seq = ++tradeLiveRefreshSeq;
+        tradeLiveRefreshing = true;
+        tradeDisplayedDirty = false;
+
+        if (window.positionRepo) {
+            await window.positionRepo.fetch();
+            // Ensure UI is re-rendered with fetched data before collecting visible rows
+            try { refreshTradeListViews(); } catch (_) { }
+        }
+
         observeQuoteRows();
         const items = getVisibleQuoteItems();
         if (!items.length) {
@@ -2903,9 +2918,6 @@
             return;
         }
 
-        const seq = ++tradeLiveRefreshSeq;
-        tradeLiveRefreshing = true;
-        tradeDisplayedDirty = false;
         // Paint only when some symbols still have no local CMP (first load).
         if (isTradeLiveRefreshing()) paintTradeLivePrices();
 

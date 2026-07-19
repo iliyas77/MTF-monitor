@@ -255,6 +255,12 @@
         if (!opts.silent) {
             hooks.showToast('Connected! (Legacy push bindings disabled for modular collections)', 'success');
         }
+        
+        // Trigger UI to fetch from repositories
+        if (typeof hooks.refreshAllViews === 'function') {
+            hooks.refreshAllViews();
+        }
+        
         return;
     }
 
