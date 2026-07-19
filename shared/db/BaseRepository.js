@@ -14,7 +14,12 @@
 
         getUid() {
             if (global.MTFAuth && typeof global.MTFAuth.getUid === 'function') {
-                return global.MTFAuth.getUid();
+                const uid = global.MTFAuth.getUid();
+                if (uid) return uid;
+            }
+            // Fallback to legacy syncCode if Firebase Auth is not actively signed in
+            if (global.MTFDb && typeof global.MTFDb.getSyncCode === 'function') {
+                return global.MTFDb.getSyncCode();
             }
             return null;
         }

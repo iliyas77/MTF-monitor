@@ -1490,7 +1490,13 @@
     }
 
     function getMarketWatchlist() {
-        const list = getStorage().marketWatchlist || [];
+        let list = [];
+        if (window.watchlistRepo && window.watchlistRepo.cache.size > 0) {
+            list = Array.from(window.watchlistRepo.cache.values()).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+        } else {
+            // Fallback for legacy initialization before fetch completes
+            list = getStorage().marketWatchlist || [];
+        }
         return list.map((item) => ({
             s: normalizeMarketSymbol(item.s),
             n: String(item.n || item.s || '').trim() || normalizeMarketSymbol(item.s),
@@ -1633,34 +1639,58 @@
         const entry = normalizeWatchlistEntry(item);
         if (!entry) return Promise.resolve(null);
         clearWatchlistTombstone(entry.s);
-        const data = getStorage();
-        const list = stripWatchlistTombstones(
-            Array.isArray(data.marketWatchlist) ? data.marketWatchlist : []
-        );
-        const existing = list.find((x) => x.s === entry.s);
-        if (existing) {
-            existing.n = entry.n;
+        
+        if (window.watchlistRepo) {
+            return window.watchlistRepo.add(entry).then(() => {
+                refreshAllViews();
+                return { s: entry.s, n: entry.n };
+            }).catch(err => {
+                showToast('Failed to add to watchlist. Please try again.', 'danger');
+                if (window.MTFLogger) window.MTFLogger.error('addToMarketWatchlist failed', err);
+                return null;
+            });
         } else {
-            list.unshift(entry);
+            // Fallback for legacy
+            const data = getStorage();
+            const list = stripWatchlistTombstones(
+                Array.isArray(data.marketWatchlist) ? data.marketWatchlist : []
+            );
+            const existing = list.find((x) => x.s === entry.s);
+            if (existing) {
+                existing.n = entry.n;
+            } else {
+                list.unshift(entry);
+            }
+            data.marketWatchlist = list;
+            return saveStorage(data).then(() => ({ s: entry.s, n: entry.n }));
         }
-        data.marketWatchlist = list;
-        return saveStorage(data).then(() => ({ s: entry.s, n: entry.n }));
     }
 
     function removeFromMarketWatchlist(symbol) {
         const key = normalizeMarketSymbol(symbol);
         if (!key) return Promise.resolve(null);
         tombstoneWatchlistSymbol(key);
-        const data = getStorage();
-        data.marketWatchlist = stripWatchlistTombstones(data.marketWatchlist || [])
-            .filter((id) => id && id.s !== key);
+        
         delete marketQuoteCache[key];
         const map = readQuoteCacheMap();
         if (map[key]) {
             delete map[key];
             writeQuoteCacheMap(map);
         }
-        return saveStorage(data);
+
+        if (window.watchlistRepo) {
+            return window.watchlistRepo.remove(key).then(() => {
+                refreshAllViews();
+            }).catch(err => {
+                showToast('Failed to remove from watchlist.', 'danger');
+                if (window.MTFLogger) window.MTFLogger.error('removeFromMarketWatchlist failed', err);
+            });
+        } else {
+            const data = getStorage();
+            data.marketWatchlist = stripWatchlistTombstones(data.marketWatchlist || [])
+                .filter((id) => id && id.s !== key);
+            return saveStorage(data);
+        }
     }
 
     function removeMarketWatchlistSymbol(symbol) {
@@ -3161,11 +3191,50 @@
             return;
         }
 
-        addToMarketWatchlist(item).then(() => {
+        // UX: Optimistic State Management - Show spinner on the clicked button
+        const list = getMarketAcListEl();
+        let btn = null;
+        if (list) {
+            btn = list.querySelector(`[data-idx="${idx}"]`);
+            if (btn) {
+                // Disable button to prevent overlapping requests
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<div class="d-flex align-items-center justify-content-between w-100">
+                                    <div class="min-w-0 flex-grow-1">${originalHtml}</div>
+                                    <div class="spinner-border spinner-border-sm text-primary ms-2 flex-shrink-0" role="status">
+                                        <span class="visually-hidden">Adding...</span>
+                                    </div>
+                                 </div>`;
+                btn.setAttribute('aria-pressed', 'true');
+            }
+        }
+
+        addToMarketWatchlist(item).then((res) => {
+            if (!res) {
+                // Revert optimistic UI on soft failure
+                if (btn) {
+                    btn.disabled = false;
+                    btn.setAttribute('aria-pressed', 'false');
+                    // We don't restore original HTML here because the user usually stays on page to retry,
+                    // but since toast shows error, it's fine. We'll just hide spinner.
+                    const spinner = btn.querySelector('.spinner-border');
+                    if (spinner) spinner.remove();
+                }
+                return;
+            }
             showToast(`Added ${item.s || item.n || 'stock'} to watchlist`, 'success');
             closeSearchPage();
             try { renderMarketPage(); } catch (_) { }
             return refreshMarketQuotes();
+        }).catch(err => {
+            // Hard failure caught by addToMarketWatchlist already, but just in case
+            if (btn) {
+                btn.disabled = false;
+                btn.setAttribute('aria-pressed', 'false');
+                const spinner = btn.querySelector('.spinner-border');
+                if (spinner) spinner.remove();
+            }
         });
     }
 
