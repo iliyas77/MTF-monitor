@@ -482,18 +482,22 @@
     }
 
     async function fetchNseEquityCsvText() {
+        // Direct fetch triggers red CORS errors in console which are alarming.
+        // We use a free CORS proxy to cleanly fetch the CSV without console spam.
+        const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(NSE_EQUITY_CSV_URL);
         try {
-            const res = await fetch(NSE_EQUITY_CSV_URL, {
-                headers: { Accept: 'text/csv,*/*' },
-                mode: 'cors'
-            });
+            const res = await fetch(proxyUrl);
             if (res.ok) {
                 const text = await res.text();
-                if (text.includes('SYMBOL,NAME OF COMPANY')) return { text, source: 'NSE direct' };
+                if (text.includes('SYMBOL,NAME OF COMPANY')) {
+                    return { text, source: 'NSE via proxy' };
+                }
             }
         } catch (_) { }
+        
+        // Fallback to Jina if corsproxy fails
         const proxied = await fetchViaJina(NSE_EQUITY_CSV_URL);
-        return { text: proxied, source: 'NSE via internet' };
+        return { text: proxied, source: 'NSE via Jina' };
     }
 
     async function loadStockCatalogFromInternet() {
@@ -1490,7 +1494,13 @@
     }
 
     function getMarketWatchlist() {
-        const list = getStorage().marketWatchlist || [];
+        let list = [];
+        if (window.watchlistRepo && window.watchlistRepo.cache.size > 0) {
+            list = Array.from(window.watchlistRepo.cache.values()).sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+        } else {
+            // Fallback for legacy initialization before fetch completes
+            list = getStorage().marketWatchlist || [];
+        }
         return list.map((item) => ({
             s: normalizeMarketSymbol(item.s),
             n: String(item.n || item.s || '').trim() || normalizeMarketSymbol(item.s),
@@ -1633,34 +1643,58 @@
         const entry = normalizeWatchlistEntry(item);
         if (!entry) return Promise.resolve(null);
         clearWatchlistTombstone(entry.s);
-        const data = getStorage();
-        const list = stripWatchlistTombstones(
-            Array.isArray(data.marketWatchlist) ? data.marketWatchlist : []
-        );
-        const existing = list.find((x) => x.s === entry.s);
-        if (existing) {
-            existing.n = entry.n;
+        
+        if (window.watchlistRepo) {
+            return window.watchlistRepo.add(entry).then(() => {
+                refreshAllViews();
+                return { s: entry.s, n: entry.n };
+            }).catch(err => {
+                showToast('Failed to add to watchlist. Please try again.', 'danger');
+                if (window.MTFLogger) window.MTFLogger.error('addToMarketWatchlist failed', err);
+                return null;
+            });
         } else {
-            list.unshift(entry);
+            // Fallback for legacy
+            const data = getStorage();
+            const list = stripWatchlistTombstones(
+                Array.isArray(data.marketWatchlist) ? data.marketWatchlist : []
+            );
+            const existing = list.find((x) => x.s === entry.s);
+            if (existing) {
+                existing.n = entry.n;
+            } else {
+                list.unshift(entry);
+            }
+            data.marketWatchlist = list;
+            return saveStorage(data).then(() => ({ s: entry.s, n: entry.n }));
         }
-        data.marketWatchlist = list;
-        return saveStorage(data).then(() => ({ s: entry.s, n: entry.n }));
     }
 
     function removeFromMarketWatchlist(symbol) {
         const key = normalizeMarketSymbol(symbol);
         if (!key) return Promise.resolve(null);
         tombstoneWatchlistSymbol(key);
-        const data = getStorage();
-        data.marketWatchlist = stripWatchlistTombstones(data.marketWatchlist || [])
-            .filter((id) => id && id.s !== key);
+        
         delete marketQuoteCache[key];
         const map = readQuoteCacheMap();
         if (map[key]) {
             delete map[key];
             writeQuoteCacheMap(map);
         }
-        return saveStorage(data);
+
+        if (window.watchlistRepo) {
+            return window.watchlistRepo.remove(key).then(() => {
+                refreshAllViews();
+            }).catch(err => {
+                showToast('Failed to remove from watchlist.', 'danger');
+                if (window.MTFLogger) window.MTFLogger.error('removeFromMarketWatchlist failed', err);
+            });
+        } else {
+            const data = getStorage();
+            data.marketWatchlist = stripWatchlistTombstones(data.marketWatchlist || [])
+                .filter((id) => id && id.s !== key);
+            return saveStorage(data);
+        }
     }
 
     function removeMarketWatchlistSymbol(symbol) {
@@ -2345,6 +2379,11 @@
         }
         let refreshedOk = false;
         try {
+            if (window.watchlistRepo) {
+                await window.watchlistRepo.fetch();
+                // Ensure UI is re-rendered to match potentially new data before fetching live quotes
+                try { renderMarketPage(); } catch (_) { }
+            }
             loadStockCatalogFromInternet();
             // Full watchlist pool — fetch one-by-one (QUOTE_QUEUE_CONCURRENCY = 1).
             const items = getMarketWatchlist();
@@ -2861,6 +2900,16 @@
         if (!isTradeLivePageVisible()) return;
         if (tradeLiveRefreshing) return;
 
+        const seq = ++tradeLiveRefreshSeq;
+        tradeLiveRefreshing = true;
+        tradeDisplayedDirty = false;
+
+        if (window.positionRepo) {
+            await window.positionRepo.fetch();
+            // Ensure UI is re-rendered with fetched data before collecting visible rows
+            try { refreshTradeListViews(); } catch (_) { }
+        }
+
         observeQuoteRows();
         const items = getVisibleQuoteItems();
         if (!items.length) {
@@ -2869,9 +2918,6 @@
             return;
         }
 
-        const seq = ++tradeLiveRefreshSeq;
-        tradeLiveRefreshing = true;
-        tradeDisplayedDirty = false;
         // Paint only when some symbols still have no local CMP (first load).
         if (isTradeLiveRefreshing()) paintTradeLivePrices();
 
@@ -3161,11 +3207,50 @@
             return;
         }
 
-        addToMarketWatchlist(item).then(() => {
+        // UX: Optimistic State Management - Show spinner on the clicked button
+        const list = getMarketAcListEl();
+        let btn = null;
+        if (list) {
+            btn = list.querySelector(`[data-idx="${idx}"]`);
+            if (btn) {
+                // Disable button to prevent overlapping requests
+                btn.disabled = true;
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = `<div class="d-flex align-items-center justify-content-between w-100">
+                                    <div class="min-w-0 flex-grow-1">${originalHtml}</div>
+                                    <div class="spinner-border spinner-border-sm text-primary ms-2 flex-shrink-0" role="status">
+                                        <span class="visually-hidden">Adding...</span>
+                                    </div>
+                                 </div>`;
+                btn.setAttribute('aria-pressed', 'true');
+            }
+        }
+
+        addToMarketWatchlist(item).then((res) => {
+            if (!res) {
+                // Revert optimistic UI on soft failure
+                if (btn) {
+                    btn.disabled = false;
+                    btn.setAttribute('aria-pressed', 'false');
+                    // We don't restore original HTML here because the user usually stays on page to retry,
+                    // but since toast shows error, it's fine. We'll just hide spinner.
+                    const spinner = btn.querySelector('.spinner-border');
+                    if (spinner) spinner.remove();
+                }
+                return;
+            }
             showToast(`Added ${item.s || item.n || 'stock'} to watchlist`, 'success');
             closeSearchPage();
             try { renderMarketPage(); } catch (_) { }
             return refreshMarketQuotes();
+        }).catch(err => {
+            // Hard failure caught by addToMarketWatchlist already, but just in case
+            if (btn) {
+                btn.disabled = false;
+                btn.setAttribute('aria-pressed', 'false');
+                const spinner = btn.querySelector('.spinner-border');
+                if (spinner) spinner.remove();
+            }
         });
     }
 
@@ -5373,7 +5458,7 @@
 
 
     // ---------- INIT ----------
-    document.addEventListener('DOMContentLoaded', function () {
+    function initApp() {
         BottomBar.mount(document.getElementById('bottomBarMount'), {
             onNavigate: navigateTo,
             onFabClick: openAddModal
@@ -5463,6 +5548,69 @@
             // iOS often suspends timers while backgrounded — restart feeds.
             ensureLiveFeedsForVisiblePage();
         });
+    }
+
+    async function fetchAppPermissions() {
+        const defaultPerms = {
+            localDbEnabled: true,
+            activityLogMaster: true,
+            activityLogDb: false,
+            activityLogApp: true,
+            activityLogTrace: false
+        };
+        
+        let loadedPerms = null;
+        try {
+            const localRaw = localStorage.getItem('mtf_permissions');
+            if (localRaw) {
+                loadedPerms = JSON.parse(localRaw);
+            }
+        } catch (e) {
+            // Ignore parse errors
+        }
+        
+        window.AppPermissions = loadedPerms || defaultPerms;
+
+        try {
+            if (global.MTFDb && global.MTFDb.initFirebase()) {
+                const fbDb = global.MTFDb.getFirebaseDb();
+                const syncCode = localStorage.getItem('mtf_sync_code');
+                if (fbDb && syncCode) {
+                    const doc = await fbDb.collection('settings').doc(syncCode).get();
+                    if (doc.exists) {
+                        const data = doc.data();
+                        if (data && data.permissions && typeof data.permissions === 'object') {
+                            window.AppPermissions = {
+                                localDbEnabled: data.permissions.localDbEnabled ?? true,
+                                activityLogMaster: data.permissions.activityLogMaster ?? true,
+                                activityLogDb: data.permissions.activityLogDb ?? false,
+                                activityLogApp: data.permissions.activityLogApp ?? true,
+                                activityLogTrace: data.permissions.activityLogTrace ?? false
+                            };
+                            localStorage.setItem('mtf_permissions', JSON.stringify(window.AppPermissions));
+                        }
+                    }
+                }
+            }
+        } catch (e) {
+            if (global.MTFLogger && global.MTFLogger.warn) {
+                global.MTFLogger.warn('Failed to fetch global permissions from Firestore:', e);
+            }
+            const bootText = document.getElementById('appBootLoaderText');
+            if (bootText) {
+                bootText.textContent = 'Offline/Error. Using secure defaults.';
+                bootText.classList.replace('text-gr1', 'text-danger');
+            }
+            await new Promise(r => setTimeout(r, 1500));
+        }
+
+        const bootLoader = document.getElementById('appBootLoader');
+        if (bootLoader) bootLoader.classList.add('d-none');
+    }
+
+    document.addEventListener('DOMContentLoaded', async function () {
+        await fetchAppPermissions();
+        initApp();
     });
 
     // Expose global functions

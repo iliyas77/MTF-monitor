@@ -5,8 +5,8 @@
 (function (global) {
     'use strict';
 
-    const APP_VERSION = "1.0.393";
-    const APP_BUILT_AT = "19 Jul 2026 · 12:20 pm";
+    const APP_VERSION = "1.0.410";
+    const APP_BUILT_AT = "20 Jul 2026 · 12:38 am";
 
     function paintMoreHubBuildMeta() {
         const el = document.getElementById('more-hub-build-meta');

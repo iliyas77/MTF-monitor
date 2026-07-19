@@ -67,3 +67,10 @@ In the final response, provide:
 | #112 | New Ticket | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/112) |
 | #115 | Role: Expert Full-Stack Developer & Code Refactoring Specialist | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/115) |
 | #116 | Role: Expert Full-Stack Developer & Code Refactoring Specialist | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/116) |
+| #119 | Role: Expert Frontend & Architecture Developer | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/119) |
+| #120 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/120) |
+| #121 | Enhance the settings management module | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/121) |
+| #122 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/122) |
+| #123 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/123) |
+| #124 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/124) |
+| #125 | Objective | Todo | [Link](https://github.com/iliyas77/MTF-monitor/issues/125) |
