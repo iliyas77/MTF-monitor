@@ -18,11 +18,7 @@
     let syncPushPending = 0;
     let localDataVersion = parseInt(localStorage.getItem('mtf_data_version') || '0', 10);
 
-    // ----- getFeed Cache (prevents repeated Firestore reads on scroll) -----
-    const FEED_CACHE_TTL_MS = 30000; // 30 seconds
-    let feedCacheKey = null;
-    let feedCacheData = null;
-    let feedCacheTs = 0;
+    // Cache variables removed in favor of LocalDB
 
     const hooks = {
         showToast: function () {},
@@ -134,32 +130,6 @@
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
         }).finally(() => { syncPushPending--; hooks.hideLoading(); });
-    }
-
-    async function archiveTradeToCloud(tx) {
-        MTFLogger.log(`Action: archiveTradeToCloud | TxId: ${tx.id}`);
-        if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
-        const id = tx.id;
-        hooks.showLoading();
-        try {
-            await createDocument(`syncs/${syncCode}/closed_trades`, {
-                ...tx,
-                archivedAt: firebase.firestore.FieldValue.serverTimestamp()
-            }, id);
-            
-            const localData = db().getStorage();
-            if (localData && localData.transactions) {
-                localData.transactions = localData.transactions.filter(t => t.id !== id);
-                db().saveStorageLocal(localData);
-                bumpLocalVersionAndPush(localData);
-            }
-            return true;
-        } catch (err) {
-            MTFLogger.error('Failed to archive trade:', err);
-            return false;
-        } finally {
-            hooks.hideLoading();
-        }
     }
 
     async function fetchClosedTradesFromCloud() {
@@ -302,12 +272,7 @@
 
             try { hooks.migrateTradeCompanySymbols({ force: true }); } catch (_) {}
             syncClosedTradesListener();
-            if (typeof db().onMoneySyncConnected === 'function') {
-                Promise.resolve(db().onMoneySyncConnected(legacyMoney)).catch(() => {});
-            }
-            if (typeof db().applyLedgerFromDocData === 'function') {
-                try { db().applyLedgerFromDocData(snapData); } catch (_) {}
-            }
+
             if (!opts.silent) hooks.showToast('Cloud sync connected!', 'success');
             hooks.refreshAllViews();
             hooks.renderSettings();
@@ -391,78 +356,71 @@
     };
 
     async function getFeed(queryConfig = {}, options = {}) {
-        const limitVal = Number(options.limit) || 20;
         const filters = parseQueryConfig(queryConfig);
-
-        // Build a cache key from query parameters to detect identical requests
-        const cacheKey = JSON.stringify({ queryConfig, limit: limitVal });
-        const now = Date.now();
-        if (cacheKey === feedCacheKey && feedCacheData && (now - feedCacheTs) < FEED_CACHE_TTL_MS) {
-            MTFLogger.log("[DB] getFeed: returning cached result (TTL not expired)");
-            return feedCacheData;
-        }
 
         MTFLogger.log("[DB] getFeed: fetching data feed with queryConfig:", queryConfig, "options:", options);
         
         const statusFilter = filters.find(f => f.field === 'status' && f.operator === '==');
         const status = statusFilter ? statusFilter.value : 'all';
         
-        if (status === 'open') {
-            let openTxs = (db().getStorage().transactions || []).filter(t => (t.status || 'open') !== 'closed');
+        let openTxs = (db().getStorage().transactions || []).filter(t => (t.status || 'open') !== 'closed');
+        filters.forEach(({ field, operator, value }) => {
+            if (field === 'status') return;
+            if (operator === '==') {
+                openTxs = openTxs.filter(t => t[field] === value);
+            }
+        });
+
+        if (status === 'closed' || status === 'close') {
+            const allClosed = (storage.transactions || []).filter(t => t.status === 'close' || t.status === 'closed');
+            return Promise.resolve(applyClientSideQuery(allClosed, queryConfig, options));
+        } else if (status === 'open' || status === 'active') {
+            return Promise.resolve(openTxs);
+        }
+        
+        // Use LocalDB cache
+        if (global.MTFLocalDB) {
+            try {
+                const cached = await global.MTFLocalDB.getTransactions();
+                if (cached && cached.length > 0) {
+                    MTFLogger.log("[DB] getFeed: returning data from LocalDB cache", cached.length, "records");
+                    return status === 'closed' ? cached : [...openTxs, ...cached];
+                }
+            } catch (err) {
+                MTFLogger.error("LocalDB read error:", err);
+            }
+        }
+
+        let closedTxs = [];
+        if (!fbDb || !syncCode) {
+            let closedLocal = (db().getStorage().transactions || []).filter(t => t.status === status || t.status === 'closed');
             filters.forEach(({ field, operator, value }) => {
                 if (field === 'status') return;
                 if (operator === '==') {
-                    openTxs = openTxs.filter(t => t[field] === value);
+                    closedLocal = closedLocal.filter(t => t[field] === value);
                 }
             });
-            return Promise.resolve(openTxs.slice(0, limitVal));
-        }
-        
-        if (status === 'closed' || status === 'cancelled') {
-            if (!fbDb || !syncCode) {
-                let closedLocal = (db().getStorage().transactions || []).filter(t => t.status === status);
-                filters.forEach(({ field, operator, value }) => {
-                    if (field === 'status') return;
-                    if (operator === '==') {
-                        closedLocal = closedLocal.filter(t => t[field] === value);
-                    }
-                });
-                return Promise.resolve(closedLocal.slice(0, limitVal));
-            }
-            
+            closedTxs = closedLocal;
+        } else {
             try {
-                const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, { limit: limitVal });
-                const result = res.success ? res.data : [];
-                // Cache the result
-                feedCacheKey = cacheKey;
-                feedCacheData = result;
-                feedCacheTs = Date.now();
-                return result;
-            } catch (err) {
-                MTFLogger.error('getFeed Firestore query failed:', err);
-                return [];
-            }
-        }
-        
-        const openTxs = (db().getStorage().transactions || []).filter(t => (t.status || 'open') !== 'closed');
-        let closedTxs = [];
-        if (fbDb && syncCode) {
-            try {
-                const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, { limit: limitVal });
+                // No arbitrary pagination limit; fetches all matching records
+                const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, options);
                 if (res.success) closedTxs = res.data;
             } catch (err) {
-                MTFLogger.error('getFeed default closed query failed:', err);
+                MTFLogger.error('getFeed Firestore query failed:', err);
             }
-        } else {
-            closedTxs = (db().getStorage().transactions || []).filter(t => t.status === 'closed');
         }
         
-        const combined = [...openTxs, ...closedTxs].slice(0, limitVal);
-        // Cache the result
-        feedCacheKey = cacheKey;
-        feedCacheData = combined;
-        feedCacheTs = Date.now();
-        return combined;
+        // Save to LocalDB
+        if (global.MTFLocalDB && closedTxs.length > 0) {
+            try {
+                await global.MTFLocalDB.saveTransactions(closedTxs);
+            } catch (err) {
+                MTFLogger.error("LocalDB write error:", err);
+            }
+        }
+
+        return status === 'closed' ? closedTxs : [...openTxs, ...closedTxs];
     }
 
     function syncClosedTradesListener() {
@@ -511,19 +469,17 @@
             closedTradesUnsub = null;
         }
         
-        MTFLogger.log(`[DB] syncClosedTradesListener: subscribing with query key: ${queryKey}`);
-        closedTradesUnsub = listenToCollection(
-            `syncs/${syncCode}/closed_trades`,
-            (res) => {
-                if (res.success) {
-                    closedTradesCache = res.data;
-                    MTFLogger.log("[DB] onSnapshot: received filtered closed trades collection from Firestore (limited to 20):", closedTradesCache);
-                    hooks.refreshAllViews();
-                }
-            },
-            queryConfig,
-            { limit: 20 }
-        );
+        // Ticket: Completely remove the transaction list from the local DB when filter happens
+        if (global.MTFLocalDB) {
+            global.MTFLocalDB.clearTransactions().catch(e => MTFLogger.error("Failed to clear LocalDB", e));
+        }
+        
+        MTFLogger.log(`[DB] syncClosedTradesListener: disabled (closed trades are now stored in the main document)`);
+        if (global.MTFLocalDB) {
+            // Re-populate LocalDB from the main transactions array since we aren't fetching a subcollection anymore
+            const allClosed = (storage.transactions || []).filter(t => t.status === 'close' || t.status === 'closed');
+            global.MTFLocalDB.saveTransactions(allClosed).catch(e => MTFLogger.error("Failed to save to LocalDB", e));
+        }
     }
 
     // ----- Core CRUD operations (v8 compat style) -----
@@ -741,7 +697,12 @@
                         batch.update(ref, op.data);
                         break;
                     case 'delete':
-                        batch.delete(ref);
+                        // TEMP DISABLED:
+                        // Permanent Batch Delete is temporarily disabled.
+                        // Retained for future implementation.
+                        // Currently replaced by Soft Delete.
+                        // batch.delete(ref);
+                        batch.update(ref, { isDeleted: true, deletedAt: firebase.firestore.FieldValue.serverTimestamp() });
                         break;
                     default:
                         throw new Error(`Unsupported batch operation: ${op.type}`);
@@ -755,6 +716,21 @@
             return { success: false, error };
         }
     }
+
+    // Boot: Load cached closed trades from LocalDB if available (defer to allow scripts to load)
+    setTimeout(() => {
+        if (global.MTFLocalDB) {
+            global.MTFLocalDB.getTransactions().then(cached => {
+                if (cached && cached.length > 0) {
+                    closedTradesCache = cached;
+                    MTFLogger.log("[DB] Initialized closedTradesCache from LocalDB", cached.length);
+                    if (typeof hooks.refreshAllViews === 'function') {
+                        hooks.refreshAllViews();
+                    }
+                }
+            }).catch(err => MTFLogger.error("Failed to load LocalDB on boot", err));
+        }
+    }, 0);
 
     // Register all database core, CRUD, and synchronization functions
     global.MTFDbRegister({
@@ -773,7 +749,6 @@
         isFirebaseConfigured,
         initFirebase,
         cloudPush,
-        archiveTradeToCloud,
         fetchClosedTradesFromCloud,
         getClosedTradesCache,
         getFeed,

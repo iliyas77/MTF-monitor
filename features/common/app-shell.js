@@ -611,6 +611,7 @@
         const refreshBtn = document.getElementById('appHeaderRefreshBtn');
         const reportBtn = document.getElementById('appHeaderReportBtn');
         const filterBtn = document.getElementById('appHeaderFilterBtn');
+        const tradeSwitch = document.getElementById('appHeaderTradeSwitch');
         const moreBtn = document.getElementById('appHeaderMoreBtn');
         const moreMenu = document.getElementById('appHeaderMoreMenu');
         const menuBtn = document.getElementById('appHeaderMenuBtn');
@@ -618,6 +619,12 @@
         if (searchBtn) searchBtn.classList.toggle('d-none', !(onTrades || onMarket));
         if (refreshBtn) refreshBtn.classList.remove('d-none');
         if (reportBtn) reportBtn.classList.toggle('d-none', !onCalendar);
+        
+        if (tradeSwitch) {
+            tradeSwitch.classList.toggle('d-none', !onTrades);
+            tradeSwitch.classList.toggle('d-flex', onTrades);
+        }
+        
         if (filterBtn) filterBtn.classList.toggle('d-none', !onTrades);
         if (moreBtn) moreBtn.classList.toggle('d-none', !onTrades);
         if (moreMenu && onTrades) moreMenu.innerHTML = renderHeaderMoreMenu();

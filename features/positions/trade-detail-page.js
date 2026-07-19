@@ -358,50 +358,6 @@
         return `<section class="trade-detail-prices-section" data-ref="trade-detail.prices.section">${gridHtml}</section>`;
     }
 
-    function renderIfSoldNow(tx, sellPrice, calc, variant, hasLiveQuote, quote, livePrice) {
-        const qty = Number(tx.quantity) || 0;
-        const price = Number(sellPrice) || 0;
-        const sellValue = price > 0 ? price * qty : 0;
-        const interest = calc ? Number(calc.interest) || 0 : Number(tx.interest) || 0;
-        const charges = calc ? Number(calc.totalCharges) || 0 : Number(tx.charges) || 0;
-        const totalCost = interest + charges;
-        const net = calc ? Number(calc.netProfit) || 0 : Number(tx.netProfit) || 0;
-        const investment = calc
-            ? Number(calc.totalInvestment) || 0
-            : (Number(tx.buyPrice) || 0) * qty;
-        const netPct = investment > 0 ? (net / investment) * 100 : null;
-        const title = 'IF SOLD NOW';
-        const subtitle = '(At Current Market Price)';
-
-        const changeParts = formatDayChangeParts(quote);
-        const dayTone = !changeParts ? 'text-body-secondary' : changeParts.up ? 'text-success' : 'text-danger';
-        const dayChangeHtml = changeParts
-            ? `<span class="${dayTone}">${escapeHtml(changeParts.pctText)}</span> <span class="text-muted">${escapeHtml(changeParts.absText)}</span>`
-            : '';
-
-        const cmpHtml = `
-            <div class="trade-detail-ifsold-col" data-ref="trade-detail.ifsold.cmp">
-                <span class="trade-detail-ifsold-label" data-ref="trade-detail.ifsold.cmp.label">Current Market Price</span>
-                <span class="trade-detail-ifsold-value" data-ref="trade-detail.ifsold.cmp.value">${livePrice != null ? fmtDec(livePrice) : fmtDec(sellPrice)}</span>
-                ${dayChangeHtml ? `<div class="mt-1 text-center" style="font-size: 0.75rem; font-weight: 500; white-space: nowrap;" data-ref="trade-detail.ifsold.cmp.day-change">${dayChangeHtml}</div>` : ''}
-            </div>
-        `;
-
-        return `
-            <section class="trade-detail-ifsold" data-ref="trade-detail.ifsold">
-                <div class="trade-detail-ifsold-grid" data-ref="trade-detail.ifsold.grid">
-                    ${cmpHtml}
-                    <span class="trade-detail-ifsold-vline" aria-hidden="true" data-ref="trade-detail.ifsold.vline"></span>
-                    <div class="trade-detail-ifsold-col" data-ref="trade-detail.ifsold.net">
-                        <span class="trade-detail-ifsold-label">Net P&amp;L</span>
-                        <span class="trade-detail-ifsold-value ${toneClass(net)}" data-ref="trade-detail.ifsold.net.value">${escapeHtml(signedMoney(net))}</span>
-                        <span class="trade-detail-ifsold-value ${toneClass(netPct)} ms-2" data-ref="trade-detail.ifsold.net.pct">${escapeHtml(signedPct(netPct))}</span>
-                    </div>
-                </div>
-            </section>
-        `;
-    }
-
     function renderCostCards(tx, calc) {
         const id = escapeHtml(tx.id || '');
         const interestDetails = (global.MTFAppHelpers || {}).interestDetails;
@@ -620,7 +576,6 @@
             <div class="trade-detail-card w-100 d-flex flex-column gap-3" data-ref="trade-detail.card">
                 <hr class="trade-detail-divider my-0" data-ref="trade-detail.divider">
                 ${renderPriceInputs(tx, targetPrice)}
-                ${renderIfSoldNow(tx, sellPriceForCalc, calc, variant, livePrice != null, quote, livePrice)}
                 ${renderCostCards(tx, calc)}
                 ${renderTimeline(tx, variant)}
                 ${notesBlock}
