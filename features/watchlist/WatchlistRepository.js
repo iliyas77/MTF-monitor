@@ -12,12 +12,11 @@
 
         getCollectionRef() {
             const db = this.getDb();
-            const uid = this.getUid();
-            if (!db || !uid) {
-                if (global.MTFLogger) global.MTFLogger.warn('[WatchlistRepository] Missing db or uid context.');
+            if (!db) {
+                if (global.MTFLogger) global.MTFLogger.warn('[WatchlistRepository] Missing db context.');
                 return null;
             }
-            return db.collection(this.collectionName).doc(uid).collection('items');
+            return db.collection('watchlist');
         }
 
         async fetch() {
@@ -35,14 +34,19 @@
             }
 
             try {
-                const snapshot = await ref.get();
+                const docSnap = await ref.doc(uid).get();
                 const items = [];
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    this.cache.set(data.s || doc.id, data);
-                    items.push(data);
-                });
+                if (docSnap.exists) {
+                    const data = docSnap.data();
+                    if (Array.isArray(data.items)) {
+                        data.items.forEach(item => items.push(item));
+                    }
+                }
+                
+                this.cache.clear();
+                items.forEach(item => this.cache.set(item.s, item));
                 const sortedItems = items.sort((a, b) => (a.orderIndex || 0) - (b.orderIndex || 0));
+                
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Fetch success: Retrieved ${items.length} items.`);
                 return sortedItems;
             } catch (e) {
@@ -76,23 +80,24 @@
 
             try {
                 const orderIndex = this.cache.size; // Simple ordering
-                const payload = {
+                const payloadItem = {
                     ...item,
                     orderIndex: orderIndex,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    updatedAt: Date.now()
                 };
 
-                const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
-                
-                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload to syncs/${uid}/watchlist/${safeSymbol}...`);
-                
-                await ref.doc(safeSymbol).set(payload, { merge: true });
-                
                 // Update Cache immediately
-                this.cache.set(item.s, { ...item, orderIndex: orderIndex });
+                this.cache.set(item.s, payloadItem);
+                
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Writing payload array to watchlist/${uid}...`);
+                
+                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
+                
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Write success. Cache updated for ${item.s}.`);
                 return true;
             } catch (e) {
+                // Rollback cache on failure
+                this.cache.delete(item.s);
                 if (global.MTFLogger) global.MTFLogger.error(`[WatchlistRepository] Write transaction failed for ${item.s}`, e);
                 throw e; // Explicitly throw so UI can catch and show error alert
             }
@@ -111,10 +116,14 @@
             }
 
             try {
-                const safeSymbol = String(symbol).replace(/[^a-zA-Z0-9_-]/g, '_');
-                await ref.doc(safeSymbol).delete();
-                
+                // Keep backup for rollback
+                const backup = this.cache.get(symbol);
                 this.cache.delete(symbol);
+                
+                if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Deleting ${symbol} and rewriting array to watchlist/${uid}`);
+                
+                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
+                
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Remove success for ${symbol}.`);
                 return true;
             } catch (e) {
@@ -126,23 +135,17 @@
         // Keep save for bulk operations if needed
         async save(items) {
             const ref = this.getCollectionRef();
-            if (!ref) return false;
+            const uid = this.getUid();
+            if (!ref || !uid) return false;
 
             try {
-                const batch = this.getDb().batch();
+                this.cache.clear();
                 items.forEach((item, index) => {
                     if (!item.s) return;
-                    this.cache.set(item.s, { ...item, orderIndex: index });
-                    
-                    const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
-                    const docRef = ref.doc(safeSymbol);
-                    batch.set(docRef, { 
-                        ...item, 
-                        orderIndex: index,
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-                    }, { merge: true });
+                    this.cache.set(item.s, { ...item, orderIndex: index, updatedAt: Date.now() });
                 });
-                await batch.commit();
+                
+                await ref.doc(uid).set({ items: Array.from(this.cache.values()) }, { merge: true });
                 if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Bulk save success for ${items.length} items.`);
                 return true;
             } catch (e) {
