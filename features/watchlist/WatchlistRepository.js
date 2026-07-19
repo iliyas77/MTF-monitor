@@ -27,14 +27,17 @@
             }
 
             const ref = this.getCollectionRef();
-            const uid = this.getUid();
-            if (!ref || !uid) {
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) {
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Fetch failed: Cannot resolve collection path (auth required).');
                 return [];
             }
 
             try {
-                const snapshot = await ref.where('syncCode', '==', uid).get();
+                // We fetch by syncCode since it identifies the logical business dataset, regardless of true auth ownership
+                const targetCode = syncCode || ownerUid;
+                const snapshot = await ref.where('syncCode', '==', targetCode).get();
                 const items = [];
                 
                 this.cache.clear();
@@ -73,8 +76,9 @@
             }
 
             const ref = this.getCollectionRef();
-            const uid = this.getUid();
-            if (!ref || !uid) {
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) {
                 const err = new Error('Authentication required');
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Add failed: Missing auth session', err);
                 throw err;
@@ -85,7 +89,8 @@
                 const payloadItem = {
                     ...item,
                     symbol: symbol,
-                    syncCode: uid,
+                    ownerUid: ownerUid,
+                    syncCode: syncCode || ownerUid,
                     orderIndex: orderIndex,
                     addedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
@@ -111,8 +116,9 @@
             if (global.MTFLogger) global.MTFLogger.log(`[WatchlistRepository] Initiating remove for: ${symbol}`);
             
             const ref = this.getCollectionRef();
-            const uid = this.getUid();
-            if (!ref || !uid) {
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) {
                 const err = new Error('Authentication required');
                 if (global.MTFLogger) global.MTFLogger.error('[WatchlistRepository] Remove failed: Missing auth session', err);
                 throw err;
@@ -125,7 +131,8 @@
                     await ref.doc(cachedItem.id).delete();
                 } else {
                     // Fallback: query by syncCode and symbol to find the document to delete
-                    const snapshot = await ref.where('syncCode', '==', uid).where('symbol', '==', symbol).get();
+                    const targetCode = syncCode || ownerUid;
+                    const snapshot = await ref.where('syncCode', '==', targetCode).where('symbol', '==', symbol).get();
                     if (!snapshot.empty) {
                         const batch = this.getDb().batch();
                         snapshot.docs.forEach(doc => {
@@ -147,8 +154,9 @@
         // Keep save for bulk operations if needed
         async save(items) {
             const ref = this.getCollectionRef();
-            const uid = this.getUid();
-            if (!ref || !uid) return false;
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) return false;
 
             try {
                 const batch = this.getDb().batch();
@@ -160,7 +168,8 @@
                     const payloadItem = {
                         ...item,
                         symbol: symbol,
-                        syncCode: uid,
+                        ownerUid: ownerUid,
+                        syncCode: syncCode || ownerUid,
                         orderIndex: index,
                         addedAt: firebase.firestore.FieldValue.serverTimestamp()
                     };

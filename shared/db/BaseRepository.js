@@ -12,16 +12,25 @@
             this.unsub = null;
         }
 
-        getUid() {
+        getOwnerUid() {
             if (global.MTFAuth && typeof global.MTFAuth.getUid === 'function') {
                 const uid = global.MTFAuth.getUid();
                 if (uid) return uid;
             }
-            // Fallback to legacy syncCode if Firebase Auth is not actively signed in
+            // If no true auth exists yet, return the legacy syncCode to act as the owner temporarily
+            return this.getSyncCode();
+        }
+
+        getSyncCode() {
             if (global.MTFDb && typeof global.MTFDb.getSyncCode === 'function') {
                 return global.MTFDb.getSyncCode();
             }
             return null;
+        }
+
+        getUid() {
+            // Deprecated: Use getOwnerUid() or getSyncCode() directly
+            return this.getOwnerUid();
         }
 
         getCollectionPath() {

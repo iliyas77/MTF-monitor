@@ -12,9 +12,8 @@
 
         getCollectionRef() {
             const db = this.getDb();
-            const uid = this.getUid();
-            if (!db || !uid) return null;
-            return db.collection(this.collectionName).doc(uid).collection('items');
+            if (!db) return null;
+            return db.collection('positions'); // Flat collection
         }
 
         async fetch() {
@@ -23,15 +22,20 @@
             }
 
             const ref = this.getCollectionRef();
-            if (!ref) return [];
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) return [];
 
             try {
-                const snapshot = await ref.get();
+                const targetCode = syncCode || ownerUid;
+                const snapshot = await ref.where('syncCode', '==', targetCode).get();
                 const items = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    this.cache.set(data.id, data);
-                    items.push(data);
+                    // Merge doc.id in case we need to reference flat collection doc ids
+                    const item = { docId: doc.id, ...data };
+                    this.cache.set(data.id, item); // Assuming transaction 'id' is unique
+                    items.push(item);
                 });
                 return items;
             } catch (e) {
@@ -42,19 +46,30 @@
 
         async save(items) {
             const ref = this.getCollectionRef();
-            if (!ref) return false;
+            const ownerUid = this.getOwnerUid();
+            const syncCode = this.getSyncCode();
+            if (!ref || !ownerUid) return false;
 
             try {
                 const batch = this.getDb().batch();
                 items.forEach(item => {
                     if (!item.id) return;
-                    this.cache.set(item.id, item);
-                    const docId = String(item.id);
-                    const docRef = ref.doc(docId);
-                    batch.set(docRef, { 
-                        ...item, 
-                        updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
-                    }, { merge: true });
+                    
+                    const payloadItem = {
+                        ...item,
+                        ownerUid: ownerUid,
+                        syncCode: syncCode || ownerUid,
+                        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    };
+                    
+                    // We can use the transaction `id` as the docId to prevent duplicates 
+                    // or let Firestore auto generate. Since transactions have unique IDs, use them.
+                    // To avoid cross-user collisions on simple IDs, we prefix it.
+                    const safeDocId = `${ownerUid}_${item.id}`;
+                    const docRef = ref.doc(safeDocId);
+                    
+                    this.cache.set(item.id, { ...payloadItem, docId: safeDocId });
+                    batch.set(docRef, payloadItem, { merge: true });
                 });
                 await batch.commit();
                 return true;
