@@ -72,6 +72,8 @@ function preferredDbOrder(scripts) {
     const preferred = [
         'shared/db/_registry.js',
         'shared/db/firebase-config.js',
+        'shared/db/auth-service.js',
+        'shared/db/BaseRepository.js',
         'shared/db/db-service.js'
     ];
     const set = new Set(scripts);
@@ -96,6 +98,9 @@ function preferredComponentsOrder(scripts) {
 function preferredFeaturesOrder(scripts) {
     // Shared shell + trade UI first (dependency order), then one *-page.js per route.
     const preferred = [
+        'features/positions/PositionRepository.js',
+        'features/watchlist/WatchlistRepository.js',
+        'features/more/SettingsRepository.js',
         'features/common/app-shell.js',
         'features/common/trade-list.js',
         'features/common/trade-sheets.js',

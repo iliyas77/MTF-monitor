@@ -120,12 +120,35 @@
             payload.moneyAccounts = [];
             payload.moneyEntries = [];
         }
+        
+        // --- ISOLATE TRANSACTIONS ARCHITECTURE ---
+        const transactionsToSync = payload.transactions || [];
+        delete payload.transactions; // Strip from main configuration tree
+        
+        // --- ISOLATE WATCHLIST ARCHITECTURE ---
+        const watchlistToSync = payload.marketWatchlist || [];
+        delete payload.marketWatchlist; // Strip from main configuration tree
+        
         const ver = version || localDataVersion;
-        return fbDb.collection('syncs').doc(syncCode).set({
-            data: payload,
-            dataVersion: ver,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).then(() => true).catch(err => {
+        
+        // Push transactions distinctively to standalone collection
+        const pushTxs = Promise.all(transactionsToSync.map(tx => {
+            if (!tx || !tx.id) return Promise.resolve();
+            const txDoc = { ...tx, syncCode: syncCode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            return fbDb.collection('transactions').doc(String(tx.id)).set(txDoc, { merge: true });
+        }));
+
+        // Push watchlist autonomously to standalone collection
+        const pushWatchlist = Promise.all(watchlistToSync.map((item, index) => {
+            if (!item || !item.s) return Promise.resolve();
+            // Use symbol as part of the doc ID, sanitize to avoid Firestore invalid paths
+            const safeSymbol = String(item.s).replace(/[^a-zA-Z0-9_-]/g, '_');
+            const docId = `${syncCode}_${safeSymbol}`;
+            const wlDoc = { ...item, syncCode: syncCode, orderIndex: index, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
+            return fbDb.collection('watchlist').doc(docId).set(wlDoc, { merge: true });
+        }));
+
+        return Promise.all([pushTxs, pushWatchlist]).then(() => true).catch(err => {
             MTFLogger.warn('Cloud push failed', err);
             hooks.showToast('Cloud sync failed. Saved locally — try reconnecting sync.', 'warning');
             return false;
@@ -136,8 +159,15 @@
         MTFLogger.log(`Action: fetchClosedTradesFromCloud | SyncCode: ${syncCode}`);
         if (!fbDb || !syncCode) return [];
         try {
-            const res = await getCollection(`syncs/${syncCode}/closed_trades`, {}, { limit: 20 });
-            return res.success ? res.data : [];
+            const ownerUid = window.watchlistRepo ? window.watchlistRepo.getOwnerUid() : syncCode; // fallback
+            const targetCode = syncCode || ownerUid;
+            
+            const snapshot = await fbDb.collection('closed_trades').where('syncCode', '==', targetCode).limit(20).get();
+            const items = [];
+            snapshot.forEach(doc => {
+                items.push({ docId: doc.id, ...doc.data() });
+            });
+            return items;
         } catch (err) {
             MTFLogger.error('Failed to fetch closed trades:', err);
             return [];
@@ -145,12 +175,20 @@
     }
 
     async function deleteClosedTradeFromCloud(id) {
-        const tx = closedTradesCache.find(t => t.id === id) || null;
         MTFLogger.log(`Action: deleteClosedTradeFromCloud | TxId: ${id}`);
         if (!fbDb || !syncCode) return Promise.reject(new Error('sync_required'));
         try {
-            const res = await deleteDocument(`syncs/${syncCode}/closed_trades`, id);
-            return res.success;
+            const ownerUid = window.watchlistRepo ? window.watchlistRepo.getOwnerUid() : syncCode; // fallback
+            const targetCode = syncCode || ownerUid;
+            
+            const snapshot = await fbDb.collection('closed_trades').where('syncCode', '==', targetCode).where('id', '==', id).get();
+            if (!snapshot.empty) {
+                const batch = fbDb.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+                return true;
+            }
+            return false;
         } catch (err) {
             MTFLogger.error('Failed to delete closed trade:', err);
             return false;
@@ -213,79 +251,17 @@
         localStorage.setItem('mtf_sync_code', code);
         hooks.renderSettings();
 
-        const docRef = fbDb.collection('syncs').doc(code);
-        if (!opts.silent) hooks.showLoading();
-        let connectLoadingActive = !opts.silent;
-        const endConnectLoading = () => {
-            if (connectLoadingActive) { connectLoadingActive = false; hooks.hideLoading(); }
-        };
-
-        docRef.get().then(snap => {
-            const local = db().getStorage();
-            const legacyMoney = {
-                moneyAccounts: Array.isArray(local.moneyAccounts) ? local.moneyAccounts.slice() : [],
-                moneyEntries: Array.isArray(local.moneyEntries) ? local.moneyEntries.slice() : []
-            };
-
-            const snapData = snap.data() || {};
-            if (snapData.data && snapData.data.dbCallLog) delete snapData.data.dbCallLog;
-            if (snapData.dbCallLog) delete snapData.dbCallLog;
-
-            if (snap.exists && snapData.data) {
-                const remote = db().ensureMoneyData({ transactions: [], ...snapData.data });
-                if (!legacyMoney.moneyAccounts.length && Array.isArray(remote.moneyAccounts)) {
-                    legacyMoney.moneyAccounts = remote.moneyAccounts.slice();
-                }
-                if (!legacyMoney.moneyEntries.length && Array.isArray(remote.moneyEntries)) {
-                    legacyMoney.moneyEntries = remote.moneyEntries.slice();
-                }
-                const remoteVersion = snapData.dataVersion || 0;
-                const merged = mergeStorageData(local, remote);
-                localDataVersion = Math.max(localDataVersion, remoteVersion) + 1;
-                try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
-                db().saveStorageLocal(merged);
-                
-                syncPushPending++;
-                const cloudMerged = { ...merged };
-                delete cloudMerged.dbCallLog;
-                docRef.set({
-                    data: cloudMerged,
-                    dataVersion: localDataVersion,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).finally(() => { syncPushPending--; });
-            } else {
-                localDataVersion++;
-                try { localStorage.setItem('mtf_data_version', String(localDataVersion)); } catch (_) {}
-                const initial = { ...local };
-                if (typeof db().stripMoneyFromBlobData === 'function') db().stripMoneyFromBlobData(initial);
-                db().saveStorageLocal(initial);
-                
-                syncPushPending++;
-                const cloudInitial = { ...initial };
-                delete cloudInitial.dbCallLog;
-                docRef.set({
-                    data: cloudInitial,
-                    dataVersion: localDataVersion,
-                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true }).finally(() => { syncPushPending--; });
-            }
-
-            try { hooks.migrateTradeCompanySymbols({ force: true }); } catch (_) {}
-            syncClosedTradesListener();
-
-            if (!opts.silent) hooks.showToast('Cloud sync connected!', 'success');
+        // Removed legacy syncs listeners completely.
+        if (!opts.silent) {
+            hooks.showToast('Connected! (Legacy push bindings disabled for modular collections)', 'success');
+        }
+        
+        // Trigger UI to fetch from repositories
+        if (typeof hooks.refreshAllViews === 'function') {
             hooks.refreshAllViews();
-            hooks.renderSettings();
-            endConnectLoading();
-        }).catch(err => {
-            MTFLogger.warn('connectSync failed', err);
-            syncStatus = 'error';
-            if (!opts.silent) {
-                hooks.showToast('Sync failed: ' + (err && err.message ? err.message : 'unknown error'), 'danger');
-            }
-            hooks.renderSettings();
-            endConnectLoading();
-        });
+        }
+        
+        return;
     }
 
     function disconnectSync() {
@@ -404,8 +380,14 @@
         } else {
             try {
                 // No arbitrary pagination limit; fetches all matching records
-                const res = await getCollection(`syncs/${syncCode}/closed_trades`, queryConfig, options);
-                if (res.success) closedTxs = res.data;
+                const ownerUid = window.watchlistRepo ? window.watchlistRepo.getOwnerUid() : syncCode; // fallback
+                const targetCode = syncCode || ownerUid;
+                const snapshot = await fbDb.collection('closed_trades').where('syncCode', '==', targetCode).get();
+                const items = [];
+                snapshot.forEach(doc => {
+                    items.push({ docId: doc.id, ...doc.data() });
+                });
+                closedTxs = items;
             } catch (err) {
                 MTFLogger.error('getFeed Firestore query failed:', err);
             }
@@ -717,6 +699,35 @@
         }
     }
 
+    async function purgeLocalDatabase() {
+        MTFLogger.warn('Executing destructive local database purge...');
+        
+        const preservedSyncCode = localStorage.getItem('mtf_sync_code');
+        const preservedPerms = localStorage.getItem('mtf_permissions');
+        const preservedVersion = localStorage.getItem('mtf_data_version');
+        
+        localStorage.clear();
+        
+        if (preservedSyncCode) localStorage.setItem('mtf_sync_code', preservedSyncCode);
+        if (preservedPerms) localStorage.setItem('mtf_permissions', preservedPerms);
+        if (preservedVersion) localStorage.setItem('mtf_data_version', preservedVersion);
+
+        if (window.indexedDB && typeof window.indexedDB.databases === 'function') {
+            try {
+                const dbs = await window.indexedDB.databases();
+                for (const db of dbs) {
+                    if (db.name) {
+                        MTFLogger.log(`Deleting IndexedDB: ${db.name}`);
+                        window.indexedDB.deleteDatabase(db.name);
+                    }
+                }
+            } catch (err) {
+                MTFLogger.warn('Failed to completely clear IndexedDB', err);
+            }
+        }
+        MTFLogger.warn('Local database purge complete.');
+    }
+
     // Boot: Load cached closed trades from LocalDB if available (defer to allow scripts to load)
     setTimeout(() => {
         if (global.MTFLocalDB) {
@@ -764,6 +775,7 @@
         getSyncNote,
         connectSync,
         disconnectSync,
-        initSyncOnLoad
+        initSyncOnLoad,
+        purgeLocalDatabase
     });
 })(typeof window !== 'undefined' ? window : globalThis);
