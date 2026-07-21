@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: MTF Profit Tracker — Single-Page App Shell
+title: MTF Monitor — Vanilla-JS Single-Page App
 scope:
     - README.md
     - .gitignore

@@ -1,0 +1,6 @@
+Four self-registering IIFE modules plug into the host app through `global.MTFRegister`:
+- `more-page.js` — two IIFEs: a molecule (`renderMoreHubOption`) that renders a single list-row button with icon/label, and an organism (`renderMoreHubPage`) that composes the hub list delegating navigation to `openMoreFeature('money'|'mtf-calc')` and `openSettingsPage()`.
+- `settings-page.js` — a single organism (`renderSettings`) that reads/writes `window.AppPermissions`, debounces saves via a 500 ms `setTimeout` around `executeSave`, paints a cloud-sync badge, drives master/dependent toggle dependencies, and wires a destructive local-db purge flow through `MTFComponents.confirmAction`. It also consumes cross-feature helpers from `MTFAppHelpers.settingsPages` (`getTransactions`, `renderSyncStatus`).
+- `SettingsRepository.js` — a Firebase-backed repository extending `global.BaseRepository` with `fetch`/`save` against `settings/{uid}`, using an in-process cache keyed by `'settings'`.
+- `app-version.js` — injects `APP_VERSION` / `APP_BUILT_AT` constants (auto-bumped by `npm run build -- --bump`) and paints the build meta footer on DOM ready.
+Dependency direction is one-way: pages depend only on global bridges (`MTFComponents`, `MTFAppHelpers`, `MTFDb`, `MTFLogger`, `BaseRepository`); the repository depends on no feature code.

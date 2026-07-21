@@ -1,4 +1,0 @@
-- Feature modules are self-contained IIFEs that register public functions on `global` via `global.MTFRegister({...})` instead of using ES modules.
-- Cross-feature UI primitives (icons, sheets, dialogs, formatters) are resolved at call time from `global.MTFComponents` with optional-chaining fallbacks so features stay decoupled.
-- Global state for cross-feature data sharing lives on `global.MTFAppHelpers` (e.g. `tradePages.getTransactions`) rather than being passed as parameters.
-- DOM elements are accessed by fixed IDs (`appSheet`, `appHeader`, `page-<feature>`) and toggled visibility with Bootstrap `d-none` / `d-flex` classes instead of component frameworks.

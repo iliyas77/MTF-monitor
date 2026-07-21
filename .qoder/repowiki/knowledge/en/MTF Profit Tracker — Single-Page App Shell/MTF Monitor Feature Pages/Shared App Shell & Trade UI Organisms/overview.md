@@ -1,1 +1,0 @@
-Reusable app-shell organisms (bottom bar, header, Cupertino Pane sheets, Bootstrap dialog) and trade-list / trade-detail sheet components shared across feature pages.

@@ -3,11 +3,11 @@ schema_version: 1
 locale: en-US
 branch: save/2026-07-20-0038
 nodes_managed: true
-exported_at: "2026-07-21T17:41:03Z"
+exported_at: "2026-07-21T18:11:28Z"
 modules:
     "":
-        dir_name: MTF Profit Tracker — Single-Page App Shell
-        title: MTF Profit Tracker — Single-Page App Shell
+        dir_name: MTF Monitor — Vanilla-JS Single-Page App
+        title: MTF Monitor — Vanilla-JS Single-Page App
         scope:
             - README.md
             - .gitignore
@@ -43,8 +43,8 @@ modules:
             - path: features
             - path: shared_runtime
     features:
-        dir_name: MTF Monitor Feature Pages
-        title: MTF Monitor Feature Pages
+        dir_name: Client-Side Feature Pages & Shared UI Primitives
+        title: Client-Side Feature Pages & Shared UI Primitives
         scope:
             - features/
             - components/
@@ -79,8 +79,8 @@ modules:
         related_to:
             - path: shared_runtime
     features/positions:
-        dir_name: Positions & Trades Feature (Open_Past_Detail Views)
-        title: Positions & Trades Feature (Open/Past/Detail Views)
+        dir_name: Positions & Trades Feature (Open_Past List + Detail Sheet)
+        title: Positions & Trades Feature (Open/Past List + Detail Sheet)
         scope:
             - features/positions/
         source_files: []
@@ -109,8 +109,8 @@ modules:
         related_to:
             - path: shared_runtime
     shared_runtime:
-        dir_name: Shared Runtime Global Registry, UI Atoms & Firestore Sync Layer
-        title: 'Shared Runtime: Global Registry, UI Atoms & Firestore Sync Layer'
+        dir_name: Shared Runtime Layer (DB Sync, UI Atoms & Theme Tokens)
+        title: Shared Runtime Layer (DB Sync, UI Atoms & Theme Tokens)
         scope:
             - shared/db/
             - shared/lib/

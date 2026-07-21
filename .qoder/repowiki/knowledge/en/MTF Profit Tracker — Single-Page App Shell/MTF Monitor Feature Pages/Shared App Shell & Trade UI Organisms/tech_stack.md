@@ -1,1 +1,0 @@
-Page.js client-side router with hashbang mode (`page.start({ hashbang: true })`), Cupertino Pane for bottom-sheet panes, Bootstrap 5 for modals/collapse/utilities, and FontAwesome icons via `MTFComponents.renderIcon`.

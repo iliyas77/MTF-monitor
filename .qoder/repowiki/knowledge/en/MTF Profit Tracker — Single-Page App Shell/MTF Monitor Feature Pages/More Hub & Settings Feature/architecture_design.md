@@ -1,6 +1,0 @@
-Feature is split into four self-registering IIFE modules that plug into the host app via `global.MTFRegister`:
-- `more-page.js` — a molecule (`renderMoreHubOption`) plus an organism (`renderMoreHubPage`) that renders the hub list and delegates navigation through `openMoreFeature` / `openSettingsPage`.
-- `settings-page.js` — an organism (`renderSettings`) that reads/writes `window.AppPermissions`, debounces saves to localStorage + Firestore (`MTFDb.getFirebaseDb().collection('settings').doc(syncCode)`), drives a cloud-sync badge, and wires up master/dependent toggle dependencies and a destructive local-db purge flow via `MTFComponents.confirmAction`.
-- `SettingsRepository.js` — a Firebase-backed repository extending `global.BaseRepository` with `fetch`/`save` against `settings/{uid}`, using an in-process cache keyed by `'settings'`.
-- `app-version.js` — injects `APP_VERSION` / `APP_BUILT_AT` constants (auto-bumped by `npm run build -- --bump`) and paints the build meta footer on DOM ready.
-Dependency direction: pages depend only on global bridges (`MTFComponents`, `MTFAppHelpers`, `MTFDb`, `MTFLogger`, `BaseRepository`); the repository depends on no feature code. The settings page also consumes cross-feature helpers via `MTFAppHelpers.settingsPages` (`getTransactions`, `renderSyncStatus`).

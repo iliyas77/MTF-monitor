@@ -629,3 +629,13 @@ At the end of every successful task completion, the AI must append a small Markd
 ## 14. Automatic GitHub Sync & Ticket Formatting Rule
 
 Whenever the user requests a new ticket (e.g. by mentioning the `TICKETS.md` file), **the AI MUST NOT perform the actual task or modify the codebase.** The AI MUST ONLY automatically write the ticket into `ticket.txt` using the STRICT template format defined in the `TICKETS.md` file under the "Ticket Creation Template" section. **Crucially, the AI MUST then automatically execute the `npm run sync` terminal command itself.** Under no circumstances should the AI tell the user to run this command manually. The AI must use its terminal execution tool to run the command, and the user will approve any network permission popups.
+
+## 15. No Local Database or Storage Rule
+
+The application must not maintain any local database or local storage (like `localStorage` or `IndexedDB`) for caching primary application data such as transactions, positions, or user records.
+
+### Rules
+* Do not use `localStorage`, `sessionStorage`, or `IndexedDB` to cache database records.
+* Data must be loaded directly from the backend database (Firestore) on-demand when required by a page or component.
+* Keep fetched data in memory temporarily for the lifespan of the page or session, as needed.
+* Avoid pre-loading massive data payloads; strictly follow the "On-Demand Data Loading" rule.

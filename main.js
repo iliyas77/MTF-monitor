@@ -5519,15 +5519,9 @@
 
             onRemoteApplied: () => {
                 try { migrateTradeCompanySymbols(); } catch (_) { }
-                try {
-                    const data = getStorage();
-                } catch (_) { }
             },
             migrateTradeCompanySymbols
         });
-        try {
-            const data = getStorage();
-        } catch (_) { }
         initSyncOnLoad();
 
         window.addEventListener('pageshow', (e) => {

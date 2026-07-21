@@ -1,1 +1,0 @@
-Implements the More hub page (navigation to Money, MTF Calculator, Settings) and the Settings page for activity-log toggles and local database control.

@@ -1,1 +1,0 @@
-Global runtime layer that wires the app's shared services (Firestore sync, auth, IndexedDB cache), Bootstrap-based UI atoms, and CSS theme tokens into a single-page MTF Monitor.
