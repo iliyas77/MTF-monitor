@@ -5561,7 +5561,6 @@
 
     async function fetchAppPermissions() {
         const defaultPerms = {
-            localDbEnabled: true,
             activityLogMaster: true,
             activityLogDb: false,
             activityLogApp: true,
@@ -5590,7 +5589,6 @@
                         const data = doc.data();
                         if (data && data.permissions && typeof data.permissions === 'object') {
                             window.AppPermissions = {
-                                localDbEnabled: data.permissions.localDbEnabled ?? true,
                                 activityLogMaster: data.permissions.activityLogMaster ?? true,
                                 activityLogDb: data.permissions.activityLogDb ?? false,
                                 activityLogApp: data.permissions.activityLogApp ?? true,

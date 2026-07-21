@@ -204,9 +204,6 @@
     }
 
     function getStorage() {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return ensureMoneyData({ transactions: [], marketWatchlist: [] });
-        }
         if (_storageCached) return _storageCached;
         try {
             const raw = localStorage.getItem('mtf_tracker_data');
@@ -257,9 +254,6 @@
     }
 
     function saveStorageLocal(data) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return;
-        }
         invalidateStorageCache();
         const payload = ensureMoneyData(data || { transactions: [], marketWatchlist: [] });
         stripSmokeTradesFromData(payload);
@@ -280,9 +274,6 @@
     }
 
     function saveStorage(data) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return Promise.resolve(true);
-        }
         const payload = ensureMoneyData(data || { transactions: [] });
         stripSmokeTradesFromData(payload);
         
@@ -295,9 +286,6 @@
     }
 
     function applyRemoteStorage(remoteData, remoteVersion) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return;
-        }
         const db = global.MTFDb;
         if (db && typeof db.applyRemoteVersion === 'function') {
             db.applyRemoteVersion(remoteVersion);

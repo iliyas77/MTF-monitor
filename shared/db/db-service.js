@@ -270,7 +270,50 @@
             hooks.refreshAllViews();
         }
         
+        syncPullFromRepositories(code);
         return;
+    }
+    
+    async function syncPullFromRepositories(code) {
+        if (!code) return;
+        if (!global.PositionRepository) {
+            MTFLogger.log('[DB-DEBUG] syncPullFromRepositories: global.PositionRepository is not defined!');
+            return;
+        }
+        try {
+            MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories executing for code: ${code}`);
+            hooks.showLoading('Syncing data...');
+            const repo = new global.PositionRepository();
+            const txs = await repo.fetch();
+            MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories fetched ${txs ? txs.length : 0} transactions.`);
+            
+            // Reconstruct payload and push to local storage cache
+            const payload = {
+                transactions: txs || [],
+                marketWatchlist: [] // WatchlistRepo not fully migrated, handled separately if needed
+            };
+            
+            if (global.MTFComponents && typeof global.MTFComponents.applyRemoteStorage === 'function') {
+                global.MTFComponents.applyRemoteStorage(payload, Date.now());
+                MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories: Used MTFComponents.applyRemoteStorage`);
+            } else if (typeof window.applyRemoteStorage === 'function') {
+                window.applyRemoteStorage(payload, Date.now());
+                MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories: Used window.applyRemoteStorage`);
+            } else if (window.MTFDb && typeof window.MTFDb.applyRemoteStorage === 'function') {
+                window.MTFDb.applyRemoteStorage(payload, Date.now());
+                MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories: Used window.MTFDb.applyRemoteStorage`);
+            } else {
+                MTFLogger.log(`[DB-DEBUG] syncPullFromRepositories: COULD NOT FIND applyRemoteStorage!`);
+            }
+        } catch (e) {
+            MTFLogger.error('[DB-DEBUG] syncPullFromRepositories failed:', e);
+            MTFLogger.error('Failed to pull from PositionRepository', e);
+        } finally {
+            hooks.hideLoading();
+            if (typeof hooks.refreshAllViews === 'function') {
+                hooks.refreshAllViews();
+            }
+        }
     }
 
     function disconnectSync() {
