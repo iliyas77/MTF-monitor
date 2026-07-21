@@ -112,7 +112,8 @@
         if (!fbDb || !syncCode) return Promise.resolve(false);
         syncPushPending++;
         hooks.showLoading();
-        const payload = db().ensureMoneyData(data || db().getStorage());
+        const baseData = data || db().getStorage();
+        const payload = { ...db().ensureMoneyData(baseData) };
         delete payload.dbCallLog;
         if (typeof db().stripMoneyFromBlobData === 'function') {
             db().stripMoneyFromBlobData(payload);
@@ -135,7 +136,7 @@
         const pushTxs = Promise.all(transactionsToSync.map(tx => {
             if (!tx || !tx.id) return Promise.resolve();
             const txDoc = { ...tx, syncCode: syncCode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            return fbDb.collection('transactions').doc(String(tx.id)).set(txDoc, { merge: true });
+            return fbDb.collection('positions').doc(String(tx.id)).set(txDoc, { merge: true });
         }));
 
         // Push watchlist autonomously to standalone collection
