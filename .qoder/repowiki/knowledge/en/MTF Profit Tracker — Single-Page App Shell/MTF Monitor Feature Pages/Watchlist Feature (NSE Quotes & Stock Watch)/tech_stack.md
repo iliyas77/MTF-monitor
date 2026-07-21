@@ -1,0 +1,1 @@
+Vanilla ES5 IIFE modules registering into a global `MTFRegister` loader; persistence via Firebase Firestore (`FieldValue.serverTimestamp()`, batch writes); UI built with inline template strings plus FontAwesome icons (`fa-bell`, `fa-ellipsis-v`).

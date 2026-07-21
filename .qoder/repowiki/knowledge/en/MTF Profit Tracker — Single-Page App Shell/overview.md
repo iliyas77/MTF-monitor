@@ -1,0 +1,1 @@
+Root shell that bootstraps the MTF Monitor SPA by loading shared runtime, feature pages, and build scripts into a single HTML document served via http-server.

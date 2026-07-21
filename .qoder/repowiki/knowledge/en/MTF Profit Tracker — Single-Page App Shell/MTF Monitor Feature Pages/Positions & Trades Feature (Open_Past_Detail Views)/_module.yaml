@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: features/positions
+title: Positions & Trades Feature (Open/Past/Detail Views)
+scope:
+    - features/positions/
+source_files: []
+depends_on: []
+related_to:
+    - path: features/common
+    - path: shared_runtime

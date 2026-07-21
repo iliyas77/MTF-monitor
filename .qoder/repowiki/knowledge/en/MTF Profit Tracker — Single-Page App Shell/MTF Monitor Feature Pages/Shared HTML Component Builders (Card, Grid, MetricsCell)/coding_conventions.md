@@ -1,0 +1,6 @@
+- Each file wraps its code in `(function (global) { ... })(typeof window !== 'undefined' ? window : globalThis);` so it runs both in browsers and Node.
+- Public APIs are registered through `global.MTFRegister({ Name })` when available, falling back to attaching directly onto `global.MTFComponents` / `global`.
+- HTML attribute injection goes through a private `_buildAttrs(attrs)` helper that iterates `Object.entries` and escapes double quotes via `.replace(/"/g, '&quot;')` before emitting `key="value"` pairs.
+- All user-supplied text values are passed through an `esc()` / `escapeHtml` helper before being interpolated into HTML strings.
+- Every rendered root element carries a `data-component="..."` attribute identifying the component type for later querying.
+- Optional sub-parts of a cell receive scoped `data-ref="<base>.<slot>"` attributes (e.g. `.icon`, `.value`, `.progress.bar`) derived from a single `baseRef`.

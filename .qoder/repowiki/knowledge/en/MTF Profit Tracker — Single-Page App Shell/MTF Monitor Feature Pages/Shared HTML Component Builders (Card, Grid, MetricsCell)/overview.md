@@ -1,0 +1,1 @@
+Vanilla-JS helpers that render Bootstrap-based HTML fragments — a card wrapper, a pure-CSS grid, and a KPI metrics cell — for server-side or client-side template composition.

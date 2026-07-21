@@ -1,0 +1,1 @@
+Bootstrap 5 + Font Awesome loaded from CDN; http-server for local dev; html-minifier-terser for production builds; Playwright for end-to-end smoke tests; Firebase Firestore rules declared at repo root.

@@ -1,0 +1,125 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: en-US
+branch: save/2026-07-20-0038
+nodes_managed: true
+exported_at: "2026-07-20T07:10:30Z"
+modules:
+    "":
+        dir_name: MTF Profit Tracker — Single-Page App Shell
+        title: MTF Profit Tracker — Single-Page App Shell
+        scope:
+            - README.md
+            - .gitignore
+            - package.json
+            - package-lock.json
+            - app-version.json
+            - pages.json
+            - firestore.rules
+            - playwright.config.js
+            - build-production.js
+            - main.html
+            - PRODUCTION.md
+            - TICKETS.md
+            - main.js
+            - production.html
+            - ticket.txt
+        source_files: []
+        children:
+            - build_and_scripts
+            - features
+            - shared_runtime
+        depends_on: []
+        related_to: []
+    build_and_scripts:
+        dir_name: Build, Integrity & Developer Workflow Scripts
+        title: Build, Integrity & Developer Workflow Scripts
+        scope:
+            - shared/scripts/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: features
+            - path: shared_runtime
+    features:
+        dir_name: MTF Monitor Feature Pages
+        title: MTF Monitor Feature Pages
+        scope:
+            - features/
+            - components/
+        source_files: []
+        children:
+            - features/common
+            - features/more
+            - features/positions
+            - features/shared_components
+            - features/watchlist
+        depends_on: []
+        related_to:
+            - path: build_and_scripts
+    features/common:
+        dir_name: Shared App Shell & Trade UI Organisms
+        title: Shared App Shell & Trade UI Organisms
+        scope:
+            - features/common/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: features/positions
+    features/more:
+        dir_name: More Hub & Settings Feature
+        title: More Hub & Settings Feature
+        scope:
+            - features/more/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: shared_runtime
+    features/positions:
+        dir_name: Positions & Trades Feature (Open_Past_Detail Views)
+        title: Positions & Trades Feature (Open/Past/Detail Views)
+        scope:
+            - features/positions/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: features/common
+            - path: shared_runtime
+    features/shared_components:
+        dir_name: Shared HTML Component Builders (Card, Grid, MetricsCell)
+        title: Shared HTML Component Builders (Card, Grid, MetricsCell)
+        scope:
+            - components/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to: []
+    features/watchlist:
+        dir_name: Watchlist Feature (NSE Quotes & Stock Watch)
+        title: Watchlist Feature (NSE Quotes & Stock Watch)
+        scope:
+            - features/watchlist/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: shared_runtime
+    shared_runtime:
+        dir_name: Shared Runtime Global Registry, UI Atoms & Firestore Sync Layer
+        title: 'Shared Runtime: Global Registry, UI Atoms & Firestore Sync Layer'
+        scope:
+            - shared/db/
+            - shared/lib/
+            - shared/css/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: build_and_scripts
+            - path: features/more
+            - path: features/positions
+            - path: features/watchlist

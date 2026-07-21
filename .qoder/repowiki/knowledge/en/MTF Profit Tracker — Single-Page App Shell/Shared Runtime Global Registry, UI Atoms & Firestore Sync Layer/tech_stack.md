@@ -1,0 +1,1 @@
+Plain ES5 IIFEs targeting `window`/`globalThis` (no bundler); Firebase Web SDK v9 compat (`firebase.initializeApp`, `firebase.firestore()`, `firebase.auth.GoogleAuthProvider`); Bootstrap 5 Modal/Toast/Dropdown/Collapse components; IndexedDB for local closed-trade caching; CSS custom properties bridged to Bootstrap 5 theme variables.

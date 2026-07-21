@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: features/shared_components
+title: Shared HTML Component Builders (Card, Grid, MetricsCell)
+scope:
+    - components/
+source_files: []
+depends_on: []
+related_to: []

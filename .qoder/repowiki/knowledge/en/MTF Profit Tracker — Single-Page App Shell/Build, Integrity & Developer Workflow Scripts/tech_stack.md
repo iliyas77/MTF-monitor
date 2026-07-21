@@ -1,0 +1,1 @@
+Plain Node.js (no bundler) using only built-ins (`fs`, `path`, `child_process`, `http`) plus Playwright (`playwright` package) for browser smoke tests and the GitHub CLI (`gh`) for PR/project operations.

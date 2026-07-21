@@ -1,0 +1,6 @@
+- Every module is an IIFE `(function(global){...})(typeof window !== 'undefined' ? window : globalThis)` that registers its public API via `global.MTFRegister({...})`.
+- Public functions are attached to `global` (e.g. `global.loadMoreTrades`, `global.backFromTradeDetail`) rather than returned, allowing cross-file discovery at runtime.
+- All user-facing strings are HTML-escaped through a local `escapeHtml` helper before being interpolated into template literals.
+- Numeric fields are coerced with `Number(...)` and validated against `isNaN`/`isFinite` before use, with `—` used as a null sentinel in formatted output.
+- DOM nodes are annotated with `data-ref="trade-detail.*"` selectors so tests and scripts can target sections instead of relying on class names.
+- Optional cross-module dependencies are accessed defensively via `global.MTFComponents`, `global.MTFAppHelpers`, or `global.MTFDb` property checks rather than direct imports.

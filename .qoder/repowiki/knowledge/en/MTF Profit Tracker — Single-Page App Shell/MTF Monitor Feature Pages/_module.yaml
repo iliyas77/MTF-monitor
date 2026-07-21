@@ -1,0 +1,10 @@
+schema_version: 1
+module_path: features
+title: MTF Monitor Feature Pages
+scope:
+    - features/
+    - components/
+source_files: []
+depends_on: []
+related_to:
+    - path: build_and_scripts

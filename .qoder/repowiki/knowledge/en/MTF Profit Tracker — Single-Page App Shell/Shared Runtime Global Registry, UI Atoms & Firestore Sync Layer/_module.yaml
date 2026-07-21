@@ -1,0 +1,14 @@
+schema_version: 1
+module_path: shared_runtime
+title: 'Shared Runtime: Global Registry, UI Atoms & Firestore Sync Layer'
+scope:
+    - shared/db/
+    - shared/lib/
+    - shared/css/
+source_files: []
+depends_on: []
+related_to:
+    - path: build_and_scripts
+    - path: features/more
+    - path: features/positions
+    - path: features/watchlist

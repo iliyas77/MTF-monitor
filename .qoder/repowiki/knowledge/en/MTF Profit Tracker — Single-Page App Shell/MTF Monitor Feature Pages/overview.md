@@ -1,0 +1,1 @@
+Client-side feature pages (Positions, Watchlist, Gold, Calendar, More) mounted by the app shell and wired together through a global MTFRegister/MTFComponents registry.
