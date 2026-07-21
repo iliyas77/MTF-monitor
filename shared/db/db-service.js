@@ -136,7 +136,15 @@
         const pushTxs = Promise.all(transactionsToSync.map(tx => {
             if (!tx || !tx.id) return Promise.resolve();
             const txDoc = { ...tx, syncCode: syncCode, updatedAt: firebase.firestore.FieldValue.serverTimestamp() };
-            return fbDb.collection('positions').doc(String(tx.id)).set(txDoc, { merge: true });
+            const docRef = fbDb.collection('positions').doc(String(tx.id));
+            
+            console.warn(`[DB-DEBUG] cloudPush targeting path: ${docRef.path}`);
+            console.warn(`[DB-DEBUG] cloudPush Payload syncCode: ${txDoc.syncCode}, ownerUid: ${txDoc.ownerUid}`);
+            if (global.MTFLogger) {
+                global.MTFLogger.log(`[DB-DEBUG] cloudPush writing to path: ${docRef.path}`, txDoc);
+            }
+            
+            return docRef.set(txDoc, { merge: true });
         }));
 
         // Push watchlist autonomously to standalone collection
