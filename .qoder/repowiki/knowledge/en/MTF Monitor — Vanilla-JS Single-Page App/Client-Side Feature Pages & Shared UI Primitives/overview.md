@@ -1,1 +1,0 @@
-Aggregates vanilla-JS feature pages (Positions, Watchlist, Gold, Calendar, More) and shared HTML component builders mounted by the app shell through a global MTFRegister/MTFComponents registry.

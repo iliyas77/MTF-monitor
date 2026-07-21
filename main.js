@@ -5573,38 +5573,6 @@
         
         window.AppPermissions = loadedPerms || defaultPerms;
 
-        try {
-            if (global.MTFDb && global.MTFDb.initFirebase()) {
-                const fbDb = global.MTFDb.getFirebaseDb();
-                const syncCode = localStorage.getItem('mtf_sync_code');
-                if (fbDb && syncCode) {
-                    const doc = await fbDb.collection('settings').doc(syncCode).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        if (data && data.permissions && typeof data.permissions === 'object') {
-                            window.AppPermissions = {
-                                activityLogMaster: data.permissions.activityLogMaster ?? true,
-                                activityLogDb: data.permissions.activityLogDb ?? false,
-                                activityLogApp: data.permissions.activityLogApp ?? true,
-                                activityLogTrace: data.permissions.activityLogTrace ?? false
-                            };
-                            localStorage.setItem('mtf_permissions', JSON.stringify(window.AppPermissions));
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            if (global.MTFLogger && global.MTFLogger.warn) {
-                global.MTFLogger.warn('Failed to fetch global permissions from Firestore:', e);
-            }
-            const bootText = document.getElementById('appBootLoaderText');
-            if (bootText) {
-                bootText.textContent = 'Offline/Error. Using secure defaults.';
-                bootText.classList.replace('text-gr1', 'text-danger');
-            }
-            await new Promise(r => setTimeout(r, 1500));
-        }
-
         const bootLoader = document.getElementById('appBootLoader');
         if (bootLoader) bootLoader.classList.add('d-none');
     }

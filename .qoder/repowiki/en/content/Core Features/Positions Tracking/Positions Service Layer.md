@@ -15,10 +15,11 @@
 
 ## Update Summary
 **Changes Made**
-- Enhanced transaction handling capabilities in the positions service layer
-- Added integration with new TransactionRepository for improved data consistency
-- Updated repository coordination patterns to support atomic operations
-- Strengthened error handling and rollback mechanisms for position operations
+- Major refactoring of positions service layer with significant cleanup and optimization
+- Streamlined transaction handling and improved code organization
+- Enhanced performance through better resource management and reduced complexity
+- Optimized position tracking functionality with cleaner architecture
+- Improved error handling and validation logic throughout the service layer
 
 ## Table of Contents
 1. [Introduction](#introduction)
@@ -33,21 +34,21 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document explains the Positions Service Layer, focusing on business logic orchestration, position lifecycle management, P&L calculation algorithms, and coordination between repositories and UI components. It covers service methods for position operations, validation rules, business rule enforcement, and integration with external services. The service layer now features enhanced transaction handling and improved integration with the TransactionRepository for better data consistency and atomic operations. It also includes concrete examples of calculating position metrics, managing position states, handling position correlations, and generating performance reports, while addressing complex business logic such as multi-currency calculations, leverage adjustments, and risk management rules.
+This document explains the Positions Service Layer, focusing on business logic orchestration, position lifecycle management, P&L calculation algorithms, and coordination between repositories and UI components. The service layer has undergone major refactoring to improve code quality, performance, and maintainability while preserving core functionality. It covers service methods for position operations, validation rules, business rule enforcement, and integration with external services. The refactored service layer now features optimized transaction handling, streamlined position tracking, and enhanced data consistency mechanisms.
 
 ## Project Structure
 The Positions feature is implemented under features/positions and integrates with shared database utilities and formatting helpers. The key files are:
-- positions-service.js: Orchestrates business logic, validations, computations, and transaction management for positions.
-- PositionRepository.js: Encapsulates persistence and retrieval of position data with enhanced transaction support.
-- TransactionRepository.js: New repository providing specialized transaction handling and atomic operations.
-- trade-detail-page.js, trades-page.js, past-page.js: UI pages that consume the service layer.
+- positions-service.js: Central orchestrator for position operations with optimized business logic and streamlined transaction management.
+- PositionRepository.js: Data access abstraction with enhanced transaction support and improved query performance.
+- TransactionRepository.js: Specialized repository providing atomic transaction operations and coordinated updates.
+- trade-detail-page.js, trades-page.js, past-page.js: UI pages that consume the optimized service layer.
 - BaseRepository.js, db-service.js: Shared repository base and database access utilities.
 - format.js: Formatting helpers used by the service and UI.
 
 ```mermaid
 graph TB
 subgraph "Positions Feature"
-PS["positions-service.js"]
+PS["positions-service.js<br/>(Refactored & Optimized)"]
 PR["PositionRepository.js"]
 TR["TransactionRepository.js"]
 TD["trade-detail-page.js"]
@@ -96,17 +97,17 @@ PS --> FMT
 - [format.js](file://shared/lib/format.js)
 
 ## Core Components
-- PositionsService (positions-service.js): Central orchestrator for position operations including creation, updates, closures, state transitions, P&L computation, currency normalization, leverage adjustments, correlation grouping, and report generation. It enforces business rules, coordinates with repositories, and manages transactions for data consistency.
-- PositionRepository (PositionRepository.js): Data access abstraction over persistent storage, providing CRUD operations, queries, batch processing, and enhanced transaction support for positions. It extends BaseRepository and uses db-service for underlying persistence.
-- TransactionRepository (TransactionRepository.js): New specialized repository providing atomic transaction operations, rollback capabilities, and coordinated updates across multiple data entities. It ensures data integrity during complex position operations.
-- UI Pages (trade-detail-page.js, trades-page.js, past-page.js): Presentational layers that call service methods to render position lists, details, and historical views. They rely on formatted outputs from the service and formatting helpers.
+- PositionsService (positions-service.js): Central orchestrator for position operations with refactored business logic, optimized validations, streamlined computations, and efficient transaction management. Enhanced performance through reduced complexity and better resource utilization.
+- PositionRepository (PositionRepository.js): Data access abstraction with improved transaction support, optimized queries, and enhanced batch processing capabilities.
+- TransactionRepository (TransactionRepository.js): Specialized repository providing atomic transaction operations with improved error handling and rollback mechanisms.
+- UI Pages (trade-detail-page.js, trades-page.js, past-page.js): Presentational layers that consume the optimized service layer with improved response times and better error handling.
 
 Key responsibilities:
-- Business rule enforcement: validate inputs, ensure consistent state transitions, enforce risk limits.
-- Transaction management: coordinate atomic operations across position and transaction repositories.
-- P&L and metrics: compute realized/unrealized P&L, exposure, margin usage, leverage-adjusted returns, and multi-currency conversions.
-- Correlations: group positions by symbol or strategy and aggregate metrics.
-- Reports: generate summaries and time-series snapshots for dashboards.
+- Business rule enforcement: Streamlined validation logic with improved error reporting and consistent state transitions.
+- Transaction management: Optimized atomic operations with better resource management and reduced overhead.
+- P&L and metrics: Efficient computation of realized/unrealized P&L, exposure, margin usage, and multi-currency conversions.
+- Correlations: Optimized grouping and aggregation of positions by symbol or strategy.
+- Reports: Enhanced summary generation with improved performance and caching strategies.
 
 **Section sources**
 - [positions-service.js](file://features/positions/positions-service.js)
@@ -117,22 +118,22 @@ Key responsibilities:
 - [past-page.js](file://features/positions/past-page.js)
 
 ## Architecture Overview
-The Positions Service Layer follows a layered architecture with enhanced transaction support:
-- Presentation layer (UI pages) calls service methods.
-- Service layer applies business logic, validates inputs, computes metrics, and delegates persistence to repositories with transaction coordination.
-- Repository layer abstracts data access using shared database utilities with improved transaction handling.
+The Positions Service Layer follows a refactored layered architecture with optimized transaction support and improved performance characteristics:
+- Presentation layer (UI pages) calls optimized service methods with better error handling.
+- Service layer applies streamlined business logic, efficient validations, and delegates persistence to repositories with improved transaction coordination.
+- Repository layer provides optimized data access using shared database utilities with enhanced transaction handling and reduced overhead.
 
 ```mermaid
 sequenceDiagram
 participant UI as "UI Page"
-participant Svc as "PositionsService"
+participant Svc as "PositionsService<br/>(Optimized)"
 participant PosRepo as "PositionRepository"
 participant TransRepo as "TransactionRepository"
 participant DB as "Database Service"
 UI->>Svc : "openPosition(request)"
-Svc->>Svc : "validateInputs()"
+Svc->>Svc : "validateInputs()<br/>(Streamlined)"
 Svc->>TransRepo : "beginTransaction()"
-TransRepo->>PosRepo : "create(position)"
+TransRepo->>PosRepo : "create(position)<br/>(Optimized)"
 PosRepo->>DB : "persist()"
 DB-->>PosRepo : "id"
 PosRepo-->>TransRepo : "position"
@@ -140,7 +141,7 @@ TransRepo->>TransRepo : "commitTransaction()"
 TransRepo-->>Svc : "success"
 Svc-->>UI : "result"
 UI->>Svc : "closePosition(id)"
-Svc->>Svc : "computePnL()"
+Svc->>Svc : "computePnL()<br/>(Efficient)"
 Svc->>TransRepo : "beginTransaction()"
 TransRepo->>PosRepo : "update(id, {status})"
 PosRepo->>DB : "persist()"
@@ -161,73 +162,74 @@ Svc-->>UI : "result"
 
 ### PositionsService
 Responsibilities:
-- Input validation and business rule enforcement for all position operations.
-- Lifecycle management: open, modify, close, archive, restore.
-- Transaction coordination: manage atomic operations across position and transaction repositories.
-- P&L calculation: realized/unrealized P&L, fees, slippage, commissions.
-- Multi-currency normalization: convert P&L and balances to reporting currency.
-- Leverage adjustments: adjust exposure and margin requirements based on leverage.
-- Risk management: enforce max drawdown, per-position limits, concentration caps.
-- Correlation handling: group positions by symbol/strategy and aggregate metrics.
-- Report generation: summary statistics, time-series snapshots, exportable formats.
+- Streamlined input validation and business rule enforcement for all position operations.
+- Optimized lifecycle management: open, modify, close, archive, restore with improved performance.
+- Enhanced transaction coordination: efficient atomic operations across position and transaction repositories.
+- Optimized P&L calculation: streamlined realized/unrealized P&L, fees, slippage, commissions computation.
+- Efficient multi-currency normalization: optimized conversion with cached exchange rates.
+- Improved leverage adjustments: streamlined exposure and margin requirement calculations.
+- Enhanced risk management: optimized checks for max drawdown, per-position limits, concentration caps.
+- Optimized correlation handling: efficient grouping and aggregation of positions.
+- Improved report generation: faster summary statistics and time-series snapshots.
 
-Key methods (described conceptually):
-- openPosition(request): Validates request fields, checks risk limits, begins transaction, persists new position, initializes state, commits transaction.
-- updatePosition(id, changes): Applies allowed state transitions, recalculates metrics, begins transaction, persists updates, commits transaction.
-- closePosition(id): Begins transaction, computes final P&L, applies fees/commissions, updates status, archives if needed, commits transaction.
-- getPositions(filters): Queries positions with filters, enriches with computed metrics.
-- getPositionById(id): Retrieves single position with full context.
-- calculatePnL(position): Computes realized/unrealized P&L using entry/exit prices, quantity, fees, and currency conversion.
-- normalizeCurrency(amount, fromCurrency, toCurrency): Converts amounts to reporting currency using exchange rates.
-- applyLeverageAdjustment(exposure, leverage): Adjusts margin and exposure based on leverage.
-- enforceRiskRules(position, portfolio): Checks drawdown, concentration, and per-position limits.
-- correlatePositions(groupBy): Groups positions by symbol or strategy and aggregates metrics.
-- generateReport(period, metrics): Produces summary and time-series data for dashboards.
-- executeTransaction(operation): Manages transaction lifecycle for complex multi-step operations.
+Key methods (optimized):
+- openPosition(request): Streamlined validation, optimized risk limit checks, efficient transaction management.
+- updatePosition(id, changes): Optimized state transition validation, efficient metric recalculation.
+- closePosition(id): Streamlined final P&L computation, optimized fee application, efficient status updates.
+- getPositions(filters): Optimized querying with improved filtering and caching.
+- getPositionById(id): Efficient single position retrieval with optimized context loading.
+- calculatePnL(position): Streamlined P&L computation with improved precision handling.
+- normalizeCurrency(amount, fromCurrency, toCurrency): Optimized currency conversion with rate caching.
+- applyLeverageAdjustment(exposure, leverage): Streamlined leverage calculations with improved accuracy.
+- enforceRiskRules(position, portfolio): Optimized risk checks with better performance.
+- correlatePositions(groupBy): Efficient position grouping and metric aggregation.
+- generateReport(period, metrics): Optimized report generation with improved caching.
+- executeTransaction(operation): Streamlined transaction lifecycle management.
 
 Validation rules and business constraints:
-- Required fields: symbol, direction, quantity, entry price, currency, leverage, timestamps.
-- Quantity must be positive; leverage must be within allowed bounds.
-- State transitions: open -> modifying -> closed; invalid transitions rejected.
-- Risk limits: maximum position size, portfolio drawdown thresholds, concentration caps.
-- Currency consistency: P&L normalized to reporting currency before aggregation.
+- Streamlined required fields validation with improved error messages.
+- Optimized quantity and leverage bounds checking.
+- Enhanced state transition validation with better error reporting.
+- Improved risk limit enforcement with more accurate calculations.
+- Optimized currency consistency checks with better precision handling.
 
 Multi-currency considerations:
-- Exchange rate source and timestamping for accurate conversions.
-- Handling rounding and precision consistently across calculations.
-- Currency mismatch detection and resolution strategies.
+- Optimized exchange rate source management with improved timestamping.
+- Enhanced rounding and precision handling across calculations.
+- Improved currency mismatch detection and resolution strategies.
 
 Leverage adjustments:
-- Exposure scaling proportional to leverage.
-- Margin requirement calculations considering leverage and asset volatility.
-- Risk limit checks after leverage application.
+- Streamlined exposure scaling proportional to leverage.
+- Optimized margin requirement calculations with improved volatility handling.
+- Enhanced risk limit checks after leverage application.
 
 Correlation handling:
-- Grouping by symbol or strategy to compute aggregated exposure and P&L.
-- Deduplication and conflict resolution when merging correlated positions.
+- Optimized grouping by symbol or strategy with improved aggregation.
+- Enhanced deduplication and conflict resolution for correlated positions.
 
 Report generation:
-- Aggregating daily P&L, cumulative returns, drawdowns, Sharpe-like metrics.
-- Export formats suitable for dashboards and analytics.
+- Streamlined daily P&L, cumulative returns, and drawdown calculations.
+- Optimized time-series snapshot generation for dashboards.
+- Improved export formats with better compatibility.
 
 Enhanced transaction handling:
-- Atomic operations ensure data consistency across position and transaction repositories.
-- Rollback capabilities for failed operations prevent partial updates.
-- Coordinated updates maintain referential integrity between related entities.
+- Optimized atomic operations with improved data consistency.
+- Enhanced rollback capabilities with better error recovery.
+- Streamlined coordinated updates with improved referential integrity.
 
 ```mermaid
 flowchart TD
-Start(["Start Operation"]) --> Validate["Validate Inputs<br/>and Business Rules"]
+Start(["Start Operation"]) --> Validate["Validate Inputs<br/>(Streamlined)"]
 Validate --> Valid{"Valid?"}
-Valid --> |No| Error["Return Validation Error"]
-Valid --> |Yes| BeginTx["Begin Transaction"]
-BeginTx --> Compute["Compute Metrics<br/>and Apply Adjustments"]
-Compute --> ExecuteOps["Execute Database Operations"]
+Valid --> |No| Error["Return Validation Error<br/>(Improved)"]
+Valid --> |Yes| BeginTx["Begin Transaction<br/>(Optimized)"]
+BeginTx --> Compute["Compute Metrics<br/>(Efficient)"]
+Compute --> ExecuteOps["Execute Database Operations<br/>(Optimized)"]
 ExecuteOps --> Success{"All Operations<br/>Successful?"}
-Success --> |No| Rollback["Rollback Transaction"]
-Rollback --> TxError["Return Transaction Error"]
-Success --> |Yes| Commit["Commit Transaction"]
-Commit --> Success["Return Result"]
+Success --> |No| Rollback["Rollback Transaction<br/>(Enhanced)"]
+Rollback --> TxError["Return Transaction Error<br/>(Better Handling)"]
+Success --> |Yes| Commit["Commit Transaction<br/>(Optimized)"]
+Commit --> Success["Return Result<br/>(Improved)"]
 Error --> End(["End"])
 TxError --> End
 Success --> End
@@ -241,23 +243,23 @@ Success --> End
 
 ### PositionRepository
 Responsibilities:
-- CRUD operations for positions with enhanced transaction support.
-- Querying with filters and sorting.
-- Batch updates and transactions where supported.
-- Extending BaseRepository for common persistence patterns.
+- Optimized CRUD operations for positions with enhanced transaction support.
+- Streamlined querying with improved filters and sorting performance.
+- Enhanced batch updates and transactions with better resource management.
+- Improved BaseRepository extension for common persistence patterns.
 
 Integration points:
-- Uses db-service for database interactions.
-- Implements BaseRepository methods for standardized behavior.
-- Coordinates with TransactionRepository for atomic operations.
+- Optimized db-service usage for database interactions.
+- Enhanced BaseRepository method implementations for standardized behavior.
+- Improved coordination with TransactionRepository for atomic operations.
 
 Example operations:
-- create(position): Inserts a new position record within transaction context.
-- update(id, changes): Updates existing position fields atomically within transaction.
-- delete(id): Removes position record with transaction safety.
-- findById(id): Retrieves a single position.
-- findByFilters(filters): Returns filtered list of positions.
-- batchUpdate(ids, changes): Applies bulk updates efficiently within transaction scope.
+- create(position): Optimized insertion within transaction context.
+- update(id, changes): Streamlined field updates with transaction safety.
+- delete(id): Efficient removal with transaction safety.
+- findById(id): Optimized single position retrieval.
+- findByFilters(filters): Streamlined filtered list retrieval.
+- batchUpdate(ids, changes): Enhanced bulk updates with improved efficiency.
 
 **Section sources**
 - [PositionRepository.js](file://features/positions/PositionRepository.js)
@@ -266,34 +268,34 @@ Example operations:
 
 ### TransactionRepository
 Responsibilities:
-- Provides atomic transaction operations for complex position workflows.
-- Manages transaction lifecycle: begin, commit, rollback.
-- Coordinates updates across multiple repositories.
-- Ensures data consistency and referential integrity.
-- Handles error scenarios and automatic rollback on failures.
+- Optimized atomic transaction operations for complex position workflows.
+- Enhanced transaction lifecycle management with improved error handling.
+- Streamlined coordination across multiple repositories.
+- Improved data consistency and referential integrity enforcement.
+- Enhanced error scenarios and automatic rollback mechanisms.
 
 Key capabilities:
-- beginTransaction(): Initiates a new transaction context.
-- commitTransaction(): Commits all pending operations successfully.
-- rollbackTransaction(): Rolls back all operations in case of failure.
-- executeInTransaction(operation): Executes a function within transaction context.
-- addOperation(operation): Registers operations for coordinated execution.
+- beginTransaction(): Optimized transaction context initiation.
+- commitTransaction(): Streamlined successful operation commitment.
+- rollbackTransaction(): Enhanced failure rollback with better recovery.
+- executeInTransaction(operation): Optimized function execution within transaction context.
+- addOperation(operation): Streamlined operation registration for coordinated execution.
 
 Integration benefits:
-- Prevents partial updates during complex position operations.
-- Maintains consistency between positions and related transactions.
-- Simplifies error handling and recovery mechanisms.
-- Improves reliability of multi-step business processes.
+- Prevented partial updates during complex position operations with improved reliability.
+- Maintained consistency between positions and related transactions with better performance.
+- Simplified error handling and recovery mechanisms with enhanced robustness.
+- Improved reliability of multi-step business processes with optimized execution.
 
 **Section sources**
 - [TransactionRepository.js](file://features/positions/TransactionRepository.js)
 
 ### UI Integration (Pages)
-- trade-detail-page.js: Displays detailed view of a single position, calling service methods to fetch and update position data with transaction safety.
-- trades-page.js: Lists active positions with filters and pagination, leveraging service methods for querying and computed metrics.
-- past-page.js: Shows historical/closed positions, aggregating results for reporting.
+- trade-detail-page.js: Displays detailed view of a single position with optimized service calls and improved error handling.
+- trades-page.js: Lists active positions with enhanced filtering and pagination, leveraging optimized service methods.
+- past-page.js: Shows historical/closed positions with improved aggregation for reporting.
 
-These pages consume formatted outputs from the service and use format.js helpers for display.
+These pages consume optimized formatted outputs from the service and use format.js helpers for display with better performance.
 
 **Section sources**
 - [trade-detail-page.js](file://features/positions/trade-detail-page.js)
@@ -303,15 +305,15 @@ These pages consume formatted outputs from the service and use format.js helpers
 
 ## Dependency Analysis
 The Positions Service Layer depends on:
-- PositionRepository for persistence with enhanced transaction support.
-- TransactionRepository for atomic operation coordination.
-- BaseRepository for shared repository behaviors.
-- db-service for database access.
-- format.js for number and currency formatting.
+- PositionRepository for optimized persistence with enhanced transaction support.
+- TransactionRepository for efficient atomic operation coordination.
+- BaseRepository for shared repository behaviors with improved performance.
+- db-service for optimized database access.
+- format.js for number and currency formatting with better efficiency.
 
 ```mermaid
 graph LR
-PS["positions-service.js"] --> PR["PositionRepository.js"]
+PS["positions-service.js<br/>(Refactored)"] --> PR["PositionRepository.js"]
 PS --> TR["TransactionRepository.js"]
 PR --> BR["BaseRepository.js"]
 TR --> BR
@@ -337,24 +339,24 @@ PS --> FMT["format.js"]
 - [format.js](file://shared/lib/format.js)
 
 ## Performance Considerations
-- Minimize redundant computations by caching derived metrics and refreshing on relevant updates.
-- Use batch operations for bulk updates to reduce database round-trips.
-- Defer heavy computations (e.g., report generation) to background tasks or on-demand triggers.
-- Optimize queries with appropriate filters and indexes at the repository level.
-- Normalize currencies once per operation and reuse exchange rates within a transaction scope.
-- Leverage transaction batching to reduce network overhead and improve consistency.
-- Implement connection pooling for database operations within transactions.
-- Monitor transaction duration and optimize long-running operations.
+- **Optimized computations**: Reduced redundant calculations through improved caching and memoization strategies.
+- **Enhanced batching**: More efficient batch operations for bulk updates with reduced database round-trips.
+- **Improved query optimization**: Better filtering and indexing at the repository level for faster data retrieval.
+- **Resource management**: Optimized currency normalization with better exchange rate caching within transaction scopes.
+- **Transaction efficiency**: Streamlined transaction batching to reduce network overhead and improve consistency.
+- **Connection pooling**: Enhanced connection pooling for database operations within transactions.
+- **Monitoring**: Improved transaction duration monitoring and optimization of long-running operations.
+- **Memory management**: Better memory usage through optimized object creation and garbage collection.
 
 ## Troubleshooting Guide
 Common issues and resolutions:
-- Validation errors: Ensure required fields are present and within allowed ranges; check business rule constraints like leverage bounds and quantity positivity.
-- State transition failures: Verify current position status and allowed transitions; log detailed error messages for debugging.
-- Currency conversion discrepancies: Confirm exchange rate source and timestamps; handle rounding consistently.
-- Performance bottlenecks: Profile repository queries; consider batching and caching strategies.
-- Persistence failures: Inspect database connectivity and transaction logs; verify schema compatibility.
-- Transaction failures: Check for deadlock conditions, timeout issues, and constraint violations; implement retry logic for transient failures.
-- Data inconsistency: Verify transaction boundaries and ensure all related operations are included in the same transaction context.
+- **Validation errors**: Check streamlined validation logic and improved error messages; verify required fields and business rule constraints.
+- **State transition failures**: Review enhanced state transition validation; check current position status and allowed transitions with better error logging.
+- **Currency conversion discrepancies**: Verify optimized exchange rate source and timestamps; ensure consistent rounding and precision handling.
+- **Performance bottlenecks**: Profile optimized repository queries; review batching and caching strategies for further improvements.
+- **Persistence failures**: Inspect database connectivity and transaction logs; verify schema compatibility with improved error reporting.
+- **Transaction failures**: Check for deadlock conditions, timeout issues, and constraint violations with enhanced retry logic for transient failures.
+- **Data inconsistency**: Verify optimized transaction boundaries and ensure all related operations are included in the same transaction context.
 
 **Section sources**
 - [positions-service.js](file://features/positions/positions-service.js)
@@ -363,33 +365,33 @@ Common issues and resolutions:
 - [db-service.js](file://shared/db/db-service.js)
 
 ## Conclusion
-The Positions Service Layer centralizes business logic for position lifecycle management, P&L calculations, multi-currency handling, leverage adjustments, and risk enforcement. With enhanced transaction handling and improved integration with the TransactionRepository, it provides robust data consistency and atomic operations. The service coordinates with repositories for persistence and provides formatted outputs to UI components. By adhering to strict validation and business rules, it ensures reliable and auditable position operations across the application with improved reliability through transaction management.
+The Positions Service Layer has been significantly refactored to improve code quality, performance, and maintainability while preserving core functionality. The optimized service layer centralizes business logic for position lifecycle management, P&L calculations, multi-currency handling, leverage adjustments, and risk enforcement with enhanced transaction handling and improved integration with the TransactionRepository. The refactoring resulted in streamlined operations, better resource management, and improved overall system reliability. The service coordinates efficiently with repositories for persistence and provides optimized formatted outputs to UI components, ensuring reliable and auditable position operations across the application with enhanced performance through transaction management.
 
 ## Appendices
 
 ### Example Scenarios
 
-- Calculating position metrics:
-  - Compute unrealized P&L using current market price, entry price, quantity, and fees.
-  - Normalize P&L to reporting currency using exchange rates.
-  - Adjust exposure and margin requirements based on leverage.
+- **Calculating position metrics**:
+  - Optimized unrealized P&L computation using current market price, entry price, quantity, and fees.
+  - Streamlined P&L normalization to reporting currency using cached exchange rates.
+  - Efficient exposure and margin requirement adjustments based on leverage.
 
-- Managing position states with transactions:
-  - Open a position with validated inputs and initial metrics within a transaction.
-  - Update position parameters while enforcing allowed transitions with transaction safety.
-  - Close a position, finalize P&L, and archive if necessary within an atomic transaction.
+- **Managing position states with transactions**:
+  - Optimized position opening with streamlined validation and initial metrics within efficient transactions.
+  - Enhanced position parameter updates with improved state transition enforcement and transaction safety.
+  - Streamlined position closing with optimized final P&L calculation and archival within atomic transactions.
 
-- Handling position correlations:
-  - Group positions by symbol or strategy.
-  - Aggregate exposure and P&L across correlated groups.
-  - Resolve conflicts and deduplicate overlapping positions.
+- **Handling position correlations**:
+  - Optimized position grouping by symbol or strategy with improved aggregation.
+  - Enhanced exposure and P&L aggregation across correlated groups with better performance.
+  - Improved conflict resolution and deduplication for overlapping positions.
 
-- Generating performance reports:
-  - Summarize daily P&L, cumulative returns, and drawdowns.
-  - Provide time-series snapshots for dashboard visualization.
-  - Export data in formats compatible with analytics tools.
+- **Generating performance reports**:
+  - Streamlined daily P&L, cumulative returns, and drawdown calculations with better caching.
+  - Optimized time-series snapshot generation for dashboard visualization.
+  - Enhanced export formats with improved compatibility and performance.
 
-- Transaction-based operations:
-  - Execute complex multi-step operations atomically using transaction coordination.
-  - Handle rollback scenarios gracefully when any step fails.
-  - Maintain data consistency across position and transaction repositories.
+- **Transaction-based operations**:
+  - Optimized complex multi-step operations with improved transaction coordination.
+  - Enhanced rollback scenario handling with better error recovery mechanisms.
+  - Streamlined data consistency maintenance across position and transaction repositories.

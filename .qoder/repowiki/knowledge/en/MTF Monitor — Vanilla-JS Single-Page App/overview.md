@@ -1,1 +1,1 @@
-Root shell that bootstraps the MTF Profit Tracker SPA by loading shared runtime, feature pages, and build scripts into a single HTML document served via http-server.
+Root shell that wires the shared runtime, feature pages, and build/dev tooling into a single MTF Monitor SPA served via http-server.

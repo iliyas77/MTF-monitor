@@ -6,4 +6,5 @@ scope:
 source_files: []
 depends_on: []
 related_to:
-    - path: features/positions
+    - path: features/shared_components
+    - path: shared_runtime

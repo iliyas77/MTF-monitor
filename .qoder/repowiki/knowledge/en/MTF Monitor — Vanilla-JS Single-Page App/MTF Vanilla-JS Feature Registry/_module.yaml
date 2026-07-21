@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: features
-title: Client-Side Feature Pages & Shared UI Primitives
+title: MTF Vanilla-JS Feature Registry
 scope:
     - features/
     - components/

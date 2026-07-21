@@ -1,0 +1,1 @@
+Aggregates vanilla-JS feature pages and shared HTML component builders that register themselves on a global MTFRegister/MTFComponents registry consumed by the app shell.

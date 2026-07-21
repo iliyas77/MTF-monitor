@@ -3,7 +3,7 @@ schema_version: 1
 locale: en-US
 branch: save/2026-07-20-0038
 nodes_managed: true
-exported_at: "2026-07-21T18:11:28Z"
+exported_at: "2026-07-21T18:40:26Z"
 modules:
     "":
         dir_name: MTF Monitor — Vanilla-JS Single-Page App
@@ -41,10 +41,11 @@ modules:
         depends_on: []
         related_to:
             - path: features
+            - path: features/shared_components
             - path: shared_runtime
     features:
-        dir_name: Client-Side Feature Pages & Shared UI Primitives
-        title: Client-Side Feature Pages & Shared UI Primitives
+        dir_name: MTF Vanilla-JS Feature Registry
+        title: MTF Vanilla-JS Feature Registry
         scope:
             - features/
             - components/
@@ -67,7 +68,8 @@ modules:
         children: []
         depends_on: []
         related_to:
-            - path: features/positions
+            - path: features/shared_components
+            - path: shared_runtime
     features/more:
         dir_name: More Hub & Settings Feature
         title: More Hub & Settings Feature
@@ -76,19 +78,16 @@ modules:
         source_files: []
         children: []
         depends_on: []
-        related_to:
-            - path: shared_runtime
+        related_to: []
     features/positions:
-        dir_name: Positions & Trades Feature (Open_Past List + Detail Sheet)
-        title: Positions & Trades Feature (Open/Past List + Detail Sheet)
+        dir_name: Positions & Trades Feature (Open_Past Lists + Detail Sheet)
+        title: Positions & Trades Feature (Open/Past Lists + Detail Sheet)
         scope:
             - features/positions/
         source_files: []
         children: []
         depends_on: []
-        related_to:
-            - path: features/common
-            - path: shared_runtime
+        related_to: []
     features/shared_components:
         dir_name: Shared HTML Component Builders (Card, Grid, MetricsCell)
         title: Shared HTML Component Builders (Card, Grid, MetricsCell)
@@ -97,7 +96,9 @@ modules:
         source_files: []
         children: []
         depends_on: []
-        related_to: []
+        related_to:
+            - path: build_and_scripts
+            - path: features/common
     features/watchlist:
         dir_name: Watchlist Feature (NSE Quotes & Stock Watch)
         title: Watchlist Feature (NSE Quotes & Stock Watch)
@@ -120,6 +121,5 @@ modules:
         depends_on: []
         related_to:
             - path: build_and_scripts
-            - path: features/more
-            - path: features/positions
+            - path: features/common
             - path: features/watchlist

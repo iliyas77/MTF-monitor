@@ -7,4 +7,5 @@ source_files: []
 depends_on: []
 related_to:
     - path: features
+    - path: features/shared_components
     - path: shared_runtime
