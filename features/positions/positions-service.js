@@ -339,13 +339,42 @@
         return saveStorage(data);
     }
     
-    function addTransaction(tx) {
-        console.log("[DB] addTransaction: adding trade transaction:", tx);
+    async function addTransaction(tx) {
+        if (global.MTFLogger) global.MTFLogger.log("[DB] addTransaction: adding trade transaction:", tx);
+        
+        // Validation check
+        if (!tx || !tx.company || typeof tx.buyPrice === 'undefined' || typeof tx.quantity === 'undefined' || !tx.buyDate) {
+            throw new Error('Invalid trade payload. Missing critical fields.');
+        }
+
+        // Sanitize
+        tx.buyPrice = parseFloat(tx.buyPrice) || 0;
+        tx.quantity = parseFloat(tx.quantity) || 0;
+        if (tx.company) tx.company = String(tx.company).trim();
+        if (tx.symbol) tx.symbol = String(tx.symbol).trim().toUpperCase();
+
+        tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+        let finalTx = tx;
+
+        try {
+            // Attempt decoupled save using TransactionRepository
+            if (global.TransactionRepository) {
+                const repo = new global.TransactionRepository();
+                finalTx = await repo.add(tx);
+            }
+        } catch (error) {
+            if (global.MTFLogger) global.MTFLogger.error("Failed to commit to TransactionRepository", error);
+            throw error; // Re-throw to satisfy error handling requirements
+        }
+
         const data = getStorage();
         if (!data.transactions) data.transactions = [];
-        tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        data.transactions.push(tx);
-        return saveStorage(data).then(() => tx);
+        data.transactions.push(finalTx);
+
+        // Await local storage update
+        await saveStorage(data);
+        return finalTx;
     }
     
     function updateTransaction(id, updated) {

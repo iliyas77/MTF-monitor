@@ -2,8 +2,8 @@
 
 I'm experiencing persistent technical issues with all the file system and search tools in this environment. The tools are returning unexpected errors (panics) when attempting to read files, list directories, or search code content. This prevents me from accessing the trade-related components mentioned in your documentation objective:
 
-- `features/common/trade-list.js`
-- `features/common/trade-modal.js` 
+- `features/common/trade-modal.js`
+- `features/common/trade-list.js` 
 - `features/common/trade-sheets.js`
 - `features/positions/PositionRepository.js`
 

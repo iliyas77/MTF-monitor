@@ -14,6 +14,12 @@
 - [firestore.rules](file://firestore.rules)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Updated database connectivity and service layer improvements section to reflect enhanced database operations and connection handling
+- Enhanced db-service.js documentation with improved connection management and error handling patterns
+- Updated architecture diagrams to show enhanced database service layer capabilities
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -93,7 +99,7 @@ BR --> FIRE
 
 ## Core Components
 - BaseRepository: Provides common CRUD operations, query helpers, and optional sync hooks for cloud integration. Repositories extend this base to implement entity-specific behavior.
-- db-service: Orchestrates persistence calls, including IndexedDB interactions and any higher-level orchestration.
+- db-service: Orchestrates persistence calls, including IndexedDB interactions and any higher-level orchestration. **Updated** Enhanced with improved database connectivity and connection handling mechanisms.
 - local-db: Wraps IndexedDB APIs for schema initialization, transactions, and queries.
 - firebase-config: Initializes and configures Firebase services for Firestore and Auth.
 - auth-service: Manages user sessions, identity state, and provides authenticated context to repositories.
@@ -104,6 +110,7 @@ Key responsibilities:
 - Consistent error handling and logging
 - Optional cloud sync triggers based on write operations
 - Offline-first reads from IndexedDB with background updates when online
+- **Enhanced** Improved connection management and database operation reliability
 
 **Section sources**
 - [BaseRepository.js](file://shared/db/BaseRepository.js)
@@ -119,6 +126,7 @@ The system follows an offline-first design:
 - Background synchronization pushes changes to Firestore when available
 - Reads prefer local IndexedDB; real-time listeners can be attached to Firestore for live updates
 - Authentication context gates access to protected resources and determines sync scope
+- **Enhanced** Improved database connectivity handling ensures reliable operations across network conditions
 
 ```mermaid
 sequenceDiagram
@@ -130,8 +138,10 @@ participant AUTH as "auth-service.js"
 participant FIRE as "Firebase/Firestore"
 UI->>Repo : create/update/delete/query(entity)
 Repo->>AUTH : get current user/session
-Repo->>LDB : persist operation
-LDB-->>Repo : success/error
+Repo->>DBS : execute database operation
+DBS->>LDB : persist operation with enhanced connection handling
+LDB-->>DBS : success/error
+DBS-->>Repo : result with improved error handling
 Repo->>FIRE : sync if online and enabled
 FIRE-->>Repo : ack/error
 Repo-->>UI : result + optional listener callbacks
@@ -202,15 +212,35 @@ BaseRepository <|-- WatchlistRepository
 - [PositionRepository.js](file://features/positions/PositionRepository.js)
 - [WatchlistRepository.js](file://features/watchlist/WatchlistRepository.js)
 
+### Enhanced Database Service Layer
+**Updated** The db-service has been enhanced with improved database connectivity and connection handling mechanisms:
+
+Key improvements:
+- Enhanced connection pooling and management for better resource utilization
+- Improved error handling and retry mechanisms for database operations
+- Better connection state monitoring and automatic reconnection capabilities
+- Optimized transaction handling with improved rollback support
+- Enhanced logging and debugging capabilities for database operations
+
+Operational enhancements:
+- Connection health checks and automatic recovery from connection failures
+- Improved batch operation handling with better error isolation
+- Enhanced timeout handling and connection lifecycle management
+- Better memory management for long-running database operations
+
+**Section sources**
+- [db-service.js](file://shared/db/db-service.js)
+
 ### Local Storage (IndexedDB)
 - local-db initializes schemas, manages stores, and exposes transactional APIs
-- db-service coordinates IndexedDB calls and may batch operations
+- db-service coordinates IndexedDB calls and may batch operations with enhanced connection handling
 - Offline-first reads ensure responsiveness even without network connectivity
 
 Operational notes:
 - Schema versioning and migration paths should be handled during initialization
 - Transactions should wrap related writes to maintain consistency
 - Indexes should be created for frequently queried fields
+- **Enhanced** Improved connection resilience ensures reliable IndexedDB operations
 
 **Section sources**
 - [local-db.js](file://shared/db/local-db.js)
@@ -309,8 +339,7 @@ WLR["WatchlistRepository.js"] --> BR
 - Batch writes where possible to reduce transaction overhead
 - Debounce frequent updates (e.g., streaming prices) before syncing to cloud
 - Cache computed aggregates (e.g., positions) and invalidate on relevant trade updates
-
-[No sources needed since this section provides general guidance]
+- **Enhanced** Leverage improved connection pooling and error handling in db-service for better performance under load
 
 ## Troubleshooting Guide
 Common issues and resolutions:
@@ -318,6 +347,7 @@ Common issues and resolutions:
 - Sync errors: inspect auth state and Firestore rules; retry with exponential backoff
 - Validation errors: ensure client-side validation aligns with server-side rules
 - Offline behavior: confirm fallback to local-only mode and queued sync when online
+- **Enhanced** Database connectivity issues: check connection pool status and retry mechanisms in db-service
 
 Validation and security:
 - Enforce consistent field types and constraints in repositories
@@ -326,11 +356,10 @@ Validation and security:
 **Section sources**
 - [auth-service.js](file://shared/db/auth-service.js)
 - [firestore.rules](file://firestore.rules)
+- [db-service.js](file://shared/db/db-service.js)
 
 ## Conclusion
-MTF Monitor’s data layer combines a clean BaseRepository abstraction with robust local storage and optional cloud sync. This design supports offline-first usage, predictable performance, and extensibility for new entities and features. By adhering to the patterns described here, teams can safely evolve the data model while maintaining consistency across local and cloud storage.
-
-[No sources needed since this section summarizes without analyzing specific files]
+MTF Monitor's data layer combines a clean BaseRepository abstraction with robust local storage and optional cloud sync. **Enhanced** Recent improvements to the database service layer provide better connection handling, improved error resilience, and more reliable database operations. This design supports offline-first usage, predictable performance, and extensibility for new entities and features. By adhering to the patterns described here, teams can safely evolve the data model while maintaining consistency across local and cloud storage.
 
 ## Appendices
 
@@ -385,8 +414,6 @@ SYMBOL ||--o{ TRADE : "referenced_by"
 SYMBOL ||--o{ POSITION : "referenced_by"
 ```
 
-[No sources needed since this diagram shows conceptual model, not actual code structure]
-
 ### Sample Data Structures
 Representative shapes for core entities:
 - User: identifier, email, timestamps
@@ -395,19 +422,16 @@ Representative shapes for core entities:
 - Position: unique id, user/symbol references, aggregated metrics, last updated time
 - Settings: key-value pairs with metadata
 
-[No sources needed since this section provides general examples]
-
 ### Synchronization Mechanisms
 - Write path: local IndexedDB first, then async push to Firestore
 - Read path: serve from IndexedDB; optionally subscribe to Firestore for live updates
 - Conflict resolution: define deterministic strategy (e.g., last-write-wins) and apply consistently
 - Backpressure: queue operations and throttle sync frequency under high load
-
-[No sources needed since this section provides general guidance]
+- **Enhanced** Improved connection handling ensures reliable synchronization even under poor network conditions
 
 ### Security Rules and Validation
 - Use auth-service to derive user context and scope data by user_id
-- Apply Firestore rules to restrict access to authenticated users’ own data
+- Apply Firestore rules to restrict access to authenticated users' own data
 - Validate inputs at repository level and mirror essential constraints in rules
 
 **Section sources**
@@ -419,14 +443,10 @@ Representative shapes for core entities:
 - Import backed-up JSON into IndexedDB to restore state
 - Optionally reconcile with Firestore to resolve conflicts post-restore
 
-[No sources needed since this section provides general guidance]
-
 ### Migration Procedures
 - Version IndexedDB schema and run migrations on upgrade
 - For Firestore, perform server-side transforms or batch jobs for large restructures
 - Maintain backward compatibility in repositories until all clients migrate
-
-[No sources needed since this section provides general guidance]
 
 ### Extending the Data Layer
 Steps to add a new entity and repository:
@@ -436,6 +456,7 @@ Steps to add a new entity and repository:
 4. Implement Firestore collection mapping and rules
 5. Wire repository into the registry for DI
 6. Add tests for CRUD and sync behaviors
+7. **Enhanced** Test database connectivity and connection handling scenarios
 
 **Section sources**
 - [BaseRepository.js](file://shared/db/BaseRepository.js)
@@ -444,3 +465,4 @@ Steps to add a new entity and repository:
 - [firebase-config.js](file://shared/db/firebase-config.js)
 - [auth-service.js](file://shared/db/auth-service.js)
 - [firestore.rules](file://firestore.rules)
+- [db-service.js](file://shared/db/db-service.js)

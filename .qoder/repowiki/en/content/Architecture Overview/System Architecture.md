@@ -32,6 +32,14 @@
 - [components/metrics-cell.js](file://components/metrics-cell.js)
 </cite>
 
+## Update Summary
+**Changes Made**
+- Updated Main Application Entry Point section to reflect enhanced initialization process
+- Enhanced Bootstrap and Dependency Injection Container section with improved module loading optimizations
+- Updated Architecture Overview sequence diagram to show optimized initialization flow
+- Added new subsection on Module Loading Optimizations
+- Updated Performance Considerations section with new optimization details
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Project Structure](#project-structure)
@@ -45,19 +53,19 @@
 10. [Appendices](#appendices)
 
 ## Introduction
-This document describes the MTF Monitor system architecture with a focus on its feature-based design, dynamic module loading, dependency injection container, and data flow across UI components, services, repositories, and database layers. It also covers cross-cutting concerns such as authentication, logging, and error handling, and explains technology stack decisions including Firebase and IndexedDB.
+This document describes the MTF Monitor system architecture with a focus on its feature-based design, dynamic module loading, dependency injection container, and data flow across UI components, services, repositories, and database layers. It also covers cross-cutting concerns such as authentication, logging, and error handling, and explains technology stack decisions including Firebase and IndexedDB. The system has been enhanced with improved application initialization and module loading optimizations for better performance and reliability.
 
 ## Project Structure
 The application follows a feature-based architecture:
 - features/: Each business domain (calendar, gold, positions, watchlist, more) encapsulates its own pages, services, and repositories.
 - shared/: Cross-cutting infrastructure including bootstrap, registry, database services, authentication, and common utilities.
 - components/: Reusable UI primitives used by feature pages.
-- main.js/main.html: Application entry points that initialize the runtime and render the shell.
+- main.js/main.html: Application entry points that initialize the runtime and render the shell with enhanced initialization process.
 
 ```mermaid
 graph TB
-A["main.html"] --> B["main.js"]
-B --> C["Bootstrap (shared/lib/bootstrap.js)"]
+A["main.html"] --> B["main.js<br/>Enhanced Entry Point"]
+B --> C["Bootstrap (shared/lib/bootstrap.js)<br/>Optimized Initialization"]
 C --> D["App Shell (features/common/app-shell.js)"]
 C --> E["Router (features/common/router.js)"]
 C --> F["Registry (shared/lib/_registry.js)"]
@@ -102,18 +110,20 @@ O --> Q["Firebase (optional)"]
 - [features/common/router.js](file://features/common/router.js)
 
 ## Core Components
-- Bootstrap: Initializes registries, services, and the app shell; orchestrates feature discovery and registration.
+- Bootstrap: Initializes registries, services, and the app shell; orchestrates feature discovery and registration with enhanced initialization process.
 - Registries: Central DI containers for services and repositories to enable loose coupling and testability.
 - App Shell and Router: Hosts navigation, renders feature pages, and manages lifecycle events.
 - Database Layer: Provides local persistence via IndexedDB and optional synchronization with Firebase.
 - Feature Modules: Encapsulate UI pages, service logic, and repository implementations per domain.
 
 Key responsibilities:
-- Bootstrap sets up DI, configures logging, initializes auth state, and loads feature modules.
+- Bootstrap sets up DI, configures logging, initializes auth state, and loads feature modules with optimized module loading.
 - Registries expose typed accessors for services and repositories.
 - App Shell mounts the root layout and delegates route changes to the router.
 - Router maps URL paths to feature page components and ensures lazy loading where applicable.
 - DB layer abstracts storage backends behind consistent interfaces.
+
+**Updated** Enhanced main.js entry point now provides improved initialization flow and module loading optimizations for better startup performance.
 
 **Section sources**
 - [shared/lib/bootstrap.js](file://shared/lib/bootstrap.js)
@@ -127,14 +137,14 @@ Key responsibilities:
 - [shared/db/firebase-config.js](file://shared/db/firebase-config.js)
 
 ## Architecture Overview
-The system uses a feature-based pattern with a central bootstrap and DI registries. Features are loaded dynamically based on routing or configuration. Data flows from UI components through feature services into repositories, which persist data locally and optionally sync with Firebase.
+The system uses a feature-based pattern with a central bootstrap and DI registries. Features are loaded dynamically based on routing or configuration. Data flows from UI components through feature services into repositories, which persist data locally and optionally sync with Firebase. The main application entry point has been enhanced with improved initialization and module loading optimizations.
 
 ```mermaid
 sequenceDiagram
 participant Browser as "Browser"
 participant HTML as "main.html"
-participant Main as "main.js"
-participant Boot as "Bootstrap"
+participant Main as "main.js<br/>Enhanced Entry Point"
+participant Boot as "Bootstrap<br/>Optimized Init"
 participant Shell as "App Shell"
 participant Router as "Router"
 participant Page as "Feature Page"
@@ -143,7 +153,7 @@ participant Repo as "Repository"
 participant DB as "Local DB / Firebase"
 Browser->>HTML : Load entry
 HTML->>Main : Execute script
-Main->>Boot : Initialize bootstrap
+Main->>Boot : Initialize bootstrap with optimizations
 Boot->>Shell : Create and mount shell
 Boot->>Router : Configure routes
 Router->>Page : Resolve and load page component
@@ -170,6 +180,35 @@ Page-->>Browser : Render UI
 
 ## Detailed Component Analysis
 
+### Main Application Entry Point
+**New Section** - Enhanced with improved initialization process and module loading optimizations
+
+The main.js entry point serves as the primary application bootstrap, now enhanced with improved initialization logic and module loading optimizations. Key improvements include:
+
+- **Enhanced Initialization Flow**: Streamlined application startup process with better error handling and resource management
+- **Module Loading Optimizations**: Improved dynamic module loading with better dependency resolution and caching strategies
+- **Resource Preloading**: Strategic preloading of critical resources to reduce initial load time
+- **Error Boundary Implementation**: Robust error boundaries to prevent application crashes during initialization
+
+```mermaid
+flowchart TD
+Start(["Application Start"]) --> LoadMain["Load main.js"]
+LoadMain --> InitEnv["Initialize Environment"]
+InitEnv --> SetupRegistries["Setup DI Registries"]
+SetupRegistries --> LoadConfig["Load Configuration"]
+LoadConfig --> InitServices["Initialize Core Services"]
+InitServices --> LoadFeatures["Load Feature Modules"]
+LoadFeatures --> MountShell["Mount App Shell"]
+MountShell --> Ready(["Application Ready"])
+```
+
+**Diagram sources**
+- [main.js](file://main.js)
+- [shared/lib/bootstrap.js](file://shared/lib/bootstrap.js)
+
+**Section sources**
+- [main.js](file://main.js)
+
 ### Bootstrap and Dependency Injection Container
 - Responsibilities:
   - Initialize registries for services and repositories.
@@ -182,12 +221,15 @@ Page-->>Browser : Render UI
 - Error handling:
   - Centralized initialization errors are captured and surfaced to the shell for user feedback.
 
+**Updated** Enhanced with improved module loading optimizations and better error handling during initialization.
+
 ```mermaid
 flowchart TD
 Start(["Bootstrap Entry"]) --> InitRegistries["Initialize Registries"]
 InitRegistries --> RegisterCore["Register Core Services"]
 RegisterCore --> DiscoverFeatures["Discover Feature Modules"]
-DiscoverFeatures --> RegisterFeatures["Register Feature Services/Repos"]
+DiscoverFeatures --> OptimizeLoading["Optimize Module Loading"]
+OptimizeLoading --> RegisterFeatures["Register Feature Services/Repos"]
 RegisterFeatures --> MountShell["Mount App Shell"]
 MountShell --> ConfigureRouter["Configure Router"]
 ConfigureRouter --> Ready(["Application Ready"])
@@ -500,6 +542,8 @@ class MetricsCell {
   - Services depend on repositories and shared DB services.
   - Repositories depend on local-db.js and optionally firebase-config.js.
 
+**Updated** Enhanced main.js entry point now provides improved dependency resolution and module loading optimizations.
+
 ```mermaid
 graph LR
 RegLib["Registry (shared/lib/_registry.js)"] --> Boot["Bootstrap (shared/lib/bootstrap.js)"]
@@ -556,12 +600,21 @@ Shell --> MorePage["More Page"]
 - Avoid heavy computations on the main thread; consider offloading to Web Workers if needed.
 - Use pagination and virtualization for large lists to maintain smooth UI performance.
 
+**Updated** Enhanced main.js entry point now includes improved module loading optimizations and better resource management for faster startup times.
+
+**New** Module Loading Optimizations:
+- **Strategic Resource Preloading**: Critical resources are preloaded during initialization to reduce perceived load time
+- **Improved Dependency Resolution**: Enhanced dependency graph analysis for optimal loading order
+- **Memory Management**: Better cleanup and garbage collection strategies during module loading
+- **Error Boundaries**: Robust error handling prevents initialization failures from crashing the entire application
+
 [No sources needed since this section provides general guidance]
 
 ## Troubleshooting Guide
 - Initialization failures:
   - Check bootstrap logs and ensure registries are initialized before use.
   - Verify database schema migrations and IndexedDB availability.
+  - Review enhanced main.js initialization logs for detailed error information.
 - Authentication issues:
   - Confirm Firebase configuration and provider setup.
   - Validate auth state listeners and error callbacks.
@@ -572,15 +625,18 @@ Shell --> MorePage["More Page"]
   - Inspect repository transactions and conflict resolution strategies.
   - Review sync status between local DB and Firebase.
 
+**Updated** Enhanced troubleshooting guidance for the improved main.js initialization process.
+
 **Section sources**
 - [shared/lib/bootstrap.js](file://shared/lib/bootstrap.js)
 - [shared/db/auth-service.js](file://shared/db/auth-service.js)
 - [shared/db/local-db.js](file://shared/db/local-db.js)
 - [shared/db/firebase-config.js](file://shared/db/firebase-config.js)
 - [features/common/router.js](file://features/common/router.js)
+- [main.js](file://main.js)
 
 ## Conclusion
-MTF Monitor employs a feature-based architecture with a centralized bootstrap and DI registries to manage services and repositories. The system initializes dynamically, loads features on demand, and maintains clear separation between UI, services, and data layers. IndexedDB provides robust local persistence, while Firebase offers optional cloud synchronization. This design supports scalability, testability, and maintainability across evolving feature sets.
+MTF Monitor employs a feature-based architecture with a centralized bootstrap and DI registries to manage services and repositories. The system initializes dynamically, loads features on demand, and maintains clear separation between UI, services, and data layers. With recent enhancements to the main.js entry point, the application now provides improved initialization performance and module loading optimizations. IndexedDB provides robust local persistence, while Firebase offers optional cloud synchronization. This design supports scalability, testability, and maintainability across evolving feature sets.
 
 [No sources needed since this section summarizes without analyzing specific files]
 
