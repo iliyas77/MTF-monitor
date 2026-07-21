@@ -1,0 +1,1 @@
+Cross-feature app chrome (bottom bar, header, Cupertino Pane sheets, Bootstrap dialogs) and trade-list / trade-detail sheet components shared by all feature pages.

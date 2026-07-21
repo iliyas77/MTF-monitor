@@ -191,98 +191,41 @@
         return data;
     }
 
-    // ----- getStorage render-frame cache -----
-    // Prevents repeated JSON.parse of localStorage within the same synchronous
-    // render cycle. Invalidated automatically via queueMicrotask after the
-    // current call stack completes, and explicitly on save operations.
+    // ----- getStorage render-frame cache (now purely in-memory) -----
     let _storageCached = null;
-    let _storageCachePending = false;
-
-    function invalidateStorageCache() {
-        _storageCached = null;
-        _storageCachePending = false;
-    }
 
     function getStorage() {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return ensureMoneyData({ transactions: [], marketWatchlist: [] });
-        }
         if (_storageCached) return _storageCached;
+        
+        // Return empty state if nothing is in memory.
+        // The application is responsible for fetching data on-demand from the backend
+        _storageCached = ensureMoneyData({ transactions: [], marketWatchlist: [] });
+        
+        // Proactively clear legacy storage keys to free up space
         try {
-            const raw = localStorage.getItem('mtf_tracker_data');
-            const rawTxs = localStorage.getItem('mtf_transactions');
-            const rawWatchlist = localStorage.getItem('mtf_watchlist');
-            
-            if (raw || rawTxs || rawWatchlist) {
-                let data = ensureMoneyData(raw ? JSON.parse(raw) : {});
-                
-                // Legacy Migration: Port embedded transactions to decoupled store
-                if (Array.isArray(data.transactions) && data.transactions.length > 0 && !rawTxs) {
-                    try { localStorage.setItem('mtf_transactions', JSON.stringify(data.transactions)); } catch (_) {}
-                    const migrated = { ...data };
-                    delete migrated.transactions;
-                    try { localStorage.setItem('mtf_tracker_data', JSON.stringify(migrated)); } catch (_) {}
-                } else if (rawTxs) {
-                    try { data.transactions = JSON.parse(rawTxs); } catch (_) { data.transactions = []; }
-                }
-
-                // Legacy Migration: Port embedded marketWatchlist to decoupled store
-                if (Array.isArray(data.marketWatchlist) && data.marketWatchlist.length > 0 && !rawWatchlist) {
-                    try { localStorage.setItem('mtf_watchlist', JSON.stringify(data.marketWatchlist)); } catch (_) {}
-                    const migrated = { ...data };
-                    delete migrated.marketWatchlist;
-                    try { localStorage.setItem('mtf_tracker_data', JSON.stringify(migrated)); } catch (_) {}
-                } else if (rawWatchlist) {
-                    try { data.marketWatchlist = JSON.parse(rawWatchlist); } catch (_) { data.marketWatchlist = []; }
-                }
-
-                if (Array.isArray(data.transactions)) {
-                    if (!smokeTradesAllowed()) {
-                        const before = data.transactions.length;
-                        stripSmokeTradesFromData(data);
-                        if (data.transactions.length !== before) {
-                            try { localStorage.setItem('mtf_transactions', JSON.stringify(data.transactions)); } catch (_) {}
-                        }
-                    }
-                    _storageCached = data;
-                    if (!_storageCachePending) {
-                        _storageCachePending = true;
-                        queueMicrotask(invalidateStorageCache);
-                    }
-                    return data;
-                }
-            }
-        } catch (_) { /* ignore */ }
-        return ensureMoneyData({ transactions: [], marketWatchlist: [] });
+            localStorage.removeItem('mtf_tracker_data');
+            localStorage.removeItem('mtf_transactions');
+            localStorage.removeItem('mtf_watchlist');
+        } catch (_) {}
+        
+        return _storageCached;
     }
 
     function saveStorageLocal(data) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return;
-        }
-        invalidateStorageCache();
         const payload = ensureMoneyData(data || { transactions: [], marketWatchlist: [] });
         stripSmokeTradesFromData(payload);
         
-        // Decouple Transactions Persistence
-        const transactions = payload.transactions || [];
-        try { localStorage.setItem('mtf_transactions', JSON.stringify(transactions)); } catch (_) {}
+        _storageCached = payload;
         
-        // Decouple Watchlist Persistence
-        const marketWatchlist = payload.marketWatchlist || [];
-        try { localStorage.setItem('mtf_watchlist', JSON.stringify(marketWatchlist)); } catch (_) {}
-        
-        const mainPayload = { ...payload };
-        delete mainPayload.transactions;
-        delete mainPayload.marketWatchlist;
-        
-        localStorage.setItem('mtf_tracker_data', JSON.stringify(mainPayload));
+        // Ensure legacy keys are removed during save operations as well
+        try {
+            localStorage.removeItem('mtf_tracker_data');
+            localStorage.removeItem('mtf_transactions');
+            localStorage.removeItem('mtf_watchlist');
+        } catch (_) {}
     }
 
     function saveStorage(data) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return Promise.resolve(true);
-        }
         const payload = ensureMoneyData(data || { transactions: [] });
         stripSmokeTradesFromData(payload);
         
@@ -295,9 +238,6 @@
     }
 
     function applyRemoteStorage(remoteData, remoteVersion) {
-        if (window.AppPermissions?.localDbEnabled === false) {
-            return;
-        }
         const db = global.MTFDb;
         if (db && typeof db.applyRemoteVersion === 'function') {
             db.applyRemoteVersion(remoteVersion);
@@ -339,13 +279,42 @@
         return saveStorage(data);
     }
     
-    function addTransaction(tx) {
-        console.log("[DB] addTransaction: adding trade transaction:", tx);
+    async function addTransaction(tx) {
+        if (global.MTFLogger) global.MTFLogger.log("[DB] addTransaction: adding trade transaction:", tx);
+        
+        // Validation check
+        if (!tx || !tx.company || typeof tx.buyPrice === 'undefined' || typeof tx.quantity === 'undefined' || !tx.buyDate) {
+            throw new Error('Invalid trade payload. Missing critical fields.');
+        }
+
+        // Sanitize
+        tx.buyPrice = parseFloat(tx.buyPrice) || 0;
+        tx.quantity = parseFloat(tx.quantity) || 0;
+        if (tx.company) tx.company = String(tx.company).trim();
+        if (tx.symbol) tx.symbol = String(tx.symbol).trim().toUpperCase();
+
+        tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+
+        let finalTx = tx;
+
+        try {
+            // Attempt decoupled save using TransactionRepository
+            if (global.TransactionRepository) {
+                const repo = new global.TransactionRepository();
+                finalTx = await repo.add(tx);
+            }
+        } catch (error) {
+            if (global.MTFLogger) global.MTFLogger.error("Failed to commit to TransactionRepository", error);
+            throw error; // Re-throw to satisfy error handling requirements
+        }
+
         const data = getStorage();
         if (!data.transactions) data.transactions = [];
-        tx.id = Date.now() + '_' + Math.random().toString(36).substring(2, 6);
-        data.transactions.push(tx);
-        return saveStorage(data).then(() => tx);
+        data.transactions.push(finalTx);
+
+        // Await local storage update
+        await saveStorage(data);
+        return finalTx;
     }
     
     function updateTransaction(id, updated) {

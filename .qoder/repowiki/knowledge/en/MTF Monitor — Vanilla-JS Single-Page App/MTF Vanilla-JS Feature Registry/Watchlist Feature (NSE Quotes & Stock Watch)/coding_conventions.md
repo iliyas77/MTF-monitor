@@ -1,0 +1,5 @@
+- Each file wraps its code in an `(function(global){...})(typeof window !== 'undefined' ? window : globalThis)` IIFE and uses `'use strict'`, keeping all state off the global except explicitly registered symbols.
+- Cross-module contracts are accessed defensively through `global.MTFAppHelpers || {}` / `global.MTFDb || {}` with `typeof x === 'function'` guards before every call, rather than assuming their presence.
+- Side effects are logged via `global.MTFLogger.log/warn/error(...)` with bracketed `[ClassName]` prefixes instead of console calls or thrown errors alone.
+- User-facing text is passed through a local `escapeHtml` helper before being interpolated into innerHTML, and numeric values are formatted with `toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })` for ₹ prices.
+- Public APIs are published both by attaching to `global.MTFAppHelpers.<namespace>` and by calling `global.MTFRegister({ <key>: <object> })` so consumers can discover them either way.

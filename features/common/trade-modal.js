@@ -71,7 +71,6 @@
             : '';
         footer.innerHTML = `${renderAppButtonRow('Cancel', isEdit ? 'Update Trade' : 'Save Trade', {
             actionId: 'txSaveBtn',
-            actionOnClick: 'saveTransaction()',
             cancelOnClick: 'closeTradeModal()',
             rowClass: 'tx-modal-actions'
         })}${deleteBtn}`;
@@ -328,7 +327,7 @@
     }
 
     function attachCalcListeners() {
-        const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage', 'txBroker'];
+        const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage'];
         fields.forEach((id) => {
             const el = document.getElementById(id);
             if (el) {
@@ -338,6 +337,16 @@
                 el.addEventListener('change', updatePreview);
             }
         });
+        
+        const txForm = document.getElementById('txForm');
+        if (txForm && !txForm.dataset.delegatedBroker) {
+            txForm.dataset.delegatedBroker = '1';
+            txForm.addEventListener('change', (e) => {
+                if (e.target && e.target.closest('[data-ref="txBrokerTrigger"]')) {
+                    updatePreview();
+                }
+            });
+        }
         const levEl = document.getElementById('txLeverage');
         if (levEl) {
             levEl.removeEventListener('input', updateLeverageBreakdown);
@@ -549,26 +558,59 @@
             breakdown: calc.breakdown
         };
 
-        const synced = getSyncNote ? getSyncNote() : '';
-        if (editId) {
-            const existingTx = getTransaction(editId);
-            const updates = existingTx && applyVerifiedReset ? applyVerifiedReset(existingTx, finalTx) : finalTx;
-            const saved = await updateTransaction(editId, updates);
-            if (saved) showToast(`Trade updated${synced}!`, 'success');
-            else showToast('Error updating trade.', 'danger');
-        } else {
-            await addTransaction(finalTx);
-            showToast(`Trade saved${synced}!`, 'success');
+        const submitBtn = document.getElementById('txSaveBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.setAttribute('aria-busy', 'true');
+            if (!submitBtn.dataset.originalContent) submitBtn.dataset.originalContent = submitBtn.innerHTML;
+            submitBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Saving...`;
         }
-        TradeSheet.close();
-        if (refreshTradeListViews) refreshTradeListViews();
-        if (renderMoney) renderMoney();
-        if (refreshActiveMoreView) refreshActiveMoreView();
+
+        try {
+            const synced = getSyncNote ? getSyncNote() : '';
+            if (editId) {
+                const existingTx = getTransaction(editId);
+                const updates = existingTx && applyVerifiedReset ? applyVerifiedReset(existingTx, finalTx) : finalTx;
+                const saved = await updateTransaction(editId, updates);
+                if (saved) showToast(`Trade updated${synced}!`, 'success');
+                else throw new Error('Error updating trade.');
+            } else {
+                await addTransaction(finalTx);
+                showToast(`Trade saved${synced}!`, 'success');
+            }
+            TradeSheet.close();
+            if (refreshTradeListViews) refreshTradeListViews();
+            if (renderMoney) renderMoney();
+            if (refreshActiveMoreView) refreshActiveMoreView();
+        } catch (error) {
+            if (global.MTFLogger) global.MTFLogger.error("saveTransaction execution failed", error);
+            showToast(error.message || 'Network or database error saving trade. Please try again.', 'danger');
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.setAttribute('aria-busy', 'false');
+                if (submitBtn.dataset.originalContent) {
+                    submitBtn.innerHTML = submitBtn.dataset.originalContent;
+                }
+            }
+        }
     }
 
     function initTradeModal() {
         const { setTxBroker, resetCompanyAutocomplete, renderMetricsGrid } = tradeModal();
         if (!document.getElementById('txModal')) return;
+        
+        const modal = document.getElementById('txModal');
+        if (modal && !modal.dataset.delegatedSave) {
+            modal.dataset.delegatedSave = '1';
+            modal.addEventListener('click', (e) => {
+                const btn = e.target.closest('#txSaveBtn');
+                if (btn) {
+                    e.preventDefault();
+                    saveTransaction();
+                }
+            });
+        }
 
         const pricesContainer = document.getElementById('txModalPricesContainer');
         const cellRenderer = global.MTFComponents.renderMetricsCell;

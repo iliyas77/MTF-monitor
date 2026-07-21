@@ -1,0 +1,1 @@
+Client-side watchlist feature that renders a live NSE stock list with market-summary carousel, persists items to Firestore via a repository, and exposes helpers for the parent app shell.

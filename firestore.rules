@@ -31,5 +31,11 @@ service cloud.firestore {
       allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
     }
 
+    // 6. The nested Transactions Collection
+    match /transactions/{uid}/items/{itemId} {
+      allow read: if true;
+      allow write: if request.resource.data.ownerUid != null || request.resource.data.syncCode != null;
+    }
+
   }
 }

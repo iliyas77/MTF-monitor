@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: features/positions
+title: Positions & Trades Feature (Open/Past Lists + Detail Sheet)
+scope:
+    - features/positions/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,5 @@
+- `npm run repair` (or `node shared/scripts/sync-manifest.js`) regenerates `manifest.json` and `main.html` script tags.
+- `npm run verify` runs integrity → build → smoke sequentially, skipping later stages when earlier ones fail.
+- `npm run save [-- <username>]` creates a dated feature branch, bumps version, builds, commits, pushes, and opens a PR targeting `Dev`.
+- `npm run save-local [-- <username>]` commits/pushes on the current branch instead of creating a new one.
+- `node shared/scripts/github-sync.js` reads `ticket.txt`, creates issues, updates `TICKETS.md`, and requires `gh auth login` with project scope.

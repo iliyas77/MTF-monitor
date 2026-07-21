@@ -1,0 +1,1 @@
+Client-side feature that persists, filters, paginates, and renders open/past trade positions with a full-screen detail sheet backed by Firestore and localStorage.
