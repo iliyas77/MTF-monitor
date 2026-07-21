@@ -1,0 +1,1 @@
+Build metadata (`APP_VERSION`, `APP_BUILT_AT`) is auto-incremented by `npm run build -- --bump` or `npm run save`; the version string must stay in sync with the release process.

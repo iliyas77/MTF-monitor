@@ -1,0 +1,1 @@
+Global runtime that wires Firestore sync, auth, IndexedDB cache, Bootstrap-based UI atoms, formatting helpers, and CSS design tokens into a single-page MTF Monitor loaded as plain scripts.

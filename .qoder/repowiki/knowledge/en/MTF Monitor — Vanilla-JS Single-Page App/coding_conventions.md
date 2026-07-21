@@ -1,0 +1,4 @@
+- Every UI element uses a `data-ref="..."` attribute so the build-time integrity checker can assert structure, and `main.html` references these same selectors throughout the codebase.
+- Feature pages declare their routes and mount points via the global `MTFRegister`/`MTFComponents` registry rather than importing each other directly.
+- All cross-cutting services (Firestore sync, IndexedDB cache, toast/dialog/sheet primitives) are accessed through `window.MTFComponents` and `window.MTFDb` instead of module imports.
+- Build artifacts and version metadata flow through `app-version.json` and `pages.json`, which are kept in sync by `shared/scripts/sync-manifest.js` before any production build.

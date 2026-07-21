@@ -4338,9 +4338,18 @@
             ariaLabel: 'Select Broker',
             fullWidth: true,
             size: '',
-            className: 'w-100 text-start d-flex align-items-center justify-content-between tx-broker-trigger'
+            className: 'w-100 text-start d-flex align-items-center justify-content-between tx-broker-trigger',
+            dataRef: 'txBrokerTrigger',
+            dataRefOption: 'txBrokerOption'
         });
-        if (typeof updatePreview === 'function') { try { updatePreview(); } catch (_) { } }
+        
+        const trigger = document.getElementById('txBrokerTrigger');
+        if (trigger) {
+            trigger.value = value || '';
+            const event = new Event('change', { bubbles: true });
+            trigger.dispatchEvent(event);
+        }
+        
         try { global.MTFComponents.hideOpenDropdowns?.(document.getElementById('txModal')); } catch (_) { }
     }
 
@@ -5510,15 +5519,9 @@
 
             onRemoteApplied: () => {
                 try { migrateTradeCompanySymbols(); } catch (_) { }
-                try {
-                    const data = getStorage();
-                } catch (_) { }
             },
             migrateTradeCompanySymbols
         });
-        try {
-            const data = getStorage();
-        } catch (_) { }
         initSyncOnLoad();
 
         window.addEventListener('pageshow', (e) => {
@@ -5552,7 +5555,6 @@
 
     async function fetchAppPermissions() {
         const defaultPerms = {
-            localDbEnabled: true,
             activityLogMaster: true,
             activityLogDb: false,
             activityLogApp: true,
@@ -5570,39 +5572,6 @@
         }
         
         window.AppPermissions = loadedPerms || defaultPerms;
-
-        try {
-            if (global.MTFDb && global.MTFDb.initFirebase()) {
-                const fbDb = global.MTFDb.getFirebaseDb();
-                const syncCode = localStorage.getItem('mtf_sync_code');
-                if (fbDb && syncCode) {
-                    const doc = await fbDb.collection('settings').doc(syncCode).get();
-                    if (doc.exists) {
-                        const data = doc.data();
-                        if (data && data.permissions && typeof data.permissions === 'object') {
-                            window.AppPermissions = {
-                                localDbEnabled: data.permissions.localDbEnabled ?? true,
-                                activityLogMaster: data.permissions.activityLogMaster ?? true,
-                                activityLogDb: data.permissions.activityLogDb ?? false,
-                                activityLogApp: data.permissions.activityLogApp ?? true,
-                                activityLogTrace: data.permissions.activityLogTrace ?? false
-                            };
-                            localStorage.setItem('mtf_permissions', JSON.stringify(window.AppPermissions));
-                        }
-                    }
-                }
-            }
-        } catch (e) {
-            if (global.MTFLogger && global.MTFLogger.warn) {
-                global.MTFLogger.warn('Failed to fetch global permissions from Firestore:', e);
-            }
-            const bootText = document.getElementById('appBootLoaderText');
-            if (bootText) {
-                bootText.textContent = 'Offline/Error. Using secure defaults.';
-                bootText.classList.replace('text-gr1', 'text-danger');
-            }
-            await new Promise(r => setTimeout(r, 1500));
-        }
 
         const bootLoader = document.getElementById('appBootLoader');
         if (bootLoader) bootLoader.classList.add('d-none');
@@ -5744,6 +5713,7 @@
     window.openBuyTradeFromMarket = openBuyTradeFromMarket;
     window.onTxStatusChange = onTxStatusChange;
     window.setTxFormStatus = setTxFormStatus;
+    window.setTxBroker = setTxBroker;
     window.onTxLeverageInput = onTxLeverageInput;
     window.syncTxLeverageDisplay = syncTxLeverageDisplay;
     window.onTxCompanyInput = onTxCompanyInput;

@@ -28,7 +28,9 @@
 
             try {
                 const targetCode = syncCode || ownerUid;
+                if (global.MTFLogger) global.MTFLogger.log(`[DB-DEBUG] PositionRepository.fetch() querying 'positions' where syncCode == ${targetCode}`);
                 const snapshot = await ref.where('syncCode', '==', targetCode).get();
+                if (global.MTFLogger) global.MTFLogger.log(`[DB-DEBUG] PositionRepository.fetch() received ${snapshot.size} documents.`);
                 const items = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
@@ -39,7 +41,7 @@
                 });
                 return items;
             } catch (e) {
-                if (global.MTFLogger) global.MTFLogger.warn('PositionRepository fetch failed', e);
+                if (global.MTFLogger) global.MTFLogger.error(`[DB-DEBUG] PositionRepository fetch failed:`, e);
                 return [];
             }
         }

@@ -1,0 +1,1 @@
+`npm start` / `npm run dev` serve on port 8080; `npm run production` opens `production.html`; `npm run all` runs the full repair → build → verify pipeline; `npm run ship` equals `npm run build`.

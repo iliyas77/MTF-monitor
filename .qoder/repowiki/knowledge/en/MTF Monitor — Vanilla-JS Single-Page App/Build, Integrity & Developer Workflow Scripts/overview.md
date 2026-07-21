@@ -1,0 +1,1 @@
+Node.js tooling that keeps the app's script manifest in sync with disk, runs integrity/build/smoke checks, and automates local saves and GitHub PR creation.

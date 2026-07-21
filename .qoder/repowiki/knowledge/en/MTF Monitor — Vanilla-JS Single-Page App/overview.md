@@ -1,0 +1,1 @@
+Root shell that wires the shared runtime, feature pages, and build/dev tooling into a single MTF Monitor SPA served via http-server.

@@ -654,7 +654,9 @@
             menuEnd = true,
             escapeValues = false,
             className = '',
-            size = 'sm'
+            size = 'sm',
+            dataRef = '',
+            dataRefOption = ''
         } = opts;
 
         if (!options.length) return '';
@@ -673,17 +675,20 @@
         const ariaAttr = ariaLabel ? ` aria-label="${ariaLabel}"` : '';
         const displayAttr = fullWidth ? ' data-bs-display="static"' : '';
 
+        const dataRefAttr = dataRef ? ` data-ref="${dataRef}"` : '';
+        const dataRefOptAttr = dataRefOption ? ` data-ref="${dataRefOption}"` : '';
+
         const items = options.map((o) => {
             const active = o.value === selected.value ? ` ${DROPDOWN_CLASSES.itemActive}` : '';
             const danger = o.danger ? ' text-danger' : '';
             const click = handler
                 ? ` onclick="${handler}(${dropdownValueArg(o.value, escapeValues)});event.stopPropagation();"`
                 : '';
-            return `<li><button type="button" class="dropdown-item${active}${danger}"${click}>${escapeHtml(o.label)}</button></li>`;
+            return `<li><button type="button" class="dropdown-item${active}${danger}"${click}${dataRefOptAttr}>${escapeHtml(o.label)}</button></li>`;
         }).join('');
 
         return `<div class="dropdown${fullWidth ? ' w-100' : ''}"${displayAttr}>
-            <button type="button" class="${triggerClass}"${idAttr} data-bs-toggle="dropdown" aria-expanded="false"${ariaAttr}>${escapeHtml(selected.label)}</button>
+            <button type="button" class="${triggerClass}"${idAttr} data-bs-toggle="dropdown" aria-expanded="false"${ariaAttr}${dataRefAttr}>${escapeHtml(selected.label)}</button>
             <ul class="${menuClass}"${menuIdAttr}>${items}</ul>
         </div>`;
     }

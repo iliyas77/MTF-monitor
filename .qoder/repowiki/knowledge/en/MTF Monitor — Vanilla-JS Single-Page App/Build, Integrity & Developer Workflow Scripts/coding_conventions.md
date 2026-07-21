@@ -1,0 +1,6 @@
+- Every script sets `const ROOT = path.join(__dirname, '../..')` and resolves all file paths relative to the repository root rather than `__dirname`.
+- External commands are executed through thin wrappers (`runGit`, `runGh`, `runNpm`, `runCmd`) that pass `cwd: ROOT`, `encoding: 'utf8'`, and `stdio: 'pipe'`, with failures funneled through a local `fail(msg)` helper that logs `✗ ...` and exits non-zero.
+- Secret-sensitive filenames are guarded by a shared `SECRET_PATTERNS` array (`/.env$/i`, `/credentials\.json$/i`, `/\.pem$/i`, `/id_rsa$/i`, `/\.p12$/i`) checked against `git status --porcelain` before any commit.
+- Each developer-facing script accepts an optional free-form username after `--` via `parseUserName(process.argv)` and uses it to slugify branch names and compose commit messages prefixed with `chore:`.
+- The verify pipeline reports results through a single `createReport()` factory exposing `pass(name,detail)`, `fail(name,detail)`, `warn(name,detail)`, `section(title)`, and a final `print()` that returns the process exit code.
+- Manifest ordering is enforced by dedicated `preferredXxxOrder(scripts)` functions that place known registry/dependency files at the front and sort the remainder alphabetically.

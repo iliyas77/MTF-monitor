@@ -1,0 +1,6 @@
+- Every file wraps its code in `(function (global){ ... })(typeof window !== 'undefined' ? window : globalThis)` and registers exports through `global.MTFRegister({...})` rather than ES modules.
+- Cross-module data and helper functions are resolved lazily at call time from `global.MTFComponents` and `global.MTFAppHelpers` instead of being imported, allowing late binding by the host shell.
+- HTML strings are built with template literals and annotated with hierarchical `data-ref="..."` attributes (e.g. `page.trades.list.item.metrics.current`) for test automation and live-updating hooks.
+- Sheet organisms follow a uniform pattern: read the trade id from a closure-scoped variable, fetch the record via `tradeSheets().getTransaction(id)`, render HTML, then call `Sheet.open(title, html, footerHtml)` from `MTFComponents`.
+- Numeric display uses `fmtDec` / `renderAmount` from `MTFComponents` consistently, and all user-facing strings are escaped via `escapeHtml` before insertion into innerHTML.
+- Modal confirmations use the shared `confirmAction` helper from `app-shell.js` rather than native `window.confirm`, keeping confirmation UX consistent.

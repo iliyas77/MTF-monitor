@@ -1,0 +1,13 @@
+schema_version: 1
+module_path: shared_runtime
+title: Shared Runtime Layer (DB Sync, UI Atoms & Theme Tokens)
+scope:
+    - shared/db/
+    - shared/lib/
+    - shared/css/
+source_files: []
+depends_on: []
+related_to:
+    - path: build_and_scripts
+    - path: features/common
+    - path: features/watchlist

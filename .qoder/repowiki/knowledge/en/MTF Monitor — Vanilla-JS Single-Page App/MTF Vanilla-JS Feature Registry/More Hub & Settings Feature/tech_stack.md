@@ -1,0 +1,1 @@
+Vanilla JS IIFEs registering render functions through a global registry; UI built with Bootstrap 5 utility classes and Font Awesome icons; persistence via Firebase Firestore (`FieldValue.serverTimestamp()`) with a thin `BaseRepository` abstraction.

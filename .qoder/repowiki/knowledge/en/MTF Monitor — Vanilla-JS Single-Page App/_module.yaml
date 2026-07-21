@@ -1,0 +1,22 @@
+schema_version: 1
+module_path: ""
+title: MTF Monitor — Vanilla-JS Single-Page App
+scope:
+    - README.md
+    - .gitignore
+    - package.json
+    - package-lock.json
+    - app-version.json
+    - pages.json
+    - firestore.rules
+    - playwright.config.js
+    - build-production.js
+    - main.html
+    - PRODUCTION.md
+    - TICKETS.md
+    - main.js
+    - production.html
+    - ticket.txt
+source_files: []
+depends_on: []
+related_to: []

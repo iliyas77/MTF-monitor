@@ -1,0 +1,5 @@
+- Each JS file is wrapped in `(function (global) { ... })(typeof window !== 'undefined' ? window : globalThis);` and registers itself by calling either `MTFRegister({ ... })` (UI atoms under `shared/lib/_registry.js`) or `global.MTFDbRegister({ ... })` (services under `shared/db/_registry.js`).
+- Public APIs are exposed as `renderXxx(...)` returning HTML strings paired with a `paintXxx(el, ...)` that replaces `el.outerHTML` and returns the new element when an `id` is provided.
+- Optional cross-module dependencies are accessed defensively via `typeof global.X === 'function'` / `if (!global.X) return null` guards rather than static imports, allowing modules to load in any order.
+- Firestore writes use soft-delete semantics (`isDeleted: true`, `deletedAt: serverTimestamp()`) instead of permanent deletes, and batch operations map `type: 'delete'` to the same soft-delete update.
+- Activity logging goes exclusively through `MTFLogger.log/warn/error` with a caller-name inferred from the stack trace and a feature tag derived from the call site filename.

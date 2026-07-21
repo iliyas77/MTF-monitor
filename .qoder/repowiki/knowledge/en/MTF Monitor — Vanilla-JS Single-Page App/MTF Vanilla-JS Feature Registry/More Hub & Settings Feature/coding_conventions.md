@@ -1,0 +1,4 @@
+- Each file is a self-contained IIFE that exposes its API through `global.MTFRegister({ ... })` rather than ES module exports.
+- DOM elements are addressed via stable `data-ref="page.<feature>.<path>"` selectors instead of ad-hoc IDs, enabling testable reference paths.
+- Async side effects (Firestore writes) are wrapped in try/catch that logs via `MTFLogger.warn` and returns a boolean success flag so callers can drive toast/badge feedback.
+- User-facing state changes are debounced before persisting (e.g. `scheduleSave` uses a 500 ms `setTimeout` around `executeSave`) to avoid thundering herds on rapid toggle clicks.

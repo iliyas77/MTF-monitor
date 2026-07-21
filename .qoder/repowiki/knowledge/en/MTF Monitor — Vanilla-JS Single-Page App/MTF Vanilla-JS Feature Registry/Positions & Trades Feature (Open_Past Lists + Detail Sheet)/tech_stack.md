@@ -1,0 +1,1 @@
+Firestore via a shared `BaseRepository` subclass (batch writes, server timestamps, where-clause on `syncCode`); `localStorage` for offline-first transaction/watchlist persistence with a microtask-invalidated read cache; Bootstrap/Fa icons for UI; no build tool — files are loaded directly into the browser runtime.
