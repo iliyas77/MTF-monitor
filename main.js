@@ -4338,9 +4338,18 @@
             ariaLabel: 'Select Broker',
             fullWidth: true,
             size: '',
-            className: 'w-100 text-start d-flex align-items-center justify-content-between tx-broker-trigger'
+            className: 'w-100 text-start d-flex align-items-center justify-content-between tx-broker-trigger',
+            dataRef: 'txBrokerTrigger',
+            dataRefOption: 'txBrokerOption'
         });
-        if (typeof updatePreview === 'function') { try { updatePreview(); } catch (_) { } }
+        
+        const trigger = document.getElementById('txBrokerTrigger');
+        if (trigger) {
+            trigger.value = value || '';
+            const event = new Event('change', { bubbles: true });
+            trigger.dispatchEvent(event);
+        }
+        
         try { global.MTFComponents.hideOpenDropdowns?.(document.getElementById('txModal')); } catch (_) { }
     }
 
@@ -5744,6 +5753,7 @@
     window.openBuyTradeFromMarket = openBuyTradeFromMarket;
     window.onTxStatusChange = onTxStatusChange;
     window.setTxFormStatus = setTxFormStatus;
+    window.setTxBroker = setTxBroker;
     window.onTxLeverageInput = onTxLeverageInput;
     window.syncTxLeverageDisplay = syncTxLeverageDisplay;
     window.onTxCompanyInput = onTxCompanyInput;

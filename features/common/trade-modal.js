@@ -328,7 +328,7 @@
     }
 
     function attachCalcListeners() {
-        const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage', 'txBroker'];
+        const fields = ['txQty', 'txBuyPrice', 'txSellPrice', 'txBuyDate', 'txSellDate', 'txLeverage'];
         fields.forEach((id) => {
             const el = document.getElementById(id);
             if (el) {
@@ -338,6 +338,16 @@
                 el.addEventListener('change', updatePreview);
             }
         });
+        
+        const txForm = document.getElementById('txForm');
+        if (txForm && !txForm.dataset.delegatedBroker) {
+            txForm.dataset.delegatedBroker = '1';
+            txForm.addEventListener('change', (e) => {
+                if (e.target && e.target.closest('[data-ref="txBrokerTrigger"]')) {
+                    updatePreview();
+                }
+            });
+        }
         const levEl = document.getElementById('txLeverage');
         if (levEl) {
             levEl.removeEventListener('input', updateLeverageBreakdown);
